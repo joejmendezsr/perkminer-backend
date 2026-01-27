@@ -37,7 +37,7 @@ class User(db.Model, UserMixin):
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
 
-# ----- BUSINESS USER SECTION -----
+# --- BUSINESS USER SECTION ---
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(100), unique=True, nullable=False)
@@ -47,7 +47,6 @@ class Business(db.Model):
     sponsor_id = db.Column(db.Integer, db.ForeignKey('business.id'))
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
-# ---------------------------------
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
 
@@ -87,7 +86,6 @@ def init_db():
     db.create_all()
     return "Database tables created!"
 
-# ----------- HOMEPAGE WITH BUSINESS LINK ------------
 @app.route("/")
 def home():
     return render_template_string("""
@@ -116,7 +114,7 @@ def home():
     </html>
     """)
 
-# ------------- USER REGISTRATION AND AUTH -------------
+# -------- USER ROUTES --------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -338,11 +336,11 @@ def login():
     </html>
     """, message=message)
 
-# ... include previous contractor/user dashboard, logout, etc...
+# (Contractor/user dashboard goes here if you have it, plus @app.route("/logout"), before you paste the business section routes below)
 
-# ---- BUSINESS USER SECTION pasted here (see last message for full code) ----
-# If you want, paste the full business model, registration, verification, dashboard, and logout routes below.
-# ... (use the same as from previous message. They work perfectly combined.)
+# ---- BUSINESS SECTION ----
+# (Paste the full "Business" registration, verify, login, dashboard... code from earlier messages directly below here)
+# Use the copy from my big business user message for the full set of @app.route's
 # ---- END BUSINESS SECTION ----
 
 if __name__ == "__main__":
