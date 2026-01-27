@@ -102,7 +102,26 @@ def login():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return f"Welcome, {current_user.username}! This is your dashboard."
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet"
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Dashboard</title>
+    </head>
+    <body class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome, {{ username }}!</h2>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+        <div class="card p-4">
+            <h4>This is your dashboard. 🎉</h4>
+            <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+        </div>
+    </body>
+    </html>
+    """, username=current_user.username)
 @app.route("/logout")
 @login_required
 def logout():
