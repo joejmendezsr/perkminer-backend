@@ -57,11 +57,23 @@ def register():
         if not username or not password:
             flash("Username and password cannot be empty.")
             return redirect(url_for("register"))
-        
-        # Generate a code for the new user (simple: "REF" + username)
-        new_user_code = f"REF{username}"
-        sponsor_id = None
 
+        # Check if username already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash("Username already taken. Choose another.")
+            return redirect(url_for("register"))
+
+        # Generate a unique referral code for each user
+        base_code = f"REF{username}"
+        code = base_code
+        counter = 1
+        while User.query.filter_by(referral_code=code).first():
+            code = f"{base_code}{counter}"
+            counter += 1
+        new_user_code = code
+
+        sponsor_id = None
         # If user enters a referral code, find a sponsor
         if referral_code:
             sponsor = User.query.filter_by(referral_code=referral_code).first()
