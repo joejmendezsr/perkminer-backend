@@ -22,12 +22,11 @@ bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 
-SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# ----------------- Contractor/User Model (regular users) ----------------
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
@@ -37,7 +36,7 @@ class User(db.Model, UserMixin):
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
 
-# --- BUSINESS USER SECTION ---
+# ----------------- Business Model -----------------
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(100), unique=True, nullable=False)
@@ -86,6 +85,7 @@ def init_db():
     db.create_all()
     return "Database tables created!"
 
+# ----------------- HOMEPAGE -----------------
 @app.route("/")
 def home():
     return render_template_string("""
@@ -114,7 +114,7 @@ def home():
     </html>
     """)
 
-# -------- USER ROUTES --------
+# ----------------- Contractor/User Registration & Verification -----------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -336,12 +336,157 @@ def login():
     </html>
     """, message=message)
 
-# (Contractor/user dashboard goes here if you have it, plus @app.route("/logout"), before you paste the business section routes below)
+@app.route("/dashboard", methods=["GET", "POST"])
+@login_required
+def dashboard():
+    if not current_user.email_confirmed:
+        flash("You must confirm your email to access the dashboard.")
+        return redirect(url_for("login"))
+    sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
+    rewards_table = ""
+    if request.method == "POST":
+        try:
+            invoice_amount = float(request.form.get("invoice_amount", 0))
+            downline_level = int(request.form.get("downline_level", 2))
+            if not (0 < invoice_amount <= 2500):
+                flash("Amount must be between 0 and 2500.")
+            elif downline_level not in [2, 3, 4, 5]:
+                flash("Invalid downline level.")
+            else:
+                if downline_level in [2, 3, 4]:
+                    rate = 0.0025
+                    cap = 6.25
+                elif downline_level == 5:
+                    rate = 0.02
+                    cap = 50
+                reward = min(invoice_amount * rate, cap)
+                rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
+                rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
+        except Exception:
+            flash("Please enter a valid number for the invoice amount.")
+    level2 = User.query.filter_by(sponsor_id=current_user.id).all()
+    level3, level4, level5 = [], [], []
+    for u2 in level2:
+        l3s = User.query.filter_by(sponsor_id=u2.id).all()
+        level3.extend(l3s)
+        for u3 in l3s:
+            l4s = User.query.filter_by(sponsor_id=u3.id).all()
+            level4.extend(l4s)
+            for u4 in l4s:
+                l5s = User.query.filter_by(sponsor_id=u4.id).all()
+                level5.extend(l5s)
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Dashboard</title>
+    </head>
+    <body class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome, {{ email }}!</h2>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+        <div class="card p-4 mb-4">
+            <h4>Your Referral Code:</h4>
+            <code>{{ referral_code }}</code>
+        </div>
+        {% if sponsor %}
+        <div class="card p-4 mb-4">
+            <h4>Your Sponsor:</h4>
+            <p class="mb-0">{{ sponsor.email }}</p>
+        </div>
+        {% endif %}
+        <div class="card p-4 mb-4">
+            <h4>Estimate Your Reward From Downline Purchases</h4>
+            <form method="post" class="row g-3 mb-3">
+                <div class="col-auto">
+                    <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
+                        placeholder="Purchase Amount (e.g. 500)" required>
+                </div>
+                <div class="col-auto">
+                    <select name="downline_level" class="form-select" required>
+                        <option value="2">Level 2 (your direct referral)</option>
+                        <option value="3">Level 3 (your referral's referral)</option>
+                        <option value="4">Level 4 (third downline)</option>
+                        <option value="5">Level 5 (fourth downline)</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Calculate My Reward</button>
+                </div>
+            </form>
+            {{ rewards_table | safe }}
+        </div>
+        <div class="card p-4 mb-4">
+            <h4>My Downline</h4>
+            <div>
+                <strong>Level 2 (direct referrals):</strong>
+                {% if level2 %}
+                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 3:</strong>
+                {% if level3 %}
+                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 4:</strong>
+                {% if level4 %}
+                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 5:</strong>
+                {% if level5 %}
+                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card p-4">
+            <h4>This is your dashboard. 🎉</h4>
+            <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+        </div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-warning mt-3">
+              {% for message in messages %}
+                {{ message }}<br>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+    </body>
+    </html>
+    """, email=current_user.email,
+         referral_code=current_user.referral_code,
+         sponsor=sponsor.email if sponsor else None,
+         rewards_table=rewards_table,
+         level2=level2, level3=level3, level4=level4, level5=level5)
 
-# ---- BUSINESS SECTION ----
-# (Paste the full "Business" registration, verify, login, dashboard... code from earlier messages directly below here)
-# Use the copy from my big business user message for the full set of @app.route's
-# ---- END BUSINESS SECTION ----
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
+# --------- BUSINESS SECTION: Paste full business block from previous message here (registration, verification, dashboard, etc) ---------
+
+# For brevity in this message, you can copy the every-business route from my previous long "business user section" post and paste them here, starting with:
+# @app.route("/business/register", methods=["GET", "POST"])
+# def business_register():
+#   ... all business routes follow ...
+# @app.route("/business/login"...), @app.route("/business/verify_email"...), etc
 
 if __name__ == "__main__":
     app.run(debug=True)
