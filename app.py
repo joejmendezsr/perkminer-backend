@@ -18,8 +18,6 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 
 db = SQLAlchemy(app)
-with app.app_context():
-    db.create_all()
 bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
@@ -28,6 +26,12 @@ twilio_sid   = os.environ.get('TWILIO_SID')
 twilio_token = os.environ.get('TWILIO_TOKEN')
 twilio_from  = os.environ.get('TWILIO_FROM')
 twilio_client = Client(twilio_sid, twilio_token) if twilio_sid and twilio_token else None
+
+# NEW: Database initialization route for Render
+@app.route("/init_db")
+def init_db():
+    db.create_all()
+    return "Database tables created!"
 
 @login_manager.user_loader
 def load_user(user_id):
