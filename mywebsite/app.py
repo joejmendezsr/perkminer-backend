@@ -29,6 +29,9 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        if not username or not password:
+            flash("Username and password cannot be empty.")
+            return redirect(url_for("register"))
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(username=username, password=hashed_pw)
         db.session.add(new_user)
