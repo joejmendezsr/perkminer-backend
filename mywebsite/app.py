@@ -1,7 +1,8 @@
+from flask import Flask, request, redirect, url_for, render_template_string, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask import Flask, request, redirect, url_for, render_template_string, flash
+import re, random, string
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'replace-this-with-a-secret-key'
@@ -17,18 +18,237 @@ def load_user(user_id):
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
-    referral_code = db.Column(db.String(20), unique=True)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    referral_code = db.Column(db.String(32), unique=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    email_confirmed = db.Column(db.Boolean, default=False)
+    phone_confirmed = db.Column(db.Boolean, default=False)
+    phone_code = db.Column(db.String(8))
+
+EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+PHONE_REGEX = r'^\+?\d{10,15}$'
+
+def valid_email(email):
+    return re.match(EMAIL_REGEX, email or "")
+
+def valid_phone(phone):
+    return re.match(PHONE_REGEX, phone or "")
+
+def random_phone_code():
+    return ''.join(random.choices(string.digits, k=6))
+
+def random_referral_code(email):
+    base_code = "REF" + (email.split("@")[0].replace(".", "")[:12])
+    code = base_code
+    counter = 1
+    while User.query.filter_by(referral_code=code).first():
+        code = f"{base_code}{counter}"
+        counter += 1
+    return code
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        phone = request.form.get("phone", "").strip()
+        password = request.form.get("password")
+        referral_code = request.form.get("referral_code")
+        if not (email and password and phone):
+            flash("All fields are required.")
+            return redirect(url_for("register"))
+        if not valid_email(email):
+            flash("Invalid email format.")
+            return redirect(url_for("register"))
+        if not valid_phone(phone):
+            flash("Invalid phone number. Use +1234567890 or 10-15 digits.")
+            return redirect(url_for("register"))
+        if User.query.filter_by(email=email).first():
+            flash("Email already registered.")
+            return redirect(url_for("register"))
+        if User.query.filter_by(phone=phone).first():
+            flash("Phone number already registered.")
+            return redirect(url_for("register"))
+
+        sponsor_id = None
+        if referral_code:
+            sponsor = User.query.filter_by(referral_code=referral_code).first()
+            if sponsor:
+                sponsor_id = sponsor.id
+            else:
+                flash("Invalid referral code.")
+                return redirect(url_for("register"))
+
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+        user_ref_code = random_referral_code(email)
+        phone_code = random_phone_code()
+
+        new_user = User(
+            email=email,
+            password=hashed_pw,
+            phone=phone,
+            referral_code=user_ref_code,
+            sponsor_id=sponsor_id,
+            email_confirmed=False,
+            phone_confirmed=False,
+            phone_code=phone_code,
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        print(f"[Email to {email}] Visit /activate/{new_user.id} to confirm your email.")
+        print(f"[SMS to {phone}] Your phone confirmation code is: {phone_code}")
+
+        flash("Check your email and SMS for confirmation instructions.")
+        return redirect(url_for("login"))
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Register</title>
+    </head>
+    <body class="container py-5">
+        <h2 class="mb-4">Register</h2>
+        <form method="post" class="mb-3">
+            <div class="mb-3">
+                <input name="email" required class="form-control" placeholder="Email (this is your username)">
+            </div>
+            <div class="mb-3">
+                <input name="phone" required class="form-control" placeholder="Phone (with country code)">
+            </div>
+            <div class="mb-3">
+                <input name="password" required type="password" class="form-control" placeholder="Password">
+            </div>
+            <div class="mb-3">
+                <input name="referral_code" class="form-control" placeholder="Referral Code (optional)">
+            </div>
+            <button type="submit" class="btn btn-success">Register</button>
+        </form>
+        <a href="{{ url_for('login') }}">Already have an account? Login</a>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-warning mt-3">
+                {% for message in messages %}
+                {{ message }}<br>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </body>
+    </html>
+    """)
+
+@app.route("/activate/<int:user_id>")
+def activate(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash("Unknown account.")
+        return redirect(url_for("login"))
+    user.email_confirmed = True
+    db.session.commit()
+    flash("Email confirmed. Please confirm your phone.")
+    session["user_for_phone"] = user.id
+    return redirect(url_for("confirm_phone"))
+
+@app.route("/confirm_phone", methods=["GET", "POST"])
+def confirm_phone():
+    user_id = session.get("user_for_phone")
+    user = User.query.get(user_id) if user_id else None
+    if not user:
+        flash("Session expired or unknown account.")
+        return redirect(url_for("login"))
+    if request.method == "POST":
+        code = request.form.get("code", "")
+        if code == user.phone_code:
+            user.phone_confirmed = True
+            user.phone_code = None
+            db.session.commit()
+            flash("Phone confirmed. You can now log in.")
+            session.pop("user_for_phone", None)
+            return redirect(url_for("login"))
+        else:
+            flash("Invalid code. Please try again.")
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Confirm Phone</title>
+    </head>
+    <body class="container py-5">
+        <h2>Confirm Your Phone</h2>
+        <form method="post" class="mb-3">
+            <div class="mb-3">
+                <input name="code" class="form-control" placeholder="Enter the code sent to your phone" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Confirm</button>
+        </form>
+        <div class="alert alert-info mt-2">
+            Don't see your code? (In demo mode: code is visible in terminal)
+        </div>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-warning mt-3">
+                {% for message in messages %}
+                {{ message }}<br>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </body>
+    </html>
+    """)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    message = ""
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password")
+        user = User.query.filter_by(email=email).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            if not user.email_confirmed:
+                message = "Please confirm your email first (check your inbox)."
+            elif not user.phone_confirmed:
+                message = "Please confirm your phone."
+            else:
+                login_user(user)
+                return redirect(url_for("dashboard"))
+        else:
+            message = "Login failed. Check email and password."
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <title>Login</title>
+    </head>
+    <body class="container py-5">
+        <h2 class="mb-4">Login</h2>
+        <form method="post" class="mb-3">
+            <div class="mb-3">
+                <input name="email" class="form-control" placeholder="Email (username)" required>
+            </div>
+            <div class="mb-3">
+                <input name="password" type="password" class="form-control" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        <div style='color:red;'>{{message}}</div>
+        <a href="{{ url_for('register') }}">Register here</a>
+    </body>
+    </html>
+    """, message=message)
+
 @app.route("/")
 def home():
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
-        <link rel="stylesheet"
-         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <title>PerkMiner Homepage</title>
     </head>
     <body class="container py-5">
@@ -48,124 +268,17 @@ def home():
     </body>
     </html>
     """)
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        referral_code = request.form.get("referral_code")
-        if not username or not password:
-            flash("Username and password cannot be empty.")
-            return redirect(url_for("register"))
-
-        # Check if username already exists
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash("Username already taken. Choose another.")
-            return redirect(url_for("register"))
-
-        # Generate a unique referral code for each user
-        base_code = f"REF{username}"
-        code = base_code
-        counter = 1
-        while User.query.filter_by(referral_code=code).first():
-            code = f"{base_code}{counter}"
-            counter += 1
-        new_user_code = code
-
-        sponsor_id = None
-        # If user enters a referral code, find a sponsor
-        if referral_code:
-            sponsor = User.query.filter_by(referral_code=referral_code).first()
-            if sponsor:
-                sponsor_id = sponsor.id
-            else:
-                flash("Invalid referral code.")
-                return redirect(url_for("register"))
-
-        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_user = User(
-            username=username,
-            password=hashed_pw,
-            referral_code=new_user_code,
-            sponsor_id=sponsor_id
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        flash("Account created! You can now log in.")
-        return redirect(url_for("login"))
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <title>Register</title>
-    </head>
-    <body class="container py-5">
-        <h2 class="mb-4">Register</h2>
-        <form method="post" class="mb-3">
-            <div class="mb-3">
-                <input name="username" class="form-control" placeholder="Username">
-            </div>
-            <div class="mb-3">
-                <input name="password" type="password" class="form-control" placeholder="Password">
-            </div>
-            <div class="mb-3">
-                <input name="referral_code" class="form-control" placeholder="Referral Code (optional)">
-            </div>
-            <button type="submit" class="btn btn-success">Register</button>
-        </form>
-        <a href="{{ url_for('login') }}">Already have an account? Login</a>
-    </body>
-    </html>
-    """)
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    message = ""
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        user = User.query.filter_by(username=username).first()
-        if user and bcrypt.check_password_hash(user.password, password):
-            login_user(user)
-            return redirect(url_for("dashboard"))
-        else:
-            message = "Login failed. Check username and password."
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet"
-         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <title>Login</title>
-    </head>
-    <body class="container py-5">
-        <h2 class="mb-4">Login</h2>
-        <form method="post" class="mb-3">
-            <div class="mb-3">
-                <input name="username" class="form-control" placeholder="Username">
-            </div>
-            <div class="mb-3">
-                <input name="password" type="password" class="form-control" placeholder="Password">
-            </div>
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-        <div style='color:red;'>{{message}}</div>
-        <a href="{{ url_for('register') }}">Register here</a>
-    </body>
-    </html>
-    """, message=message)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
+    if not (current_user.email_confirmed and current_user.phone_confirmed):
+        flash("You must confirm your email and phone to access the dashboard.")
+        return redirect(url_for("login"))
+
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     rewards_table = ""
-    invoice_amount = None
 
-    # Reward calculation for downline purchases
     if request.method == "POST":
         try:
             invoice_amount = float(request.form.get("invoice_amount", 0))
@@ -187,11 +300,8 @@ def dashboard():
         except Exception:
             flash("Please enter a valid number for the invoice amount.")
 
-    # Downline lookup for Levels 2-5
     level2 = User.query.filter_by(sponsor_id=current_user.id).all()
-    level3 = []
-    level4 = []
-    level5 = []
+    level3, level4, level5 = [], [], []
     for u2 in level2:
         l3s = User.query.filter_by(sponsor_id=u2.id).all()
         level3.extend(l3s)
@@ -206,13 +316,12 @@ def dashboard():
     <!DOCTYPE html>
     <html>
     <head>
-        <link rel="stylesheet"
-              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <title>Dashboard</title>
     </head>
     <body class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Welcome, {{ username }}!</h2>
+            <h2>Welcome, {{ email }}!</h2>
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
         </div>
         <div class="card p-4 mb-4">
@@ -251,7 +360,7 @@ def dashboard():
             <div>
                 <strong>Level 2 (direct referrals):</strong>
                 {% if level2 %}
-                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
                 {% else %}
                     <span>None</span>
                 {% endif %}
@@ -259,7 +368,7 @@ def dashboard():
             <div>
                 <strong>Level 3:</strong>
                 {% if level3 %}
-                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
                 {% else %}
                     <span>None</span>
                 {% endif %}
@@ -267,7 +376,7 @@ def dashboard():
             <div>
                 <strong>Level 4:</strong>
                 {% if level4 %}
-                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
                 {% else %}
                     <span>None</span>
                 {% endif %}
@@ -275,7 +384,7 @@ def dashboard():
             <div>
                 <strong>Level 5:</strong>
                 {% if level5 %}
-                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
                 {% else %}
                     <span>None</span>
                 {% endif %}
@@ -296,16 +405,18 @@ def dashboard():
         {% endwith %}
     </body>
     </html>
-    """, username=current_user.username,
+    """, email=current_user.email,
          referral_code=current_user.referral_code,
-         sponsor=sponsor.username if sponsor else None,
+         sponsor=sponsor.email if sponsor else None,
          rewards_table=rewards_table,
          level2=level2, level3=level3, level4=level4, level5=level5)
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
