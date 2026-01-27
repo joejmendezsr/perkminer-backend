@@ -47,23 +47,24 @@ def register():
     """)
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    message = ""
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
         user = User.query.filter_by(username=username).first()
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
-            flash("Logged in successfully!")
             return redirect(url_for("dashboard"))
         else:
-            flash("Login failed. Check username and password.")
+            message = "Login failed. Check username and password."
     return render_template_string("""
     <form method="post">
         Username: <input name="username"><br>
         Password: <input name="password" type="password"><br>
         <input type="submit" value="Login">
+        <div style='color:red;'>{{message}}</div>
     </form>
-    """)
+    """, message=message)
 @app.route("/dashboard")
 @login_required
 def dashboard():
