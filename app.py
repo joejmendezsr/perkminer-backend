@@ -11,7 +11,6 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Email config for Flask-Mail (Gmail example, works on Render)
 app.config['MAIL_SERVER']   = os.environ.get('MAIL_SERVER',   'smtp.gmail.com')
 app.config['MAIL_PORT']     = int(os.environ.get('MAIL_PORT', 465))
 app.config['MAIL_USE_SSL']  = True
@@ -23,7 +22,6 @@ bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 
-# Twilio config (from Render env vars)
 twilio_sid   = os.environ.get('TWILIO_SID')
 twilio_token = os.environ.get('TWILIO_TOKEN')
 twilio_from  = os.environ.get('TWILIO_FROM')
