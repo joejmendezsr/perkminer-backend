@@ -1,5 +1,6 @@
-flask
-flask-bcrypt
-flask-login
-gunicorn
-flask-sqlalchemy
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Bcrypt
+Flask-Mail
+twilio
