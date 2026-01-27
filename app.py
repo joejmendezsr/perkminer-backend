@@ -83,7 +83,7 @@ def send_sms(to, body):
     except Exception as e:
         print("SMS SEND ERROR:", e)
 
-@app.before_first_request
+@app.before_serving
 def create_tables():
     db.create_all()
 
