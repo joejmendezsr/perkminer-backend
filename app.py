@@ -165,6 +165,7 @@ def dashboard():
     rewards_table = ""
     invoice_amount = None
 
+    # Reward calculation for downline purchases
     if request.method == "POST":
         try:
             invoice_amount = float(request.form.get("invoice_amount", 0))
@@ -186,12 +187,27 @@ def dashboard():
         except Exception:
             flash("Please enter a valid number for the invoice amount.")
 
+    # Downline lookup for Levels 2-5
+    level2 = User.query.filter_by(sponsor_id=current_user.id).all()
+    level3 = []
+    level4 = []
+    level5 = []
+    for u2 in level2:
+        l3s = User.query.filter_by(sponsor_id=u2.id).all()
+        level3.extend(l3s)
+        for u3 in l3s:
+            l4s = User.query.filter_by(sponsor_id=u3.id).all()
+            level4.extend(l4s)
+            for u4 in l4s:
+                l5s = User.query.filter_by(sponsor_id=u4.id).all()
+                level5.extend(l5s)
+
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
         <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <title>Dashboard</title>
     </head>
     <body class="container py-5">
@@ -230,6 +246,41 @@ def dashboard():
             </form>
             {{ rewards_table | safe }}
         </div>
+        <div class="card p-4 mb-4">
+            <h4>My Downline</h4>
+            <div>
+                <strong>Level 2 (direct referrals):</strong>
+                {% if level2 %}
+                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 3:</strong>
+                {% if level3 %}
+                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 4:</strong>
+                {% if level4 %}
+                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 5:</strong>
+                {% if level5 %}
+                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.username }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+        </div>
         <div class="card p-4">
             <h4>This is your dashboard. 🎉</h4>
             <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
@@ -248,7 +299,8 @@ def dashboard():
     """, username=current_user.username,
          referral_code=current_user.referral_code,
          sponsor=sponsor.username if sponsor else None,
-         rewards_table=rewards_table)
+         rewards_table=rewards_table,
+         level2=level2, level3=level3, level4=level4, level5=level5)
 @app.route("/logout")
 @login_required
 def logout():
