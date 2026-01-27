@@ -18,6 +18,8 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 
 db = SQLAlchemy(app)
+with app.app_context():
+    db.create_all()
 bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
@@ -82,10 +84,6 @@ def send_sms(to, body):
             print("[TWILIO WARNING] Twilio not configured. Skipping SMS send.")
     except Exception as e:
         print("SMS SEND ERROR:", e)
-
-@app.before_serving
-def create_tables():
-    db.create_all()
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
