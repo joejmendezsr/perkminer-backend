@@ -39,7 +39,29 @@ def register():
         <input type="submit" value="Register">
     </form>
     """)
-
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        user = User.query.filter_by(username=username).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            login_user(user)
+            flash("Logged in successfully!")
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Login failed. Check username and password.")
+    return render_template_string("""
+    <form method="post">
+        Username: <input name="username"><br>
+        Password: <input name="password" type="password"><br>
+        <input type="submit" value="Login">
+    </form>
+    """)
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return f"Welcome, {current_user.username}! This is your dashboard."
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
