@@ -39,11 +39,27 @@ def register():
         flash("Account created! You can now log in.")
         return redirect(url_for("login"))
     return render_template_string("""
-        <form method="post">
-            Username: <input name="username"><br>
-            Password: <input name="password" type="password"><br>
-            <input type="submit" value="Register">
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet"
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Register</title>
+    </head>
+    <body class="container py-5">
+        <h2 class="mb-4">Register</h2>
+        <form method="post" class="mb-3">
+            <div class="mb-3">
+                <input name="username" class="form-control" placeholder="Username">
+            </div>
+            <div class="mb-3">
+                <input name="password" type="password" class="form-control" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-success">Register</button>
         </form>
+        <a href="{{ url_for('login') }}">Already have an account? Login</a>
+    </body>
+    </html>
     """)
 
 @app.route("/login", methods=["GET", "POST"])
@@ -59,12 +75,28 @@ def login():
         else:
             message = "Login failed. Check username and password."
     return render_template_string("""
-        <form method="post">
-            Username: <input name="username"><br>
-            Password: <input name="password" type="password"><br>
-            <input type="submit" value="Login">
-            <div style='color:red;'>{{message}}</div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet"
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Login</title>
+    </head>
+    <body class="container py-5">
+        <h2 class="mb-4">Login</h2>
+        <form method="post" class="mb-3">
+            <div class="mb-3">
+                <input name="username" class="form-control" placeholder="Username">
+            </div>
+            <div class="mb-3">
+                <input name="password" type="password" class="form-control" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
         </form>
+        <div style='color:red;'>{{message}}</div>
+        <a href="{{ url_for('register') }}">Register here</a>
+    </body>
+    </html>
     """, message=message)
 
 @app.route("/dashboard")
@@ -80,4 +112,3 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
