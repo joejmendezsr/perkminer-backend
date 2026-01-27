@@ -53,11 +53,31 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        referral_code = request.form.get("referral_code")
         if not username or not password:
             flash("Username and password cannot be empty.")
             return redirect(url_for("register"))
+        
+        # Generate a code for the new user (simple: "REF" + username)
+        new_user_code = f"REF{username}"
+        sponsor_id = None
+
+        # If user enters a referral code, find a sponsor
+        if referral_code:
+            sponsor = User.query.filter_by(referral_code=referral_code).first()
+            if sponsor:
+                sponsor_id = sponsor.id
+            else:
+                flash("Invalid referral code.")
+                return redirect(url_for("register"))
+
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_user = User(username=username, password=hashed_pw)
+        new_user = User(
+            username=username,
+            password=hashed_pw,
+            referral_code=new_user_code,
+            sponsor_id=sponsor_id
+        )
         db.session.add(new_user)
         db.session.commit()
         flash("Account created! You can now log in.")
@@ -67,7 +87,7 @@ def register():
     <html>
     <head>
         <link rel="stylesheet"
-         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <title>Register</title>
     </head>
     <body class="container py-5">
@@ -78,6 +98,9 @@ def register():
             </div>
             <div class="mb-3">
                 <input name="password" type="password" class="form-control" placeholder="Password">
+            </div>
+            <div class="mb-3">
+                <input name="referral_code" class="form-control" placeholder="Referral Code (optional)">
             </div>
             <button type="submit" class="btn btn-success">Register</button>
         </form>
