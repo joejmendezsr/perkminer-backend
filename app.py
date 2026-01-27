@@ -85,6 +85,10 @@ def send_sms(to, body):
     except Exception as e:
         print("SMS SEND ERROR:", e)
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -130,12 +134,10 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
-        # Send confirmation email with link
         activate_url = url_for("activate", user_id=new_user.id, _external=True)
         html_body = f"""<p>Welcome to PerkMiner!</p>
             <p>Click <a href="{activate_url}">here</a> to confirm your email.</p>"""
         send_email(new_user.email, "Activate your PerkMiner account", html_body)
-        # Send phone code SMS
         send_sms(new_user.phone, f"Your PerkMiner phone confirmation code is: {phone_code}")
         flash("Check your email and SMS for confirmation instructions.")
         return redirect(url_for("login"))
@@ -451,6 +453,4 @@ def logout():
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
