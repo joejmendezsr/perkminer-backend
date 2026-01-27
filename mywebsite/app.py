@@ -152,97 +152,87 @@ def dashboard():
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     rewards_table = ""
     invoice_amount = None
-    results = []
+
     if request.method == "POST":
         try:
             invoice_amount = float(request.form.get("invoice_amount", 0))
+            downline_level = int(request.form.get("downline_level", 2))
             if not (0 < invoice_amount <= 2500):
                 flash("Amount must be between 0 and 2500.")
+            elif downline_level not in [2, 3, 4, 5]:
+                flash("Invalid downline level.")
             else:
-                # Referral rewards logic
-                percentages = [0.02, 0.0025, 0.0025, 0.0025, 0.02]
-                caps = [50, 6.25, 6.25, 6.25, 50]
-                upline = [current_user]
-                u = current_user
-                for _ in range(4):
-                    if not u.sponsor_id:
-                        break
-                    sponsor = User.query.get(u.sponsor_id)
-                    if not sponsor:
-                        break
-                    upline.append(sponsor)
-                    u = sponsor
-                while len(upline) < 5:
-                    upline.append(None)
-                labels = [
-                    "You (cashback)",
-                    "Level 2 Sponsor",
-                    "Level 3 Sponsor",
-                    "Level 4 Sponsor",
-                    "Level 5 Sponsor"
-                ]
-                rewards_table += "<h5 class='mt-4 mb-2'>Reward breakdown for you and your uplines (5 levels):</h5>"
-                rewards_table += "<table class='table table-bordered'><tr><th>Level</th><th>User</th><th>Reward</th></tr>"
-                for idx, label in enumerate(labels):
-                    name = upline[idx].username if upline[idx] else "(none)"
-                    reward = min(invoice_amount * percentages[idx], caps[idx]) if upline[idx] else 0
-                    rewards_table += f"<tr><td>{label}</td><td>{name}</td><td>${reward:.2f}</td></tr>"
-                rewards_table += "</table>"
+                if downline_level in [2, 3, 4]:
+                    rate = 0.0025
+                    cap = 6.25
+                elif downline_level == 5:
+                    rate = 0.02
+                    cap = 50
+                reward = min(invoice_amount * rate, cap)
+                rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
+                rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
         except Exception:
             flash("Please enter a valid number for the invoice amount.")
 
     return render_template_string("""
     <!DOCTYPE html>
-<html>
-<head>
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-<title>Dashboard</title>
-</head>
-<body class="container py-5">
-<div class="d-flex justify-content-between align-items-center mb-4">
-<h2>Welcome, {{ username }}!</h2>
-<a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
-</div>
-<div class="card p-4 mb-4">
-<h4>Your Referral Code:</h4>
-<code>{{ referral_code }}</code>
-</div>
-{% if sponsor %}
-<div class="card p-4 mb-4">
-<h4>Your Sponsor:</h4>
-<p class="mb-0">{{ sponsor }}</p>
-</div>
-{% endif %}
-
-<div class="card p-4 mb-4">
-<h4>Enter Invoice Amount</h4>
-<form method="post" class="row g-3">
-<div class="col-auto">
-<input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
-placeholder="e.g. 500" required>
-</div>
-<div class="col-auto">
-<button class="btn btn-primary" type="submit">Calculate Rewards</button>
-</div>
-</form>
-{{ rewards_table | safe }}
-</div>
-<div class="card p-4">
-<h4>This is your dashboard. 🎉</h4>
-<p class="mb-0">Congrats on building a secure, styled Python web app!</p>
-</div>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="alert alert-warning mt-3">
-{% for message in messages %}
-{{ message }}<br>
-{% endfor %}
-</div>
-{% endif %}
-{% endwith %}
-</body>
-</html>
+    <html>
+    <head>
+        <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Dashboard</title>
+    </head>
+    <body class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome, {{ username }}!</h2>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+        <div class="card p-4 mb-4">
+            <h4>Your Referral Code:</h4>
+            <code>{{ referral_code }}</code>
+        </div>
+        {% if sponsor %}
+        <div class="card p-4 mb-4">
+            <h4>Your Sponsor:</h4>
+            <p class="mb-0">{{ sponsor }}</p>
+        </div>
+        {% endif %}
+        <div class="card p-4 mb-4">
+            <h4>Estimate Your Reward From Downline Purchases</h4>
+            <form method="post" class="row g-3 mb-3">
+                <div class="col-auto">
+                    <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
+                        placeholder="Purchase Amount (e.g. 500)" required>
+                </div>
+                <div class="col-auto">
+                    <select name="downline_level" class="form-select" required>
+                        <option value="2">Level 2 (your direct referral)</option>
+                        <option value="3">Level 3 (your referral's referral)</option>
+                        <option value="4">Level 4 (third downline)</option>
+                        <option value="5">Level 5 (fourth downline)</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Calculate My Reward</button>
+                </div>
+            </form>
+            {{ rewards_table | safe }}
+        </div>
+        <div class="card p-4">
+            <h4>This is your dashboard. 🎉</h4>
+            <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+        </div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-warning mt-3">
+              {% for message in messages %}
+                {{ message }}<br>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+    </body>
+    </html>
     """, username=current_user.username,
          referral_code=current_user.referral_code,
          sponsor=sponsor.username if sponsor else None,
