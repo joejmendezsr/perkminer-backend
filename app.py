@@ -3,35 +3,26 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
-from twilio.rest import Client
-import os, re, random, string
+import os, re, random, string, time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-app.config['MAIL_SERVER']   = os.environ.get('MAIL_SERVER',   'smtp.gmail.com')
+app.config['MAIL_SERVER']   = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT']     = int(os.environ.get('MAIL_PORT', 465))
 app.config['MAIL_USE_SSL']  = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 
 db = SQLAlchemy(app)
+with app.app_context():
+    db.create_all()
 bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 
-twilio_sid   = os.environ.get('TWILIO_SID')
-twilio_token = os.environ.get('TWILIO_TOKEN')
-twilio_from  = os.environ.get('TWILIO_FROM')
-twilio_client = Client(twilio_sid, twilio_token) if twilio_sid and twilio_token else None
-
-# NEW: Database initialization route for Render
-@app.route("/init_db")
-def init_db():
-    db.create_all()
-    return "Database tables created!"
+SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -41,24 +32,18 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
-    phone = db.Column(db.String(20), unique=True, nullable=False)
     referral_code = db.Column(db.String(32), unique=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     email_confirmed = db.Column(db.Boolean, default=False)
-    phone_confirmed = db.Column(db.Boolean, default=False)
-    phone_code = db.Column(db.String(8))
+    email_code = db.Column(db.String(16)) # single-use verification code
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
-PHONE_REGEX = r'^\+?\d{10,15}$'
 
 def valid_email(email):
     return re.match(EMAIL_REGEX, email or "")
 
-def valid_phone(phone):
-    return re.match(PHONE_REGEX, phone or "")
-
-def random_phone_code():
-    return ''.join(random.choices(string.digits, k=6))
+def random_email_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
 def random_referral_code(email):
     base_code = "REF" + (email.split("@")[0].replace(".", "")[:12])
@@ -76,40 +61,25 @@ def send_email(to, subject, html_body):
     except Exception as e:
         print("EMAIL SEND ERROR:", e)
 
-def send_sms(to, body):
-    try:
-        if twilio_client and twilio_from:
-            twilio_client.messages.create(
-                body=body,
-                from_=twilio_from,
-                to=to
-            )
-        else:
-            print("[TWILIO WARNING] Twilio not configured. Skipping SMS send.")
-    except Exception as e:
-        print("SMS SEND ERROR:", e)
+@app.route("/init_db")
+def init_db():
+    db.create_all()
+    return "Database tables created!"
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
-        phone = request.form.get("phone", "").strip()
         password = request.form.get("password")
-        referral_code = request.form.get("referral_code")
-        if not (email and password and phone):
-            flash("All fields are required.")
+        referral_code = request.form.get("referral_code", "").strip()
+        if not (email and password):
+            flash("Email and password are required.")
             return redirect(url_for("register"))
         if not valid_email(email):
             flash("Invalid email format.")
             return redirect(url_for("register"))
-        if not valid_phone(phone):
-            flash("Invalid phone number. Use +1234567890 or 10-15 digits.")
-            return redirect(url_for("register"))
         if User.query.filter_by(email=email).first():
             flash("Email already registered.")
-            return redirect(url_for("register"))
-        if User.query.filter_by(phone=phone).first():
-            flash("Phone number already registered.")
             return redirect(url_for("register"))
         sponsor_id = None
         if referral_code:
@@ -121,44 +91,36 @@ def register():
                 return redirect(url_for("register"))
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         user_ref_code = random_referral_code(email)
-        phone_code = random_phone_code()
+        email_code = random_email_code()
         new_user = User(
             email=email,
             password=hashed_pw,
-            phone=phone,
             referral_code=user_ref_code,
             sponsor_id=sponsor_id,
             email_confirmed=False,
-            phone_confirmed=False,
-            phone_code=phone_code,
+            email_code=email_code
         )
         db.session.add(new_user)
         db.session.commit()
-        activate_url = url_for("activate", user_id=new_user.id, _external=True)
-        html_body = f"""<p>Welcome to PerkMiner!</p>
-            <p>Click <a href="{activate_url}">here</a> to confirm your email.</p>"""
-        send_email(new_user.email, "Activate your PerkMiner account", html_body)
-        send_sms(new_user.phone, f"Your PerkMiner phone confirmation code is: {phone_code}")
-        flash("Check your email and SMS for confirmation instructions.")
-        return redirect(url_for("login"))
+        send_verification_email(new_user)
+        session['pending_email'] = email
+        session['last_verification_sent'] = time.time()
+        return redirect(url_for("verify_email"))
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <title>Register</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     </head>
     <body class="container py-5">
-        <h2 class="mb-4">Register</h2>
+        <h2>Register</h2>
         <form method="post" class="mb-3">
             <div class="mb-3">
-                <input name="email" required class="form-control" placeholder="Email (this is your username)">
+                <input name="email" class="form-control" required placeholder="Email (username)">
             </div>
             <div class="mb-3">
-                <input name="phone" required class="form-control" placeholder="Phone (with country code)">
-            </div>
-            <div class="mb-3">
-                <input name="password" required type="password" class="form-control" placeholder="Password">
+                <input name="password" type="password" class="form-control" required placeholder="Password">
             </div>
             <div class="mb-3">
                 <input name="referral_code" class="form-control" placeholder="Referral Code (optional)">
@@ -167,78 +129,124 @@ def register():
         </form>
         <a href="{{ url_for('login') }}">Already have an account? Login</a>
         {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="alert alert-warning mt-3">
-                {% for message in messages %}
-                {{ message }}<br>
-                {% endfor %}
-                </div>
-            {% endif %}
+           {% if messages %}
+             <div class="alert alert-warning mt-3">
+               {% for message in messages %}{{ message }}<br>{% endfor %}
+             </div>
+           {% endif %}
         {% endwith %}
     </body>
     </html>
     """)
 
-@app.route("/activate/<int:user_id>")
-def activate(user_id):
-    user = User.query.get(user_id)
-    if not user:
-        flash("Unknown account.")
-        return redirect(url_for("login"))
-    user.email_confirmed = True
-    db.session.commit()
-    flash("Email confirmed. Please confirm your phone.")
-    session["user_for_phone"] = user.id
-    return redirect(url_for("confirm_phone"))
+def send_verification_email(user):
+    code = user.email_code
+    verify_url = url_for("activate", code=code, _external=True)
+    html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your email, or use code: <b>{code}</b></p>"""
+    send_email(
+        user.email,
+        "Confirm your PerkMiner email!",
+        html_body
+    )
 
-@app.route("/confirm_phone", methods=["GET", "POST"])
-def confirm_phone():
-    user_id = session.get("user_for_phone")
-    user = User.query.get(user_id) if user_id else None
+@app.route("/verify_email", methods=["GET", "POST"])
+def verify_email():
+    pending_email = session.get('pending_email')
+    user = User.query.filter_by(email=pending_email).first() if pending_email else None
+    can_resend = False
+    wait_seconds = 0
     if not user:
-        flash("Session expired or unknown account.")
+        flash("No registration found to verify.")
+        return redirect(url_for("register"))
+    if user.email_confirmed:
+        flash("Email is already confirmed, please log in.")
         return redirect(url_for("login"))
+    now = time.time()
+    last_sent = session.get('last_verification_sent', 0)
+    if now - last_sent >= 30:
+        can_resend = True
+    else:
+        wait_seconds = int(30 - (now - last_sent))
+
+    # Check for code entry
     if request.method == "POST":
-        code = request.form.get("code", "")
-        if code == user.phone_code:
-            user.phone_confirmed = True
-            user.phone_code = None
+        submitted_code = request.form.get("code", "").strip().upper()
+        if submitted_code == user.email_code:
+            user.email_confirmed = True
             db.session.commit()
-            flash("Phone confirmed. You can now log in.")
-            session.pop("user_for_phone", None)
+            flash("Email confirmed! You can now log in.")
+            session.pop("pending_email", None)
             return redirect(url_for("login"))
         else:
-            flash("Invalid code. Please try again.")
+            flash("Incorrect code.")
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
+        <title>Verify Email</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <title>Confirm Phone</title>
+        <script>
+            function enableResend() {
+                document.getElementById('resend-btn').disabled = false;
+                document.getElementById('wait-msg').style.display = 'none';
+            }
+            window.onload = function() {
+                {% if not can_resend %}
+                    setTimeout(enableResend, {{ wait_seconds * 1000 }});
+                {% endif %}
+            }
+        </script>
     </head>
     <body class="container py-5">
-        <h2>Confirm Your Phone</h2>
+        <h2>Check your email for a verification link or code</h2>
         <form method="post" class="mb-3">
-            <div class="mb-3">
-                <input name="code" class="form-control" placeholder="Enter the code sent to your phone" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Confirm</button>
+            <input name="code" class="form-control mb-2" placeholder="Enter verification code">
+            <button type="submit" class="btn btn-primary">Verify</button>
+        </form>
+        <form method="post" action="{{ url_for('resend_verification') }}">
+            <button id="resend-btn" class="btn btn-link" type="submit" {% if not can_resend %}disabled{% endif %}>Resend Code</button>
+            {% if not can_resend %}
+                <span id="wait-msg" style="color:gray;">You can resend in {{ wait_seconds }}s</span>
+            {% endif %}
         </form>
         <div class="alert alert-info mt-2">
-            You'll receive the code via SMS.
+            If you don't see the message, check your Spam or Junk folder.
         </div>
         {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="alert alert-warning mt-3">
-                {% for message in messages %}
-                {{ message }}<br>
-                {% endfor %}
-                </div>
-            {% endif %}
+           {% if messages %}
+             <div class="alert alert-warning mt-3">
+               {% for message in messages %}{{ message }}<br>{% endfor %}
+             </div>
+           {% endif %}
         {% endwith %}
     </body>
     </html>
-    """)
+    """, can_resend=can_resend, wait_seconds=wait_seconds)
+
+@app.route("/resend_verification", methods=["POST"])
+def resend_verification():
+    pending_email = session.get('pending_email')
+    user = User.query.filter_by(email=pending_email).first() if pending_email else None
+    if user and not user.email_confirmed:
+        user.email_code = random_email_code()
+        db.session.commit()
+        send_verification_email(user)
+        session['last_verification_sent'] = time.time()
+        flash("Verification email resent.")
+    return redirect(url_for("verify_email"))
+
+@app.route("/activate/<code>")
+def activate(code):
+    user = User.query.filter_by(email_code=code).first()
+    if user:
+        user.email_confirmed = True
+        db.session.commit()
+        flash("Email confirmed! You can now log in.")
+        session.pop('pending_email', None)
+        return redirect(url_for("login"))
+    else:
+        flash("Invalid or expired code.")
+        return redirect(url_for("register"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -250,8 +258,8 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             if not user.email_confirmed:
                 message = "Please confirm your email first (check your inbox)."
-            elif not user.phone_confirmed:
-                message = "Please confirm your phone."
+                session['pending_email'] = email
+                return redirect(url_for("verify_email"))
             else:
                 login_user(user)
                 return redirect(url_for("dashboard"))
@@ -311,8 +319,8 @@ def home():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
-    if not (current_user.email_confirmed and current_user.phone_confirmed):
-        flash("You must confirm your email and phone to access the dashboard.")
+    if not current_user.email_confirmed:
+        flash("You must confirm your email to access the dashboard.")
         return redirect(url_for("login"))
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     rewards_table = ""
