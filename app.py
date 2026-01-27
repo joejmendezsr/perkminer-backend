@@ -20,3 +20,7 @@ login_manager = LoginManager(app)
 def hello():
     return "Hello, Joe!"
 
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
