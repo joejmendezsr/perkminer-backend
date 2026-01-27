@@ -19,6 +19,8 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    referral_code = db.Column(db.String(20), unique=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 @app.route("/")
 def home():
     return render_template_string("""
