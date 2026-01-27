@@ -146,10 +146,47 @@ def login():
     </html>
     """, message=message)
 
-@app.route("/dashboard")
+@app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
+    rewards_table = ""
+    invoice_amount = None
+    results = []
+    if request.method == "POST":
+        try:
+            invoice_amount = float(request.form.get("invoice_amount", 0))
+            if not (0 < invoice_amount <= 2500):
+                flash("Amount must be between 0 and 2500.")
+            else:
+                # Referral system logic
+                percentages = [0.02, 0.005, 0.005, 0.005, 0.02]
+                caps = [50, 10, 10, 10, 50]
+                upline = []
+                u = current_user
+                for _ in range(5):
+                    if not u.sponsor_id:
+                        break
+                    sponsor = User.query.get(u.sponsor_id)
+                    if not sponsor:
+                        break
+                    upline.append(sponsor)
+                    u = sponsor
+                # Fill up to 5 levels, even if there are missing sponsors
+                while len(upline) < 5:
+                    upline.append(None)
+                for i in range(5):
+                    name = upline[i].username if upline[i] else "(none)"
+                    reward = min(invoice_amount * percentages[i], caps[i]) if upline[i] else 0
+                    results.append((name, reward))
+                rewards_table += "<h5 class='mt-4 mb-2'>Reward breakdown for your uplines (5 levels):</h5>"
+                rewards_table += "<table class='table table-bordered'><tr><th>Level</th><th>Sponsor</th><th>Reward</th></tr>"
+                for idx, (name, reward) in enumerate(results):
+                    rewards_table += f"<tr><td>{idx+1}</td><td>{name}</td><td>${reward:.2f}</td></tr>"
+                rewards_table += "</table>"
+        except Exception:
+            flash("Please enter a valid number for the invoice amount.")
+
     return render_template_string("""
     <!DOCTYPE html>
     <html>
@@ -173,13 +210,39 @@ def dashboard():
             <p class="mb-0">{{ sponsor }}</p>
         </div>
         {% endif %}
+
+        <div class="card p-4 mb-4">
+            <h4>Enter Invoice Amount</h4>
+            <form method="post" class="row g-3">
+                <div class="col-auto">
+                    <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
+                        placeholder="e.g. 500" required>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Calculate Rewards</button>
+                </div>
+            </form>
+            {{ rewards_table | safe }}
+        </div>
         <div class="card p-4">
             <h4>This is your dashboard. 🎉</h4>
             <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
         </div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-warning mt-3">
+              {% for message in messages %}
+                {{ message }}<br>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
     </body>
     </html>
-    """, username=current_user.username, referral_code=current_user.referral_code, sponsor=sponsor.username if sponsor else None)
+    """, username=current_user.username,
+         referral_code=current_user.referral_code,
+         sponsor=sponsor.username if sponsor else None,
+         rewards_table=rewards_table)
 @app.route("/logout")
 @login_required
 def logout():
