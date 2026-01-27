@@ -22,12 +22,11 @@ bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 
-SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# ----------------- Contractor/User Model (regular users) ----------------
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
@@ -35,7 +34,18 @@ class User(db.Model, UserMixin):
     referral_code = db.Column(db.String(32), unique=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     email_confirmed = db.Column(db.Boolean, default=False)
-    email_code = db.Column(db.String(16)) # single-use verification code
+    email_code = db.Column(db.String(16))
+
+# ----------------- Business Model -----------------
+class Business(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_name = db.Column(db.String(100), unique=True, nullable=False)
+    business_email = db.Column(db.String(200), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+    referral_code = db.Column(db.String(32), unique=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('business.id'))
+    email_confirmed = db.Column(db.Boolean, default=False)
+    email_code = db.Column(db.String(16))
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
 
@@ -54,6 +64,15 @@ def random_referral_code(email):
         counter += 1
     return code
 
+def random_business_code(business_name):
+    base_code = "BIZ" + (business_name.replace(" ", "")[:12])
+    code = base_code
+    counter = 1
+    while Business.query.filter_by(referral_code=code).first():
+        code = f"{base_code}{counter}"
+        counter += 1
+    return code
+
 def send_email(to, subject, html_body):
     msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
     try:
@@ -66,6 +85,36 @@ def init_db():
     db.create_all()
     return "Database tables created!"
 
+# ----------------- HOMEPAGE -----------------
+@app.route("/")
+def home():
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>PerkMiner Homepage</title>
+    </head>
+    <body class="container py-5">
+        <nav class="navbar navbar-expand navbar-light bg-light mb-4">
+            <a class="navbar-brand" href="/">PerkMiner</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                <a class="nav-link" href="{{ url_for('business_register') }}">Advertise with Us</a>
+            </div>
+        </nav>
+        <div class="jumbotron">
+            <h1 class="display-4">Welcome to PerkMiner!</h1>
+            <p class="lead">Your secure, custom site is now live.</p>
+            <hr class="my-4">
+            <p>Build more features, connect your domain, and make it yours.</p>
+        </div>
+    </body>
+    </html>
+    """)
+
+# ----------------- Contractor/User Registration & Verification -----------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -102,7 +151,7 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
-        send_verification_email(new_user)
+        send_user_verification_email(new_user)
         session['pending_email'] = email
         session['last_verification_sent'] = time.time()
         return redirect(url_for("verify_email"))
@@ -139,7 +188,7 @@ def register():
     </html>
     """)
 
-def send_verification_email(user):
+def send_user_verification_email(user):
     code = user.email_code
     verify_url = url_for("activate", code=code, _external=True)
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your email, or use code: <b>{code}</b></p>"""
@@ -167,8 +216,6 @@ def verify_email():
         can_resend = True
     else:
         wait_seconds = int(30 - (now - last_sent))
-
-    # Check for code entry
     if request.method == "POST":
         submitted_code = request.form.get("code", "").strip().upper()
         if submitted_code == user.email_code:
@@ -230,7 +277,7 @@ def resend_verification():
     if user and not user.email_confirmed:
         user.email_code = random_email_code()
         db.session.commit()
-        send_verification_email(user)
+        send_user_verification_email(user)
         session['last_verification_sent'] = time.time()
         flash("Verification email resent.")
     return redirect(url_for("verify_email"))
@@ -288,33 +335,6 @@ def login():
     </body>
     </html>
     """, message=message)
-
-@app.route("/")
-def home():
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <title>PerkMiner Homepage</title>
-    </head>
-    <body class="container py-5">
-        <nav class="navbar navbar-expand navbar-light bg-light mb-4">
-            <a class="navbar-brand" href="/">PerkMiner</a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-            </div>
-        </nav>
-        <div class="jumbotron">
-            <h1 class="display-4">Welcome to PerkMiner!</h1>
-            <p class="lead">Your secure, custom site is now live.</p>
-            <hr class="my-4">
-            <p>Build more features, connect your domain, and make it yours.</p>
-        </div>
-    </body>
-    </html>
-    """)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
@@ -374,7 +394,7 @@ def dashboard():
         {% if sponsor %}
         <div class="card p-4 mb-4">
             <h4>Your Sponsor:</h4>
-            <p class="mb-0">{{ sponsor }}</p>
+            <p class="mb-0">{{ sponsor.email }}</p>
         </div>
         {% endif %}
         <div class="card p-4 mb-4">
@@ -459,6 +479,14 @@ def dashboard():
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
+# --------- BUSINESS SECTION: Paste full business block from previous message here (registration, verification, dashboard, etc) ---------
+
+# For brevity in this message, you can copy the every-business route from my previous long "business user section" post and paste them here, starting with:
+# @app.route("/business/register", methods=["GET", "POST"])
+# def business_register():
+#   ... all business routes follow ...
+# @app.route("/business/login"...), @app.route("/business/verify_email"...), etc
 
 if __name__ == "__main__":
     app.run(debug=True)
