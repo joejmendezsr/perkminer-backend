@@ -192,7 +192,57 @@ def dashboard():
             flash("Please enter a valid number for the invoice amount.")
 
     return render_template_string("""
-    ... (rest of your HTML as before) ...
+    <!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<title>Dashboard</title>
+</head>
+<body class="container py-5">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2>Welcome, {{ username }}!</h2>
+<a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+</div>
+<div class="card p-4 mb-4">
+<h4>Your Referral Code:</h4>
+<code>{{ referral_code }}</code>
+</div>
+{% if sponsor %}
+<div class="card p-4 mb-4">
+<h4>Your Sponsor:</h4>
+<p class="mb-0">{{ sponsor }}</p>
+</div>
+{% endif %}
+
+<div class="card p-4 mb-4">
+<h4>Enter Invoice Amount</h4>
+<form method="post" class="row g-3">
+<div class="col-auto">
+<input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
+placeholder="e.g. 500" required>
+</div>
+<div class="col-auto">
+<button class="btn btn-primary" type="submit">Calculate Rewards</button>
+</div>
+</form>
+{{ rewards_table | safe }}
+</div>
+<div class="card p-4">
+<h4>This is your dashboard. 🎉</h4>
+<p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+</div>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="alert alert-warning mt-3">
+{% for message in messages %}
+{{ message }}<br>
+{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+</body>
+</html>
     """, username=current_user.username,
          referral_code=current_user.referral_code,
          sponsor=sponsor.username if sponsor else None,
