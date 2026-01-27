@@ -2,15 +2,32 @@ from flask import Flask, request, redirect, url_for, render_template_string, fla
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-import re, random, string
+from flask_mail import Mail, Message
+from twilio.rest import Client
+import os, re, random, string
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'replace-this-with-a-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Email config for Flask-Mail (Gmail example, works on Render)
+app.config['MAIL_SERVER']   = os.environ.get('MAIL_SERVER',   'smtp.gmail.com')
+app.config['MAIL_PORT']     = int(os.environ.get('MAIL_PORT', 465))
+app.config['MAIL_USE_SSL']  = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+mail = Mail(app)
 login_manager = LoginManager(app)
+
+# Twilio config (from Render env vars)
+twilio_sid   = os.environ.get('TWILIO_SID')
+twilio_token = os.environ.get('TWILIO_TOKEN')
+twilio_from  = os.environ.get('TWILIO_FROM')
+twilio_client = Client(twilio_sid, twilio_token) if twilio_sid and twilio_token else None
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -48,6 +65,26 @@ def random_referral_code(email):
         counter += 1
     return code
 
+def send_email(to, subject, html_body):
+    msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print("EMAIL SEND ERROR:", e)
+
+def send_sms(to, body):
+    try:
+        if twilio_client and twilio_from:
+            twilio_client.messages.create(
+                body=body,
+                from_=twilio_from,
+                to=to
+            )
+        else:
+            print("[TWILIO WARNING] Twilio not configured. Skipping SMS send.")
+    except Exception as e:
+        print("SMS SEND ERROR:", e)
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -70,7 +107,6 @@ def register():
         if User.query.filter_by(phone=phone).first():
             flash("Phone number already registered.")
             return redirect(url_for("register"))
-
         sponsor_id = None
         if referral_code:
             sponsor = User.query.filter_by(referral_code=referral_code).first()
@@ -79,11 +115,9 @@ def register():
             else:
                 flash("Invalid referral code.")
                 return redirect(url_for("register"))
-
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         user_ref_code = random_referral_code(email)
         phone_code = random_phone_code()
-
         new_user = User(
             email=email,
             password=hashed_pw,
@@ -96,10 +130,13 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
-
-        print(f"[Email to {email}] Visit /activate/{new_user.id} to confirm your email.")
-        print(f"[SMS to {phone}] Your phone confirmation code is: {phone_code}")
-
+        # Send confirmation email with link
+        activate_url = url_for("activate", user_id=new_user.id, _external=True)
+        html_body = f"""<p>Welcome to PerkMiner!</p>
+            <p>Click <a href="{activate_url}">here</a> to confirm your email.</p>"""
+        send_email(new_user.email, "Activate your PerkMiner account", html_body)
+        # Send phone code SMS
+        send_sms(new_user.phone, f"Your PerkMiner phone confirmation code is: {phone_code}")
         flash("Check your email and SMS for confirmation instructions.")
         return redirect(url_for("login"))
     return render_template_string("""
@@ -186,7 +223,7 @@ def confirm_phone():
             <button type="submit" class="btn btn-primary">Confirm</button>
         </form>
         <div class="alert alert-info mt-2">
-            Don't see your code? (In demo mode: code is visible in terminal)
+            You'll receive the code via SMS.
         </div>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -275,10 +312,8 @@ def dashboard():
     if not (current_user.email_confirmed and current_user.phone_confirmed):
         flash("You must confirm your email and phone to access the dashboard.")
         return redirect(url_for("login"))
-
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     rewards_table = ""
-
     if request.method == "POST":
         try:
             invoice_amount = float(request.form.get("invoice_amount", 0))
@@ -299,7 +334,6 @@ def dashboard():
                 rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
         except Exception:
             flash("Please enter a valid number for the invoice amount.")
-
     level2 = User.query.filter_by(sponsor_id=current_user.id).all()
     level3, level4, level5 = [], [], []
     for u2 in level2:
@@ -311,7 +345,6 @@ def dashboard():
             for u4 in l4s:
                 l5s = User.query.filter_by(sponsor_id=u4.id).all()
                 level5.extend(l5s)
-
     return render_template_string("""
     <!DOCTYPE html>
     <html>
