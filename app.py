@@ -149,6 +149,7 @@ def login():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     return render_template_string("""
     <!DOCTYPE html>
     <html>
@@ -162,13 +163,23 @@ def dashboard():
             <h2>Welcome, {{ username }}!</h2>
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
         </div>
+        <div class="card p-4 mb-4">
+            <h4>Your Referral Code:</h4>
+            <code>{{ referral_code }}</code>
+        </div>
+        {% if sponsor %}
+        <div class="card p-4 mb-4">
+            <h4>Your Sponsor:</h4>
+            <p class="mb-0">{{ sponsor }}</p>
+        </div>
+        {% endif %}
         <div class="card p-4">
             <h4>This is your dashboard. 🎉</h4>
             <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
         </div>
     </body>
     </html>
-    """, username=current_user.username)
+    """, username=current_user.username, referral_code=current_user.referral_code, sponsor=sponsor.username if sponsor else None)
 @app.route("/logout")
 @login_required
 def logout():
