@@ -5,3 +5,4 @@ Flask-Bcrypt
 Flask-Mail
 twilio
 gunicorn
+psycopg2-binary
