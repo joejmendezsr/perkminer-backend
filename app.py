@@ -26,7 +26,7 @@ login_manager = LoginManager(app)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# USER MODEL
+# Contractor (User) Model
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
@@ -36,7 +36,7 @@ class User(db.Model, UserMixin):
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
 
-# BUSINESS MODEL
+# Business Model
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(100), unique=True, nullable=False)
@@ -85,7 +85,6 @@ def init_db():
     db.create_all()
     return "Database tables created!"
 
-# HOMEPAGE WITH "ADVERTISE WITH US"
 @app.route("/")
 def home():
     return render_template_string("""
@@ -114,129 +113,124 @@ def home():
     </html>
     """)
 
-# USER REGISTRATION/VERIFICATION ROUTES (see previous message for full implementation)
-# ... rest of user routes go here...
-
-# For brevity, paste your existing user registration, verify, resend, activate, login, dashboard, logout routes here.
-
-# ---------- BUSINESS REGISTRATION ----------
-@app.route("/business/register", methods=["GET", "POST"])
-def business_register():
+# --------- CONTRACTOR/USER ROUTES ------------
+@app.route("/register", methods=["GET", "POST"])
+def register():
     if request.method == "POST":
-        business_name = request.form.get("business_name", "").strip()
-        business_email = request.form.get("business_email", "").strip().lower()
+        email = request.form.get("email", "").strip().lower()
         password = request.form.get("password")
         referral_code = request.form.get("referral_code", "").strip()
-        if not (business_name and business_email and password):
-            flash("All fields are required.")
-            return redirect(url_for("business_register"))
-        if not valid_email(business_email):
+        if not (email and password):
+            flash("Email and password are required.")
+            return redirect(url_for("register"))
+        if not valid_email(email):
             flash("Invalid email format.")
-            return redirect(url_for("business_register"))
-        if Business.query.filter_by(business_email=business_email).first():
+            return redirect(url_for("register"))
+        if User.query.filter_by(email=email).first():
             flash("Email already registered.")
-            return redirect(url_for("business_register"))
-        if Business.query.filter_by(business_name=business_name).first():
-            flash("Business name already registered.")
-            return redirect(url_for("business_register"))
+            return redirect(url_for("register"))
         sponsor_id = None
         if referral_code:
-            sponsor = Business.query.filter_by(referral_code=referral_code).first()
+            sponsor = User.query.filter_by(referral_code=referral_code).first()
             if sponsor:
                 sponsor_id = sponsor.id
             else:
                 flash("Invalid referral code.")
-                return redirect(url_for("business_register"))
+                return redirect(url_for("register"))
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
-        biz_ref_code = random_business_code(business_name)
+        user_ref_code = random_referral_code(email)
         email_code = random_email_code()
-        new_biz = Business(
-            business_name=business_name,
-            business_email=business_email,
+        new_user = User(
+            email=email,
             password=hashed_pw,
-            referral_code=biz_ref_code,
+            referral_code=user_ref_code,
             sponsor_id=sponsor_id,
             email_confirmed=False,
-            email_code=email_code,
+            email_code=email_code
         )
-        db.session.add(new_biz)
+        db.session.add(new_user)
         db.session.commit()
-        send_business_verification_email(new_biz)
-        session['pending_business_email'] = business_email
-        session['last_business_verification_sent'] = time.time()
-        return redirect(url_for("business_verify_email"))
+        send_user_verification_email(new_user)
+        session['pending_email'] = email
+        session['last_verification_sent'] = time.time()
+        return redirect(url_for("verify_email"))
     return render_template_string("""
     <!DOCTYPE html>
     <html>
-    <head><title>Business Register</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"></head>
+    <head>
+        <title>Register</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    </head>
     <body class="container py-5">
-    <h2>Business Registration</h2>
-    <form method="post" class="mb-3">
-        <div class="mb-3">
-            <input name="business_name" class="form-control" required placeholder="Business Name (will be visible)">
-        </div>
-        <div class="mb-3">
-            <input name="business_email" class="form-control" required placeholder="Business Email">
-        </div>
-        <div class="mb-3">
-            <input name="password" type="password" class="form-control" required placeholder="Password">
-        </div>
-        <div class="mb-3">
-            <input name="referral_code" class="form-control" placeholder="Referral Code (optional)">
-        </div>
-        <button type="submit" class="btn btn-success">Register</button>
-    </form>
-    <a href="{{ url_for('business_login') }}">Already have a business account? Login</a>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="alert alert-warning mt-3">
-          {% for message in messages %}{{ message }}<br>{% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    </body></html>
+        <h2>Register</h2>
+        <form method="post" class="mb-3">
+            <div class="mb-3">
+                <input name="email" class="form-control" required placeholder="Email (username)">
+            </div>
+            <div class="mb-3">
+                <input name="password" type="password" class="form-control" required placeholder="Password">
+            </div>
+            <div class="mb-3">
+                <input name="referral_code" class="form-control" placeholder="Referral Code (optional)">
+            </div>
+            <button type="submit" class="btn btn-success">Register</button>
+        </form>
+        <a href="{{ url_for('login') }}">Already have an account? Login</a>
+        {% with messages = get_flashed_messages() %}
+           {% if messages %}
+             <div class="alert alert-warning mt-3">
+               {% for message in messages %}{{ message }}<br>{% endfor %}
+             </div>
+           {% endif %}
+        {% endwith %}
+    </body>
+    </html>
     """)
 
-def send_business_verification_email(biz):
-    code = biz.email_code
-    verify_url = url_for("business_activate", code=code, _external=True)
-    html_body = f"""<p>Click <a href="{verify_url}">here</a> to verify your business email, or use code: <b>{code}</b></p>"""
-    send_email(biz.business_email, "[PerkMiner] Verify your business email!", html_body)
+def send_user_verification_email(user):
+    code = user.email_code
+    verify_url = url_for("activate", code=code, _external=True)
+    html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your email, or use code: <b>{code}</b></p>"""
+    send_email(
+        user.email,
+        "Confirm your PerkMiner email!",
+        html_body
+    )
 
-@app.route("/business/verify_email", methods=["GET", "POST"])
-def business_verify_email():
-    pending_email = session.get('pending_business_email')
-    biz = Business.query.filter_by(business_email=pending_email).first() if pending_email else None
+@app.route("/verify_email", methods=["GET", "POST"])
+def verify_email():
+    pending_email = session.get('pending_email')
+    user = User.query.filter_by(email=pending_email).first() if pending_email else None
     can_resend = False
     wait_seconds = 0
-    if not biz:
+    if not user:
         flash("No registration found to verify.")
-        return redirect(url_for("business_register"))
-    if biz.email_confirmed:
+        return redirect(url_for("register"))
+    if user.email_confirmed:
         flash("Email is already confirmed, please log in.")
-        return redirect(url_for("business_login"))
+        return redirect(url_for("login"))
     now = time.time()
-    last_sent = session.get('last_business_verification_sent', 0)
+    last_sent = session.get('last_verification_sent', 0)
     if now - last_sent >= 30:
         can_resend = True
     else:
         wait_seconds = int(30 - (now - last_sent))
+
     if request.method == "POST":
         submitted_code = request.form.get("code", "").strip().upper()
-        if submitted_code == biz.email_code:
-            biz.email_confirmed = True
+        if submitted_code == user.email_code:
+            user.email_confirmed = True
             db.session.commit()
-            flash("Business email confirmed! You can now log in.")
-            session.pop("pending_business_email", None)
-            return redirect(url_for("business_login"))
+            flash("Email confirmed! You can now log in.")
+            session.pop("pending_email", None)
+            return redirect(url_for("login"))
         else:
             flash("Incorrect code.")
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Verify Business Email</title>
+        <title>Verify Email</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <script>
             function enableResend() {
@@ -251,12 +245,12 @@ def business_verify_email():
         </script>
     </head>
     <body class="container py-5">
-        <h2>Check your business email for the code or link</h2>
+        <h2>Check your email for a verification link or code</h2>
         <form method="post" class="mb-3">
             <input name="code" class="form-control mb-2" placeholder="Enter verification code">
             <button type="submit" class="btn btn-primary">Verify</button>
         </form>
-        <form method="post" action="{{ url_for('business_resend_verification') }}">
+        <form method="post" action="{{ url_for('resend_verification') }}">
             <button id="resend-btn" class="btn btn-link" type="submit" {% if not can_resend %}disabled{% endif %}>Resend Code</button>
             {% if not can_resend %}
                 <span id="wait-msg" style="color:gray;">You can resend in {{ wait_seconds }}s</span>
@@ -276,336 +270,220 @@ def business_verify_email():
     </html>
     """, can_resend=can_resend, wait_seconds=wait_seconds)
 
-@app.route("/business/resend_verification", methods=["POST"])
-def business_resend_verification():
-    pending_email = session.get('pending_business_email')
-    biz = Business.query.filter_by(business_email=pending_email).first() if pending_email else None
-    if biz and not biz.email_confirmed:
-        biz.email_code = random_email_code()
+@app.route("/resend_verification", methods=["POST"])
+def resend_verification():
+    pending_email = session.get('pending_email')
+    user = User.query.filter_by(email=pending_email).first() if pending_email else None
+    if user and not user.email_confirmed:
+        user.email_code = random_email_code()
         db.session.commit()
-        send_business_verification_email(biz)
-        session['last_business_verification_sent'] = time.time()
+        send_user_verification_email(user)
+        session['last_verification_sent'] = time.time()
         flash("Verification email resent.")
-    return redirect(url_for("business_verify_email"))
+    return redirect(url_for("verify_email"))
 
-@app.route("/business/activate/<code>")
-def business_activate(code):
-    biz = Business.query.filter_by(email_code=code).first()
-    if biz:
-        biz.email_confirmed = True
+@app.route("/activate/<code>")
+def activate(code):
+    user = User.query.filter_by(email_code=code).first()
+    if user:
+        user.email_confirmed = True
         db.session.commit()
-        flash("Email confirmed! You can now log in as a business.")
-        session.pop('pending_business_email', None)
-        return redirect(url_for("business_login"))
+        flash("Email confirmed! You can now log in.")
+        session.pop('pending_email', None)
+        return redirect(url_for("login"))
     else:
         flash("Invalid or expired code.")
-        return redirect(url_for("business_register"))
+        return redirect(url_for("register"))
 
-@app.route("/business/login", methods=["GET", "POST"])
-def business_login():
+@app.route("/login", methods=["GET", "POST"])
+def login():
     message = ""
     if request.method == "POST":
-        business_email = request.form.get("business_email", "").strip().lower()
+        email = request.form.get("email", "").strip().lower()
         password = request.form.get("password")
-        biz = Business.query.filter_by(business_email=business_email).first()
-        if biz and bcrypt.check_password_hash(biz.password, password):
-            if not biz.email_confirmed:
-                message = "Please confirm your business email first (check your inbox)."
-                session['pending_business_email'] = business_email
-                return redirect(url_for("business_verify_email"))
+        user = User.query.filter_by(email=email).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            if not user.email_confirmed:
+                message = "Please confirm your email first (check your inbox)."
+                session['pending_email'] = email
+                return redirect(url_for("verify_email"))
             else:
-                session['business_id'] = biz.id  # Use session to track "logged-in business"
-                return redirect(url_for("business_dashboard"))
+                login_user(user)
+                return redirect(url_for("dashboard"))
         else:
-            message = "Login failed. Check business email and password."
+            message = "Login failed. Check email and password."
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <title>Business Login</title>
+    <title>Login</title>
     </head>
     <body class="container py-5">
-        <h2 class="mb-4">Business Login</h2>
+        <h2 class="mb-4">Login</h2>
         <form method="post" class="mb-3">
             <div class="mb-3">
-                <input name="business_email" class="form-control" placeholder="Business Email" required>
+                <input name="email" class="form-control" placeholder="Email (username)" required>
             </div>
             <div class="mb-3">
                 <input name="password" type="password" class="form-control" placeholder="Password" required>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
-        <a href="{{ url_for('business_register') }}">Register your business</a>
         <div style='color:red;'>{{message}}</div>
+        <a href="{{ url_for('register') }}">Register here</a>
     </body>
     </html>
     """, message=message)
 
-@app.route("/business/dashboard", methods=["GET", "POST"])
-def business_dashboard():
-    biz_id = session.get('business_id')
-    biz = Business.query.get(biz_id) if biz_id else None
-    if not biz or not biz.email_confirmed:
-        flash("Please log in and confirm your business email to access the dashboard.")
-        return redirect(url_for("business_login"))
-    sponsor = Business.query.get(biz.sponsor_id) if biz.sponsor_id else None
+@app.route("/dashboard", methods=["GET", "POST"])
+@login_required
+def dashboard():
+    if not current_user.email_confirmed:
+        flash("You must confirm your email to access the dashboard.")
+        return redirect(url_for("login"))
+    sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     rewards_table = ""
-    # Demo different referral rewards for businesses
-    percentages = [0.06, 0.02, 0.01, 0.005, 0.003]  # Example: 6%, 2%, 1%, 0.5%, 0.3%
-    caps = [1000, 500, 250, 125, 75]
-    label_names = [
-        "You (Business owner)",
-        "Level 2 Referral",
-        "Level 3 Referral",
-        "Level 4 Referral",
-        "Level 5 Referral"
-    ]
     if request.method == "POST":
         try:
             invoice_amount = float(request.form.get("invoice_amount", 0))
-            if not (0 < invoice_amount <= 10000):
-                flash("Amount must be between 0 and 10,000.")
+            downline_level = int(request.form.get("downline_level", 2))
+            if not (0 < invoice_amount <= 2500):
+                flash("Amount must be between 0 and 2500.")
+            elif downline_level not in [2, 3, 4, 5]:
+                flash("Invalid downline level.")
             else:
-                current = biz
-                sponsors = [biz]
-                for _ in range(4):
-                    if current.sponsor_id:
-                        current = Business.query.get(current.sponsor_id)
-                        sponsors.append(current)
-                    else:
-                        sponsors.append(None)
-                rewards_table += "<h5 class='mt-4 mb-2'>Reward breakdown for you and your business uplines (5 levels):</h5>"
-                rewards_table += "<table class='table table-bordered'><tr><th>Level</th><th>Business</th><th>Reward</th></tr>"
-                for idx in range(5):
-                    name = sponsors[idx].business_name if sponsors[idx] else "(none)"
-                    reward = min(invoice_amount * percentages[idx], caps[idx]) if sponsors[idx] else 0
-                    rewards_table += f"<tr><td>{label_names[idx]}</td><td>{name}</td><td>${reward:.2f}</td></tr>"
-                rewards_table += "</table>"
+                if downline_level in [2, 3, 4]:
+                    rate = 0.0025
+                    cap = 6.25
+                elif downline_level == 5:
+                    rate = 0.02
+                    cap = 50
+                reward = min(invoice_amount * rate, cap)
+                rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
+                rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
         except Exception:
             flash("Please enter a valid number for the invoice amount.")
-    level2 = Business.query.filter_by(sponsor_id=biz.id).all()
+    level2 = User.query.filter_by(sponsor_id=current_user.id).all()
     level3, level4, level5 = [], [], []
-    for b2 in level2:
-        b3s = Business.query.filter_by(sponsor_id=b2.id).all()
-        level3.extend(b3s)
-        for b3 in b3s:
-            b4s = Business.query.filter_by(sponsor_id=b3.id).all()
-            level4.extend(b4s)
-            for b4 in b4s:
-                b5s = Business.query.filter_by(sponsor_id=b4.id).all()
-                level5.extend(b5s)
+    for u2 in level2:
+        l3s = User.query.filter_by(sponsor_id=u2.id).all()
+        level3.extend(l3s)
+        for u3 in l3s:
+            l4s = User.query.filter_by(sponsor_id=u3.id).all()
+            level4.extend(l4s)
+            for u4 in l4s:
+                l5s = User.query.filter_by(sponsor_id=u4.id).all()
+                level5.extend(l5s)
     return render_template_string("""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Business Dashboard</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <title>Dashboard</title>
     </head>
     <body class="container py-5">
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <h2>Welcome, {{ biz.business_name }}!</h2>
-            <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome, {{ email }}!</h2>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
         </div>
         <div class="card p-4 mb-4">
-            <h4>Your Business Referral Code:</h4>
-            <code>{{ biz.referral_code }}</code>
+            <h4>Your Referral Code:</h4>
+            <code>{{ referral_code }}</code>
         </div>
         {% if sponsor %}
         <div class="card p-4 mb-4">
             <h4>Your Sponsor:</h4>
-            <div class="mb-0">{{ sponsor.business_name }}</div>
+            <p class="mb-0">{{ sponsor }}</p>
         </div>
         {% endif %}
         <div class="card p-4 mb-4">
-            <h4>Estimate Your Reward</h4>
-            <form method="post" class="row g-3">
+            <h4>Estimate Your Reward From Downline Purchases</h4>
+            <form method="post" class="row g-3 mb-3">
                 <div class="col-auto">
-                    <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="10000" placeholder="Invoice Amount" required>
+                    <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
+                        placeholder="Purchase Amount (e.g. 500)" required>
                 </div>
                 <div class="col-auto">
-                    <button class="btn btn-primary" type="submit">Calculate Rewards</button>
+                    <select name="downline_level" class="form-select" required>
+                        <option value="2">Level 2 (your direct referral)</option>
+                        <option value="3">Level 3 (your referral's referral)</option>
+                        <option value="4">Level 4 (third downline)</option>
+                        <option value="5">Level 5 (fourth downline)</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Calculate My Reward</button>
                 </div>
             </form>
             {{ rewards_table | safe }}
         </div>
         <div class="card p-4 mb-4">
-            <h4>My Downline Businesses</h4>
-            <div><strong>Level 2:</strong>
-            {% if level2 %}
-                <ul>{% for b in level2 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
-            {% else %}None{% endif %}</div>
-            <div><strong>Level 3:</strong>
-            {% if level3 %}
-                <ul>{% for b in level3 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
-            {% else %}None{% endif %}</div>
-            <div><strong>Level 4:</strong>
-            {% if level4 %}
-                <ul>{% for b in level4 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
-            {% else %}None{% endif %}</div>
-            <div><strong>Level 5:</strong>
-            {% if level5 %}
-                <ul>{% for b in level5 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
-            {% else %}None{% endif %}</div>
+            <h4>My Downline</h4>
+            <div>
+                <strong>Level 2 (direct referrals):</strong>
+                {% if level2 %}
+                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 3:</strong>
+                {% if level3 %}
+                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 4:</strong>
+                {% if level4 %}
+                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong>Level 5:</strong>
+                {% if level5 %}
+                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
         </div>
         <div class="card p-4">
-            <h4>This is your business dashboard. 🎉</h4>
-            <p class="mb-0">Congrats on building a secure, styled business rewards web app!</p>
+            <h4>This is your dashboard. 🎉</h4>
+            <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
         </div>
         {% with messages = get_flashed_messages() %}
-           {% if messages %}
-             <div class="alert alert-warning mt-3">
-               {% for message in messages %}{{ message }}<br>{% endfor %}
-             </div>
-           {% endif %}
-        {% endwith %}
-    </body></html>
-    """, biz=biz, sponsor=sponsor, rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5)
-
-@app.route("/business/logout")
-def business_logout():
-    session.pop('business_id', None)
-    flash("Logged out as business.")
-    return redirect(url_for("business_login"))
-
-@app.route("/business/activate/<code>")
-def business_activate(code):
-    biz = Business.query.filter_by(email_code=code).first()
-    if biz:
-        biz.email_confirmed = True
-        db.session.commit()
-        flash("Email confirmed! You can now log in as a business.")
-        session.pop('pending_business_email', None)
-        return redirect(url_for("business_login"))
-    else:
-        flash("Invalid or expired code.")
-        return redirect(url_for("business_register"))
-
-# Don't forget to add business login and email verify routes from above sections.
-@app.route("/business/login", methods=["GET", "POST"])
-def business_login():
-    message = ""
-    if request.method == "POST":
-        business_email = request.form.get("business_email", "").strip().lower()
-        password = request.form.get("password")
-        biz = Business.query.filter_by(business_email=business_email).first()
-        if biz and bcrypt.check_password_hash(biz.password, password):
-            if not biz.email_confirmed:
-                message = "Please confirm your business email first (check your inbox)."
-                session['pending_business_email'] = business_email
-                return redirect(url_for("business_verify_email"))
-            else:
-                session['business_id'] = biz.id
-                return redirect(url_for("business_dashboard"))
-        else:
-            message = "Login failed. Check business email and password."
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <title>Business Login</title>
-    </head>
-    <body class="container py-5">
-        <h2 class="mb-4">Business Login</h2>
-        <form method="post" class="mb-3">
-            <div class="mb-3">
-                <input name="business_email" class="form-control" placeholder="Business Email" required>
+          {% if messages %}
+            <div class="alert alert-warning mt-3">
+              {% for message in messages %}
+                {{ message }}<br>
+              {% endfor %}
             </div>
-            <div class="mb-3">
-                <input name="password" type="password" class="form-control" placeholder="Password" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-        <a href="{{ url_for('business_register') }}">Register your business</a>
-        <div style='color:red;'>{{message}}</div>
-    </body>
-    </html>
-    """, message=message)
-
-@app.route("/business/resend_verification", methods=["POST"])
-def business_resend_verification():
-    pending_email = session.get('pending_business_email')
-    biz = Business.query.filter_by(business_email=pending_email).first() if pending_email else None
-    if biz and not biz.email_confirmed:
-        biz.email_code = random_email_code()
-        db.session.commit()
-        send_business_verification_email(biz)
-        session['last_business_verification_sent'] = time.time()
-        flash("Verification email resent.")
-    return redirect(url_for("business_verify_email"))
-
-@app.route("/business/verify_email", methods=["GET", "POST"])
-def business_verify_email():
-    pending_email = session.get('pending_business_email')
-    biz = Business.query.filter_by(business_email=pending_email).first() if pending_email else None
-    can_resend = False
-    wait_seconds = 0
-    if not biz:
-        flash("No registration found to verify.")
-        return redirect(url_for("business_register"))
-    if biz.email_confirmed:
-        flash("Email is already confirmed, please log in.")
-        return redirect(url_for("business_login"))
-    now = time.time()
-    last_sent = session.get('last_business_verification_sent', 0)
-    if now - last_sent >= 30:
-        can_resend = True
-    else:
-        wait_seconds = int(30 - (now - last_sent))
-    if request.method == "POST":
-        submitted_code = request.form.get("code", "").strip().upper()
-        if submitted_code == biz.email_code:
-            biz.email_confirmed = True
-            db.session.commit()
-            flash("Business email confirmed! You can now log in.")
-            session.pop("pending_business_email", None)
-            return redirect(url_for("business_login"))
-        else:
-            flash("Incorrect code.")
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Verify Business Email</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <script>
-            function enableResend() {
-                document.getElementById('resend-btn').disabled = false;
-                document.getElementById('wait-msg').style.display = 'none';
-            }
-            window.onload = function() {
-                {% if not can_resend %}
-                    setTimeout(enableResend, {{ wait_seconds * 1000 }});
-                {% endif %}
-            }
-        </script>
-    </head>
-    <body class="container py-5">
-        <h2>Check your business email for the code or link</h2>
-        <form method="post" class="mb-3">
-            <input name="code" class="form-control mb-2" placeholder="Enter verification code">
-            <button type="submit" class="btn btn-primary">Verify</button>
-        </form>
-        <form method="post" action="{{ url_for('business_resend_verification') }}">
-            <button id="resend-btn" class="btn btn-link" type="submit" {% if not can_resend %}disabled{% endif %}>Resend Code</button>
-            {% if not can_resend %}
-                <span id="wait-msg" style="color:gray;">You can resend in {{ wait_seconds }}s</span>
-            {% endif %}
-        </form>
-        <div class="alert alert-info mt-2">
-            If you don't see the message, check your Spam or Junk folder.
-        </div>
-        {% with messages = get_flashed_messages() %}
-           {% if messages %}
-             <div class="alert alert-warning mt-3">
-               {% for message in messages %}{{ message }}<br>{% endfor %}
-             </div>
-           {% endif %}
+          {% endif %}
         {% endwith %}
     </body>
     </html>
-    """, can_resend=can_resend, wait_seconds=wait_seconds)
+    """, email=current_user.email,
+         referral_code=current_user.referral_code,
+         sponsor=sponsor.email if sponsor else None,
+         rewards_table=rewards_table,
+         level2=level2, level3=level3, level4=level4, level5=level5)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
+# ------- BUSINESS SECTION -------
+# Business registration, verify, resend, activate, login, dashboard, and logout
+# (Paste the full block from earlier as shown above for business_* routes here.)
+# Be sure: only one of each route, no duplicates.
 
 if __name__ == "__main__":
     app.run(debug=True)
