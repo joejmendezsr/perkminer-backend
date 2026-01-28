@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body class="container py-5">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <h2>Welcome, {{ biz.business_name }}!</h2>
+        <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
+    </div>
+    <div class="card p-4 mb-4">
+        <h4>Your Business Referral Code:</h4>
+        <code>{{ biz.referral_code }}</code>
+    </div>
+    {% if sponsor %}
+    <div class="card p-4 mb-4">
+        <h4>Your Sponsor:</h4>
+        <div class="mb-0">{{ sponsor.business_name }}</div>
+    </div>
+    {% endif %}
+    <div class="card p-4 mb-4">
+        <h4>Estimate Your Reward From Downline Purchases</h4>
+        <form method="post" class="row g-3 mb-3">
+            <div class="col-auto">
+                <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
+                    placeholder="Purchase Amount (e.g. 500)" required>
+            </div>
+            <div class="col-auto">
+                <select name="downline_level" class="form-select" required>
+                    <option value="2">Level 2 (your directly referred businesses)</option>
+                    <option value="3">Level 3 (businesses referred by your direct referrals)</option>
+                    <option value="4">Level 4 (third-level downline)</option>
+                    <option value="5">Level 5 (fourth-level downline)</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" type="submit">Calculate My Reward</button>
+            </div>
+        </form>
+        {{ rewards_table | safe }}
+    </div>
+    <div class="card p-4 mb-4">
+        <h4>My Downline Businesses</h4>
+        <div>
+            <strong>Level 2 (direct referrals):</strong>
+            {% if level2 %}
+                <ul class="mb-2">{% for b in level2 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
+            {% else %}
+                <span>None</span>
+            {% endif %}
+        </div>
+        <div>
+            <strong>Level 3:</strong>
+            {% if level3 %}
+                <ul class="mb-2">{% for b in level3 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
+            {% else %}
+                <span>None</span>
+            {% endif %}
+        </div>
+        <div>
+            <strong>Level 4:</strong>
+            {% if level4 %}
+                <ul class="mb-2">{% for b in level4 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
+            {% else %}
+                <span>None</span>
+            {% endif %}
+        </div>
+        <div>
+            <strong>Level 5:</strong>
+            {% if level5 %}
+                <ul class="mb-2">{% for b in level5 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
+            {% else %}
+                <span>None</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card p-4">
+        <h4>This is your business dashboard. 🎉</h4>
+        <p class="mb-0">Congrats on building a secure, styled business rewards web app!</p>
+    </div>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-warning mt-3">
+          {% for message in messages %}{{ message }}<br>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+</body>
+</html>
