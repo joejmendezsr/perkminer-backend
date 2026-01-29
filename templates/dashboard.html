@@ -27,7 +27,6 @@
         document.getElementById('network_total').innerText = total.toFixed(2);
         document.getElementById('network_results').style.display = 'block';
       }
-      // Frontend calculator for single reward
       function calculateSingleReward() {
         let amount = parseFloat(document.getElementById('reward_amount').value) || 0;
         if (amount > 2500) amount = 2500;
@@ -77,6 +76,31 @@
             View/Edit Profile
           </a>
           <a href="{{ url_for('logout') }}" class="btn btn-outline-danger ms-md-3 mt-3 mt-md-0">Logout</a>
+      </div>
+
+      <!-- Invite Others Button -->
+      <div class="mb-4">
+        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">Invite others to join</button>
+      </div>
+
+      <!-- Invite Modal -->
+      <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form class="modal-content" method="post" action="{{ url_for('invite') }}">
+            <div class="modal-header">
+              <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
+              <input type="email" required class="form-control" id="invitee-email" name="invitee_email" placeholder="Enter email to invite">
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Send Invitation</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Profile Edit Section (collapsible)-->
