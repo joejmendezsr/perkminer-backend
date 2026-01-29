@@ -65,7 +65,6 @@ class Business(db.Model):
     address = db.Column(db.String(255))
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
-    # New Profile Fields
     hours_of_operation = db.Column(db.String(100))
     website_url = db.Column(db.String(255))
     about_us = db.Column(db.Text)
@@ -118,7 +117,42 @@ def send_business_verification_email(biz):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# ----- WTForms -----
+# ========================== INVITE ROUTES ==========================
+@app.route('/invite', methods=['POST'])
+@login_required
+def invite():
+    invitee_email = request.form['invitee_email'].strip()
+    inviter_name = current_user.name if current_user.name else current_user.email
+    subject = f"You have been invited by {inviter_name} to join Perkminer."
+    reg_url = url_for('register', ref=current_user.referral_code, _external=True)
+    html_body = f"""
+    <p>You have been invited by {inviter_name} to join PerkMiner. Here are the benefits of joining.</p>
+    <p><a href="{reg_url}">Join PerkMiner</a></p>
+    """
+    send_email(invitee_email, subject, html_body)
+    flash('Invitation sent!')
+    return redirect(url_for('dashboard'))
+
+@app.route('/business/invite', methods=['POST'])
+def business_invite():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id) if biz_id else None
+    if not biz:
+        flash("Business invite failed. Please log in.")
+        return redirect(url_for("business_login"))
+    invitee_email = request.form['invitee_email'].strip()
+    subject = f"You have been invited by {biz.business_name} to join Perkminer."
+    reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
+    html_body = f"""
+    <p>You have been invited by {biz.business_name} to join PerkMiner. Here are the benefits of joining.</p>
+    <p><a href="{reg_url}">Join PerkMiner as a Business</a></p>
+    """
+    send_email(invitee_email, subject, html_body)
+    flash('Business invitation sent!')
+    return redirect(url_for('business_dashboard'))
+# ======================== END INVITE ROUTES ========================
+
+# ========== WTForms ==========
 class VerifyCodeForm(FlaskForm):
     code = StringField('Code', validators=[DataRequired()])
     submit = SubmitField('Verify')
@@ -183,6 +217,7 @@ class BusinessProfileForm(FlaskForm):
     longitude = StringField('Longitude', validators=[Optional()])
     submit = SubmitField('Save Profile')
 
+# ======= ROUTES =======
 @app.route("/")
 def home(): return render_template("home.html")
 @app.route("/business")
@@ -536,7 +571,6 @@ def business_dashboard():
         return request.form.get(f"service_{n}", "")
 
     if request.method == "POST":
-        # Profile update section—save all profile fields
         if ('profile_photo' in request.files or
             any(x in request.form for x in [
                 'phone_number', 'address', 'latitude', 'longitude', 'hours_of_operation',
@@ -556,7 +590,6 @@ def business_dashboard():
                 path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(path)
                 biz.profile_photo = filename
-            # NEW FIELDS
             biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
             biz.website_url = request.form.get('website_url', biz.website_url)
             biz.about_us = request.form.get('about_us', biz.about_us)
