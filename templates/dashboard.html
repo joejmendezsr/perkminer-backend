@@ -27,6 +27,35 @@
         document.getElementById('network_total').innerText = total.toFixed(2);
         document.getElementById('network_results').style.display = 'block';
       }
+      // Frontend calculator for single reward
+      function calculateSingleReward() {
+        let amount = parseFloat(document.getElementById('reward_amount').value) || 0;
+        if (amount > 2500) amount = 2500;
+        document.getElementById('reward_amount').value = amount;
+        let tier = document.getElementById('reward_tier').value;
+        let reward = 0;
+        let desc = "";
+        let cap = null;
+        if (tier === "1") {
+            reward = amount * 0.02; desc = "As the customer, you earn";
+        } else if (["2","3","4"].includes(tier)) {
+            reward = amount * 0.0025;
+            cap = 6.25;
+            if (reward > cap) reward = cap;
+            desc = `If your level ${tier} downline makes a purchase`;
+        } else if (tier === "5") {
+            reward = amount * 0.02;
+            cap = 50;
+            if (reward > cap) reward = cap;
+            desc = "If your level 5 downline makes a purchase";
+        }
+        let out = '';
+        if (amount > 0) {
+          out += `<h5 class='mt-4 mb-2'>${desc} of $${amount.toFixed(2)}:</h5>`;
+          out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
+        }
+        document.getElementById('rewards_output').innerHTML = out;
+      }
     </script>
 </head>
 <body>
@@ -88,25 +117,26 @@
       {% endif %}
       <div class="card p-4 mb-4">
           <h4>Estimate Your Rewards From One Purchase</h4>
-          <form method="post" class="row g-3 mb-3">
-              {{ form.hidden_tag() }}
+          <div class="row g-3 mb-3">
               <div class="col-12 col-md-auto">
-                  {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
-                  {% if form.invoice_amount.errors %}
-                      <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
-                  {% endif %}
+                  <input id="reward_amount" type="number" class="form-control" placeholder="Amount (e.g. 500)" max="2500" required>
               </div>
               <div class="col-12 col-md-auto">
-                  {{ form.downline_level(class="form-select", required=True) }}
-                  {% if form.downline_level.errors %}
-                      <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
-                  {% endif %}
+                  <select id="reward_tier" class="form-select" required>
+                      <option value="1" selected>Tier 1 (your purchases)</option>
+                      <option value="2">Tier 2 (direct referral purchases)</option>
+                      <option value="3">Tier 3 (Tier 2 referral purchases)</option>
+                      <option value="4">Tier 4 (Tier 3 referral purchases)</option>
+                      <option value="5">Tier 5 (Tier 4 referral purchases)</option>
+                  </select>
               </div>
               <div class="col-12 col-md-auto">
-                  {{ form.submit(class="btn btn-primary") }}
+                  <button type="button" class="btn btn-primary" onclick="calculateSingleReward()">Calculate My Reward</button>
               </div>
-          </form>
-          {{ rewards_table | safe }}
+          </div>
+          <div id="rewards_output">
+            {{ rewards_table | safe }}
+          </div>
       </div>
       <div class="card p-4 mb-4">
         <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
