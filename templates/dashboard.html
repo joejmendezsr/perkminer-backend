@@ -4,6 +4,9 @@
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+      .pointer { cursor: pointer; }
+    </style>
     <script>
       function calculateNetworkEarnings() {
         let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
@@ -28,32 +31,48 @@
 </head>
 <body>
     <div class="container py-5">
+
+      <!-- Collapsible Welcome & Profile Bar -->
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-          <h2 class="mb-2 mb-md-0">Welcome, {{ email }}!</h2>
-          <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+          <div class="d-flex align-items-center">
+            {% if profile_img_url %}
+              <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle me-3" style="width:70px;height:70px;object-fit:cover;">
+            {% else %}
+              <div style="width:70px;height:70px;background:#eee;" class="rounded-circle d-flex justify-content-center align-items-center me-3">No Image</div>
+            {% endif %}
+            <h2 class="mb-0">
+                Welcome, {{ user_name if user_name else email }}!
+            </h2>
+          </div>
+          <a class="fw-semibold text-primary pointer ms-2" data-bs-toggle="collapse" href="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
+            View/Edit Profile
+          </a>
+          <a href="{{ url_for('logout') }}" class="btn btn-outline-danger ms-md-3 mt-3 mt-md-0">Logout</a>
       </div>
 
-      <!-- Profile Edit Section -->
-      <div class="card p-4 mb-4">
-        <h4>Your Profile</h4>
-        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
-            {{ profile_form.hidden_tag() }}
-            <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
-                {% if profile_img_url %}
-                  <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
-                {% else %}
-                  <div style="width:100px;height:100px;display:inline-block;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center">No Image</div>
-                {% endif %}
-                <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
-            </div>
-            <div class="col-12 col-md-auto mb-3 mb-md-0">
-                <label class="form-label">Name</label>
-                {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
-            </div>
-            <div class="col-12 col-md-auto">
-                {{ profile_form.submit(class="btn btn-success") }}
-            </div>
-        </form>
+      <!-- Profile Edit Section (collapsible)-->
+      <div class="collapse mb-4" id="profileCollapse">
+        <div class="card p-4">
+          <h4>Your Profile</h4>
+          <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+              {{ profile_form.hidden_tag() }}
+              <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
+                  {% if profile_img_url %}
+                    <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
+                  {% else %}
+                    <div style="width:100px;height:100px;display:inline-block;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center">No Image</div>
+                  {% endif %}
+                  <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
+              </div>
+              <div class="col-12 col-md-auto mb-3 mb-md-0">
+                  <label class="form-label">Name</label>
+                  {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
+              </div>
+              <div class="col-12 col-md-auto">
+                  {{ profile_form.submit(class="btn btn-success") }}
+              </div>
+          </form>
+        </div>
       </div>
       <!-- End Profile Edit Section -->
 
@@ -90,7 +109,7 @@
           {{ rewards_table | safe }}
       </div>
       <div class="card p-4 mb-4">
-        <h4>Referral Network Cashback Calculator (one purchase from everyone in your network)</h4>
+        <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
         <div class="mb-2">
           <label>If you and everyone in your network refers 
             <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
