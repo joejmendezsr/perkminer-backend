@@ -59,8 +59,6 @@
 </head>
 <body>
     <div class="container py-5">
-
-      <!-- Collapsible Welcome & Profile Bar -->
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
           <div class="d-flex align-items-center">
             {% if profile_img_url %}
@@ -83,21 +81,21 @@
         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">Invite others to join</button>
       </div>
 
-      <!-- Invite Modal -->
+      <!-- Invite Modal (CSRF safe with WTForms)-->
       <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <form class="modal-content" method="post" action="{{ url_for('invite') }}">
-            {{ csrf_token() }}
+            {{ invite_form.hidden_tag() }}
             <div class="modal-header">
               <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
               <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
-              <input type="email" required class="form-control" id="invitee-email" name="invitee_email" placeholder="Enter email to invite">
+              {{ invite_form.invitee_email(class="form-control", id="invitee-email", placeholder="Enter email to invite", required=True) }}
             </div>
             <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Send Invitation</button>
+              {{ invite_form.submit(class="btn btn-primary") }}
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
           </form>
