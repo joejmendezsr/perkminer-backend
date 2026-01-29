@@ -7,6 +7,8 @@
       function calculateBizNetworkEarnings() {
         let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
         let amount = parseFloat(document.getElementById('biz_amount').value) || 0;
+        if (amount > 2500) amount = 2500; // Enforce cap in JS (for pasting etc)
+        document.getElementById('biz_amount').value = amount; // Display capped
         let t1 = 0.01 * amount;
         let t2 = 0.002 * amount * numBiz;
         let t3 = 0.002 * amount * Math.pow(numBiz, 2);
@@ -43,7 +45,7 @@
         <form method="post" class="row g-3 mb-3">
             {{ form.hidden_tag() }}
             <div class="col-auto">
-                {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", required=True) }}
+                {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
                 {% if form.invoice_amount.errors %}
                     <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
                 {% endif %}
@@ -68,20 +70,21 @@
         <label>If you and everyone in your network refers
           <input id="biz_network" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
           business(es) and you each generate one invoice during the month in the amount of $ 
-          <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" step="0.01" value="100" style="width:110px;" />
+          <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
           , this is how much your business would earn in Cashback Rewards for the month:
         </label>
+        <small class="text-muted d-block">*Maximum invoice amount allowed is $2,500</small>
       </div>
       <button class="btn btn-info mb-2" type="button" onclick="calculateBizNetworkEarnings()">Calculate</button>
       <div id="biz_results" style="display:none;">
         <ul class="mb-1">
-          <li>Tier One: (Your Invoices) = <span id="biz_t1"></span></li>
-          <li>Tier Two: (Invoices from direct referrals) = <span id="biz_t2"></span></li>
-          <li>Tier Three: (Invoices from 2nd Tier referrals) = <span id="biz_t3"></span></li>
-          <li>Tier Four: (Invoices from 3rd Tier referrals) = <span id="biz_t4"></span></li>
-          <li>Tier Five: (Invoices from 4th Tier referrals) = <span id="biz_t5"></span></li>
+          <li>Tier One: (Your invoices) = <span id="biz_t1"></span></li>
+          <li>Tier Two: (Invoices from your direct referrals) = <span id="biz_t2"></span></li>
+          <li>Tier Three: (Invoices from 2nd tier referrals) = <span id="biz_t3"></span></li>
+          <li>Tier Four: (Invoices from 3rd tier referrals) = <span id="biz_t4"></span></li>
+          <li>Tier Five: (Invoices from 4th tier referrals) = <span id="biz_t5"></span></li>
         </ul>
-        <strong>Your total earnings for the month would be $<span id="biz_total"></span></strong>
+        <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
       </div>
     </div>
 
