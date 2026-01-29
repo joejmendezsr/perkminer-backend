@@ -32,6 +32,31 @@
           <h2 class="mb-2 mb-md-0">Welcome, {{ email }}!</h2>
           <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
+
+      <!-- Profile Edit Section -->
+      <div class="card p-4 mb-4">
+        <h4>Your Profile</h4>
+        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+            {{ profile_form.hidden_tag() }}
+            <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
+                {% if profile_img_url %}
+                  <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
+                {% else %}
+                  <div style="width:100px;height:100px;display:inline-block;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center">No Image</div>
+                {% endif %}
+                <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
+            </div>
+            <div class="col-12 col-md-auto mb-3 mb-md-0">
+                <label class="form-label">Name</label>
+                {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
+            </div>
+            <div class="col-12 col-md-auto">
+                {{ profile_form.submit(class="btn btn-success") }}
+            </div>
+        </form>
+      </div>
+      <!-- End Profile Edit Section -->
+
       <div class="card p-4 mb-4">
           <h4>Your Referral Code:</h4>
           <code>{{ referral_code }}</code>

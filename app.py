@@ -1,11 +1,12 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session
+from flask import Flask, request, redirect, url_for, render_template, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
 from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
+from werkzeug.utils import secure_filename
 import os, re, random, string, time, logging
 
 app = Flask(__name__)
@@ -17,6 +18,11 @@ app.config['MAIL_PORT']     = int(os.environ.get('MAIL_PORT', 465))
 app.config['MAIL_USE_SSL']  = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 db = SQLAlchemy(app)
 with app.app_context():
@@ -42,6 +48,8 @@ class User(db.Model, UserMixin):
     sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
+    name = db.Column(db.String(100))
+    profile_photo = db.Column(db.String(200))
 
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -52,18 +60,16 @@ class Business(db.Model):
     sponsor_id = db.Column(db.Integer, db.ForeignKey('business.id'))
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
+    profile_photo = db.Column(db.String(200))
+    phone_number = db.Column(db.String(30))
+    address = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
-
-def valid_email(email):
-    return re.match(EMAIL_REGEX, email or "")
-
-def valid_password(pw):
-    return pw and len(pw) >= MIN_PASSWORD_LENGTH
-
-def random_email_code():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-
+def valid_email(email): return re.match(EMAIL_REGEX, email or "")
+def valid_password(pw): return pw and len(pw) >= MIN_PASSWORD_LENGTH
+def random_email_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 def random_referral_code(email):
     base_code = "REF" + (email.split("@")[0].replace(".", "")[:12])
     code = base_code
@@ -72,7 +78,6 @@ def random_referral_code(email):
         code = f"{base_code}{counter}"
         counter += 1
     return code
-
 def random_business_code(business_name):
     base_code = "BIZ" + (business_name.replace(" ", "")[:12])
     code = base_code
@@ -81,56 +86,36 @@ def random_business_code(business_name):
         code = f"{base_code}{counter}"
         counter += 1
     return code
-
 def send_email(to, subject, html_body):
     msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
-    try:
-        mail.send(msg)
-    except Exception as e:
-        logging.error("EMAIL SEND ERROR: %s", e)
-
+    try: mail.send(msg)
+    except Exception as e: logging.error("EMAIL SEND ERROR: %s", e)
 def send_verification_email(user):
     code = user.email_code
     verify_url = url_for("activate", code=code, _external=True)
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your email, or use code: <b>{code}</b></p>"""
-    send_email(
-        user.email,
-        "Confirm your PerkMiner email!",
-        html_body
-    )
-
+    send_email(user.email, "Confirm your PerkMiner email!", html_body)
 def send_business_verification_email(biz):
     code = biz.email_code
     verify_url = url_for("business_activate", code=code, _external=True)
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to verify your business email, or use code: <b>{code}</b></p>"""
     send_email(biz.business_email, "[PerkMiner] Verify your business email!", html_body)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# WTForms - for both verification pages
+# ----- WTForms -----
 class VerifyCodeForm(FlaskForm):
     code = StringField('Code', validators=[DataRequired()])
     submit = SubmitField('Verify')
-
-# HOMEPAGE and BUSINESS HOME routes
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-@app.route("/business")
-def business_home():
-    return render_template("business_home.html")
-
-# WTForms classes
 class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
     referral_code = StringField('Referral Code', validators=[Optional()])
     submit = SubmitField('Register')
-
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
-
 class RewardForm(FlaskForm):
     invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
     downline_level = SelectField(
@@ -146,19 +131,16 @@ class RewardForm(FlaskForm):
         default='1'
     )
     submit = SubmitField('Calculate My Reward')
-
 class BusinessRegisterForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
     business_email = StringField('Business Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
     referral_code = StringField('Referral Code', validators=[Optional()])
     submit = SubmitField('Register')
-
 class BusinessLoginForm(FlaskForm):
     business_email = StringField('Business Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
-
 class BusinessRewardForm(FlaskForm):
     invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
     downline_level = SelectField(
@@ -174,8 +156,29 @@ class BusinessRewardForm(FlaskForm):
         default='1'
     )
     submit = SubmitField('Calculate My Reward')
+# -- Profile Forms --
+class UserProfileForm(FlaskForm):
+    name = StringField('Name', validators=[Optional(), Length(max=100)])
+    profile_photo = FileField('Upload Profile Photo')
+    submit = SubmitField('Save Profile')
+class BusinessProfileForm(FlaskForm):
+    profile_photo = FileField('Upload Profile Photo')
+    phone_number = StringField('Phone Number', validators=[Optional(), Length(max=30)])
+    address = StringField('Address', validators=[Optional(), Length(max=255)])
+    latitude = StringField('Latitude', validators=[Optional()])
+    longitude = StringField('Longitude', validators=[Optional()])
+    submit = SubmitField('Save Profile')
 
-# USER routes
+# HOMEPAGE and BUSINESS HOME routes
+@app.route("/")
+def home(): return render_template("home.html")
+@app.route("/business")
+def business_home(): return render_template("business_home.html")
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
@@ -304,12 +307,25 @@ def login():
 @login_required
 def dashboard():
     form = RewardForm(request.form)
+    profile_form = UserProfileForm()
+    if request.method == "POST" and profile_form.submit.data and profile_form.validate():
+        user = current_user
+        if profile_form.name.data:
+            user.name = profile_form.name.data
+        file = request.files.get('profile_photo')
+        if file and allowed_file(file.filename):
+            filename = f"user_{user.id}_{int(time.time())}_{secure_filename(file.filename)}"
+            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(path)
+            user.profile_photo = filename
+        db.session.commit()
+        flash("Profile updated!")
+        return redirect(url_for('dashboard'))
+
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
-
-    rewards_table = ""
-    reward = None
+    rewards_table = ""; reward = None
     invoice_amount = float(form.invoice_amount.data or 0)
     downline_level = int(form.downline_level.data or 1)
     cap = None
@@ -323,22 +339,14 @@ def dashboard():
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.02  # 2% for self
-            rewards_desc = "As the customer, you earn"
-            cap = None
+            reward = invoice_amount * 0.02; rewards_desc = "As the customer, you earn"; cap = None
         elif downline_level in [2, 3, 4]:
-            rate = 0.0025
-            cap = 6.25
-            reward = min(invoice_amount * rate, cap)
+            rate = 0.0025; cap = 6.25; reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If your level {downline_level} downline makes a purchase"
         elif downline_level == 5:
-            rate = 0.02
-            cap = 50
-            reward = min(invoice_amount * rate, cap)
+            rate = 0.02; cap = 50; reward = min(invoice_amount * rate, cap)
             rewards_desc = "If your level 5 downline makes a purchase"
-        else:
-            reward = 0
-            rewards_desc = ""
+        else: reward = 0; rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
@@ -346,7 +354,6 @@ def dashboard():
         else:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
             rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
-
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     level2 = User.query.filter_by(sponsor_id=current_user.id).all()
     level3, level4, level5 = [], [], []
@@ -359,17 +366,18 @@ def dashboard():
             for u4 in l4s:
                 l5s = User.query.filter_by(sponsor_id=u4.id).all()
                 level5.extend(l5s)
-    return render_template("dashboard.html", form=form, email=current_user.email,
+    return render_template("dashboard.html", form=form, profile_form=profile_form,
+         email=current_user.email,
          referral_code=current_user.referral_code, sponsor=sponsor.email if sponsor else None,
-         rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5)
+         rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5,
+         user_name=current_user.name,
+         profile_img_url=url_for('uploaded_file', filename=current_user.profile_photo) if current_user.profile_photo else None)
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("home"))
-
-# BUSINESS ROUTES with CSRF/wtforms for code verify
 
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
@@ -505,15 +513,36 @@ def business_dashboard():
     form = BusinessRewardForm(request.form)
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id) if biz_id else None
+
     if not biz or not biz.email_confirmed:
         flash("Please log in and confirm your business email to access the dashboard.")
         return redirect(url_for("business_login"))
 
+    profile_form = BusinessProfileForm()
+    if request.method == "POST" and profile_form.submit.data and profile_form.validate():
+        if profile_form.phone_number.data:
+            biz.phone_number = profile_form.phone_number.data
+        if profile_form.address.data:
+            biz.address = profile_form.address.data
+        if profile_form.latitude.data and profile_form.longitude.data:
+            try:
+                biz.latitude = float(profile_form.latitude.data)
+                biz.longitude = float(profile_form.longitude.data)
+            except ValueError: pass
+        file = request.files.get('profile_photo')
+        if file and allowed_file(file.filename):
+            filename = f"biz_{biz.id}_{int(time.time())}_{secure_filename(file.filename)}"
+            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(path)
+            biz.profile_photo = filename
+        db.session.commit()
+        flash("Business profile updated!")
+        return redirect(url_for('business_dashboard'))
+
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
-    rewards_table = ""
-    reward = None
+    rewards_table = ""; reward = None
     invoice_amount = float(form.invoice_amount.data or 0)
     downline_level = int(form.downline_level.data or 1)
     cap = None
@@ -527,22 +556,14 @@ def business_dashboard():
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.01  # 1% for business self
-            rewards_desc = "As the business, you earn"
-            cap = None
+            reward = invoice_amount * 0.01; rewards_desc = "As the business, you earn"; cap = None
         elif downline_level in [2, 3, 4]:
-            rate = 0.002
-            cap = 3.75
-            reward = min(invoice_amount * rate, cap)
+            rate = 0.002; cap = 3.75; reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If your level {downline_level} downline business makes a purchase"
         elif downline_level == 5:
-            rate = 0.02
-            cap = 25
-            reward = min(invoice_amount * rate, cap)
+            rate = 0.02; cap = 25; reward = min(invoice_amount * rate, cap)
             rewards_desc = "If your level 5 downline business makes a purchase"
-        else:
-            reward = 0
-            rewards_desc = ""
+        else: reward = 0; rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
@@ -550,7 +571,6 @@ def business_dashboard():
         else:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
             rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
-
     sponsor = Business.query.get(biz.sponsor_id) if biz.sponsor_id else None
     level2 = Business.query.filter_by(sponsor_id=biz.id).all()
     level3, level4, level5 = [], [], []
@@ -563,8 +583,11 @@ def business_dashboard():
             for b4 in b4s:
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
-    return render_template("business_dashboard.html", form=form, biz=biz, sponsor=sponsor,
-        rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5)
+    return render_template("business_dashboard.html", form=form, profile_form=profile_form, biz=biz, sponsor=sponsor,
+        rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5,
+        profile_img_url=url_for('uploaded_file', filename=biz.profile_photo) if biz.profile_photo else None,
+        phone_number=biz.phone_number, address=biz.address,
+        latitude=biz.latitude, longitude=biz.longitude)
 
 @app.route("/business/logout")
 def business_logout():
