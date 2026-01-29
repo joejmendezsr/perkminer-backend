@@ -313,6 +313,10 @@ def login():
             message = "Login failed. Check email and password."
     return render_template("login.html", message=message, form=form)
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
