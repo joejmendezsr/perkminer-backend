@@ -188,6 +188,12 @@ class BusinessProfileForm(FlaskForm):
     submit = SubmitField('Save Profile')
 
 # ...ROUTES start below...
+@app.route("/")
+def home():
+    return render_template("home.html")
+@app.route("/business")
+def business_home():
+    return render_template("business_home.html")
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
