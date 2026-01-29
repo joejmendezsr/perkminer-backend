@@ -20,11 +20,11 @@
     </div>
     {% endif %}
     <div class="card p-4 mb-4">
-        <h4>Estimate Your Reward From Downline Purchases</h4>
+        <h4>Estimate Your Reward From Invoices</h4>
         <form method="post" class="row g-3 mb-3">
             {{ form.hidden_tag() }}
             <div class="col-auto">
-                {{ form.invoice_amount(class="form-control", placeholder="Purchase Amount (e.g. 500)", required=True) }}
+                {{ form.invoice_amount(class="form-control", placeholder="Invoice Amount (e.g. 500)", required=True) }}
                 {% if form.invoice_amount.errors %}
                     <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
                 {% endif %}
