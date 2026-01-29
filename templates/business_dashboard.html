@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Business Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <script>
       function calculateBizNetworkEarnings() {
@@ -25,133 +26,132 @@
       }
     </script>
 </head>
-<body class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Welcome, {{ biz.business_name }}!</h2>
-        <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
-    </div>
-    <div class="card p-4 mb-4">
-        <h4>Your Business Referral Code:</h4>
-        <code>{{ biz.referral_code }}</code>
-    </div>
-    {% if sponsor %}
-    <div class="card p-4 mb-4">
-        <h4>Your Sponsor:</h4>
-        <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
-    </div>
-    {% endif %}
-    <div class="card p-4 mb-4">
-        <h4>Estimate Your Rewards From Business Invoices</h4>
-        <form method="post" class="row g-3 mb-3">
-            {{ form.hidden_tag() }}
-            <div class="col-auto">
-                {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
-                {% if form.invoice_amount.errors %}
-                    <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
-                {% endif %}
-            </div>
-            <div class="col-auto">
-                {{ form.downline_level(class="form-select", required=True) }}
-                {% if form.downline_level.errors %}
-                    <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
-                {% endif %}
-            </div>
-            <div class="col-auto">
-                {{ form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
-        {{ rewards_table | safe }}
-    </div>
-
-    <!-- New Network Earnings Calculator for Businesses -->
-    <div class="card p-4 mb-4">
-      <h4>Business Referral Network Cashback Calculator</h4>
-      <div class="mb-2">
-        <label>If you and everyone in your network refers
-          <input id="biz_network" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
-          business(es) and you each generate one invoice during the month in the amount of $ 
-          <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
-          , this is how much your business would earn in Cashback Rewards for the month:
-        </label>
-        <small class="text-muted d-block">*Maximum invoice amount allowed is $2,500</small>
+<body>
+    <div class="container py-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+          <h2 class="mb-2 mb-md-0">Welcome, {{ biz.business_name }}!</h2>
+          <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
-      <button class="btn btn-info mb-2" type="button" onclick="calculateBizNetworkEarnings()">Calculate</button>
-      <div id="biz_results" style="display:none;">
-        <ul class="mb-1">
-          <li>Tier One: (Your invoices) = <span id="biz_t1"></span></li>
-          <li>Tier Two: (Invoices from your direct referrals) = <span id="biz_t2"></span></li>
-          <li>Tier Three: (Invoices from 2nd tier referrals) = <span id="biz_t3"></span></li>
-          <li>Tier Four: (Invoices from 3rd tier referrals) = <span id="biz_t4"></span></li>
-          <li>Tier Five: (Invoices from 4th tier referrals) = <span id="biz_t5"></span></li>
-        </ul>
-        <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
+      <div class="card p-4 mb-4">
+          <h4>Your Business Referral Code:</h4>
+          <code>{{ biz.referral_code }}</code>
       </div>
-    </div>
-
-    <div class="card p-4 mb-4">
-        <h4>My Business Network</h4>
-        <div>
-            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
-                Tier 2 (direct referrals)
-            </a>
-            <div class="collapse mt-2" id="biztier2">
-                {% if level2 %}
-                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                {% else %}
-                    <span>None</span>
-                {% endif %}
-            </div>
-        </div>
-        <div>
-            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
-                Tier 3 (referred by Tier 2 businesses)
-            </a>
-            <div class="collapse mt-2" id="biztier3">
-                {% if level3 %}
-                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                {% else %}
-                    <span>None</span>
-                {% endif %}
-            </div>
-        </div>
-        <div>
-            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
-                Tier 4 (referred by Tier 3 businesses)
-            </a>
-            <div class="collapse mt-2" id="biztier4">
-                {% if level4 %}
-                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                {% else %}
-                    <span>None</span>
-                {% endif %}
-            </div>
-        </div>
-        <div>
-            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
-                Tier 5 (referred by Tier 4 businesses)
-            </a>
-            <div class="collapse mt-2" id="biztier5">
-                {% if level5 %}
-                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                {% else %}
-                    <span>None</span>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    <div class="card p-4">
-        <h4>This is your business dashboard.</h4>
-        <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
-    </div>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="alert alert-warning mt-3">
-          {% for message in messages %}
-            {{ message }}<br>
-          {% endfor %}
-        </div>
+      {% if sponsor %}
+      <div class="card p-4 mb-4">
+          <h4>Your Sponsor:</h4>
+          <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
+      </div>
       {% endif %}
-    {% endwith %}
+      <div class="card p-4 mb-4">
+          <h4>Estimate Your Rewards From Business Invoices</h4>
+          <form method="post" class="row g-3 mb-3">
+              {{ form.hidden_tag() }}
+              <div class="col-12 col-md-auto">
+                  {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
+                  {% if form.invoice_amount.errors %}
+                      <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
+                  {% endif %}
+              </div>
+              <div class="col-12 col-md-auto">
+                  {{ form.downline_level(class="form-select", required=True) }}
+                  {% if form.downline_level.errors %}
+                      <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
+                  {% endif %}
+              </div>
+              <div class="col-12 col-md-auto">
+                  {{ form.submit(class="btn btn-primary") }}
+              </div>
+          </form>
+          {{ rewards_table | safe }}
+      </div>
+      <div class="card p-4 mb-4">
+        <h4>Business Referral Network Cashback Calculator</h4>
+        <div class="mb-2">
+          <label>If you and everyone in your network refers
+            <input id="biz_network" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
+            business(es) and you each generate one invoice during the month in the amount of $ 
+            <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
+            , this is how much your business would earn in Cashback Rewards for the month:
+          </label>
+          <small class="text-muted d-block">*Maximum invoice amount allowed is $2,500</small>
+        </div>
+        <button class="btn btn-info mb-2" type="button" onclick="calculateBizNetworkEarnings()">Calculate</button>
+        <div id="biz_results" style="display:none;">
+          <ul class="mb-1">
+            <li>Tier One: (Your invoices) = <span id="biz_t1"></span></li>
+            <li>Tier Two: (Invoices from your direct referrals) = <span id="biz_t2"></span></li>
+            <li>Tier Three: (Invoices from 2nd tier referrals) = <span id="biz_t3"></span></li>
+            <li>Tier Four: (Invoices from 3rd tier referrals) = <span id="biz_t4"></span></li>
+            <li>Tier Five: (Invoices from 4th tier referrals) = <span id="biz_t5"></span></li>
+          </ul>
+          <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
+        </div>
+      </div>
+      <div class="card p-4 mb-4">
+          <h4>My Business Network</h4>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
+                  Tier 2 (direct referrals)
+              </a>
+              <div class="collapse mt-2" id="biztier2">
+                  {% if level2 %}
+                      <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
+                  Tier 3 (referred by Tier 2 businesses)
+              </a>
+              <div class="collapse mt-2" id="biztier3">
+                  {% if level3 %}
+                      <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
+                  Tier 4 (referred by Tier 3 businesses)
+              </a>
+              <div class="collapse mt-2" id="biztier4">
+                  {% if level4 %}
+                      <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
+                  Tier 5 (referred by Tier 4 businesses)
+              </a>
+              <div class="collapse mt-2" id="biztier5">
+                  {% if level5 %}
+                      <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+      </div>
+      <div class="card p-4">
+          <h4>This is your business dashboard.</h4>
+          <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
+      </div>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="alert alert-warning mt-3">
+            {% for message in messages %}
+              {{ message }}<br>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
