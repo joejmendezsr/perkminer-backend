@@ -65,6 +65,21 @@ class Business(db.Model):
     address = db.Column(db.String(255))
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    # New Profile Fields
+    hours_of_operation = db.Column(db.String(100))
+    website_url = db.Column(db.String(255))
+    about_us = db.Column(db.Text)
+    service_1 = db.Column(db.String(100))
+    service_2 = db.Column(db.String(100))
+    service_3 = db.Column(db.String(100))
+    service_4 = db.Column(db.String(100))
+    service_5 = db.Column(db.String(100))
+    service_6 = db.Column(db.String(100))
+    service_7 = db.Column(db.String(100))
+    service_8 = db.Column(db.String(100))
+    service_9 = db.Column(db.String(100))
+    service_10 = db.Column(db.String(100))
+    search_keywords = db.Column(db.String(500))
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
 def valid_email(email): return re.match(EMAIL_REGEX, email or "")
@@ -156,7 +171,6 @@ class BusinessRewardForm(FlaskForm):
         default='1'
     )
     submit = SubmitField('Calculate My Reward')
-# -- Profile Forms --
 class UserProfileForm(FlaskForm):
     name = StringField('Name', validators=[Optional(), Length(max=100)])
     profile_photo = FileField('Upload Profile Photo')
@@ -169,7 +183,6 @@ class BusinessProfileForm(FlaskForm):
     longitude = StringField('Longitude', validators=[Optional()])
     submit = SubmitField('Save Profile')
 
-# HOMEPAGE and BUSINESS HOME routes
 @app.route("/")
 def home(): return render_template("home.html")
 @app.route("/business")
@@ -519,25 +532,44 @@ def business_dashboard():
         return redirect(url_for("business_login"))
 
     profile_form = BusinessProfileForm()
-    if request.method == "POST" and profile_form.submit.data and profile_form.validate():
-        if profile_form.phone_number.data:
-            biz.phone_number = profile_form.phone_number.data
-        if profile_form.address.data:
-            biz.address = profile_form.address.data
-        if profile_form.latitude.data and profile_form.longitude.data:
+    def get_service_field(n):
+        return request.form.get(f"service_{n}", "")
+
+    if request.method == "POST":
+        # Profile update section—save all profile fields
+        if ('profile_photo' in request.files or
+            any(x in request.form for x in [
+                'phone_number', 'address', 'latitude', 'longitude', 'hours_of_operation',
+                'website_url', 'about_us', 'search_keywords', 'service_1'
+            ])):
+            biz.phone_number = request.form.get('phone_number', biz.phone_number)
+            biz.address = request.form.get('address', biz.address)
             try:
-                biz.latitude = float(profile_form.latitude.data)
-                biz.longitude = float(profile_form.longitude.data)
+                if request.form.get('latitude'):
+                    biz.latitude = float(request.form.get('latitude'))
+                if request.form.get('longitude'):
+                    biz.longitude = float(request.form.get('longitude'))
             except ValueError: pass
-        file = request.files.get('profile_photo')
-        if file and allowed_file(file.filename):
-            filename = f"biz_{biz.id}_{int(time.time())}_{secure_filename(file.filename)}"
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(path)
-            biz.profile_photo = filename
-        db.session.commit()
-        flash("Business profile updated!")
-        return redirect(url_for('business_dashboard'))
+            file = request.files.get('profile_photo')
+            if file and allowed_file(file.filename):
+                filename = f"biz_{biz.id}_{int(time.time())}_{secure_filename(file.filename)}"
+                path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(path)
+                biz.profile_photo = filename
+            # NEW FIELDS
+            biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+            biz.website_url = request.form.get('website_url', biz.website_url)
+            biz.about_us = request.form.get('about_us', biz.about_us)
+            biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
+            for n in range(1, 11):
+                setattr(biz, f'service_{n}', get_service_field(n))
+            db.session.commit()
+            flash("Business profile updated!")
+            return redirect(url_for('business_dashboard'))
+
+    latitude = biz.latitude if biz.latitude else ""
+    longitude = biz.longitude if biz.longitude else ""
+    profile_img_url = url_for('uploaded_file', filename=biz.profile_photo) if biz.profile_photo else None
 
     if request.method == "GET":
         form.downline_level.data = '1'
@@ -585,9 +617,12 @@ def business_dashboard():
                 level5.extend(b5s)
     return render_template("business_dashboard.html", form=form, profile_form=profile_form, biz=biz, sponsor=sponsor,
         rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5,
-        profile_img_url=url_for('uploaded_file', filename=biz.profile_photo) if biz.profile_photo else None,
-        phone_number=biz.phone_number, address=biz.address,
-        latitude=biz.latitude, longitude=biz.longitude)
+        profile_img_url=profile_img_url,
+        phone_number=biz.phone_number,
+        address=biz.address,
+        latitude=latitude,
+        longitude=longitude
+    )
 
 @app.route("/business/logout")
 def business_logout():

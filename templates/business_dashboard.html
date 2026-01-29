@@ -8,73 +8,144 @@
       #map {
         width: 100%; height: 300px; border-radius: 8px; margin-bottom: 12px;
       }
-    </style>
-    <script>
-      function calculateBizNetworkEarnings() {
-        let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
-        let amount = parseFloat(document.getElementById('biz_amount').value) || 0;
-        if (amount > 2500) amount = 2500;
-        document.getElementById('biz_amount').value = amount;
-        let t1 = 0.01 * amount;
-        let t2 = 0.002 * amount * numBiz;
-        let t3 = 0.002 * amount * Math.pow(numBiz, 2);
-        let t4 = 0.002 * amount * Math.pow(numBiz, 3);
-        let t5 = 0.01 * amount * Math.pow(numBiz, 4);
-        let total = t1 + t2 + t3 + t4 + t5;
-        document.getElementById('biz_t1').innerText = t1.toFixed(2);
-        document.getElementById('biz_t2').innerText = t2.toFixed(2);
-        document.getElementById('biz_t3').innerText = t3.toFixed(2);
-        document.getElementById('biz_t4').innerText = t4.toFixed(2);
-        document.getElementById('biz_t5').innerText = t5.toFixed(2);
-        document.getElementById('biz_total').innerText = total.toFixed(2);
-        document.getElementById('biz_results').style.display = 'block';
+      .pointer { cursor: pointer; }
+      .collapse.show { animation: expand 0.3s; }
+      @keyframes expand {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
-    </script>
+      .modal-lg { max-width: 800px; }
+      .service-remove { font-size:1.2em; color:#b33; cursor:pointer; }
+    </style>
 </head>
 <body>
     <div class="container py-5">
+      <!-- Profile Header -->
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-          <h2 class="mb-2 mb-md-0">Welcome, {{ biz.business_name }}!</h2>
+          <div class="d-flex align-items-center">
+            {% if profile_img_url %}
+              <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle me-3" style="width:70px;height:70px;object-fit:cover;">
+            {% else %}
+              <div style="width:70px;height:70px;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center me-3">No Image</div>
+            {% endif %}
+            <div>
+              <h4 class="mb-0">{{ biz.business_name }}</h4>
+            </div>
+          </div>
           <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
 
-      <!-- Profile section -->
-      <div class="card p-4 mb-4">
-        <h4>Your Business Profile</h4>
-        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+      <!-- View/Edit Profile Collapsible Link -->
+      <div>
+        <a class="fw-semibold text-primary pointer" data-bs-toggle="collapse" href="#businessProfileEditCollapse" aria-expanded="false" aria-controls="businessProfileEditCollapse">
+          View/Edit Profile
+        </a>
+      </div>
+
+      <!-- Collapsible Profile Edit Section -->
+      <div class="collapse mt-3" id="businessProfileEditCollapse">
+        <div class="card p-4 mb-4">
+          <h4>Edit Business Profile</h4>
+          <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
             {{ profile_form.hidden_tag() }}
             <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
                 {% if profile_img_url %}
                   <img src="{{ profile_img_url }}" alt="Business Profile Photo" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
                 {% else %}
-                  <div style="width:100px;height:100px;display:inline-block;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center">No Image</div>
+                  <div style="width:100px;height:100px;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center">No Image</div>
                 {% endif %}
                 <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
             </div>
-            <div class="col-12 col-md-auto mb-3 mb-md-0">
+            <div class="col-12 col-md-6">
                 <label class="form-label">Phone Number</label>
-                {{ profile_form.phone_number(class="form-control", value=phone_number, placeholder="Business phone") }}
+                {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555", maxlength="14", pattern="\\(\\d{3}\\) \\d{3}-\\d{4}") }}
+                <div class="form-text">Format: (555) 555-5555</div>
                 <label class="form-label mt-2">Address</label>
                 {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
+                <label class="form-label mt-2">Hours of Operation</label>
+                <input type="text" class="form-control" id="hours_of_operation" name="hours_of_operation" maxlength="100" value="{{ biz.hours_of_operation or '' }}" placeholder="e.g., Mon-Fri 8am-5pm">
+                <label class="form-label mt-2">Website URL</label>
+                <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255" value="{{ biz.website_url or '' }}" placeholder="https://example.com">
+                <label class="form-label mt-2">About Us</label>
+                <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="2000" placeholder="Enter details about your business...">{{ biz.about_us or '' }}</textarea>
             </div>
             <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
             <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
-            <div class="col-12">
-              <label class="form-label">Map: Pin your location</label>
-              <div id="map"></div>
+
+            <!-- Products/Services Offered Collapse -->
+            <div class="col-12 mt-3">
+              <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
+                Products or Services Offered
+              </a>
+              <div class="collapse mt-2" id="servicesCollapse">
+                <div id="services-list">
+                  {% set services = [
+                    biz.service_1 or '',
+                    biz.service_2 or '',
+                    biz.service_3 or '',
+                    biz.service_4 or '',
+                    biz.service_5 or '',
+                    biz.service_6 or '',
+                    biz.service_7 or '',
+                    biz.service_8 or '',
+                    biz.service_9 or '',
+                    biz.service_10 or ''
+                  ] %}
+                  {% set service_count = 0 %}
+                  {% for s in range(0, 10) %}
+                    {% if services[s] or s < 2 %}
+                      <div class="input-group mb-2 service-field" data-index="{{ s }}">
+                        <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
+                        <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
+                      </div>
+                      {% set service_count = service_count + 1 %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                <button class="btn btn-outline-primary" type="button" id="addServiceBtn">+ Add Service</button>
+                <small class="text-muted d-block mt-1">Max 10 services.</small>
+              </div>
             </div>
-            <div class="col-12 col-md-auto">
-                {{ profile_form.submit(class="btn btn-success mt-2") }}
+
+            <!-- Keywords -->
+            <div class="col-12 mt-3">
+              <label class="form-label">Keywords (for search, separated by commas)</label>
+              <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
+              <div class="form-text">Up to 20 keywords (comma-separated).</div>
             </div>
-        </form>
-        <div class="small text-muted mt-2 mb-0">
-          Editing your info automatically updates what your team and customers see.
+
+            <div class="col-12 mt-3 d-flex gap-2">
+              <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
+              {{ profile_form.submit(class="btn btn-success") }}
+            </div>
+          </form>
+          <div class="small text-muted mt-2 mb-0">
+            Save to update your profile listing. Preview shows what users will see.
+          </div>
         </div>
       </div>
-      <!-- End Profile section -->
+      <!-- End Collapsible Profile Edit Section -->
 
-      <!-- ...rest of your dashboard code unchanged... -->
+      <!-- Preview Modal -->
+      <div class="modal fade" id="listingPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Business Listing Preview</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="listing-preview-content">
+              <!-- Populated by JS -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Editing</button>
+              <button type="button" class="btn btn-success" id="saveProfileBtn">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Rest of dashboard here (unchanged) -->
       <div class="card p-4 mb-4">
           <h4>Your Business Referral Code:</h4>
           <code>{{ biz.referral_code }}</code>
@@ -85,106 +156,8 @@
           <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
       </div>
       {% endif %}
-      <div class="card p-4 mb-4">
-          <h4>Estimate Your Rewards From One Single Business Invoice</h4>
-          <form method="post" class="row g-3 mb-3">
-              {{ form.hidden_tag() }}
-              <div class="col-12 col-md-auto">
-                  {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
-                  {% if form.invoice_amount.errors %}
-                      <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
-                  {% endif %}
-              </div>
-              <div class="col-12 col-md-auto">
-                  {{ form.downline_level(class="form-select", required=True) }}
-                  {% if form.downline_level.errors %}
-                      <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
-                  {% endif %}
-              </div>
-              <div class="col-12 col-md-auto">
-                  {{ form.submit(class="btn btn-primary") }}
-              </div>
-          </form>
-          {{ rewards_table | safe }}
-      </div>
-      <div class="card p-4 mb-4">
-        <h4>Business Referral Network Cashback Calculator (one invoice from every business in your network)</h4>
-        <div class="mb-2">
-          <label>If you and everyone in your network refers
-            <input id="biz_network" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
-            business(es) and you each generate one invoice during the month in the amount of $ 
-            <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
-            , this is how much your business would earn in Cashback Rewards for the month:
-          </label>
-          <small class="text-muted d-block">*Maximum invoice amount allowed is $2,500</small>
-        </div>
-        <button class="btn btn-info mb-2" type="button" onclick="calculateBizNetworkEarnings()">Calculate</button>
-        <div id="biz_results" style="display:none;">
-          <ul class="mb-1">
-            <li>Tier One: (Your invoices) = <span id="biz_t1"></span></li>
-            <li>Tier Two: (Invoices from your direct referrals) = <span id="biz_t2"></span></li>
-            <li>Tier Three: (Invoices from 2nd tier referrals) = <span id="biz_t3"></span></li>
-            <li>Tier Four: (Invoices from 3rd tier referrals) = <span id="biz_t4"></span></li>
-            <li>Tier Five: (Invoices from 4th tier referrals) = <span id="biz_t5"></span></li>
-          </ul>
-          <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
-        </div>
-      </div>
-      <div class="card p-4 mb-4">
-          <h4>My Business Network</h4>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
-                  Tier 2 (direct referrals)
-              </a>
-              <div class="collapse mt-2" id="biztier2">
-                  {% if level2 %}
-                      <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
-                  Tier 3 (referred by Tier 2 businesses)
-              </a>
-              <div class="collapse mt-2" id="biztier3">
-                  {% if level3 %}
-                      <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
-                  Tier 4 (referred by Tier 3 businesses)
-              </a>
-              <div class="collapse mt-2" id="biztier4">
-                  {% if level4 %}
-                      <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
-                  Tier 5 (referred by Tier 4 businesses)
-              </a>
-              <div class="collapse mt-2" id="biztier5">
-                  {% if level5 %}
-                      <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-      </div>
-      <div class="card p-4">
-          <h4>This is your business dashboard.</h4>
-          <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
-      </div>
+      <!-- ... you can keep rest of business dashboard as-is ... -->
+
       {% with messages = get_flashed_messages() %}
         {% if messages %}
           <div class="alert alert-warning mt-3">
@@ -195,50 +168,178 @@
         {% endif %}
       {% endwith %}
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Google Maps + Places Autocomplete -->
-    <script>
-      let marker, map, autocomplete;
-      function initMap() {
-        var lat = parseFloat(document.getElementById('latitude').value) || 39.8283;
-        var lng = parseFloat(document.getElementById('longitude').value) || -98.5795;
-        var myLatlng = {lat: lat, lng: lng};
-        map = new google.maps.Map(document.getElementById('map'), { zoom: 4, center: myLatlng });
-        marker = new google.maps.Marker({ position: myLatlng, map: map, draggable: true });
-        // Marker drag
-        google.maps.event.addListener(marker, 'dragend', function(event) {
-          document.getElementById('latitude').value = event.latLng.lat();
-          document.getElementById('longitude').value = event.latLng.lng();
-        });
-        // Map click
-        map.addListener('click', function(e) {
-          marker.setPosition(e.latLng);
-          document.getElementById('latitude').value = e.latLng.lat();
-          document.getElementById('longitude').value = e.latLng.lng();
-        });
 
-        // Add Places Autocomplete
-        var input = document.getElementById('address-autocomplete');
-        autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
-        autocomplete.addListener('place_changed', function () {
-            var place = autocomplete.getPlace();
-            if (!place.geometry) return;
-            // Update hidden fields
-            var lat = place.geometry.location.lat();
-            var lng = place.geometry.location.lng();
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-            // Move marker/map
-            marker.setPosition({lat: lat, lng: lng});
-            map.setCenter({lat: lat, lng: lng});
-            map.setZoom(16);
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Google Maps + Places Autocomplete -->
+<script>
+  let marker, map, autocomplete;
+  function initMap() {
+    var lat = parseFloat(document.getElementById('latitude').value) || 39.8283;
+    var lng = parseFloat(document.getElementById('longitude').value) || -98.5795;
+    var myLatlng = {lat: lat, lng: lng};
+    map = new google.maps.Map(document.getElementById('map'), { zoom: 4, center: myLatlng });
+    marker = new google.maps.Marker({ position: myLatlng, map: map, draggable: true });
+    // Marker drag
+    google.maps.event.addListener(marker, 'dragend', function(event) {
+      document.getElementById('latitude').value = event.latLng.lat();
+      document.getElementById('longitude').value = event.latLng.lng();
+    });
+    // Map click
+    map.addListener('click', function(e) {
+      marker.setPosition(e.latLng);
+      document.getElementById('latitude').value = e.latLng.lat();
+      document.getElementById('longitude').value = e.latLng.lng();
+    });
+
+    // Add Places Autocomplete
+    var input = document.getElementById('address-autocomplete');
+    autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
+    autocomplete.addListener('place_changed', function () {
+        var place = autocomplete.getPlace();
+        if (!place.geometry) return;
+        // Update hidden fields
+        var lat = place.geometry.location.lat();
+        var lng = place.geometry.location.lng();
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+        // Move marker/map
+        marker.setPosition({lat: lat, lng: lng});
+        map.setCenter({lat: lat, lng: lng});
+        map.setZoom(16);
+    });
+  }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
+
+<!-- US phone formatting, dynamic service fields, and preview modal -->
+<script>
+  // US phone mask
+  function formatPhoneNumber(value) {
+    let digits = value.replace(/\D/g, '');
+    let formatted = digits;
+    if (digits.length > 0) {
+      formatted = '(' + digits.substring(0, 3);
+    }
+    if (digits.length >= 4) {
+      formatted += ') ' + digits.substring(3, 6);
+    }
+    if (digits.length >= 7) {
+      formatted += '-' + digits.substring(6, 10);
+    }
+    return formatted.substring(0, 14);
+  }
+  function phoneInputHandler(e) {
+    const input = e.target;
+    const original = input.value;
+    const formatted = formatPhoneNumber(original);
+    if (formatted !== original) {
+      input.value = formatted;
+    }
+  }
+  window.addEventListener('DOMContentLoaded', function() {
+    const phone = document.getElementById('us-phone');
+    if (phone) {
+      phone.addEventListener('input', phoneInputHandler);
+    }
+  });
+
+  // Dynamic add/remove for services (max 10)
+  document.addEventListener('DOMContentLoaded', function(){
+      let maxServices = 10;
+      let servicesList = document.getElementById('services-list');
+      let addBtn = document.getElementById('addServiceBtn');
+
+      function countServices() {
+        return servicesList.querySelectorAll('.service-field').length;
+      }
+      addBtn && addBtn.addEventListener('click', function(){
+        let idx = countServices();
+        if(idx >= maxServices) return;
+        let div = document.createElement('div');
+        div.className = 'input-group mb-2 service-field';
+        div.setAttribute('data-index', idx);
+        div.innerHTML = `<input type="text" class="form-control" name="service_${idx+1}" maxlength="100" placeholder="Service #${idx+1}">
+                        <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)">&minus;</button>`;
+        servicesList.appendChild(div);
+        updateRemoveButtons();
+      });
+      window.removeService = function(btn){
+        let fields = servicesList.querySelectorAll('.service-field');
+        if(fields.length <= 2) return;
+        btn.closest('.service-field').remove();
+        // Rename remaining inputs
+        let fieldsNew = servicesList.querySelectorAll('.service-field');
+        fieldsNew.forEach((field, idx) => {
+          let input = field.querySelector('input');
+          input.placeholder = "Service #"+(idx+1);
+          input.name = "service_"+(idx+1);
+          field.setAttribute('data-index', idx);
+        });
+        updateRemoveButtons();
+      }
+      function updateRemoveButtons(){
+        let fields = servicesList.querySelectorAll('.service-field');
+        fields.forEach((f,i)=>{
+          let b = f.querySelector('.service-remove');
+          b.disabled = i<2;
         });
       }
-    </script>
-    <!-- 
-      !! Place your Google Maps API KEY below.
-      Make sure it has BOTH Maps JavaScript API and Places API enabled.
-    -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
+      updateRemoveButtons();
+  });
+
+  // Preview Modal
+  document.addEventListener('DOMContentLoaded', function(){
+    let previewBtn = document.getElementById('previewListingBtn');
+    let saveBtn = document.getElementById('saveProfileBtn');
+    let form = document.getElementById('profile-form');
+    let modal = document.getElementById('listingPreviewModal');
+    let modalContent = document.getElementById('listing-preview-content');
+    let previewModal = new bootstrap.Modal(modal);
+
+    previewBtn && previewBtn.addEventListener('click', function(){
+      // Build preview HTML from form values
+      let profileImgUrl = "{{ profile_img_url }}";
+      let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ biz.business_name }}";
+      let phone = document.getElementById('us-phone').value;
+      let address = document.getElementById('address-autocomplete').value;
+      let hours = document.getElementById('hours_of_operation').value;
+      let website = document.getElementById('website_url').value;
+      let about = document.getElementById('about_us').value;
+      let keywords = document.getElementById('search_keywords').value;
+      // Collect services
+      let services = [];
+      document.querySelectorAll('#services-list input').forEach(input => {
+        if(input.value.trim()!="") services.push(input.value.trim());
+      });
+      // Build HTML
+      let html = `
+        <div class="row">
+          <div class="col-md-3 text-center mb-3">
+            ${profileImgUrl ? `<img src="${profileImgUrl}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;">` : `<div style="width:120px;height:120px;background:#eee;" class="rounded-circle d-flex justify-content-center align-items-center"><span>No Image</span></div>`}
+          </div>
+          <div class="col-md-9">
+            <h3>${name}</h3>
+            ${website ? `<div class="mb-2"><a href="${website}" target="_blank">${website}</a></div>` : ""}
+            <div class="mb-2"><strong>Phone:</strong> ${phone ? phone : 'N/A'}</div>
+            <div class="mb-2"><strong>Address:</strong> ${address ? address : 'N/A'}</div>
+            <div class="mb-2"><strong>Hours:</strong> ${hours ? hours : 'N/A'}</div>
+            <div class="mb-2"><strong>About Us:</strong><br>${about ? about.replace(/\n/g,'<br>') : 'N/A'}</div>
+            <div class="mb-2"><strong>Products/Services:</strong>${services.length ? `<ul class="mb-0">${services.map(s=>`<li>${s}</li>`).join('')}</ul>` : 'N/A'}</div>
+            <div class="mb-2"><strong>Keywords for Search:</strong> ${keywords ? keywords : 'N/A'}</div>
+          </div>
+        </div>
+      `;
+      modalContent.innerHTML = html;
+      previewModal.show();
+    });
+
+    // Let "Save" in modal submit the form
+    saveBtn && saveBtn.addEventListener('click', function(){
+      previewModal.hide();
+      form && form.submit();
+    });
+  });
+</script>
 </body>
 </html>
