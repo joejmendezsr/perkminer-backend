@@ -531,8 +531,8 @@ def business_dashboard():
             rewards_desc = "As the business, you earn"
             cap = None
         elif downline_level in [2, 3, 4]:
-            rate = 0.0025
-            cap = 3.25
+            rate = 0.002
+            cap = 3.75
             reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If your level {downline_level} downline business makes a purchase"
         elif downline_level == 5:
