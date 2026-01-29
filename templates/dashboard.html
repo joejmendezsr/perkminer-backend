@@ -37,17 +37,17 @@
         let desc = "";
         let cap = null;
         if (tier === "1") {
-            reward = amount * 0.02; desc = "As the customer, you earn";
+            reward = amount * 0.02; desc = "As the customer, from a purchase you make";
         } else if (["2","3","4"].includes(tier)) {
             reward = amount * 0.0025;
             cap = 6.25;
             if (reward > cap) reward = cap;
-            desc = `If your level ${tier} downline makes a purchase`;
+            desc = `If your Tier ${tier} referral makes a purchase`;
         } else if (tier === "5") {
             reward = amount * 0.02;
             cap = 50;
             if (reward > cap) reward = cap;
-            desc = "If your level 5 downline makes a purchase";
+            desc = "If your Tier 5 referral makes a purchase";
         }
         let out = '';
         if (amount > 0) {
