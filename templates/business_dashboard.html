@@ -36,6 +36,29 @@
           <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
 
+      <!-- Invite Other Businesses Button and Modal -->
+      <div class="mb-4">
+        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#businessInviteModal">Invite other businesses to join</button>
+      </div>
+      <div class="modal fade" id="businessInviteModal" tabindex="-1" aria-labelledby="businessInviteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
+            <div class="modal-header">
+              <h5 class="modal-title" id="businessInviteModalLabel">Invite Other Businesses to Join PerkMiner</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <label for="business-invitee-email" class="form-label">Recipient's Email Address:</label>
+              <input type="email" required class="form-control" id="business-invitee-email" name="invitee_email" placeholder="Enter business email to invite">
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Send Invitation</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- View/Edit Profile Collapsible Link -->
       <div>
         <a class="fw-semibold text-primary pointer" data-bs-toggle="collapse" href="#businessProfileEditCollapse" aria-expanded="false" aria-controls="businessProfileEditCollapse">
@@ -146,7 +169,7 @@
         </div>
       </div>
 
-      <!-- Business Referral Code, Sponsor, Calculators, Network Display (as before) -->
+      <!-- Business Referral Code, Sponsor, Calculators, Network Display -->
       <div class="card p-4 mb-4">
           <h4>Your Business Referral Code:</h4>
           <code>{{ biz.referral_code }}</code>
@@ -305,7 +328,6 @@
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
 
-<!-- US phone formatting, dynamic service fields, and preview modal -->
 <script>
   function formatPhoneNumber(value) {
     let digits = value.replace(/\D/g, '');
@@ -336,7 +358,6 @@
     }
   });
 
-  // Dynamic add/remove for services (max 10)
   document.addEventListener('DOMContentLoaded', function(){
       let maxServices = 10;
       let servicesList = document.getElementById('services-list');
@@ -379,7 +400,6 @@
       updateRemoveButtons();
   });
 
-  // Preview Modal
   document.addEventListener('DOMContentLoaded', function(){
     let previewBtn = document.getElementById('previewListingBtn');
     let saveBtn = document.getElementById('saveProfileBtn');
@@ -389,7 +409,6 @@
     let previewModal = new bootstrap.Modal(modal);
 
     previewBtn && previewBtn.addEventListener('click', function(){
-      // Grab the map location fields, build map
       let profileImgUrl = "{{ profile_img_url }}";
       let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ biz.business_name }}";
       let phone = document.getElementById('us-phone').value;
@@ -397,7 +416,6 @@
       let hours = document.getElementById('hours_of_operation').value;
       let website = document.getElementById('website_url').value;
       let about = document.getElementById('about_us').value;
-      // let keywords = document.getElementById('search_keywords').value; // do not display in preview
       let lat = document.getElementById('latitude').value;
       let lng = document.getElementById('longitude').value;
       let hasMap = !!(lat && lng && !isNaN(lat) && !isNaN(lng));
@@ -421,7 +439,6 @@
         </div>
         `;
         setTimeout(function() {
-          // Only load the map if map section is expanded
           let mapLoad = false;
           let theCollapse = document.getElementById(mapId);
           if (theCollapse) {
@@ -460,7 +477,6 @@
       previewModal.show();
     });
 
-    // "Save" in modal submits the form
     saveBtn && saveBtn.addEventListener('click', function(){
       previewModal.hide();
       form && form.submit();
