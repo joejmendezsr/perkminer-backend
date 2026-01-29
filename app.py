@@ -588,13 +588,13 @@ def business_dashboard():
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.01; rewards_desc = "As the business, for an invoice you create and get paid for in the amount of"; cap = None
+            reward = invoice_amount * 0.01; rewards_desc = "As the business, for an invoice you create and get paid for in the amount"; cap = None
         elif downline_level in [2, 3, 4]:
             rate = 0.002; cap = 3.75; reward = min(invoice_amount * rate, cap)
-            rewards_desc = f"If a Tier {downline_level} business creates and gets paid for an invoice"
+            rewards_desc = f"If a Tier {downline_level} business creates and gets paid for an invoice in the amount"
         elif downline_level == 5:
             rate = 0.02; cap = 25; reward = min(invoice_amount * rate, cap)
-            rewards_desc = "If a Tier 5 business creates and gets paid for an invoice"
+            rewards_desc = "If a Tier 5 business creates and gets paid for an invoice in the amount"
         else: reward = 0; rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
