@@ -356,7 +356,7 @@ def dashboard():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("login"))
+    return redirect(url_for("/home"))
 
 # BUSINESS ROUTES
 @app.route("/business/register", methods=["GET", "POST"])
@@ -552,7 +552,7 @@ def business_dashboard():
 def business_logout():
     session.pop('business_id', None)
     flash("Logged out as business.")
-    return redirect(url_for("business_login"))
+    return redirect(url_for("business_home"))
 
 if __name__ == "__main__":
     app.run(debug=True)
