@@ -317,6 +317,25 @@ def login():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/invite', methods=['POST'])
+@login_required
+def invite():
+    invite_form = InviteForm()
+    if not invite_form.validate_on_submit():
+        flash('Invalid form.')
+        return redirect(url_for('dashboard'))
+    invitee_email = invite_form.invitee_email.data.strip()
+    inviter_name = current_user.name if current_user.name else current_user.email
+    subject = f"You have been invited by {inviter_name} to join Perkminer."
+    reg_url = url_for('register', ref=current_user.referral_code, _external=True)
+    html_body = f"""
+    <p>You have been invited by {inviter_name} to join PerkMiner. Here are the benefits of joining.</p>
+    <p><a href="{reg_url}">Join PerkMiner</a></p>
+    """
+    send_email(invitee_email, subject, html_body)
+    flash('Invitation sent!')
+    return redirect(url_for('dashboard'))
+
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
@@ -520,6 +539,25 @@ def business_login():
         else:
             message = "Login failed. Check business email and password."
     return render_template("business_login.html", message=message, form=form)
+
+@app.route('/business/invite', methods=['POST'])
+def business_invite():
+    invite_form = BusinessInviteForm()
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id) if biz_id else None
+    if not biz or not invite_form.validate_on_submit():
+        flash("Business invite failed. Please log in and use a valid email.")
+        return redirect(url_for("business_login"))
+    invitee_email = invite_form.invitee_email.data.strip()
+    subject = f"You have been invited by {biz.business_name} to join Perkminer."
+    reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
+    html_body = f"""
+    <p>You have been invited by {biz.business_name} to join PerkMiner. Here are the benefits of joining.</p>
+    <p><a href="{reg_url}">Join PerkMiner as a Business</a></p>
+    """
+    send_email(invitee_email, subject, html_body)
+    flash('Business invitation sent!')
+    return redirect(url_for('business_dashboard'))
 
 @app.route("/business/dashboard", methods=["GET", "POST"])
 def business_dashboard():
