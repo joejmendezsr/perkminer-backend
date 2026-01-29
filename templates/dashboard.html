@@ -8,9 +8,9 @@
         let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
         let amount = parseFloat(document.getElementById('network_amount').value) || 0;
         let t1 = 0.02 * amount;
-        let t2 = 0.002 * amount * numPeople;
-        let t3 = 0.002 * amount * Math.pow(numPeople, 2);
-        let t4 = 0.002 * amount * Math.pow(numPeople, 3);
+        let t2 = 0.0025 * amount * numPeople;
+        let t3 = 0.0025 * amount * Math.pow(numPeople, 2);
+        let t4 = 0.0025 * amount * Math.pow(numPeople, 3);
         let t5 = 0.02 * amount * Math.pow(numPeople, 4);
         let total = t1 + t2 + t3 + t4 + t5;
         document.getElementById('network_t1').innerText = t1.toFixed(2);
@@ -39,7 +39,7 @@
     </div>
     {% endif %}
     <div class="card p-4 mb-4">
-        <h4>Estimate Your Rewards From Purchases</h4>
+        <h4>Estimate Your Rewards From A Single Purchase</h4>
         <form method="post" class="row g-3 mb-3">
             {{ form.hidden_tag() }}
             <div class="col-auto">
@@ -75,11 +75,11 @@
       <button class="btn btn-info mb-2" type="button" onclick="calculateNetworkEarnings()">Calculate</button>
       <div id="network_results" style="display:none;">
         <ul class="mb-1">
-          <li>Tier One: 2% of amount = <span id="network_t1"></span></li>
-          <li>Tier Two: 0.2% of amount × # of people = <span id="network_t2"></span></li>
-          <li>Tier Three: 0.2% of amount × (# of people)^2 = <span id="network_t3"></span></li>
-          <li>Tier Four: 0.2% of amount × (# of people)^3 = <span id="network_t4"></span></li>
-          <li>Tier Five: 2% of amount × (# of people)^4 = <span id="network_t5"></span></li>
+          <li>Tier One: (Your purchases) = <span id="network_t1"></span></li>
+          <li>Tier Two: (Purchases from your direct referrals) = <span id="network_t2"></span></li>
+          <li>Tier Three: (Purchases from 2nd Tier referrals) = <span id="network_t3"></span></li>
+          <li>Tier Four: (Purchases from 3rd Tier referrals) = <span id="network_t4"></span></li>
+          <li>Tier Five: (Purchases from 4th Tier referrals) = <span id="network_t5"></span></li>
         </ul>
         <strong>Your total earnings for the month would be $<span id="network_total"></span></strong>
       </div>
