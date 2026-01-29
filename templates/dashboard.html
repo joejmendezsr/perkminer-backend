@@ -3,6 +3,25 @@
 <head>
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script>
+      function calculateNetworkEarnings() {
+        let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
+        let amount = parseFloat(document.getElementById('network_amount').value) || 0;
+        let t1 = 0.02 * amount;
+        let t2 = 0.002 * amount * numPeople;
+        let t3 = 0.002 * amount * Math.pow(numPeople, 2);
+        let t4 = 0.002 * amount * Math.pow(numPeople, 3);
+        let t5 = 0.02 * amount * Math.pow(numPeople, 4);
+        let total = t1 + t2 + t3 + t4 + t5;
+        document.getElementById('network_t1').innerText = t1.toFixed(2);
+        document.getElementById('network_t2').innerText = t2.toFixed(2);
+        document.getElementById('network_t3').innerText = t3.toFixed(2);
+        document.getElementById('network_t4').innerText = t4.toFixed(2);
+        document.getElementById('network_t5').innerText = t5.toFixed(2);
+        document.getElementById('network_total').innerText = total.toFixed(2);
+        document.getElementById('network_results').style.display = 'block';
+      }
+    </script>
 </head>
 <body class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -41,6 +60,31 @@
         </form>
         {{ rewards_table | safe }}
     </div>
+
+    <!-- New Network Earnings Calculator for Users -->
+    <div class="card p-4 mb-4">
+      <h4>Referral Network Cashback Calculator</h4>
+      <div class="mb-2">
+        <label>If you and everyone in your network refers 
+          <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
+          people and you each make one purchase during the month in the amount of $ 
+          <input id="network_amount" type="number" class="form-control d-inline-block w-auto" min="0" step="0.01" value="100" style="width:110px;" />
+          , this is how much you would earn in Cashback Rewards for the month:
+        </label>
+      </div>
+      <button class="btn btn-info mb-2" type="button" onclick="calculateNetworkEarnings()">Calculate</button>
+      <div id="network_results" style="display:none;">
+        <ul class="mb-1">
+          <li>Tier One: 2% of amount = <span id="network_t1"></span></li>
+          <li>Tier Two: 0.2% of amount × # of people = <span id="network_t2"></span></li>
+          <li>Tier Three: 0.2% of amount × (# of people)^2 = <span id="network_t3"></span></li>
+          <li>Tier Four: 0.2% of amount × (# of people)^3 = <span id="network_t4"></span></li>
+          <li>Tier Five: 2% of amount × (# of people)^4 = <span id="network_t5"></span></li>
+        </ul>
+        <strong>Your total earnings for the month would be $<span id="network_total"></span></strong>
+      </div>
+    </div>
+
     <div class="card p-4 mb-4">
         <h4>My Network</h4>
         <div>
