@@ -36,24 +36,24 @@
           <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
 
-      <!-- Invite Other Businesses Button and Modal (with CSRF token) -->
+      <!-- Invite Other Businesses Button and Modal -->
       <div class="mb-4">
         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#businessInviteModal">Invite other businesses to join</button>
       </div>
       <div class="modal fade" id="businessInviteModal" tabindex="-1" aria-labelledby="businessInviteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
-            {{ csrf_token() }}
+            {{ invite_form.hidden_tag() }}
             <div class="modal-header">
               <h5 class="modal-title" id="businessInviteModalLabel">Invite Other Businesses to Join PerkMiner</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
               <label for="business-invitee-email" class="form-label">Recipient's Email Address:</label>
-              <input type="email" required class="form-control" id="business-invitee-email" name="invitee_email" placeholder="Enter business email to invite">
+              {{ invite_form.invitee_email(class="form-control", id="business-invitee-email", placeholder="Enter business email to invite", required=True) }}
             </div>
             <div class="modal-footer">
-              <button type="submit" class="btn btn-primary">Send Invitation</button>
+              {{ invite_form.submit(class="btn btn-primary") }}
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
           </form>
@@ -131,14 +131,11 @@
                 <small class="text-muted d-block mt-1">Max 10 services.</small>
               </div>
             </div>
-
-            <!-- Keywords -->
             <div class="col-12 mt-3">
               <label class="form-label">Keywords (for search, separated by commas)</label>
               <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
               <div class="form-text">Up to 20 keywords (comma-separated).</div>
             </div>
-
             <div class="col-12 mt-3 d-flex gap-2">
               <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
               {{ profile_form.submit(class="btn btn-success") }}
@@ -149,7 +146,6 @@
           </div>
         </div>
       </div>
-      <!-- End Collapsible Profile Edit Section -->
 
       <!-- Preview Modal -->
       <div class="modal fade" id="listingPreviewModal" tabindex="-1">
@@ -170,7 +166,6 @@
         </div>
       </div>
 
-      <!-- Business Referral Code, Sponsor, Calculators, Network Display -->
       <div class="card p-4 mb-4">
           <h4>Your Business Referral Code:</h4>
           <code>{{ biz.referral_code }}</code>
@@ -307,7 +302,7 @@
       document.getElementById('latitude').value = event.latLng.lat();
       document.getElementById('longitude').value = event.latLng.lng();
     });
-    map.addListener('click', function(e) {
+    map.addEventListener && map.addEventListener('click', function(e) {
       marker.setPosition(e.latLng);
       document.getElementById('latitude').value = e.latLng.lat();
       document.getElementById('longitude').value = e.latLng.lng();
