@@ -347,12 +347,12 @@ def dashboard():
         form.downline_level.data = '1'
         reward = invoice_amount * 0.02
         cap = None
-        rewards_desc = "As the customer, you earn"
+        rewards_desc = "As the customer, when you make a purchase in the amount of"
     else:
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.02; rewards_desc = "As the customer, you earn"; cap = None
+            reward = invoice_amount * 0.02; rewards_desc = "When you make a purchase, you earn"; cap = None
         elif downline_level in [2, 3, 4]:
             rate = 0.0025; cap = 6.25; reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If a person in your Tier {downline_level} level makes a purchase"
@@ -588,7 +588,7 @@ def business_dashboard():
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.01; rewards_desc = "As the business, you earn"; cap = None
+            reward = invoice_amount * 0.01; rewards_desc = "As the business, for an invoice you create and get paid for in the amount of"; cap = None
         elif downline_level in [2, 3, 4]:
             rate = 0.002; cap = 3.75; reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If a Tier {downline_level} business creates and gets paid for an invoice"
@@ -599,10 +599,10 @@ def business_dashboard():
     if invoice_amount > 0 and reward is not None:
         if cap:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
-            rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback (capped at ${cap:.2f}).</div>"
+            rewards_table += f"<div class='alert alert-success'>Your business earns <strong>${reward:.2f}</strong> as cashback (capped at ${cap:.2f}).</div>"
         else:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
-            rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
+            rewards_table += f"<div class='alert alert-success'>Your business earns <strong>${reward:.2f}</strong> as cashback.</div>"
     sponsor = Business.query.get(biz.sponsor_id) if biz.sponsor_id else None
     level2 = Business.query.filter_by(sponsor_id=biz.id).all()
     level3, level4, level5 = [], [], []
