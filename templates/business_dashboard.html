@@ -4,6 +4,11 @@
     <title>Business Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+      #map {
+        width: 100%; height: 300px; border-radius: 8px; margin-bottom: 12px;
+      }
+    </style>
     <script>
       function calculateBizNetworkEarnings() {
         let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
@@ -32,6 +37,42 @@
           <h2 class="mb-2 mb-md-0">Welcome, {{ biz.business_name }}!</h2>
           <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
+
+      <!-- Profile section -->
+      <div class="card p-4 mb-4">
+        <h4>Your Business Profile</h4>
+        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+            {{ profile_form.hidden_tag() }}
+            <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
+                {% if profile_img_url %}
+                  <img src="{{ profile_img_url }}" alt="Business Profile Photo" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;">
+                {% else %}
+                  <div style="width:100px;height:100px;display:inline-block;background:#eee;" class="rounded-circle text-center d-flex justify-content-center align-items-center">No Image</div>
+                {% endif %}
+                <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
+            </div>
+            <div class="col-12 col-md-auto mb-3 mb-md-0">
+                <label class="form-label">Phone Number</label>
+                {{ profile_form.phone_number(class="form-control", value=phone_number, placeholder="Business phone") }}
+                <label class="form-label mt-2">Address</label>
+                {{ profile_form.address(class="form-control", value=address, placeholder="Business address") }}
+            </div>
+            <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
+            <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
+            <div class="col-12">
+              <label class="form-label">Map: Pin your location</label>
+              <div id="map"></div>
+            </div>
+            <div class="col-12 col-md-auto">
+                {{ profile_form.submit(class="btn btn-success mt-2") }}
+            </div>
+        </form>
+        <div class="small text-muted mt-2 mb-0">
+          Editing your info automatically updates what your team and customers see.
+        </div>
+      </div>
+      <!-- End Profile section -->
+
       <div class="card p-4 mb-4">
           <h4>Your Business Referral Code:</h4>
           <code>{{ biz.referral_code }}</code>
@@ -153,5 +194,38 @@
       {% endwith %}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Google Maps Script: Insert your API key below -->
+    <script>
+      function initMap() {
+        // Set initial location (existing or default to US center)
+        var lat = parseFloat(document.getElementById('latitude').value) || 39.8283;
+        var lng = parseFloat(document.getElementById('longitude').value) || -98.5795;
+        var myLatlng = {lat: lat, lng: lng};
+
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 4,
+          center: myLatlng
+        });
+
+        var marker = new google.maps.Marker({
+          position: myLatlng,
+          map: map,
+          draggable: true
+        });
+
+        // On marker drag or map click, update hidden fields
+        google.maps.event.addListener(marker, 'dragend', function(event) {
+          document.getElementById('latitude').value = event.latLng.lat();
+          document.getElementById('longitude').value = event.latLng.lng();
+        });
+
+        map.addListener('click', function(e) {
+          marker.setPosition(e.latLng);
+          document.getElementById('latitude').value = e.latLng.lat();
+          document.getElementById('longitude').value = e.latLng.lng();
+        });
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&callback=initMap" async defer></script>
 </body>
 </html>
