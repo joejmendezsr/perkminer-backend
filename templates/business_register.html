@@ -10,18 +10,30 @@
         {{ form.hidden_tag() }}
         <div class="mb-3">
             {{ form.business_name(class="form-control", placeholder="Business Name (will be visible)", required=True) }}
+            {% if form.business_name.errors %}
+                <div class="text-danger small">{{ form.business_name.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.business_email(class="form-control", placeholder="Business Email", required=True) }}
+            {% if form.business_email.errors %}
+                <div class="text-danger small">{{ form.business_email.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.password(class="form-control", placeholder="Password", required=True) }}
             <small class="form-text text-muted">Minimum 8 characters</small>
+            {% if form.password.errors %}
+                <div class="text-danger small">{{ form.password.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.referral_code(class="form-control", placeholder="Referral Code (optional)") }}
+            {% if form.referral_code.errors %}
+                <div class="text-danger small">{{ form.referral_code.errors[0] }}</div>
+            {% endif %}
         </div>
-        <button type="submit" class="btn btn-success">Register</button>
+        {{ form.submit(class="btn btn-success") }}
     </form>
     <a href="{{ url_for('business_login') }}">Already have a business account? Login</a>
     {% with messages = get_flashed_messages() %}
