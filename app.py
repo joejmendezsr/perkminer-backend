@@ -355,10 +355,10 @@ def dashboard():
             reward = invoice_amount * 0.02; rewards_desc = "As the customer, you earn"; cap = None
         elif downline_level in [2, 3, 4]:
             rate = 0.0025; cap = 6.25; reward = min(invoice_amount * rate, cap)
-            rewards_desc = f"If your level {downline_level} downline makes a purchase"
+            rewards_desc = f"If a person in your Tier {downline_level} level makes a purchase"
         elif downline_level == 5:
             rate = 0.02; cap = 50; reward = min(invoice_amount * rate, cap)
-            rewards_desc = "If your level 5 downline makes a purchase"
+            rewards_desc = "If a person in your Tier 5 level makes a purchase"
         else: reward = 0; rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
@@ -591,10 +591,10 @@ def business_dashboard():
             reward = invoice_amount * 0.01; rewards_desc = "As the business, you earn"; cap = None
         elif downline_level in [2, 3, 4]:
             rate = 0.002; cap = 3.75; reward = min(invoice_amount * rate, cap)
-            rewards_desc = f"If your level {downline_level} downline business makes a purchase"
+            rewards_desc = f"If a Tier {downline_level} business creates and gets paid for an invoice"
         elif downline_level == 5:
             rate = 0.02; cap = 25; reward = min(invoice_amount * rate, cap)
-            rewards_desc = "If your level 5 downline business makes a purchase"
+            rewards_desc = "If a Tier 5 business creates and gets paid for an invoice"
         else: reward = 0; rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
