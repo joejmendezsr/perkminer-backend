@@ -36,13 +36,14 @@
           <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
 
-      <!-- Invite Other Businesses Button and Modal -->
+      <!-- Invite Other Businesses Button and Modal (with CSRF token) -->
       <div class="mb-4">
         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#businessInviteModal">Invite other businesses to join</button>
       </div>
       <div class="modal fade" id="businessInviteModal" tabindex="-1" aria-labelledby="businessInviteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
+            {{ csrf_token() }}
             <div class="modal-header">
               <h5 class="modal-title" id="businessInviteModalLabel">Invite Other Businesses to Join PerkMiner</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
