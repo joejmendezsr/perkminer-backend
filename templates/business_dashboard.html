@@ -24,7 +24,7 @@
         <form method="post" class="row g-3 mb-3">
             {{ form.hidden_tag() }}
             <div class="col-auto">
-                {{ form.invoice_amount(class="form-control", placeholder="Invoice Amount (e.g. 500)", required=True) }}
+                {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", required=True) }}
                 {% if form.invoice_amount.errors %}
                     <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
                 {% endif %}
@@ -42,9 +42,9 @@
         {{ rewards_table | safe }}
     </div>
     <div class="card p-4 mb-4">
-        <h4>My Downline Businesses</h4>
+        <h4>My Business Network</h4>
         <div>
-            <strong>Level 2 (direct referrals):</strong>
+            <strong>Tier 2 (direct referrals):</strong>
             {% if level2 %}
                 <ul class="mb-2">{% for b in level2 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
             {% else %}
@@ -52,7 +52,7 @@
             {% endif %}
         </div>
         <div>
-            <strong>Level 3:</strong>
+            <strong>Tier 3 (referred by Tier 2 businesses):</strong>
             {% if level3 %}
                 <ul class="mb-2">{% for b in level3 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
             {% else %}
@@ -60,7 +60,7 @@
             {% endif %}
         </div>
         <div>
-            <strong>Level 4:</strong>
+            <strong>Tier 4 (referred by Tier 3 businesses):</strong>
             {% if level4 %}
                 <ul class="mb-2">{% for b in level4 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
             {% else %}
@@ -68,7 +68,7 @@
             {% endif %}
         </div>
         <div>
-            <strong>Level 5:</strong>
+            <strong>Tier 5 (referred by Tier 4 businesses):</strong>
             {% if level5 %}
                 <ul class="mb-2">{% for b in level5 %}<li>{{ b.business_name }} ({{ b.referral_code }})</li>{% endfor %}</ul>
             {% else %}
