@@ -105,6 +105,11 @@ def send_business_verification_email(biz):
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to verify your business email, or use code: <b>{code}</b></p>"""
     send_email(biz.business_email, "[PerkMiner] Verify your business email!", html_body)
 
+# WTForms - for both verification pages
+class VerifyCodeForm(FlaskForm):
+    code = StringField('Code', validators=[DataRequired()])
+    submit = SubmitField('Verify')
+
 # HOMEPAGE and BUSINESS HOME routes
 @app.route("/")
 def home():
@@ -170,7 +175,7 @@ class BusinessRewardForm(FlaskForm):
     )
     submit = SubmitField('Calculate My Reward')
 
-# USER ROUTES (registration, verification, login, dashboard, etc.)
+# USER routes
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
@@ -216,6 +221,7 @@ def register():
 
 @app.route("/verify_email", methods=["GET", "POST"])
 def verify_email():
+    form = VerifyCodeForm()
     pending_email = session.get('pending_email')
     user = User.query.filter_by(email=pending_email).first() if pending_email else None
     can_resend = False
@@ -232,8 +238,8 @@ def verify_email():
         can_resend = True
     else:
         wait_seconds = int(30 - (now - last_sent))
-    if request.method == "POST":
-        submitted_code = request.form.get("code", "").strip().upper()
+    if form.validate_on_submit():
+        submitted_code = form.code.data.strip().upper()
         if submitted_code == user.email_code:
             user.email_confirmed = True
             db.session.commit()
@@ -242,7 +248,12 @@ def verify_email():
             return redirect(url_for("login"))
         else:
             flash("Incorrect code.")
-    return render_template("verify_email.html", can_resend=can_resend, wait_seconds=wait_seconds)
+    return render_template(
+        "verify_email.html",
+        form=form,
+        can_resend=can_resend,
+        wait_seconds=wait_seconds,
+    )
 
 @app.route("/resend_verification", methods=["POST"])
 def resend_verification():
@@ -358,7 +369,8 @@ def logout():
     logout_user()
     return redirect(url_for("home"))
 
-# BUSINESS ROUTES
+# BUSINESS ROUTES with CSRF/wtforms for code verify
+
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
     form = BusinessRegisterForm()
@@ -409,6 +421,7 @@ def business_register():
 
 @app.route("/business/verify_email", methods=["GET", "POST"])
 def business_verify_email():
+    form = VerifyCodeForm()
     pending_email = session.get('pending_business_email')
     biz = Business.query.filter_by(business_email=pending_email).first() if pending_email else None
     can_resend = False
@@ -425,8 +438,8 @@ def business_verify_email():
         can_resend = True
     else:
         wait_seconds = int(30 - (now - last_sent))
-    if request.method == "POST":
-        submitted_code = request.form.get("code", "").strip().upper()
+    if form.validate_on_submit():
+        submitted_code = form.code.data.strip().upper()
         if submitted_code == biz.email_code:
             biz.email_confirmed = True
             db.session.commit()
@@ -435,7 +448,12 @@ def business_verify_email():
             return redirect(url_for("business_login"))
         else:
             flash("Incorrect code.")
-    return render_template("business_verify_email.html", can_resend=can_resend, wait_seconds=wait_seconds)
+    return render_template(
+        "business_verify_email.html",
+        form=form,
+        can_resend=can_resend,
+        wait_seconds=wait_seconds,
+    )
 
 @app.route("/business/resend_verification", methods=["POST"])
 def business_resend_verification():
