@@ -4,8 +4,8 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
 from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, Optional
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 import os, re, random, string, time, logging
 
 app = Flask(__name__)
@@ -28,8 +28,6 @@ csrf = CSRFProtect(app)
 logging.basicConfig(level=logging.INFO)
 
 SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
-
-# Password minimum/complexity settings
 MIN_PASSWORD_LENGTH = 8
 
 @login_manager.user_loader
@@ -61,7 +59,6 @@ def valid_email(email):
     return re.match(EMAIL_REGEX, email or "")
 
 def valid_password(pw):
-    # Add more checks as needed (uppercase, symbol, etc)
     return pw and len(pw) >= MIN_PASSWORD_LENGTH
 
 def random_email_code():
@@ -90,7 +87,7 @@ def send_email(to, subject, html_body):
     try:
         mail.send(msg)
     except Exception as e:
-        logging.error("EMAIL SEND ERROR: %s", e)  # Now using logging, not print
+        logging.error("EMAIL SEND ERROR: %s", e)
 
 def send_verification_email(user):
     code = user.email_code
@@ -108,7 +105,7 @@ def send_business_verification_email(biz):
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to verify your business email, or use code: <b>{code}</b></p>"""
     send_email(biz.business_email, "[PerkMiner] Verify your business email!", html_body)
 
-# ------------- WTForms: Replace inline forms in routes with FlaskForm classes -----------------
+# WTForms classes
 class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
@@ -119,6 +116,18 @@ class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
+
+class RewardForm(FlaskForm):
+    invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2)
+    downline_level = SelectField(
+        'Downline Level',
+        choices=[('2', 'Level 2 (direct referral)'),
+                 ('3', "Level 3 (referral's referral)"),
+                 ('4', "Level 4 (third downline)"),
+                 ('5', "Level 5 (fourth downline)")],
+        validators=[DataRequired()]
+    )
+    submit = SubmitField('Calculate My Reward')
 
 class BusinessRegisterForm(FlaskForm):
     business_name = StringField('Business Name', validators=[DataRequired()])
@@ -132,8 +141,19 @@ class BusinessLoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
-# ------------------- User routes (move HTML into templates/ as marked) ------------------------
+class BusinessRewardForm(FlaskForm):
+    invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2)
+    downline_level = SelectField(
+        'Downline Level',
+        choices=[('2', 'Level 2 (your directly referred businesses)'),
+                 ('3', "Level 3 (businesses referred by your direct referrals)"),
+                 ('4', "Level 4 (third-level downline)"),
+                 ('5', "Level 5 (fourth-level downline)")],
+        validators=[DataRequired()]
+    )
+    submit = SubmitField('Calculate My Reward')
 
+# Routes
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
@@ -176,9 +196,6 @@ def register():
         session['last_verification_sent'] = time.time()
         return redirect(url_for("verify_email"))
     return render_template("register.html", form=form)
-
-# Move previous inline HTML into 'templates/register.html'
-# Repeat for all HTML inline templates—see bottom of this code for guidance.
 
 @app.route("/verify_email", methods=["GET", "POST"])
 def verify_email():
@@ -262,34 +279,26 @@ def home():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
+    form = RewardForm()
     if not current_user.email_confirmed:
         flash("You must confirm your email to access the dashboard.")
         return redirect(url_for("login"))
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     rewards_table = ""
-    if request.method == "POST":
-        try:
-            invoice_amount = float(request.form.get("invoice_amount", 0))
-            downline_level = int(request.form.get("downline_level", 2))
-            if not (0 < invoice_amount <= 2500):
-                flash("Amount must be between 0 and 2500.")
-            elif downline_level not in [2, 3, 4, 5]:
-                flash("Invalid downline level.")
-            else:
-                if downline_level in [2, 3, 4]:
-                    rate = 0.0025
-                    cap = 6.25
-                elif downline_level == 5:
-                    rate = 0.02
-                    cap = 50
-                reward = min(invoice_amount * rate, cap)
-                rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
-                rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
-        except Exception:
-            flash("Please enter a valid number for the invoice amount.")
-    # ---- PERFORMANCE CAVEAT (N+1 problem) ----
-    # For large userbases, this will cause too many queries.
-    # Consider optimizing this logic.
+    if form.validate_on_submit():
+        invoice_amount = float(form.invoice_amount.data)
+        downline_level = int(form.downline_level.data)
+        if downline_level in [2, 3, 4]:
+            rate = 0.0025
+            cap = 6.25
+        elif downline_level == 5:
+            rate = 0.02
+            cap = 50
+        else:
+            rate = cap = 0
+        reward = min(invoice_amount * rate, cap)
+        rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
+        rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
     level2 = User.query.filter_by(sponsor_id=current_user.id).all()
     level3, level4, level5 = [], [], []
     for u2 in level2:
@@ -301,11 +310,9 @@ def dashboard():
             for u4 in l4s:
                 l5s = User.query.filter_by(sponsor_id=u4.id).all()
                 level5.extend(l5s)
-    return render_template("dashboard.html", email=current_user.email,
-         referral_code=current_user.referral_code,
-         sponsor=sponsor.email if sponsor else None,
-         rewards_table=rewards_table,
-         level2=level2, level3=level3, level4=level4, level5=level5)
+    return render_template("dashboard.html", form=form, email=current_user.email,
+         referral_code=current_user.referral_code, sponsor=sponsor.email if sponsor else None,
+         rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5)
 
 @app.route("/logout")
 @login_required
@@ -313,8 +320,7 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-# -------- Business routes: forms, logic and templates should all match user routes ----------
-
+# Business routes
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
     form = BusinessRegisterForm()
@@ -432,7 +438,7 @@ def business_login():
                 session['pending_business_email'] = business_email
                 return redirect(url_for("business_verify_email"))
             else:
-                session['business_id'] = biz.id  # Use session to track logged-in business
+                session['business_id'] = biz.id
                 return redirect(url_for("business_dashboard"))
         else:
             message = "Login failed. Check business email and password."
@@ -444,6 +450,7 @@ def business_home():
 
 @app.route("/business/dashboard", methods=["GET", "POST"])
 def business_dashboard():
+    form = BusinessRewardForm()
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id) if biz_id else None
     if not biz or not biz.email_confirmed:
@@ -451,27 +458,20 @@ def business_dashboard():
         return redirect(url_for("business_login"))
     sponsor = Business.query.get(biz.sponsor_id) if biz.sponsor_id else None
     rewards_table = ""
-    if request.method == "POST":
-        try:
-            invoice_amount = float(request.form.get("invoice_amount", 0))
-            downline_level = int(request.form.get("downline_level", 2))
-            if not (0 < invoice_amount <= 2500):
-                flash("Amount must be between 0 and 2,500.")
-            elif downline_level not in [2, 3, 4, 5]:
-                flash("Invalid downline level.")
-            else:
-                if downline_level in [2, 3, 4]:
-                    rate = 0.0025
-                    cap = 3.25
-                elif downline_level == 5:
-                    rate = 0.02
-                    cap = 25
-                reward = min(invoice_amount * rate, cap)
-                rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
-                rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
-        except Exception:
-            flash("Please enter a valid number for the invoice amount.")
-    # Same performance note as user dashboard applies here.
+    if form.validate_on_submit():
+        invoice_amount = float(form.invoice_amount.data)
+        downline_level = int(form.downline_level.data)
+        if downline_level in [2, 3, 4]:
+            rate = 0.0025
+            cap = 3.25
+        elif downline_level == 5:
+            rate = 0.02
+            cap = 25
+        else:
+            rate = cap = 0
+        reward = min(invoice_amount * rate, cap)
+        rewards_table += f"<h5 class='mt-4 mb-2'>If your level {downline_level} downline makes a purchase of ${invoice_amount:,.2f}:</h5>"
+        rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
     level2 = Business.query.filter_by(sponsor_id=biz.id).all()
     level3, level4, level5 = [], [], []
     for b2 in level2:
@@ -483,7 +483,7 @@ def business_dashboard():
             for b4 in b4s:
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
-    return render_template("business_dashboard.html", biz=biz, sponsor=sponsor,
+    return render_template("business_dashboard.html", form=form, biz=biz, sponsor=sponsor,
         rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5)
 
 @app.route("/business/logout")
@@ -491,11 +491,6 @@ def business_logout():
     session.pop('business_id', None)
     flash("Logged out as business.")
     return redirect(url_for("business_login"))
-
-# -------------- Place all templates in templates/ directory -----------------
-# register.html, login.html, verify_email.html, dashboard.html, business_register.html, etc.
-# Copy each render_template_string's HTML there.
-# See Flask docs: https://flask.palletsprojects.com/en/2.3.x/quickstart/#rendering-templates
 
 if __name__ == "__main__":
     app.run(debug=True)

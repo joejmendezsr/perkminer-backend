@@ -10,11 +10,17 @@
         {{ form.hidden_tag() }}
         <div class="mb-3">
             {{ form.email(class="form-control", placeholder="Email (username)", required=True) }}
+            {% if form.email.errors %}
+                <div class="text-danger small">{{ form.email.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.password(class="form-control", placeholder="Password", required=True) }}
+            {% if form.password.errors %}
+                <div class="text-danger small">{{ form.password.errors[0] }}</div>
+            {% endif %}
         </div>
-        <button type="submit" class="btn btn-primary">Login</button>
+        {{ form.submit(class="btn btn-primary") }}
     </form>
     {% if message %}
       <div style="color:red;">{{ message }}</div>

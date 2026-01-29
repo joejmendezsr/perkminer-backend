@@ -10,15 +10,24 @@
         {{ form.hidden_tag() }}
         <div class="mb-3">
             {{ form.email(class="form-control", placeholder="Email (username)", required=True) }}
+            {% if form.email.errors %}
+                <div class="text-danger small">{{ form.email.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.password(class="form-control", placeholder="Password", required=True) }}
             <small class="form-text text-muted">Minimum 8 characters</small>
+            {% if form.password.errors %}
+                <div class="text-danger small">{{ form.password.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.referral_code(class="form-control", placeholder="Referral Code (optional)") }}
+            {% if form.referral_code.errors %}
+                <div class="text-danger small">{{ form.referral_code.errors[0] }}</div>
+            {% endif %}
         </div>
-        <button type="submit" class="btn btn-success">Register</button>
+        {{ form.submit(class="btn btn-success") }}
     </form>
     <a href="{{ url_for('login') }}">Already have an account? Login</a>
     {% with messages = get_flashed_messages() %}

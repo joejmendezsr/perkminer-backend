@@ -22,22 +22,21 @@
     <div class="card p-4 mb-4">
         <h4>Estimate Your Reward From Downline Purchases</h4>
         <form method="post" class="row g-3 mb-3">
-        {{ form.hidden_tag() }}
+            {{ form.hidden_tag() }}
             <div class="col-auto">
-                <input name="invoice_amount" class="form-control" type="number" step="0.01" min="0" max="2500"
-                    placeholder="Purchase Amount (e.g. 500)" required>
+                {{ form.invoice_amount(class="form-control", placeholder="Purchase Amount (e.g. 500)", required=True) }}
+                {% if form.invoice_amount.errors %}
+                    <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
+                {% endif %}
             </div>
             <div class="col-auto">
-                <select name="downline_level" class="form-select" required>
-                    <option value="1">Level 1 (your business invoices)</option>
-                    <option value="2">Level 2 (your directly referred businesses)</option>
-                    <option value="3">Level 3 (businesses referred by your direct referrals)</option>
-                    <option value="4">Level 4 (third-level downline)</option>
-                    <option value="5">Level 5 (fourth-level downline)</option>
-                </select>
+                {{ form.downline_level(class="form-select", required=True) }}
+                {% if form.downline_level.errors %}
+                    <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
+                {% endif %}
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary" type="submit">Calculate My Reward</button>
+                {{ form.submit(class="btn btn-primary") }}
             </div>
         </form>
         {{ rewards_table | safe }}

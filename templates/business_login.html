@@ -10,11 +10,17 @@
         {{ form.hidden_tag() }}
         <div class="mb-3">
             {{ form.business_email(class="form-control", placeholder="Business Email", required=True) }}
+            {% if form.business_email.errors %}
+                <div class="text-danger small">{{ form.business_email.errors[0] }}</div>
+            {% endif %}
         </div>
         <div class="mb-3">
             {{ form.password(class="form-control", placeholder="Password", required=True) }}
+            {% if form.password.errors %}
+                <div class="text-danger small">{{ form.password.errors[0] }}</div>
+            {% endif %}
         </div>
-        <button type="submit" class="btn btn-primary">Login</button>
+        {{ form.submit(class="btn btn-primary") }}
     </form>
     <a href="{{ url_for('business_register') }}">Register your business</a>
     {% if message %}

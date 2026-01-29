@@ -18,6 +18,7 @@
 <body class="container py-5">
     <h2>Check your business email for the code or link</h2>
     <form method="post" class="mb-3">
+        <!-- simple POST, not FlaskForm, so no hidden_tag needed here -->
         <input name="code" class="form-control mb-2" placeholder="Enter verification code">
         <button type="submit" class="btn btn-primary">Verify</button>
     </form>
