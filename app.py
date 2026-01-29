@@ -105,12 +105,16 @@ def send_business_verification_email(biz):
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to verify your business email, or use code: <b>{code}</b></p>"""
     send_email(biz.business_email, "[PerkMiner] Verify your business email!", html_body)
 
-# --------------------- HOMEPAGE ROUTE ----------------------
+# HOMEPAGE and BUSINESS HOME routes
 @app.route("/")
 def home():
     return render_template("home.html")
 
-# --------------------- FORMS ----------------------
+@app.route("/business")
+def business_home():
+    return render_template("business_home.html")
+
+# WTForms classes
 class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
@@ -166,7 +170,7 @@ class BusinessRewardForm(FlaskForm):
     )
     submit = SubmitField('Calculate My Reward')
 
-# --------------------- USER ROUTES ----------------------
+# USER ROUTES (registration, verification, login, dashboard, etc.)
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
@@ -354,7 +358,7 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-# --------------------- BUSINESS ROUTES ----------------------
+# BUSINESS ROUTES
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
     form = BusinessRegisterForm()
@@ -549,8 +553,6 @@ def business_logout():
     session.pop('business_id', None)
     flash("Logged out as business.")
     return redirect(url_for("business_login"))
-
-# ...Keep any other routes or logic you use...
 
 if __name__ == "__main__":
     app.run(debug=True)
