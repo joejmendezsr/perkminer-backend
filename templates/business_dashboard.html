@@ -16,6 +16,7 @@
       }
       .modal-lg { max-width: 800px; }
       .service-remove { font-size:1.2em; color:#b33; cursor:pointer; }
+      #preview-map { width: 100%; height: 250px; border-radius: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -145,7 +146,7 @@
         </div>
       </div>
 
-      <!-- Rest of dashboard here (unchanged) -->
+      <!-- Business Referral Code, Sponsor, Calculators, Network Display (as before) -->
       <div class="card p-4 mb-4">
           <h4>Your Business Referral Code:</h4>
           <code>{{ biz.referral_code }}</code>
@@ -156,8 +157,106 @@
           <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
       </div>
       {% endif %}
-      <!-- ... you can keep rest of business dashboard as-is ... -->
-
+      <div class="card p-4 mb-4">
+          <h4>Estimate Your Rewards From One Single Business Invoice</h4>
+          <form method="post" class="row g-3 mb-3">
+              {{ form.hidden_tag() }}
+              <div class="col-12 col-md-auto">
+                  {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
+                  {% if form.invoice_amount.errors %}
+                      <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
+                  {% endif %}
+              </div>
+              <div class="col-12 col-md-auto">
+                  {{ form.downline_level(class="form-select", required=True) }}
+                  {% if form.downline_level.errors %}
+                      <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
+                  {% endif %}
+              </div>
+              <div class="col-12 col-md-auto">
+                  {{ form.submit(class="btn btn-primary") }}
+              </div>
+          </form>
+          {{ rewards_table | safe }}
+      </div>
+      <div class="card p-4 mb-4">
+        <h4>Business Referral Network Cashback Calculator (one invoice from every business in your network)</h4>
+        <div class="mb-2">
+          <label>If you and everyone in your network refers
+            <input id="biz_network" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
+            business(es) and you each generate one invoice during the month in the amount of $ 
+            <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
+            , this is how much your business would earn in Cashback Rewards for the month:
+          </label>
+          <small class="text-muted d-block">*Maximum invoice amount allowed is $2,500</small>
+        </div>
+        <button class="btn btn-info mb-2" type="button" onclick="calculateBizNetworkEarnings()">Calculate</button>
+        <div id="biz_results" style="display:none;">
+          <ul class="mb-1">
+            <li>Tier One: (Your invoices) = <span id="biz_t1"></span></li>
+            <li>Tier Two: (Invoices from your direct referrals) = <span id="biz_t2"></span></li>
+            <li>Tier Three: (Invoices from 2nd tier referrals) = <span id="biz_t3"></span></li>
+            <li>Tier Four: (Invoices from 3rd tier referrals) = <span id="biz_t4"></span></li>
+            <li>Tier Five: (Invoices from 4th tier referrals) = <span id="biz_t5"></span></li>
+          </ul>
+          <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
+        </div>
+      </div>
+      <div class="card p-4 mb-4">
+          <h4>My Business Network</h4>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
+                  Tier 2 (direct referrals)
+              </a>
+              <div class="collapse mt-2" id="biztier2">
+                  {% if level2 %}
+                      <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
+                  Tier 3 (referred by Tier 2 businesses)
+              </a>
+              <div class="collapse mt-2" id="biztier3">
+                  {% if level3 %}
+                      <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
+                  Tier 4 (referred by Tier 3 businesses)
+              </a>
+              <div class="collapse mt-2" id="biztier4">
+                  {% if level4 %}
+                      <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+          <div>
+              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
+                  Tier 5 (referred by Tier 4 businesses)
+              </a>
+              <div class="collapse mt-2" id="biztier5">
+                  {% if level5 %}
+                      <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                  {% else %}
+                      <span>None</span>
+                  {% endif %}
+              </div>
+          </div>
+      </div>
+      <div class="card p-4">
+          <h4>This is your business dashboard.</h4>
+          <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
+      </div>
       {% with messages = get_flashed_messages() %}
         {% if messages %}
           <div class="alert alert-warning mt-3">
@@ -180,30 +279,24 @@
     var myLatlng = {lat: lat, lng: lng};
     map = new google.maps.Map(document.getElementById('map'), { zoom: 4, center: myLatlng });
     marker = new google.maps.Marker({ position: myLatlng, map: map, draggable: true });
-    // Marker drag
     google.maps.event.addListener(marker, 'dragend', function(event) {
       document.getElementById('latitude').value = event.latLng.lat();
       document.getElementById('longitude').value = event.latLng.lng();
     });
-    // Map click
     map.addListener('click', function(e) {
       marker.setPosition(e.latLng);
       document.getElementById('latitude').value = e.latLng.lat();
       document.getElementById('longitude').value = e.latLng.lng();
     });
-
-    // Add Places Autocomplete
     var input = document.getElementById('address-autocomplete');
     autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
     autocomplete.addListener('place_changed', function () {
         var place = autocomplete.getPlace();
         if (!place.geometry) return;
-        // Update hidden fields
         var lat = place.geometry.location.lat();
         var lng = place.geometry.location.lng();
         document.getElementById('latitude').value = lat;
         document.getElementById('longitude').value = lng;
-        // Move marker/map
         marker.setPosition({lat: lat, lng: lng});
         map.setCenter({lat: lat, lng: lng});
         map.setZoom(16);
@@ -214,7 +307,6 @@
 
 <!-- US phone formatting, dynamic service fields, and preview modal -->
 <script>
-  // US phone mask
   function formatPhoneNumber(value) {
     let digits = value.replace(/\D/g, '');
     let formatted = digits;
@@ -268,7 +360,6 @@
         let fields = servicesList.querySelectorAll('.service-field');
         if(fields.length <= 2) return;
         btn.closest('.service-field').remove();
-        // Rename remaining inputs
         let fieldsNew = servicesList.querySelectorAll('.service-field');
         fieldsNew.forEach((field, idx) => {
           let input = field.querySelector('input');
@@ -298,7 +389,7 @@
     let previewModal = new bootstrap.Modal(modal);
 
     previewBtn && previewBtn.addEventListener('click', function(){
-      // Build preview HTML from form values
+      // Grab the map location fields, build map
       let profileImgUrl = "{{ profile_img_url }}";
       let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ biz.business_name }}";
       let phone = document.getElementById('us-phone').value;
@@ -306,13 +397,48 @@
       let hours = document.getElementById('hours_of_operation').value;
       let website = document.getElementById('website_url').value;
       let about = document.getElementById('about_us').value;
-      let keywords = document.getElementById('search_keywords').value;
-      // Collect services
+      // let keywords = document.getElementById('search_keywords').value; // do not display in preview
+      let lat = document.getElementById('latitude').value;
+      let lng = document.getElementById('longitude').value;
+      let hasMap = !!(lat && lng && !isNaN(lat) && !isNaN(lng));
       let services = [];
       document.querySelectorAll('#services-list input').forEach(input => {
         if(input.value.trim()!="") services.push(input.value.trim());
       });
-      // Build HTML
+
+      let mapLinkHtml = "";
+      if(hasMap && address) {
+        let mapId = "previewMapSection";
+        let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+        mapLinkHtml = `
+        <div class="mb-2">
+          <a class="fw-semibold pointer text-primary" data-bs-toggle="collapse" href="#${mapId}" aria-expanded="false" aria-controls="${mapId}">Map</a>
+          &nbsp;|&nbsp;
+          <a class="fw-semibold pointer text-primary" href="${directionsUrl}" target="_blank">Driving Directions</a>
+          <div class="collapse mt-2" id="${mapId}">
+            <div id="preview-map"></div>
+          </div>
+        </div>
+        `;
+        setTimeout(function() {
+          // Only load the map if map section is expanded
+          let mapLoad = false;
+          let theCollapse = document.getElementById(mapId);
+          if (theCollapse) {
+            theCollapse.addEventListener('shown.bs.collapse', function() {
+              if (!mapLoad) {
+                let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
+                  center: {lat: parseFloat(lat), lng: parseFloat(lng)},
+                  zoom: 16
+                });
+                new google.maps.Marker({position: {lat: parseFloat(lat), lng: parseFloat(lng)}, map: previewMap});
+                mapLoad = true;
+              }
+            });
+          }
+        }, 300);
+      }
+
       let html = `
         <div class="row">
           <div class="col-md-3 text-center mb-3">
@@ -326,7 +452,7 @@
             <div class="mb-2"><strong>Hours:</strong> ${hours ? hours : 'N/A'}</div>
             <div class="mb-2"><strong>About Us:</strong><br>${about ? about.replace(/\n/g,'<br>') : 'N/A'}</div>
             <div class="mb-2"><strong>Products/Services:</strong>${services.length ? `<ul class="mb-0">${services.map(s=>`<li>${s}</li>`).join('')}</ul>` : 'N/A'}</div>
-            <div class="mb-2"><strong>Keywords for Search:</strong> ${keywords ? keywords : 'N/A'}</div>
+            ${mapLinkHtml}
           </div>
         </div>
       `;
@@ -334,12 +460,32 @@
       previewModal.show();
     });
 
-    // Let "Save" in modal submit the form
+    // "Save" in modal submits the form
     saveBtn && saveBtn.addEventListener('click', function(){
       previewModal.hide();
       form && form.submit();
     });
   });
+
+  function calculateBizNetworkEarnings() {
+    let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
+    let amount = parseFloat(document.getElementById('biz_amount').value) || 0;
+    if (amount > 2500) amount = 2500;
+    document.getElementById('biz_amount').value = amount;
+    let t1 = 0.01 * amount;
+    let t2 = 0.002 * amount * numBiz;
+    let t3 = 0.002 * amount * Math.pow(numBiz, 2);
+    let t4 = 0.002 * amount * Math.pow(numBiz, 3);
+    let t5 = 0.01 * amount * Math.pow(numBiz, 4);
+    let total = t1 + t2 + t3 + t4 + t5;
+    document.getElementById('biz_t1').innerText = t1.toFixed(2);
+    document.getElementById('biz_t2').innerText = t2.toFixed(2);
+    document.getElementById('biz_t3').innerText = t3.toFixed(2);
+    document.getElementById('biz_t4').innerText = t4.toFixed(2);
+    document.getElementById('biz_t5').innerText = t5.toFixed(2);
+    document.getElementById('biz_total').innerText = total.toFixed(2);
+    document.getElementById('biz_results').style.display = 'block';
+  }
 </script>
 </body>
 </html>
