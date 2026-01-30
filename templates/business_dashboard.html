@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
+<style>
 :root {
   --pm-primary: #2a5859;
   --pm-accent: #ffd66b;
@@ -85,6 +85,13 @@ label { font-weight: 500; }
     height: 60px;
     font-size: 1.5em;
   }
+  #map, #preview-map { height: 180px !important;}
+}
+#map, #preview-map {
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  margin-bottom: 12px;
 }
 footer {
   background: #f8fafb;
@@ -95,7 +102,7 @@ footer {
   font-size: 1em;
   border-top: 1px solid #e1e7ea;
 }
-    </style>
+</style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -154,12 +161,8 @@ footer {
     </div>
   </div>
 
-  <div>
-    <a class="fw-semibold text-primary pointer" data-bs-toggle="collapse" href="#businessProfileEditCollapse" aria-expanded="false" aria-controls="businessProfileEditCollapse">
-      View/Edit Profile
-    </a>
-  </div>
-  <div class="collapse mt-3" id="businessProfileEditCollapse">
+  <!-- Edit Profile (with always-visible map) -->
+  <div class="collapse show mt-3" id="businessProfileEditCollapse">
     <div class="card p-4 mb-4">
       <h4>Edit Business Profile</h4>
       <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
@@ -240,7 +243,7 @@ footer {
     </div>
   </div>
 
-  <!-- Preview Modal -->
+  <!-- Preview Modal (fully restored) -->
   <div class="modal fade" id="listingPreviewModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -257,7 +260,7 @@ footer {
     </div>
   </div>
 
-  <!-- Dashboard Cards below -->
+  <!-- Dashboard Cards below (unchanged except for polish) -->
   <div class="card p-4 mb-4">
     <h4>Your Business Referral Code:</h4>
     <code>{{ biz.referral_code }}</code>
@@ -394,10 +397,6 @@ footer {
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Keep: Map/phone formatting/dynamic services/preview/etc JS blocks below; no changes needed unless you want more polish! -->
-
-<!-- Google Maps + Places Autocomplete -->
 <script>
 let marker, map, autocomplete;
 function initMap() {
@@ -440,8 +439,156 @@ function initMap() {
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
 <script>
-// Phone input formatting and dynamic services block...
-// (keep your working js from your original HTML)
+// Phone input formatting
+function formatPhoneNumber(value) {
+  let digits = value.replace(/\D/g, '');
+  let formatted = digits;
+  if (digits.length > 0) {
+    formatted = '(' + digits.substring(0, 3);
+  }
+  if (digits.length >= 4) {
+    formatted += ') ' + digits.substring(3, 6);
+  }
+  if (digits.length >= 7) {
+    formatted += '-' + digits.substring(6, 10);
+  }
+  return formatted.substring(0, 14);
+}
+function phoneInputHandler(e) {
+  const input = e.target;
+  const original = input.value;
+  const formatted = formatPhoneNumber(original);
+  if (formatted !== original) {
+    input.value = formatted;
+  }
+}
+window.addEventListener('DOMContentLoaded', function() {
+  const phone = document.getElementById('us-phone');
+  if (phone) {
+    phone.addEventListener('input', phoneInputHandler);
+  }
+  // Preview Listing Modal logic...
+  let previewBtn = document.getElementById('previewListingBtn');
+  let saveBtn = document.getElementById('saveProfileBtn');
+  let form = document.getElementById('profile-form');
+  let modal = document.getElementById('listingPreviewModal');
+  let modalContent = document.getElementById('listing-preview-content');
+  let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
+
+  previewBtn && previewBtn.addEventListener('click', function(){
+    let profileImgUrl = "{{ profile_img_url }}";
+    let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ biz.business_name }}";
+    let phone = document.getElementById('us-phone').value;
+    let address = document.getElementById('address-autocomplete').value;
+    let email = "{{ biz.business_email }}";
+    let hours = document.getElementById('hours_of_operation').value;
+    let website = document.getElementById('website_url').value;
+    let about = document.getElementById('about_us').value;
+    let lat = document.getElementById('latitude').value;
+    let lng = document.getElementById('longitude').value;
+    let hasMap = !!(lat && lng && !isNaN(lat) && !isNaN(lng));
+    let services = [];
+    document.querySelectorAll('#services-list input').forEach(input => {
+      if(input.value.trim()!="") services.push(input.value.trim());
+    });
+
+    let mapLinkHtml = "";
+    if(hasMap && address) {
+      let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+      mapLinkHtml = `<div class="mb-2">
+        <a class="fw-semibold pointer text-primary" data-bs-toggle="collapse" href="#publicMapSection" aria-expanded="false" aria-controls="publicMapSection">View Map</a>
+        &nbsp;|&nbsp;
+        <a class="fw-semibold pointer text-primary" href="${directionsUrl}" target="_blank">Driving Directions</a>
+        <div class="collapse mt-2" id="publicMapSection">
+          <div id="preview-map"></div>
+        </div>
+      </div>`;
+      // auto-render Google Map (one-time, when user opens the map section)
+      setTimeout(function() {
+        let mapLoaded = false;
+        let mapBtn = document.getElementById('publicMapSection');
+        if(mapBtn) {
+          mapBtn.addEventListener('shown.bs.collapse', function() {
+            if (!mapLoaded && window.google && document.getElementById('preview-map')) {
+              let pMap = new google.maps.Map(document.getElementById('preview-map'), { center: {lat: parseFloat(lat), lng: parseFloat(lng)}, zoom: 16 });
+              new google.maps.Marker({position: {lat: parseFloat(lat), lng: parseFloat(lng)}, map: pMap});
+              mapLoaded = true;
+            }
+          });
+        }
+      }, 300);
+    }
+
+    let html = `
+      <div class="row">
+        <div class="col-md-3 text-center mb-3">
+          ${profileImgUrl ? `<img src="${profileImgUrl}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;">` : `<div style="width:120px;height:120px;background:#eee;" class="rounded-circle d-flex justify-content-center align-items-center"><span>No Image</span></div>`}
+        </div>
+        <div class="col-md-9">
+          <h3>${name}</h3>
+          ${website ? `<div class="mb-2"><a href="${website}" target="_blank">${website}</a></div>` : ""}
+          <div class="mb-2"><strong>Phone:</strong> ${phone ? phone : 'N/A'}</div>
+          <div class="mb-2"><strong>Email:</strong> ${email ? email : 'N/A'}</div>
+          <div class="mb-2"><strong>Address:</strong> ${address ? address : 'N/A'}</div>
+          <div class="mb-2"><strong>Hours:</strong> ${hours ? hours : 'N/A'}</div>
+          <div class="mb-2"><strong>About Us:</strong><br>${about ? about.replace(/\n/g,'<br>') : 'N/A'}</div>
+          <div class="mb-2"><strong>Products/Services:</strong>${services.length ? `<ul class="mb-0">${services.map(s=>`<li>${s}</li>`).join('')}</ul>` : 'N/A'}</div>
+          ${mapLinkHtml}
+        </div>
+      </div>
+    `;
+    modalContent.innerHTML = html;
+    previewModal && previewModal.show();
+  });
+
+  saveBtn && saveBtn.addEventListener('click', function(){
+    previewModal && previewModal.hide();
+    form && form.submit();
+  });
+});
+
+// Dynamic services...
+document.addEventListener('DOMContentLoaded', function(){
+    let maxServices = 10;
+    let servicesList = document.getElementById('services-list');
+    let addBtn = document.getElementById('addServiceBtn');
+
+    function countServices() {
+      return servicesList.querySelectorAll('.service-field').length;
+    }
+    addBtn && addBtn.addEventListener('click', function(){
+      let idx = countServices();
+      if(idx >= maxServices) return;
+      let div = document.createElement('div');
+      div.className = 'input-group mb-2 service-field';
+      div.setAttribute('data-index', idx);
+      div.innerHTML = `<input type="text" class="form-control" name="service_${idx+1}" maxlength="100" placeholder="Service #${idx+1}">
+                      <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)">&minus;</button>`;
+      servicesList.appendChild(div);
+      updateRemoveButtons();
+    });
+    window.removeService = function(btn){
+      let fields = servicesList.querySelectorAll('.service-field');
+      if(fields.length <= 2) return;
+      btn.closest('.service-field').remove();
+      let fieldsNew = servicesList.querySelectorAll('.service-field');
+      fieldsNew.forEach((field, idx) => {
+        let input = field.querySelector('input');
+        input.placeholder = "Service #"+(idx+1);
+        input.name = "service_"+(idx+1);
+        field.setAttribute('data-index', idx);
+      });
+      updateRemoveButtons();
+    }
+    function updateRemoveButtons(){
+      let fields = servicesList.querySelectorAll('.service-field');
+      fields.forEach((f,i)=>{
+        let b = f.querySelector('.service-remove');
+        b.disabled = i<2;
+      });
+    }
+    updateRemoveButtons();
+});
 </script>
 </body>
 </html>
