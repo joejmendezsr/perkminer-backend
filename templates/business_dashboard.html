@@ -214,24 +214,87 @@ footer {
     <div class="collapse mb-4" id="profileCollapse">
       <div class="card p-4">
         <h4>Your Profile</h4>
-        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
-          {{ profile_form.hidden_tag() }}
-          <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
-            {% if profile_img_url %}
-              <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
-            {% else %}
-              <div class="placeholder-pic">No Image</div>
-            {% endif %}
-            <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
-          </div>
-        <div class="mb-3 col-12 col-md-6">
-            <label class="form-label">Business Name</label>
-            {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
-        </div>  
-          <div class="col-12 col-md-auto">
-            {{ profile_form.submit(class="btn btn-success") }}
-          </div>
-        </form>
+<form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
+  {{ profile_form.hidden_tag() }}
+  <!-- Profile Photo -->
+  <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
+    {% if profile_img_url %}
+      <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
+    {% else %}
+      <div class="placeholder-pic">No Image</div>
+    {% endif %}
+    <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
+  </div>
+
+  <!-- Business Name -->
+  <div class="mb-3 col-12 col-md-6">
+    <label class="form-label">Business Name</label>
+    {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
+  </div>
+
+  <!-- Phone Number -->
+  <div class="mb-3 col-12 col-md-6">
+    <label class="form-label">Phone Number</label>
+    {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555") }}
+    <div class="form-text">Format: (555) 555-5555</div>
+  </div>
+
+  <!-- Business Address + Map -->
+  <div class="mb-3 col-12 col-md-6">
+    <label class="form-label">Business Address</label>
+    {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
+    <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
+    <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
+    <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
+    <div id="map"></div>
+  </div>
+
+  <!-- Services Offered Collapse -->
+  <div class="col-12 mt-3">
+    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
+      Products or Services Offered
+    </a>
+    <div class="collapse mt-2" id="servicesCollapse">
+      <div id="services-list">
+        {% set services = [
+          biz.service_1 or '',
+          biz.service_2 or '',
+          biz.service_3 or '',
+          biz.service_4 or '',
+          biz.service_5 or '',
+          biz.service_6 or '',
+          biz.service_7 or '',
+          biz.service_8 or '',
+          biz.service_9 or '',
+          biz.service_10 or ''
+        ] %}
+        {% for s in range(0, 10) %}
+          {% if services[s] or s < 2 %}
+            <div class="input-group mb-2 service-field" data-index="{{ s }}">
+              <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
+              <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <button class="btn btn-outline-primary" type="button" id="addServiceBtn">+ Add Service</button>
+      <small class="text-muted d-block mt-1">Max 10 services.</small>
+    </div>
+  </div>
+
+  <!-- Keywords -->
+  <div class="col-12 mt-3">
+    <label class="form-label">Keywords (for search, separated by commas)</label>
+    <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
+    <div class="form-text">Up to 20 keywords (comma-separated).</div>
+  </div>
+
+  <!-- Preview and Save Buttons -->
+  <div class="col-12 mt-3 d-flex gap-2">
+    <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
+    {{ profile_form.submit(class="btn btn-success") }}
+  </div>
+</form>
       </div>
     </div>
   </div>
