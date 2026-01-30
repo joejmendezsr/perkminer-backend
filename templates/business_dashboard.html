@@ -149,9 +149,6 @@ function calculateBizNetworkEarnings() {
         <h3 class="mb-0">{{ biz.business_name }}</h3>
       </div>
       <div class="ms-auto d-flex gap-2 flex-wrap">
-        <a class="fw-semibold text-primary pointer" data-bs-toggle="collapse" href="#businessProfileEditCollapse" aria-expanded="false" aria-controls="businessProfileEditCollapse">
-          View/Edit Profile
-        </a>
         <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
     </div>
@@ -161,7 +158,10 @@ function calculateBizNetworkEarnings() {
   <div class="mb-4">
     <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#businessInviteModal">
       <i class="bi bi-person-plus me-1"></i>Invite other businesses to join
-    </button>
+    </button></br>
+    <button class="fw-semibold text-primary pointer" data-bs-toggle="collapse" href="#businessProfileCollapse" aria-expanded="false" aria-controls="businessProfileCollapse">
+          View/Edit Profile
+        </button></br>
   </div>
   <div class="modal fade" id="businessInviteModal" tabindex="-1" aria-labelledby="businessInviteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
