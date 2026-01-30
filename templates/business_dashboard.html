@@ -251,7 +251,7 @@ footer {
 
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
-    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
+   <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
       Products or Services Offered
     </a>
     <div class="collapse mt-2" id="servicesCollapse">
@@ -427,5 +427,50 @@ footer {
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let marker, map, autocomplete;
+function initMap() {
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    let lat = parseFloat(latInput.value) || 39.8283;  // center on USA if blank
+    let lng = parseFloat(lngInput.value) || -98.5795;
+    let center = {lat: lat, lng: lng};
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: (latInput.value && lngInput.value) ? 16 : 4,
+        center: center
+    });
+    marker = new google.maps.Marker({
+        position: center,
+        map: map,
+        draggable: true
+    });
+    google.maps.event.addListener(marker, 'dragend', function(event) {
+        latInput.value = event.latLng.lat();
+        lngInput.value = event.latLng.lng();
+    });
+    // Click on map moves marker
+    map.addListener && map.addListener('click', function(e) {
+        marker.setPosition(e.latLng);
+        latInput.value = e.latLng.lat();
+        lngInput.value = e.latLng.lng();
+    });
+    // Address autocomplete
+    const input = document.getElementById('address-autocomplete');
+    if (input) {
+      autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
+      autocomplete.addListener('place_changed', function () {
+          const place = autocomplete.getPlace();
+          if (!place.geometry) return;
+          const loc = place.geometry.location;
+          latInput.value = loc.lat();
+          lngInput.value = loc.lng();
+          marker.setPosition(loc);
+          map.setCenter(loc);
+          map.setZoom(16);
+      });
+    }
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
