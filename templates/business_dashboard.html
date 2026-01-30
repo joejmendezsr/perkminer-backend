@@ -16,7 +16,6 @@
 </head>
 <body>
     <div class="container py-5">
-
       <!-- Profile Header -->
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
           <div class="d-flex align-items-center">
@@ -32,8 +31,36 @@
           <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
 
-      <!-- Invite Modal and Rest Unchanged... -->
-      <!-- Collapsible Profile Edit Section -->
+      <!-- Invite Other Businesses Modal -->
+      <div class="mb-4">
+        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#businessInviteModal">Invite other businesses to join</button>
+      </div>
+      <div class="modal fade" id="businessInviteModal" tabindex="-1" aria-labelledby="businessInviteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
+            {{ invite_form.hidden_tag() }}
+            <div class="modal-header">
+              <h5 class="modal-title" id="businessInviteModalLabel">Invite Other Businesses to Join PerkMiner</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <label for="business-invitee-email" class="form-label">Recipient's Email Address:</label>
+              {{ invite_form.invitee_email(class="form-control", id="business-invitee-email", placeholder="Enter business email to invite", required=True) }}
+            </div>
+            <div class="modal-footer">
+              {{ invite_form.submit(class="btn btn-primary") }}
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div>
+        <a class="fw-semibold text-primary pointer" data-bs-toggle="collapse" href="#businessProfileEditCollapse" aria-expanded="false" aria-controls="businessProfileEditCollapse">
+          View/Edit Profile
+        </a>
+      </div>
+
       <div class="collapse mt-3" id="businessProfileEditCollapse">
         <div class="card p-4 mb-4">
           <h4>Edit Business Profile</h4>
@@ -66,7 +93,7 @@
                 <label class="form-label mt-2">About Us</label>
                 <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="2000" placeholder="Enter details about your business...">{{ biz.about_us or '' }}</textarea>
             </div>
-            <!-- Products/Services Offered Collapse -->
+            <!-- Products/Services Offered -->
             <div class="col-12 mt-3">
               <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
                 Products or Services Offered
@@ -116,7 +143,7 @@
         </div>
       </div>
 
-      <!-- Preview Modal (fully enhanced)-->
+      <!-- Preview Modal -->
       <div class="modal fade" id="listingPreviewModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
@@ -132,38 +159,40 @@
           </div>
         </div>
       </div>
-      <!-- Dashboard & Network Display -->
+
+      <!-- Calculators and Business Network below -->
       <div class="card p-4 mb-4">
-          <h4>Your Business Referral Code:</h4>
-          <code>{{ biz.referral_code }}</code>
+        <h4>Your Business Referral Code:</h4>
+        <code>{{ biz.referral_code }}</code>
       </div>
       {% if sponsor %}
       <div class="card p-4 mb-4">
-          <h4>Your Sponsor:</h4>
-          <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
+        <h4>Your Sponsor:</h4>
+        <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
       </div>
       {% endif %}
+
       <div class="card p-4 mb-4">
-          <h4>Estimate Your Rewards From One Single PAID Business Invoice</h4>
-          <form method="post" class="row g-3 mb-3">
-              {{ form.hidden_tag() }}
-              <div class="col-12 col-md-auto">
-                  {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
-                  {% if form.invoice_amount.errors %}
-                      <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
-                  {% endif %}
-              </div>
-              <div class="col-12 col-md-auto">
-                  {{ form.downline_level(class="form-select", required=True) }}
-                  {% if form.downline_level.errors %}
-                      <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
-                  {% endif %}
-              </div>
-              <div class="col-12 col-md-auto">
-                  {{ form.submit(class="btn btn-primary") }}
-              </div>
-          </form>
-          {{ rewards_table | safe }}
+        <h4>Estimate Your Rewards From One Single PAID Business Invoice</h4>
+        <form method="post" class="row g-3 mb-3">
+            {{ form.hidden_tag() }}
+            <div class="col-12 col-md-auto">
+                {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
+                {% if form.invoice_amount.errors %}
+                    <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="col-12 col-md-auto">
+                {{ form.downline_level(class="form-select", required=True) }}
+                {% if form.downline_level.errors %}
+                    <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
+                {% endif %}
+            </div>
+            <div class="col-12 col-md-auto">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+        {{ rewards_table | safe }}
       </div>
       <div class="card p-4 mb-4">
         <h4>Business Referral Network Cashback Calculator (one invoice from every business in your network)</h4>
@@ -189,59 +218,59 @@
         </div>
       </div>
       <div class="card p-4 mb-4">
-          <h4>My Business Network</h4>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
-                  Tier 2 (direct referrals)
-              </a>
-              <div class="collapse mt-2" id="biztier2">
-                  {% if level2 %}
-                      <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
-                  Tier 3 (referred by Tier 2 businesses)
-              </a>
-              <div class="collapse mt-2" id="biztier3">
-                  {% if level3 %}
-                      <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
-                  Tier 4 (referred by Tier 3 businesses)
-              </a>
-              <div class="collapse mt-2" id="biztier4">
-                  {% if level4 %}
-                      <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
-          <div>
-              <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
-                  Tier 5 (referred by Tier 4 businesses)
-              </a>
-              <div class="collapse mt-2" id="biztier5">
-                  {% if level5 %}
-                      <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-                  {% else %}
-                      <span>None</span>
-                  {% endif %}
-              </div>
-          </div>
+        <h4>My Business Network</h4>
+        <div>
+            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
+                Tier 2 (direct referrals)
+            </a>
+            <div class="collapse mt-2" id="biztier2">
+                {% if level2 %}
+                    <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
+                Tier 3 (referred by Tier 2 businesses)
+            </a>
+            <div class="collapse mt-2" id="biztier3">
+                {% if level3 %}
+                    <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
+                Tier 4 (referred by Tier 3 businesses)
+            </a>
+            <div class="collapse mt-2" id="biztier4">
+                {% if level4 %}
+                    <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
+                Tier 5 (referred by Tier 4 businesses)
+            </a>
+            <div class="collapse mt-2" id="biztier5">
+                {% if level5 %}
+                    <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+                {% else %}
+                    <span>None</span>
+                {% endif %}
+            </div>
+        </div>
       </div>
       <div class="card p-4">
-          <h4>This is your business dashboard.</h4>
-          <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
+        <h4>This is your business dashboard.</h4>
+        <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
       </div>
       {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -253,8 +282,8 @@
         {% endif %}
       {% endwith %}
     </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <!-- Google Maps + Places Autocomplete -->
 <script>
 let marker, map, autocomplete;
@@ -299,8 +328,80 @@ function initMap() {
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
 
 <script>
-// Dynamic phone formatting and service field code remains unchanged, copy from your previous working file as needed.
+// Phone input formatting
+function formatPhoneNumber(value) {
+  let digits = value.replace(/\D/g, '');
+  let formatted = digits;
+  if (digits.length > 0) {
+    formatted = '(' + digits.substring(0, 3);
+  }
+  if (digits.length >= 4) {
+    formatted += ') ' + digits.substring(3, 6);
+  }
+  if (digits.length >= 7) {
+    formatted += '-' + digits.substring(6, 10);
+  }
+  return formatted.substring(0, 14);
+}
+function phoneInputHandler(e) {
+  const input = e.target;
+  const original = input.value;
+  const formatted = formatPhoneNumber(original);
+  if (formatted !== original) {
+    input.value = formatted;
+  }
+}
+window.addEventListener('DOMContentLoaded', function() {
+  const phone = document.getElementById('us-phone');
+  if (phone) {
+    phone.addEventListener('input', phoneInputHandler);
+  }
+});
 
+// Dynamic services
+document.addEventListener('DOMContentLoaded', function(){
+    let maxServices = 10;
+    let servicesList = document.getElementById('services-list');
+    let addBtn = document.getElementById('addServiceBtn');
+
+    function countServices() {
+      return servicesList.querySelectorAll('.service-field').length;
+    }
+    addBtn && addBtn.addEventListener('click', function(){
+      let idx = countServices();
+      if(idx >= maxServices) return;
+      let div = document.createElement('div');
+      div.className = 'input-group mb-2 service-field';
+      div.setAttribute('data-index', idx);
+      div.innerHTML = `<input type="text" class="form-control" name="service_${idx+1}" maxlength="100" placeholder="Service #${idx+1}">
+                      <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)">&minus;</button>`;
+      servicesList.appendChild(div);
+      updateRemoveButtons();
+    });
+    window.removeService = function(btn){
+      let fields = servicesList.querySelectorAll('.service-field');
+      if(fields.length <= 2) return;
+      btn.closest('.service-field').remove();
+      let fieldsNew = servicesList.querySelectorAll('.service-field');
+      fieldsNew.forEach((field, idx) => {
+        let input = field.querySelector('input');
+        input.placeholder = "Service #"+(idx+1);
+        input.name = "service_"+(idx+1);
+        field.setAttribute('data-index', idx);
+      });
+      updateRemoveButtons();
+    }
+    function updateRemoveButtons(){
+      let fields = servicesList.querySelectorAll('.service-field');
+      fields.forEach((f,i)=>{
+        let b = f.querySelector('.service-remove');
+        b.disabled = i<2;
+      });
+    }
+    updateRemoveButtons();
+});
+
+// Preview Listing Modal (restored, bulletproof, complete)
 document.addEventListener('DOMContentLoaded', function(){
   let previewBtn = document.getElementById('previewListingBtn');
   let saveBtn = document.getElementById('saveProfileBtn');
@@ -328,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
     let mapLinkHtml = "";
     if(hasMap && address) {
-      let gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
       let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
       mapLinkHtml = `<div class="mb-2">
         <a class="fw-semibold pointer text-primary" data-bs-toggle="collapse" href="#publicMapSection" aria-expanded="false" aria-controls="publicMapSection">View Map</a>
@@ -337,17 +437,21 @@ document.addEventListener('DOMContentLoaded', function(){
         <div class="collapse mt-2" id="publicMapSection">
           <div id="preview-map"></div>
         </div>
-      </div>
-      <script>
-      let mapLoaded = false;
-      document.getElementById('publicMapSection').addEventListener('shown.bs.collapse', function() {
-        if (!mapLoaded && window.google) {
-          let pMap = new google.maps.Map(document.getElementById('preview-map'), { center: {lat: parseFloat('${lat}'), lng: parseFloat('${lng}')}, zoom: 16 });
-          new google.maps.Marker({position: {lat: parseFloat('${lat}'), lng: parseFloat('${lng}')}, map: pMap});
-          mapLoaded = true;
+      </div>`;
+      // auto-render Google Map (one-time, when user opens the map section)
+      setTimeout(function() {
+        let mapLoaded = false;
+        let mapBtn = document.getElementById('publicMapSection');
+        if(mapBtn) {
+          mapBtn.addEventListener('shown.bs.collapse', function() {
+            if (!mapLoaded && window.google && document.getElementById('preview-map')) {
+              let pMap = new google.maps.Map(document.getElementById('preview-map'), { center: {lat: parseFloat(lat), lng: parseFloat(lng)}, zoom: 16 });
+              new google.maps.Marker({position: {lat: parseFloat(lat), lng: parseFloat(lng)}, map: pMap});
+              mapLoaded = true;
+            }
+          });
         }
-      });
-      </script>`;
+      }, 300);
     }
 
     let html = `
@@ -377,6 +481,27 @@ document.addEventListener('DOMContentLoaded', function(){
     form && form.submit();
   });
 });
+
+// Calculators
+function calculateBizNetworkEarnings() {
+  let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
+  let amount = parseFloat(document.getElementById('biz_amount').value) || 0;
+  if (amount > 2500) amount = 2500;
+  document.getElementById('biz_amount').value = amount;
+  let t1 = 0.01 * amount;
+  let t2 = 0.002 * amount * numBiz;
+  let t3 = 0.002 * amount * Math.pow(numBiz, 2);
+  let t4 = 0.002 * amount * Math.pow(numBiz, 3);
+  let t5 = 0.01 * amount * Math.pow(numBiz, 4);
+  let total = t1 + t2 + t3 + t4 + t5;
+  document.getElementById('biz_t1').innerText = t1.toFixed(2);
+  document.getElementById('biz_t2').innerText = t2.toFixed(2);
+  document.getElementById('biz_t3').innerText = t3.toFixed(2);
+  document.getElementById('biz_t4').innerText = t4.toFixed(2);
+  document.getElementById('biz_t5').innerText = t5.toFixed(2);
+  document.getElementById('biz_total').innerText = total.toFixed(2);
+  document.getElementById('biz_results').style.display = 'block';
+}
 </script>
 </body>
 </html>
