@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Business Dashboard - PerkMiner</title>
+    <title>Dashboard - PerkMiner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<style>
+    <style>
 :root {
   --pm-primary: #2a5859;
   --pm-accent: #ffd66b;
@@ -85,13 +85,6 @@ label { font-weight: 500; }
     height: 60px;
     font-size: 1.5em;
   }
-  #map, #preview-map { height: 180px !important;}
-}
-#map, #preview-map {
-  width: 100%;
-  height: 300px;
-  border-radius: 8px;
-  margin-bottom: 12px;
 }
 footer {
   background: #f8fafb;
@@ -102,299 +95,248 @@ footer {
   font-size: 1em;
   border-top: 1px solid #e1e7ea;
 }
-</style>
-<script>
-// JS for business referral network cashback calculator
-function calculateBizNetworkEarnings() {
-  let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
-  let amount = parseFloat(document.getElementById('biz_amount').value) || 0;
-  if (amount > 2500) amount = 2500;
-  document.getElementById('biz_amount').value = amount;
-  let t1 = 0.01 * amount;
-  let t2 = 0.002 * amount * numBiz;
-  let t3 = 0.002 * amount * Math.pow(numBiz, 2);
-  let t4 = 0.002 * amount * Math.pow(numBiz, 3);
-  let t5 = 0.01 * amount * Math.pow(numBiz, 4);
-  let total = t1 + t2 + t3 + t4 + t5;
-  document.getElementById('biz_t1').innerText = t1.toFixed(2);
-  document.getElementById('biz_t2').innerText = t2.toFixed(2);
-  document.getElementById('biz_t3').innerText = t3.toFixed(2);
-  document.getElementById('biz_t4').innerText = t4.toFixed(2);
-  document.getElementById('biz_t5').innerText = t5.toFixed(2);
-  document.getElementById('biz_total').innerText = total.toFixed(2);
-  document.getElementById('biz_results').style.display = 'block';
-}
-</script>
+    </style>
+    <script>
+      function calculateNetworkEarnings() {
+        let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
+        let amount = parseFloat(document.getElementById('network_amount').value) || 0;
+        if (amount > 2500) amount = 2500;
+        document.getElementById('network_amount').value = amount;
+        let t1 = 0.02 * amount;
+        let t2 = 0.0025 * amount * numPeople;
+        let t3 = 0.0025 * amount * Math.pow(numPeople, 2);
+        let t4 = 0.0025 * amount * Math.pow(numPeople, 3);
+        let t5 = 0.02 * amount * Math.pow(numPeople, 4);
+        let total = t1 + t2 + t3 + t4 + t5;
+        document.getElementById('network_t1').innerText = t1.toFixed(2);
+        document.getElementById('network_t2').innerText = t2.toFixed(2);
+        document.getElementById('network_t3').innerText = t3.toFixed(2);
+        document.getElementById('network_t4').innerText = t4.toFixed(2);
+        document.getElementById('network_t5').innerText = t5.toFixed(2);
+        document.getElementById('network_total').innerText = total.toFixed(2);
+        document.getElementById('network_results').style.display = 'block';
+      }
+      function calculateSingleReward() {
+        let amount = parseFloat(document.getElementById('reward_amount').value) || 0;
+        if (amount > 2500) amount = 2500;
+        document.getElementById('reward_amount').value = amount;
+        let tier = document.getElementById('reward_tier').value;
+        let reward = 0;
+        let desc = "";
+        let cap = null;
+        if (tier === "1") {
+            reward = amount * 0.02; desc = "As the customer, from a purchase you make";
+        } else if (["2","3","4"].includes(tier)) {
+            reward = amount * 0.0025;
+            cap = 6.25;
+            if (reward > cap) reward = cap;
+            desc = `If your Tier ${tier} referral makes a purchase`;
+        } else if (tier === "5") {
+            reward = amount * 0.02;
+            cap = 50;
+            if (reward > cap) reward = cap;
+            desc = "If your Tier 5 referral makes a purchase";
+        }
+        let out = '';
+        if (amount > 0) {
+          out += `<h5 class='mt-4 mb-2'>${desc} of $${amount.toFixed(2)}:</h5>`;
+          out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
+        }
+        document.getElementById('rewards_output').innerHTML = out;
+      }
+    </script>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
     <div class="container">
         <a class="navbar-brand" href="/">PerkMiner</a>
         <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="{{ url_for('business_logout') }}">Logout</a>
+            <span class="nav-link disabled">{{ email }}</span>
+            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
         </div>
     </div>
 </nav>
 <div class="container py-4">
-
-  <!-- Profile Header -->
   <div class="card mb-4 p-4">
     <div class="d-flex align-items-center flex-wrap mb-3">
       {% if profile_img_url %}
         <img src="{{ profile_img_url }}" alt="Profile Photo" class="profile-pic me-3">
       {% else %}
-        <div class="placeholder-pic me-3"><i class="bi bi-building"></i></div>
+        <div class="placeholder-pic me-3"><i class="bi bi-person"></i></div>
       {% endif %}
       <div>
-        <h3 class="mb-0">{{ biz.business_name }}</h3>
+        <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
+        <div><small class="text-muted">Referral Code: <b>{{ referral_code }}</b></small></div>
+        {% if sponsor %}
+          <div class="mt-2">Sponsored by: <span class="text-success">{{ sponsor }}</span></div>
+        {% endif %}
       </div>
       <div class="ms-auto d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
     </div>
-  </div>
 
-  <!-- Invite Other Businesses Modal -->
-  <div class="mb-4">
-    <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#businessInviteModal">
-      <i class="bi bi-person-plus me-1"></i>Invite other businesses to join
-    </button>
-
+    <!-- Invite Others Button -->
+    <div class="mb-4">
+      <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+        <i class="bi bi-person-plus me-1"></i>Invite others to join
+      </button>
+    </div></br>
 <button class="btn btn-primary" type="button"
   data-bs-toggle="collapse"
-  data-bs-target="#businessProfileEditCollapse"
+  data-bs-target="#profileCollapse"
   aria-expanded="false"
-  aria-controls="businessProfileEditCollapse">
+  aria-controls="profileCollapse">
   View/Edit Profile
-</button>
-  </div>
-  <div class="modal fade" id="businessInviteModal" tabindex="-1" aria-labelledby="businessInviteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
-        {{ invite_form.hidden_tag() }}
-        <div class="modal-header">
-          <h5 class="modal-title" id="businessInviteModalLabel">Invite Other Businesses to Join PerkMiner</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <label for="business-invitee-email" class="form-label">Recipient's Email Address:</label>
-          {{ invite_form.invitee_email(class="form-control", id="business-invitee-email", placeholder="Enter business email to invite", required=True) }}
-        </div>
-        <div class="modal-footer">
-          {{ invite_form.submit(class="btn btn-primary") }}
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </form>
+</button></br>
+    <!-- Invite Modal -->
+    <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form class="modal-content" method="post" action="{{ url_for('invite') }}">
+          {{ invite_form.hidden_tag() }}
+          <div class="modal-header">
+            <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
+            {{ invite_form.invitee_email(class="form-control", id="invitee-email", placeholder="Enter email to invite", required=True) }}
+          </div>
+          <div class="modal-footer">
+            {{ invite_form.submit(class="btn btn-primary") }}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
 
-  <!-- Edit Profile (always open with map displayed) -->
-  <div class="collapse mt-3" id="businessProfileEditCollapse">
-    <div class="card p-4 mb-4">
-      <h4>Edit Business Profile</h4>
-      <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
-        {{ profile_form.hidden_tag() }}
-        <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
+    <!-- Profile Edit Section -->
+    <div class="collapse mb-4" id="profileCollapse">
+      <div class="card p-4">
+        <h4>Your Profile</h4>
+        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+          {{ profile_form.hidden_tag() }}
+          <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
             {% if profile_img_url %}
-              <img src="{{ profile_img_url }}" alt="Business Profile Photo" class="rounded-circle profile-pic">
+              <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
             {% else %}
               <div class="placeholder-pic">No Image</div>
             {% endif %}
             <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
-        </div>
-        <div class="col-12 col-md-6">
-            <label class="form-label">Phone Number</label>
-            {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555", maxlength="14", pattern="\\(\\d{3}\\) \\d{3}-\\d{4}") }}
-            <div class="form-text">Format: (555) 555-5555</div>
-            <label class="form-label mt-2">Address</label>
-            {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
-            <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
-            <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
-            <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
-            <div id="map"></div>
-            <label class="form-label mt-2">Business Email</label>
-            <input type="email" class="form-control" value="{{ biz.business_email }}" disabled>
-            <label class="form-label mt-2">Hours of Operation</label>
-            <input type="text" class="form-control" id="hours_of_operation" name="hours_of_operation" maxlength="100" value="{{ biz.hours_of_operation or '' }}" placeholder="e.g., Mon-Fri 8am-5pm">
-            <label class="form-label mt-2">Website URL</label>
-            <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255" value="{{ biz.website_url or '' }}" placeholder="https://example.com">
-            <label class="form-label mt-2">About Us</label>
-            <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="2000" placeholder="Enter details about your business...">{{ biz.about_us or '' }}</textarea>
-        </div>
-        <div class="col-12 mt-3">
-          <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
-            Products or Services Offered
-          </a>
-          <div class="collapse mt-2" id="servicesCollapse">
-            <div id="services-list">
-              {% set services = [
-                biz.service_1 or '',
-                biz.service_2 or '',
-                biz.service_3 or '',
-                biz.service_4 or '',
-                biz.service_5 or '',
-                biz.service_6 or '',
-                biz.service_7 or '',
-                biz.service_8 or '',
-                biz.service_9 or '',
-                biz.service_10 or ''
-              ] %}
-              {% set service_count = 0 %}
-              {% for s in range(0, 10) %}
-                {% if services[s] or s < 2 %}
-                  <div class="input-group mb-2 service-field" data-index="{{ s }}">
-                    <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
-                    <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
-                  </div>
-                  {% set service_count = service_count + 1 %}
-                {% endif %}
-              {% endfor %}
-            </div>
-            <button class="btn btn-outline-primary" type="button" id="addServiceBtn">+ Add Service</button>
-            <small class="text-muted d-block mt-1">Max 10 services.</small>
           </div>
-        </div>
-        <div class="col-12 mt-3">
-          <label class="form-label">Keywords (for search, separated by commas)</label>
-          <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
-          <div class="form-text">Up to 20 keywords (comma-separated).</div>
-        </div>
-        <div class="col-12 mt-3 d-flex gap-2">
-          <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
-          {{ profile_form.submit(class="btn btn-success") }}
-        </div>
-      </form>
-      <div class="small text-muted mt-2 mb-0">
-        Save to update your profile listing. Preview shows what users will see after you save your information.
+          <div class="col-12 col-md-auto mb-3 mb-md-0">
+            <label class="form-label">Name</label>
+            {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
+          </div>
+          <div class="col-12 col-md-auto">
+            {{ profile_form.submit(class="btn btn-success") }}
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
-  <!-- Preview Modal (fully restored) -->
-  <div class="modal fade" id="listingPreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Business Listing Preview</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="listing-preview-content"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Editing</button>
-          <button type="button" class="btn btn-success" id="saveProfileBtn">Save</button>
-        </div>
+  <div class="card p-4 mb-4">
+    <h4>Estimate Your Rewards From One Single Purchase</h4>
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-md-auto">
+        <input id="reward_amount" type="number" class="form-control" placeholder="Amount (e.g. 500)" max="2500" required>
       </div>
+      <div class="col-12 col-md-auto">
+        <select id="reward_tier" class="form-select" required>
+            <option value="1" selected>Tier 1 (your purchases)</option>
+            <option value="2">Tier 2 (direct referral purchases)</option>
+            <option value="3">Tier 3 (Tier 2 referral purchases)</option>
+            <option value="4">Tier 4 (Tier 3 referral purchases)</option>
+            <option value="5">Tier 5 (Tier 4 referral purchases)</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-auto">
+        <button type="button" class="btn btn-primary" onclick="calculateSingleReward()">Calculate My Reward</button>
+      </div>
+    </div>
+    <div id="rewards_output">
+      {{ rewards_table | safe }}
     </div>
   </div>
 
-  <!-- Other dashboard cards as before -->
   <div class="card p-4 mb-4">
-    <h4>Your Business Referral Code:</h4>
-    <code>{{ biz.referral_code }}</code>
-  </div>
-  {% if sponsor %}
-  <div class="card p-4 mb-4">
-    <h4>Your Sponsor:</h4>
-    <p class="mb-0">{{ sponsor.business_name if sponsor else '' }}</p>
-  </div>
-  {% endif %}
-
-  <div class="card p-4 mb-4">
-    <h4>Estimate Your Rewards From One Single PAID Business Invoice</h4>
-    <form method="post" class="row g-3 mb-3">
-        {{ form.hidden_tag() }}
-        <div class="col-12 col-md-auto">
-            {{ form.invoice_amount(class="form-control", placeholder="Amount (e.g. 500)", max="2500", required=True) }}
-            {% if form.invoice_amount.errors %}
-                <div class="text-danger small">{{ form.invoice_amount.errors[0] }}</div>
-            {% endif %}
-        </div>
-        <div class="col-12 col-md-auto">
-            {{ form.downline_level(class="form-select", required=True) }}
-            {% if form.downline_level.errors %}
-                <div class="text-danger small">{{ form.downline_level.errors[0] }}</div>
-            {% endif %}
-        </div>
-        <div class="col-12 col-md-auto">
-            {{ form.submit(class="btn btn-primary") }}
-        </div>
-    </form>
-    {{ rewards_table | safe }}
-  </div>
-
-  <!-- Business Referral Network Cashback Calculator -->
-  <div class="card p-4 mb-4">
-    <h4>Business Referral Network Cashback Calculator (one invoice from every business in your network)</h4>
+    <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
     <div class="mb-2">
-      <label>If you and everyone in your network refers
-        <input id="biz_network" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
-        business(es) and you each generate one invoice during the month in the amount of $ 
-        <input id="biz_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
-        , this is how much your business would earn in Cashback Rewards for the month:
+      <label>If you and everyone in your network refers 
+        <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
+        people and you each make one purchase during the month in the amount of $ 
+        <input id="network_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
+        , this is how much you would earn in Cashback Rewards for the month:
       </label>
-      <small class="text-muted d-block">*Maximum invoice amount allowed is $2,500</small>
+      <small class="text-muted d-block">*Maximum purchase amount allowed is $2,500</small>
     </div>
-    <button class="btn btn-info mb-2" type="button" onclick="calculateBizNetworkEarnings()">Calculate</button>
-    <div id="biz_results" style="display:none;">
+    <button class="btn btn-info mb-2" type="button" onclick="calculateNetworkEarnings()">Calculate</button>
+    <div id="network_results" style="display:none;">
       <ul class="mb-1">
-        <li>Tier One: (Your invoices) = <span id="biz_t1"></span></li>
-        <li>Tier Two: (Invoices from your direct referrals) = <span id="biz_t2"></span></li>
-        <li>Tier Three: (Invoices from 2nd tier referrals) = <span id="biz_t3"></span></li>
-        <li>Tier Four: (Invoices from 3rd tier referrals) = <span id="biz_t4"></span></li>
-        <li>Tier Five: (Invoices from 4th tier referrals) = <span id="biz_t5"></span></li>
+        <li>Tier One: (Your purchases) = <span id="network_t1"></span></li>
+        <li>Tier Two: (Purchases from your direct referrals) = <span id="network_t2"></span></li>
+        <li>Tier Three: (Purchases from 2nd Tier referrals) = <span id="network_t3"></span></li>
+        <li>Tier Four: (Purchases from 3rd Tier referrals) = <span id="network_t4"></span></li>
+        <li>Tier Five: (Purchases from 4th Tier referrals) = <span id="network_t5"></span></li>
       </ul>
-      <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
+      <strong>Your total cashback earnings for the month would be $<span id="network_total"></span></strong>
     </div>
   </div>
-
-  <!-- Full Business Network, collapsible levels -->
   <div class="card p-4 mb-4">
-    <h4>My Business Network</h4>
+    <h4>My Network</h4>
     <div>
-        <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier2" aria-expanded="false" aria-controls="biztier2">
-            Tier 2 (direct referrals)
-        </a>
-        <div class="collapse mt-2" id="biztier2">
-            {% if level2 %}
-                <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}<span>None</span>{% endif %}
-        </div>
+      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier2" aria-expanded="false" aria-controls="tier2">
+        Tier 2 (direct referrals)
+      </a>
+      <div class="collapse mt-2" id="tier2">
+        {% if level2 %}
+          <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        {% else %}
+          <span>None</span>
+        {% endif %}
+      </div>
     </div>
     <div>
-        <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier3" aria-expanded="false" aria-controls="biztier3">
-            Tier 3 (referred by Tier 2 businesses)
-        </a>
-        <div class="collapse mt-2" id="biztier3">
-            {% if level3 %}
-                <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}<span>None</span>{% endif %}
-        </div>
+      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier3" aria-expanded="false" aria-controls="tier3">
+        Tier 3 (referred by Tier 2 people)
+      </a>
+      <div class="collapse mt-2" id="tier3">
+        {% if level3 %}
+          <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        {% else %}
+          <span>None</span>
+        {% endif %}
+      </div>
     </div>
     <div>
-        <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier4" aria-expanded="false" aria-controls="biztier4">
-            Tier 4 (referred by Tier 3 businesses)
-        </a>
-        <div class="collapse mt-2" id="biztier4">
-            {% if level4 %}
-                <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}<span>None</span>{% endif %}
-        </div>
+      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier4" aria-expanded="false" aria-controls="tier4">
+        Tier 4 (referred by Tier 3 people)
+      </a>
+      <div class="collapse mt-2" id="tier4">
+        {% if level4 %}
+          <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        {% else %}
+          <span>None</span>
+        {% endif %}
+      </div>
     </div>
     <div>
-        <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#biztier5" aria-expanded="false" aria-controls="biztier5">
-            Tier 5 (referred by Tier 4 businesses)
-        </a>
-        <div class="collapse mt-2" id="biztier5">
-            {% if level5 %}
-                <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}<span>None</span>{% endif %}
-        </div>
+      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier5" aria-expanded="false" aria-controls="tier5">
+        Tier 5 (referred by Tier 4 people)
+      </a>
+      <div class="collapse mt-2" id="tier5">
+        {% if level5 %}
+          <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        {% else %}
+          <span>None</span>
+        {% endif %}
+      </div>
     </div>
   </div>
-
   <div class="card p-4 text-center">
-    <h4>This is your business dashboard.</h4>
-    <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
+    <h4>This is your dashboard.</h4>
+    <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
   </div>
   {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -405,6 +347,7 @@ function calculateBizNetworkEarnings() {
       </div>
     {% endif %}
   {% endwith %}
+
 </div>
 <footer>
   <div>
@@ -421,195 +364,5 @@ function calculateBizNetworkEarnings() {
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- GOOGLE MAP and DYNAMIC SERVICES/PROFILE PREVIEW JS Below -->
-<script>
-let marker, map, autocomplete;
-function initMap() {
-    const latInput = document.getElementById('latitude');
-    const lngInput = document.getElementById('longitude');
-    let lat = parseFloat(latInput.value) || 39.8283;
-    let lng = parseFloat(lngInput.value) || -98.5795;
-    let center = {lat: lat, lng: lng};
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: (latInput.value && lngInput.value) ? 16 : 4,
-        center: center
-    });
-    marker = new google.maps.Marker({
-        position: center,
-        map: map,
-        draggable: true
-    });
-    google.maps.event.addListener(marker, 'dragend', function(event) {
-        latInput.value = event.latLng.lat();
-        lngInput.value = event.latLng.lng();
-    });
-    map.addEventListener && map.addEventListener('click', function(e) {
-        marker.setPosition(e.latLng);
-        latInput.value = e.latLng.lat();
-        lngInput.value = e.latLng.lng();
-    });
-    const input = document.getElementById('address-autocomplete');
-    autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
-    autocomplete.addListener('place_changed', function () {
-        const place = autocomplete.getPlace();
-        if (!place.geometry) return;
-        const loc = place.geometry.location;
-        latInput.value = loc.lat();
-        lngInput.value = loc.lng();
-        marker.setPosition(loc);
-        map.setCenter(loc);
-        map.setZoom(16);
-    });
-}
-</script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
-<script>
-// Phone input formatting
-function formatPhoneNumber(value) {
-  let digits = value.replace(/\D/g, '');
-  let formatted = digits;
-  if (digits.length > 0) {
-    formatted = '(' + digits.substring(0, 3);
-  }
-  if (digits.length >= 4) {
-    formatted += ') ' + digits.substring(3, 6);
-  }
-  if (digits.length >= 7) {
-    formatted += '-' + digits.substring(6, 10);
-  }
-  return formatted.substring(0, 14);
-}
-function phoneInputHandler(e) {
-  const input = e.target;
-  const original = input.value;
-  const formatted = formatPhoneNumber(original);
-  if (formatted !== original) {
-    input.value = formatted;
-  }
-}
-window.addEventListener('DOMContentLoaded', function() {
-  const phone = document.getElementById('us-phone');
-  if (phone) { phone.addEventListener('input', phoneInputHandler); }
-
-  // Preview Listing Modal logic...
-  let previewBtn = document.getElementById('previewListingBtn');
-  let saveBtn = document.getElementById('saveProfileBtn');
-  let form = document.getElementById('profile-form');
-  let modal = document.getElementById('listingPreviewModal');
-  let modalContent = document.getElementById('listing-preview-content');
-  let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
-
-  previewBtn && previewBtn.addEventListener('click', function(){
-    let profileImgUrl = "{{ profile_img_url }}";
-    let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ biz.business_name }}";
-    let phone = document.getElementById('us-phone').value;
-    let address = document.getElementById('address-autocomplete').value;
-    let email = "{{ biz.business_email }}";
-    let hours = document.getElementById('hours_of_operation').value;
-    let website = document.getElementById('website_url').value;
-    let about = document.getElementById('about_us').value;
-    let lat = document.getElementById('latitude').value;
-    let lng = document.getElementById('longitude').value;
-    let hasMap = !!(lat && lng && !isNaN(lat) && !isNaN(lng));
-    let services = [];
-    document.querySelectorAll('#services-list input').forEach(input => {
-      if(input.value.trim()!="") services.push(input.value.trim());
-    });
-
-    let mapLinkHtml = "";
-    if(hasMap && address) {
-      let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
-      mapLinkHtml = `<div class="mb-2">
-        <a class="fw-semibold pointer text-primary" data-bs-toggle="collapse" href="#publicMapSection" aria-expanded="false" aria-controls="publicMapSection">View Map</a>
-        &nbsp;|&nbsp;
-        <a class="fw-semibold pointer text-primary" href="${directionsUrl}" target="_blank">Driving Directions</a>
-        <div class="collapse mt-2" id="publicMapSection">
-          <div id="preview-map"></div>
-        </div>
-      </div>`;
-      // auto-render Google Map (one-time, when user opens the map section)
-      setTimeout(function() {
-        let mapLoaded = false;
-        let mapBtn = document.getElementById('publicMapSection');
-        if(mapBtn) {
-          mapBtn.addEventListener('shown.bs.collapse', function() {
-            if (!mapLoaded && window.google && document.getElementById('preview-map')) {
-              let pMap = new google.maps.Map(document.getElementById('preview-map'), { center: {lat: parseFloat(lat), lng: parseFloat(lng)}, zoom: 16 });
-              new google.maps.Marker({position: {lat: parseFloat(lat), lng: parseFloat(lng)}, map: pMap});
-              mapLoaded = true;
-            }
-          });
-        }
-      }, 300);
-    }
-
-    let html = `
-      <div class="row">
-        <div class="col-md-3 text-center mb-3">
-          ${profileImgUrl ? `<img src="${profileImgUrl}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;">` : `<div style="width:120px;height:120px;background:#eee;" class="rounded-circle d-flex justify-content-center align-items-center"><span>No Image</span></div>`}
-        </div>
-        <div class="col-md-9">
-          <h3>${name}</h3>
-          ${website ? `<div class="mb-2"><a href="${website}" target="_blank">${website}</a></div>` : ""}
-          <div class="mb-2"><strong>Phone:</strong> ${phone ? phone : 'N/A'}</div>
-          <div class="mb-2"><strong>Email:</strong> ${email ? email : 'N/A'}</div>
-          <div class="mb-2"><strong>Address:</strong> ${address ? address : 'N/A'}</div>
-          <div class="mb-2"><strong>Hours:</strong> ${hours ? hours : 'N/A'}</div>
-          <div class="mb-2"><strong>About Us:</strong><br>${about ? about.replace(/\n/g,'<br>') : 'N/A'}</div>
-          <div class="mb-2"><strong>Products/Services:</strong>${services.length ? `<ul class="mb-0">${services.map(s=>`<li>${s}</li>`).join('')}</ul>` : 'N/A'}</div>
-          ${mapLinkHtml}
-        </div>
-      </div>
-    `;
-    modalContent.innerHTML = html;
-    previewModal && previewModal.show();
-  });
-
-  saveBtn && saveBtn.addEventListener('click', function(){
-    previewModal && previewModal.hide();
-    form && form.submit();
-  });
-
-  // Dynamic services form block
-  let maxServices = 10;
-  let servicesList = document.getElementById('services-list');
-  let addBtn = document.getElementById('addServiceBtn');
-  function countServices() {
-    return servicesList.querySelectorAll('.service-field').length;
-  }
-  addBtn && addBtn.addEventListener('click', function(){
-    let idx = countServices();
-    if(idx >= maxServices) return;
-    let div = document.createElement('div');
-    div.className = 'input-group mb-2 service-field';
-    div.setAttribute('data-index', idx);
-    div.innerHTML = `<input type="text" class="form-control" name="service_${idx+1}" maxlength="100" placeholder="Service #${idx+1}">
-                    <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)">&minus;</button>`;
-    servicesList.appendChild(div);
-    updateRemoveButtons();
-  });
-  window.removeService = function(btn){
-    let fields = servicesList.querySelectorAll('.service-field');
-    if(fields.length <= 2) return;
-    btn.closest('.service-field').remove();
-    let fieldsNew = servicesList.querySelectorAll('.service-field');
-    fieldsNew.forEach((field, idx) => {
-      let input = field.querySelector('input');
-      input.placeholder = "Service #"+(idx+1);
-      input.name = "service_"+(idx+1);
-      field.setAttribute('data-index', idx);
-    });
-    updateRemoveButtons();
-  }
-  function updateRemoveButtons(){
-    let fields = servicesList.querySelectorAll('.service-field');
-    fields.forEach((f,i)=>{
-      let b = f.querySelector('.service-remove');
-      b.disabled = i<2;
-    });
-  }
-  updateRemoveButtons();
-});
-</script>
 </body>
 </html>
