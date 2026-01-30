@@ -194,9 +194,15 @@ def home():
 @app.route("/business")
 def business_home():
     return render_template("business_home.html")
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
+    # Populate referral_code field from ?ref= on GET (invite link)
+    ref_code = request.args.get('ref')
+    if request.method == "GET" and ref_code:
+        form.referral_code.data = ref_code
+
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
         password = form.password.data
@@ -419,6 +425,11 @@ def logout():
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
     form = BusinessRegisterForm()
+    # Populate referral_code field from ?ref= on GET (invite link)
+    ref_code = request.args.get('ref')
+    if request.method == "GET" and ref_code:
+        form.referral_code.data = ref_code
+
     if form.validate_on_submit():
         business_name = form.business_name.data.strip()
         business_email = form.business_email.data.strip().lower()
