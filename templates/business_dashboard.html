@@ -103,6 +103,28 @@ footer {
   border-top: 1px solid #e1e7ea;
 }
 </style>
+<script>
+// JS for business referral network cashback calculator
+function calculateBizNetworkEarnings() {
+  let numBiz = parseInt(document.getElementById('biz_network').value, 10) || 0;
+  let amount = parseFloat(document.getElementById('biz_amount').value) || 0;
+  if (amount > 2500) amount = 2500;
+  document.getElementById('biz_amount').value = amount;
+  let t1 = 0.01 * amount;
+  let t2 = 0.002 * amount * numBiz;
+  let t3 = 0.002 * amount * Math.pow(numBiz, 2);
+  let t4 = 0.002 * amount * Math.pow(numBiz, 3);
+  let t5 = 0.01 * amount * Math.pow(numBiz, 4);
+  let total = t1 + t2 + t3 + t4 + t5;
+  document.getElementById('biz_t1').innerText = t1.toFixed(2);
+  document.getElementById('biz_t2').innerText = t2.toFixed(2);
+  document.getElementById('biz_t3').innerText = t3.toFixed(2);
+  document.getElementById('biz_t4').innerText = t4.toFixed(2);
+  document.getElementById('biz_t5').innerText = t5.toFixed(2);
+  document.getElementById('biz_total').innerText = total.toFixed(2);
+  document.getElementById('biz_results').style.display = 'block';
+}
+</script>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -133,7 +155,7 @@ footer {
         <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
     </div>
-  </div> 
+  </div>
 
   <!-- Invite Other Businesses Modal -->
   <div class="mb-4">
@@ -161,7 +183,7 @@ footer {
     </div>
   </div>
 
-  <!-- Edit Profile (with always-visible map) -->
+  <!-- Edit Profile (always open with map displayed) -->
   <div class="collapse show mt-3" id="businessProfileEditCollapse">
     <div class="card p-4 mb-4">
       <h4>Edit Business Profile</h4>
@@ -260,7 +282,7 @@ footer {
     </div>
   </div>
 
-  <!-- Dashboard Cards below (unchanged except for polish) -->
+  <!-- Other dashboard cards as before -->
   <div class="card p-4 mb-4">
     <h4>Your Business Referral Code:</h4>
     <code>{{ biz.referral_code }}</code>
@@ -294,6 +316,8 @@ footer {
     </form>
     {{ rewards_table | safe }}
   </div>
+
+  <!-- Business Referral Network Cashback Calculator -->
   <div class="card p-4 mb-4">
     <h4>Business Referral Network Cashback Calculator (one invoice from every business in your network)</h4>
     <div class="mb-2">
@@ -317,6 +341,8 @@ footer {
       <strong>Your business total cashback earnings for the month would be $<span id="biz_total"></span></strong>
     </div>
   </div>
+
+  <!-- Full Business Network, collapsible levels -->
   <div class="card p-4 mb-4">
     <h4>My Business Network</h4>
     <div>
@@ -326,9 +352,7 @@ footer {
         <div class="collapse mt-2" id="biztier2">
             {% if level2 %}
                 <ul class="mb-2">{% for user in level2 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}
-                <span>None</span>
-            {% endif %}
+            {% else %}<span>None</span>{% endif %}
         </div>
     </div>
     <div>
@@ -338,9 +362,7 @@ footer {
         <div class="collapse mt-2" id="biztier3">
             {% if level3 %}
                 <ul class="mb-2">{% for user in level3 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}
-                <span>None</span>
-            {% endif %}
+            {% else %}<span>None</span>{% endif %}
         </div>
     </div>
     <div>
@@ -350,9 +372,7 @@ footer {
         <div class="collapse mt-2" id="biztier4">
             {% if level4 %}
                 <ul class="mb-2">{% for user in level4 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}
-                <span>None</span>
-            {% endif %}
+            {% else %}<span>None</span>{% endif %}
         </div>
     </div>
     <div>
@@ -362,12 +382,11 @@ footer {
         <div class="collapse mt-2" id="biztier5">
             {% if level5 %}
                 <ul class="mb-2">{% for user in level5 %}<li>{{ user.business_name }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-            {% else %}
-                <span>None</span>
-            {% endif %}
+            {% else %}<span>None</span>{% endif %}
         </div>
     </div>
   </div>
+
   <div class="card p-4 text-center">
     <h4>This is your business dashboard.</h4>
     <p class="mb-0">We're excited to see how much cashback you earn for your business in the future!</p>
@@ -397,6 +416,7 @@ footer {
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- GOOGLE MAP and DYNAMIC SERVICES/PROFILE PREVIEW JS Below -->
 <script>
 let marker, map, autocomplete;
 function initMap() {
@@ -464,9 +484,8 @@ function phoneInputHandler(e) {
 }
 window.addEventListener('DOMContentLoaded', function() {
   const phone = document.getElementById('us-phone');
-  if (phone) {
-    phone.addEventListener('input', phoneInputHandler);
-  }
+  if (phone) { phone.addEventListener('input', phoneInputHandler); }
+
   // Preview Listing Modal logic...
   let previewBtn = document.getElementById('previewListingBtn');
   let saveBtn = document.getElementById('saveProfileBtn');
@@ -545,49 +564,46 @@ window.addEventListener('DOMContentLoaded', function() {
     previewModal && previewModal.hide();
     form && form.submit();
   });
-});
 
-// Dynamic services...
-document.addEventListener('DOMContentLoaded', function(){
-    let maxServices = 10;
-    let servicesList = document.getElementById('services-list');
-    let addBtn = document.getElementById('addServiceBtn');
-
-    function countServices() {
-      return servicesList.querySelectorAll('.service-field').length;
-    }
-    addBtn && addBtn.addEventListener('click', function(){
-      let idx = countServices();
-      if(idx >= maxServices) return;
-      let div = document.createElement('div');
-      div.className = 'input-group mb-2 service-field';
-      div.setAttribute('data-index', idx);
-      div.innerHTML = `<input type="text" class="form-control" name="service_${idx+1}" maxlength="100" placeholder="Service #${idx+1}">
-                      <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)">&minus;</button>`;
-      servicesList.appendChild(div);
-      updateRemoveButtons();
-    });
-    window.removeService = function(btn){
-      let fields = servicesList.querySelectorAll('.service-field');
-      if(fields.length <= 2) return;
-      btn.closest('.service-field').remove();
-      let fieldsNew = servicesList.querySelectorAll('.service-field');
-      fieldsNew.forEach((field, idx) => {
-        let input = field.querySelector('input');
-        input.placeholder = "Service #"+(idx+1);
-        input.name = "service_"+(idx+1);
-        field.setAttribute('data-index', idx);
-      });
-      updateRemoveButtons();
-    }
-    function updateRemoveButtons(){
-      let fields = servicesList.querySelectorAll('.service-field');
-      fields.forEach((f,i)=>{
-        let b = f.querySelector('.service-remove');
-        b.disabled = i<2;
-      });
-    }
+  // Dynamic services form block
+  let maxServices = 10;
+  let servicesList = document.getElementById('services-list');
+  let addBtn = document.getElementById('addServiceBtn');
+  function countServices() {
+    return servicesList.querySelectorAll('.service-field').length;
+  }
+  addBtn && addBtn.addEventListener('click', function(){
+    let idx = countServices();
+    if(idx >= maxServices) return;
+    let div = document.createElement('div');
+    div.className = 'input-group mb-2 service-field';
+    div.setAttribute('data-index', idx);
+    div.innerHTML = `<input type="text" class="form-control" name="service_${idx+1}" maxlength="100" placeholder="Service #${idx+1}">
+                    <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)">&minus;</button>`;
+    servicesList.appendChild(div);
     updateRemoveButtons();
+  });
+  window.removeService = function(btn){
+    let fields = servicesList.querySelectorAll('.service-field');
+    if(fields.length <= 2) return;
+    btn.closest('.service-field').remove();
+    let fieldsNew = servicesList.querySelectorAll('.service-field');
+    fieldsNew.forEach((field, idx) => {
+      let input = field.querySelector('input');
+      input.placeholder = "Service #"+(idx+1);
+      input.name = "service_"+(idx+1);
+      field.setAttribute('data-index', idx);
+    });
+    updateRemoveButtons();
+  }
+  function updateRemoveButtons(){
+    let fields = servicesList.querySelectorAll('.service-field');
+    fields.forEach((f,i)=>{
+      let b = f.querySelector('.service-remove');
+      b.disabled = i<2;
+    });
+  }
+  updateRemoveButtons();
 });
 </script>
 </body>
