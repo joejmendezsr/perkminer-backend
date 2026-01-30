@@ -4,6 +4,90 @@
     <title>PerkMiner Homepage</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+:root {
+  --pm-primary: #2a5859;
+  --pm-accent: #ffd66b;
+  --pm-bg: #ffffff;
+  --pm-text: #222;
+  --pm-hover: #e6f6f5;
+}
+body {
+  background: var(--pm-bg);
+  color: var(--pm-text);
+}
+body > nav {
+  margin-bottom: 2rem !important;
+}
+.navbar {
+  box-shadow: 0 2px 8px #f0f2f3;
+}
+.card {
+  border: none;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeinCard 0.7s ease forwards;
+}
+@keyframes fadeinCard {
+  to { opacity: 1; transform: none; }
+}
+.card .card-title, .card span {
+  color: var(--pm-primary);
+}
+.card:hover, .card:focus-within {
+  background: var(--pm-hover);
+  box-shadow: 0 4px 16px #b4dad9;
+  transform: scale(1.045);
+  z-index: 1;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.16s;
+}
+.btn-primary {
+  background: var(--pm-primary);
+  border: none;
+  color: #fff !important;
+}
+.btn-primary:hover {
+  background: var(--pm-accent);
+  color: var(--pm-text) !important;
+}
+.input-group {
+  border-radius: 18px;
+  box-shadow: 0 2px 10px #f2f5f5;
+}
+.input-group .form-control, .input-group .btn {
+  border-radius: 18px !important;
+}
+.category-icon {
+  font-size: 2em;
+  margin-bottom: 4px;
+  color: var(--pm-primary);
+  display: block;
+}
+@media (max-width: 600px) {
+  .card {
+    min-width: 90vw !important;
+    margin: 0 auto 12px auto;
+  }
+  .input-group {
+    max-width: 100% !important;
+  }
+}
+footer {
+  background: #f8fafb;
+  color: #999;
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+  text-align: center;
+  font-size: 1em;
+  border-top: 1px solid #e1e7ea;
+}
+.breadcrumb {
+  background: none;
+  padding-left: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+</style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -28,7 +112,6 @@
         <p class="lead">Your secure, custom site is now live.</p>
         <hr class="my-4">
 
-        <!-- SEARCH BAR -->
         <form method="get" action="{{ url_for('search') }}">
           <div class="input-group mb-4" style="max-width: 600px; margin: 0 auto;">
             <input type="text" class="form-control" name="q" placeholder="Search for products, services, or businesses..." aria-label="Search" style="font-size: 1.2em;">
@@ -36,24 +119,87 @@
           </div>
         </form>
 
-        <!-- CATEGORY CARDS HORIZONTAL SCROLL -->
         <div class="d-flex overflow-auto pb-3 mb-4" style="gap:18px;">
-          {% set categories = ['Handyman/Contractor','Auto Parts & Service','Home and Garden','Retail Outlet','Insurance','Restaurant','Real Estate','More'] %}
+          {% set categories = [
+            {'name':'Handyman-Contractor', 'icon':'wrench'},
+            {'name':'Auto Parts & Service', 'icon':'car-front-fill'},
+            {'name':'Home and Garden', 'icon':'house-door-fill'},
+            {'name':'Retail Outlet', 'icon':'shop'},
+            {'name':'Insurance', 'icon':'safe-fill'},
+            {'name':'Restaurant', 'icon':'cup-straw'},
+            {'name':'Real Estate', 'icon':'building'},
+            {'name':'More', 'icon':'grid-3x3-gap'}
+          ] %}
           {% for cat in categories %}
-            <a class="text-decoration-none" href="{{ url_for('category_browse', name=cat) }}">
+            <a class="text-decoration-none" href="{{ url_for('category_browse', name=cat.name) }}">
               <div class="card shadow-sm px-4 py-3 h-100 text-center pointer"
-                    style="min-width:180px; min-height:100px; display:flex; flex-direction:column; justify-content:center; border-radius: 12px; transition: box-shadow 0.2s;"
-                    onmouseover="this.style.boxShadow='0 4px 16px #dfd';" onmouseout="this.style.boxShadow='0 1px 4px #eee';">
-                <span style="font-size: 1.1em; color: #2a5859;">{{ cat }}</span>
+                    style="min-width:170px; min-height:118px; display:flex; flex-direction:column; justify-content:center; align-items:center; border-radius: 12px; transition: box-shadow 0.2s;">
+                <i class="bi bi-{{ cat.icon }} category-icon" {% if cat.name == 'More' %}style="color: var(--pm-accent);"{% endif %}></i>
+                <span style="font-size: 1.1em; {% if cat.name == 'More' %}color: var(--pm-accent);{% endif %}">{{ cat.name }}</span>
               </div>
             </a>
           {% endfor %}
         </div>
 
-        <!-- EXAMPLE: PUT ANY EXTRA HOMEPAGE CONTENT BELOW HERE -->
-        <p>Build more features, connect your domain, and make it yours.</p>
+        <!-- MOCK DEMO LISTINGS -->
+        <div class="mb-5">
+          <h3 class="mb-4 text-start">Featured Businesses</h3>
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% set demo_listings = [
+                {'business_name':'Sparks & Sons Handyman','category':'Handyman-Contractor','website_url':'','about_us':'Skilled repairs and home improvement.','profile_photo':'','address':'123 Maple Drive'},
+                {'business_name':'Evergreen Motors','category':'Auto Parts & Service','website_url':'https://evergreenmotors.com','about_us':'Your neighborhood auto care experts.','profile_photo':'','address':'881 Fixit Ave'},
+                {'business_name':'Blossom Gardens','category':'Home and Garden','website_url':'','about_us':'Garden design and lawn maintenance.','profile_photo':'','address':'14 Flower Rd'},
+                {'business_name':'Downtown Styles','category':'Retail Outlet','website_url':'https://dtnstyles.example','about_us':'Trendy clothing and more.','profile_photo':'','address':'45 Center St'},
+                {'business_name':'Safe Choice Insurance','category':'Insurance','website_url':'https://safechoice.com','about_us':'Peace of mind for your family and business.','profile_photo':'','address':'900 Policy Pkwy'},
+                {'business_name':'Sunrise Diner','category':'Restaurant','website_url':'','about_us':'Breakfast, lunch, and dinner—open late!','profile_photo':'','address':'789 Egg Ct'},
+                {'business_name':'Smart Realty Group','category':'Real Estate','website_url':'https://smartrealty.com','about_us':'Finding your dream home made easy.','profile_photo':'','address':'1620 Lakefront Blvd'}
+            ] %}
+            {% for biz in demo_listings %}
+              <div class="col">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <i class="bi bi-{{ categories | selectattr('name','equalto',biz.category) | map(attribute='icon') | list | first or 'grid-3x3-gap' }} category-icon"></i>
+                    <h5 class="card-title mb-2" style="font-weight: bold;">{{ biz.business_name }}</h5>
+                    <div class="mb-1 small" style="font-weight: 500;">
+                      <i class="bi bi-tag-fill" style="font-size:1em; color:var(--pm-primary);"></i>
+                      {{ biz.category }}
+                    </div>
+                    {% if biz.website_url %}
+                      <div class="mb-1"><strong>Website:</strong> <a href="{{ biz.website_url }}" target="_blank" rel="noopener">{{ biz.website_url }}</a></div>
+                    {% endif %}
+                    <div class="mb-1"><strong>Address:</strong> {{ biz.address }}</div>
+                    {% if biz.about_us %}
+                      <div class="mb-1"><strong>About:</strong> {{ biz.about_us }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          {% if demo_listings|length == 0 %}
+            <div class="alert alert-warning text-center mt-4">
+              No featured businesses yet. <a href="{{ url_for('business_home') }}" class="btn btn-link">Be the first to advertise here!</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <p>Explore top businesses, find your next deal, or <a href="{{ url_for('business_home') }}" style="color:var(--pm-primary); font-weight: 500;">get listed today</a>.</p>
       </div>
     </main>
+    <footer>
+      <div>
+        <div class="mb-2">
+          <a href="/" style="color:var(--pm-primary);font-weight:600;text-decoration:none;">PerkMiner</a> &copy; 2026
+        </div>
+        <div>
+          <small>Need help? <a href="mailto:support@perkminer.com" style="color:var(--pm-primary);">Contact Support</a></small>
+        </div>
+        <div class="mt-1">
+          <a href="#" style="color:#3dbbee; margin:0 6px;text-decoration:none;">Privacy</a>
+          <a href="#" style="color:#3dbbee; margin:0 6px;text-decoration:none;">Terms</a>
+        </div>
+      </div>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
