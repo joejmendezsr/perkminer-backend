@@ -224,10 +224,10 @@ footer {
             {% endif %}
             <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
           </div>
-          <div class="col-12 col-md-auto mb-3 mb-md-0">
-            <label class="form-label">Name</label>
-            {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
-          </div>
+        <div class="mb-3 col-12 col-md-6">
+            <label class="form-label">Business Name</label>
+            {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
+        </div>  
           <div class="col-12 col-md-auto">
             {{ profile_form.submit(class="btn btn-success") }}
           </div>
