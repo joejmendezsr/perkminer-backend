@@ -141,11 +141,11 @@ class RewardForm(FlaskForm):
     downline_level = SelectField(
         'Downline Level',
         choices=[
-            ('1', 'Tier 1 (your purchases)'), 
-            ('2', 'Tier 2 (direct referral purchases)'),
-            ('3', 'Tier 3 (Tier 2 referral purchases)'),
-            ('4', 'Tier 4 (Tier 3 referral purchases)'),
-            ('5', 'Tier 5 (Tier 4 referral purchases)')
+            ('1', 'Tier 1: (your purchases)'), 
+            ('2', 'Tier 2: (direct referral purchases)'),
+            ('3', 'Tier 3: (Tier 2 referral purchases)'),
+            ('4', 'Tier 4: (Tier 3 referral purchases)'),
+            ('5', 'Tier 5: (Tier 4 referral purchases)')
         ],
         validators=[DataRequired()],
         default='1'
@@ -166,11 +166,11 @@ class BusinessRewardForm(FlaskForm):
     downline_level = SelectField(
         'Downline Level',
         choices=[
-            ('1', 'Tier 1 (your invoices)'), 
-            ('2', 'Tier 2 (direct referral invoices)'),
-            ('3', 'Tier 3 (Tier 2 referral invoices)'),
-            ('4', 'Tier 4 (Tier 3 referral invoices)'),
-            ('5', 'Tier 5 (Tier 4 referral invoices)')
+            ('1', 'Tier 1: (your invoices)'), 
+            ('2', 'Tier 2: (direct referral invoices)'),
+            ('3', 'Tier 3: (Tier 2 referral invoices)'),
+            ('4', 'Tier 4: (Tier 3 referral invoices)'),
+            ('5', 'Tier 5: (Tier 4 referral invoices)')
         ],
         validators=[DataRequired()],
         default='1'
