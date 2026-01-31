@@ -715,5 +715,8 @@ def business_logout():
     flash("Logged out as business.")
     return redirect(url_for("business_home"))
 
+for rule in app.url_map.iter_rules():
+    print(f"{rule.endpoint:25s} {rule.methods} {rule}")
+
 if __name__ == "__main__":
     app.run(debug=True)
