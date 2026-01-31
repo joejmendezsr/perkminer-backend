@@ -233,20 +233,20 @@ footer {
     {% endif %}
     <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
   </div>
-
+</br>
   <!-- Business Name -->
   <div class="mb-3 col-12 col-md-6">
     <label class="form-label">Business Name</label>
     {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
   </div>
-
+</br>
   <!-- Phone Number -->
   <div class="mb-3 col-12 col-md-6">
     <label class="form-label">Phone Number</label>
     {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555") }}
     <div class="form-text">Format: (555) 555-5555</div>
   </div>
-
+</br>
   <!-- Business Address + Map -->
   <div class="mb-3 col-12 col-md-6">
     <label class="form-label">Business Address</label>
@@ -256,7 +256,7 @@ footer {
     <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
     <div id="map"></div>
   </div>
-
+</br>
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
@@ -289,14 +289,14 @@ footer {
       <small class="text-muted d-block mt-1">Max 10 services.</small>
     </div>
   </div>
-
+</br>
   <!-- Keywords -->
   <div class="col-12 mt-3">
     <label class="form-label">Keywords (for search, separated by commas)</label>
     <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
-
+</br>
   <!-- Preview and Save Buttons -->
   <div class="col-12 mt-3 d-flex gap-2">
     <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
