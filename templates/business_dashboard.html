@@ -160,7 +160,7 @@ footer {
         <a class="navbar-brand" href="/">PerkMiner</a>
         <div class="navbar-nav ms-auto">
             <span class="nav-link disabled">{{ email }}</span>
-            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            <a class="nav-link" href="{{ url_for('business_logout') }}">Logout</a>
         </div>
     </div>
 </nav>
@@ -336,7 +336,7 @@ footer {
   </div>
       {% if sponsor %}
         <div class="card p-4 mb-4">
-          <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor }}</span></small></div>
+          <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor.business_name }}</span></small></div>
         </div>
       {% endif %}
   <div class="card p-4 mb-4">
