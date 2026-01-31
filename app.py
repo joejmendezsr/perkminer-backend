@@ -635,7 +635,8 @@ def business_dashboard():
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
                 upload_result = cloudinary.uploader.upload(file)
-                biz.profile_photo = upload_result.get('secure_url')            biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+                biz.profile_photo = upload_result.get('secure_url')
+                biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
             biz.website_url = request.form.get('website_url', biz.website_url)
             biz.about_us = request.form.get('about_us', biz.about_us)
             biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
