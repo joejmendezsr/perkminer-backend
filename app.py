@@ -14,7 +14,7 @@ import cloudinary.uploader
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
-  api_secret = 'CLOUDINARY_URL=cloudinary://786387955898581:**********@dmrntlcfd'
+  api_secret = 'cLtDoC44BarYjVrr3dIgi_0XiKo'
 )
 
 app = Flask(__name__)
