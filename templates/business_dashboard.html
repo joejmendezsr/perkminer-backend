@@ -600,6 +600,56 @@ setTimeout(function() {
   });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const servicesList = document.getElementById('services-list');
+  const addBtn = document.getElementById('addServiceBtn');
+
+  addBtn.addEventListener('click', function() {
+    // Count current fields
+    const count = servicesList.querySelectorAll('.service-field').length;
+    if (count >= 10) return; // Max 10
+
+    // Create new service input group
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2 service-field';
+    div.setAttribute('data-index', count);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control';
+    input.name = 'service_' + (count + 1);
+    input.maxLength = 100;
+    input.placeholder = 'Service #' + (count + 1);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline-danger service-remove';
+    btn.type = 'button';
+    btn.innerHTML = '&minus;';
+    btn.addEventListener('click', function() {
+      if (servicesList.querySelectorAll('.service-field').length > 2) {
+        div.remove();
+      }
+    });
+    // Disable remove for first two fields
+    if (count < 2) btn.disabled = true;
+
+    div.appendChild(input);
+    div.appendChild(btn);
+    servicesList.appendChild(div);
+  });
+
+  // Re-enable remove buttons for >2 fields
+  servicesList.querySelectorAll('.service-field .service-remove').forEach(function(btn, idx) {
+    if (idx >= 2) btn.disabled = false;
+    btn.addEventListener('click', function() {
+      if (servicesList.querySelectorAll('.service-field').length > 2) {
+        btn.parentElement.remove();
+      }
+    });
+  });
+});
+</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
 <div class="modal fade" id="listingPreviewModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
