@@ -608,11 +608,16 @@ def business_dashboard():
     if request.method == "POST":
         if 'business_name' in request.form:
             biz.business_name = request.form.get('business_name', biz.business_name)
-        if ('profile_photo' in request.files or
+
+        if (
+            'profile_photo' in request.files or
             any(x in request.form for x in [
                 'phone_number', 'address', 'latitude', 'longitude', 'hours_of_operation',
-                'website_url', 'about_us', 'search_keywords', 'service_1'
-            ])):
+                'website_url', 'about_us', 'category', 'search_keywords', 'service_1'
+            ])
+        ):
+            if 'category' in request.form:
+                biz.category = request.form.get('category', biz.category)
             biz.phone_number = request.form.get('phone_number', biz.phone_number)
             biz.address = request.form.get('address', biz.address)
             try:
@@ -620,7 +625,8 @@ def business_dashboard():
                     biz.latitude = float(request.form.get('latitude'))
                 if request.form.get('longitude'):
                     biz.longitude = float(request.form.get('longitude'))
-            except ValueError: pass
+            except ValueError:
+                pass
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
                 filename = f"biz_{biz.id}_{int(time.time())}_{secure_filename(file.filename)}"
@@ -641,6 +647,7 @@ def business_dashboard():
     longitude = biz.longitude if biz.longitude else ""
     profile_img_url = url_for('uploaded_file', filename=biz.profile_photo) if biz.profile_photo else None
 
+    # Calculators - unchanged!
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
@@ -673,6 +680,7 @@ def business_dashboard():
         else:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
             rewards_table += f"<div class='alert alert-success'>Your business earns <strong>${reward:.2f}</strong> as cashback.</div>"
+
     sponsor = Business.query.get(biz.sponsor_id) if biz.sponsor_id else None
     level2 = Business.query.filter_by(sponsor_id=biz.id).all()
     level3, level4, level5 = [], [], []
@@ -685,8 +693,15 @@ def business_dashboard():
             for b4 in b4s:
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
-    return render_template("business_dashboard.html", form=form, profile_form=profile_form, invite_form=invite_form, biz=biz, sponsor=sponsor,
-        rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5,
+    return render_template("business_dashboard.html",
+        form=form,
+        profile_form=profile_form,
+        invite_form=invite_form,
+        biz=biz,
+        sponsor=sponsor,
+        referral_code=biz.referral_code,
+        rewards_table=rewards_table,
+        level2=level2, level3=level3, level4=level4, level5=level5,
         profile_img_url=profile_img_url,
         phone_number=biz.phone_number,
         address=biz.address,
