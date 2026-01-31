@@ -484,6 +484,47 @@ function initMap() {
     }
 }
 </script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  let previewBtn = document.getElementById('previewListingBtn');
+  let modal = document.getElementById('listingPreviewModal');
+  let modalContent = document.getElementById('listing-preview-content');
+  let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
+
+  previewBtn && previewBtn.addEventListener('click', function(){
+    let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ user_name }}";
+    let email = "{{ email }}";
+    let phone = ''; // Add a phone input if you want
+    let keywords = document.getElementById('search_keywords') ? document.getElementById('search_keywords').value : '';
+    // Add any other fields you want to preview
+
+    let html = `
+      <div>
+        <h4>${name ? name : 'No name entered'}</h4>
+        <div><strong>Email:</strong> ${email ? email : '-'}</div>
+        <div><strong>Keywords:</strong> ${keywords ? keywords : '-'}</div>
+      </div>
+    `;
+    modalContent.innerHTML = html;
+    previewModal && previewModal.show();
+  });
+});
+</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
+<div class="modal fade" id="listingPreviewModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Profile Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="listing-preview-content"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

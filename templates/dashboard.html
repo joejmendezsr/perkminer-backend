@@ -156,34 +156,40 @@ footer {
         </div>
     </div>
 </nav>
-<div class="container py-4">
-  <div class="card mb-4 p-4">
-    <div class="d-flex align-items-center flex-wrap mb-3">
-      {% if profile_img_url %}
-        <img src="{{ profile_img_url }}" alt="Profile Photo" class="profile-pic me-3">
-      {% else %}
-        <div class="placeholder-pic me-3"><i class="bi bi-person"></i></div>
-      {% endif %}
-      <div>
-        <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
-      <div class="ms-auto d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
-      </div>
+<!-- Profile photo | Welcome message | Logout (all in one row at the top) -->
+<div class="card mb-4 p-4">
+  <div class="d-flex align-items-center flex-wrap mb-3">
+    {% if profile_img_url %}
+      <img src="{{ profile_img_url }}" alt="Profile Photo" class="profile-pic me-3">
+    {% else %}
+      <div class="placeholder-pic me-3"><i class="bi bi-person"></i></div>
+    {% endif %}
+    <div>
+      <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
     </div>
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+    </div>
+  </div>
+</div>
 
-    <!-- Invite Others Button -->
-    <div class="mb-4">
-      <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
-        <i class="bi bi-person-plus me-1"></i>Invite others to join
-      </button>
-    </div></br>
-<button class="btn btn-primary" type="button"
-  data-bs-toggle="collapse"
-  data-bs-target="#profileCollapse"
-  aria-expanded="false"
-  aria-controls="profileCollapse">
-  View/Edit Profile
-</button></br>
+<!-- Stacked action buttons under the top card -->
+<div class="card p-4 mb-4">
+  <div class="mb-3">
+    <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+      <i class="bi bi-person-plus me-1"></i>Invite others to join
+    </button>
+  </div>
+  <div>
+    <button class="btn btn-primary w-100" type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#profileCollapse"
+      aria-expanded="false"
+      aria-controls="profileCollapse">
+      View/Edit Profile
+    </button>
+  </div>
+</div>
     <!-- Invite Modal -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
       <div class="modal-dialog">
