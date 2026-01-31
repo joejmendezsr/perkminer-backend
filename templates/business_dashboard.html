@@ -173,7 +173,9 @@ footer {
       <div class="placeholder-pic me-3"><i class="bi bi-person"></i></div>
     {% endif %}
     <div>
-      <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
+      <h2 class="mb-0">
+        Welcome, {{ biz.business_name if biz.business_name else (user_name if user_name else email) }}!
+      </h2>
     </div>
     <div class="ms-auto d-flex gap-2 flex-wrap">
       <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
@@ -181,18 +183,22 @@ footer {
   </div>
 
     <!-- Invite Others Button -->
-    <div class="mb-4">
-      <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
-        <i class="bi bi-person-plus me-1"></i>Invite others to join
-      </button>
-    </div></br>
-<button class="btn btn-primary" type="button"
-  data-bs-toggle="collapse"
-  data-bs-target="#profileCollapse"
-  aria-expanded="false"
-  aria-controls="profileCollapse">
-  View/Edit Profile
-</button></br>
+<div class="card p-4 mb-4">
+  <div class="mb-3">
+    <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+      <i class="bi bi-person-plus me-1"></i>Invite others to join
+    </button>
+  </div>
+  <div>
+    <button class="btn btn-primary w-100" type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#profileCollapse"
+      aria-expanded="false"
+      aria-controls="profileCollapse">
+      View/Edit Profile
+    </button>
+  </div>
+</div>
     <!-- Invite Modal -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -252,7 +258,11 @@ footer {
     <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
     <div id="map"></div>
   </div>
-
+<div class="col-12 mb-3">
+  <label class="form-label">Website</label>
+  <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
+         value="{{ biz.website_url or '' }}" placeholder="https://your-website.com">
+</div>
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
@@ -285,7 +295,24 @@ footer {
       <small class="text-muted d-block mt-1">Max 10 services.</small>
     </div>
   </div>
-
+<div class="col-12 mb-3">
+  <label class="form-label">About Us</label>
+  <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ biz.about_us or '' }}</textarea>
+  <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
+</div>
+<div class="col-12 mb-3">
+  <label class="form-label">Category</label>
+  <select class="form-select" name="category" id="business_category" required>
+    <option value="">Select category...</option>
+    <option value="Handyman-Contractor" {% if biz.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
+    <option value="Auto Parts & Service" {% if biz.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
+    <option value="Home and Garden" {% if biz.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
+    <option value="Retail Outlet" {% if biz.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
+    <option value="Insurance" {% if biz.category == 'Insurance' %}selected{% endif %}>Insurance</option>
+    <option value="Restaurant" {% if biz.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
+    <option value="Real Estate" {% if biz.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+  </select>
+</div>
   <!-- Keywords -->
   <div class="col-12 mt-3">
     <label class="form-label">Keywords (for search, separated by commas)</label>
@@ -492,20 +519,83 @@ window.addEventListener('DOMContentLoaded', function() {
   let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
 
   previewBtn && previewBtn.addEventListener('click', function(){
-    let name = document.querySelector('[name="name"]') ? document.querySelector('[name="name"]').value : "{{ user_name }}";
-    let email = "{{ email }}";
-    let phone = ''; // Add a phone input if you want
-    let keywords = document.getElementById('search_keywords') ? document.getElementById('search_keywords').value : '';
-    // Add any other fields you want to preview
+    let name = document.querySelector('[name="business_name"]')?.value || "{{ biz.business_name }}";
+    let address = document.getElementById('address-autocomplete')?.value || "{{ biz.address }}";
+    let category = document.getElementById('business_category')?.value || "{{ biz.category }}";
+    let phone = document.getElementById('us-phone')?.value || "{{ biz.phone_number }}";
+    let website = document.getElementById('website_url')?.value || "{{ biz.website_url }}";
+    let about = document.getElementById('about_us')?.value || "{{ biz.about_us }}";
+    let keywords = document.getElementById('search_keywords')?.value || "{{ biz.search_keywords }}";
+// For services, you’ll need to loop Jinja or parse inputs
 
-    let html = `
-      <div>
-        <h4>${name ? name : 'No name entered'}</h4>
-        <div><strong>Email:</strong> ${email ? email : '-'}</div>
-        <div><strong>Keywords:</strong> ${keywords ? keywords : '-'}</div>
+let services = [];
+document.querySelectorAll('#services-list input').forEach(input => {
+  if(input.value.trim()!="") services.push(input.value.trim());
+});
+
+    let img = '{{ profile_img_url if profile_img_url else "" }}';
+
+    let smallListing = `
+  <div class="card mb-3">
+    <div class="row g-0 align-items-center">
+      <div class="col-md-3 text-center">
+        ${img? `<img src="${img}" class="rounded-circle" style="width:60px;height:60px;object-fit:cover;">` : ""}
       </div>
-    `;
+      <div class="col-md-9">
+        <b>${name}</b><br/>
+        <span class="text-muted">${category}</span><br/>
+        <span>${address}</span><br/>
+        <small>Services: ${services.length ? services.join(', ') : 'N/A'}</small>
+      </div>
+    </div>
+  </div>
+`;
+
+    let largeListing = `
+  <div>
+    ${img? `<div class="mb-3 text-center"><img src="${img}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;"></div>` : ""}
+    <h3>${name}</h3>
+    <div><strong>Category:</strong> ${category}</div>
+    <div><strong>Address:</strong> ${address}</div>
+    <div id="preview-map" style="width:100%;height:150px;border-radius:8px;margin:8px 0;"></div>
+    <div><strong>Phone:</strong> ${phone}</div>
+    <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
+    <div><strong>Email:</strong> {{ biz.business_email }}</div>
+    <div><strong>About us:</strong> ${about}</div>
+    <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
+  </div>
+`;
+
+// Display the cards in your modal
+    let html = `
+  <div>
+    <h5>Small Listing Preview</h5>
+    ${smallListing}
+    <hr/>
+    <h5>Large Listing Preview</h5>
+    ${largeListing}
+  </div>
+`;
+
+modalContent.innerHTML = html;
+
+// Add map rendering logic inside the preview modal if you want (see below)
+
+
     modalContent.innerHTML = html;
+// Render a mini map in preview if there is a lat/lng
+setTimeout(function() {
+  let lat = Number(document.getElementById('latitude')?.value) || 39.8283;
+  let lng = Number(document.getElementById('longitude')?.value) || -98.5795;
+
+  if (window.google && document.getElementById('preview-map')) {
+    let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
+      center: {lat: lat, lng: lng},
+      zoom: 16
+    });
+    new google.maps.Marker({position: {lat: lat, lng: lng}, map: previewMap});
+  }
+}, 200);
     previewModal && previewModal.show();
   });
 });
