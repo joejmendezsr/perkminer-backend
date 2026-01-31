@@ -54,7 +54,6 @@ class User(db.Model, UserMixin):
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(100), unique=True, nullable=False)
-    category = db.Column(db.String(50), nullable=False, default="Other")
     business_email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     referral_code = db.Column(db.String(32), unique=True)
@@ -181,7 +180,6 @@ class UserProfileForm(FlaskForm):
     profile_photo = FileField('Upload Profile Photo')
     submit = SubmitField('Save Profile')
 class BusinessProfileForm(FlaskForm):
-    business_name = StringField('Business Name', validators=[Optional(), Length(max=100)])
     profile_photo = FileField('Upload Profile Photo')
     phone_number = StringField('Phone Number', validators=[Optional(), Length(max=30)])
     address = StringField('Address', validators=[Optional(), Length(max=255)])
@@ -196,24 +194,6 @@ def home():
 @app.route("/business")
 def business_home():
     return render_template("business_home.html")
-
-@app.route("/search")
-def search():
-    q = request.args.get("q", "").strip()
-    category = request.args.get("category", "").strip()
-    query = Business.query
-    if category:
-        query = query.filter(Business.category == category)
-    if q:
-        # Simple ILIKE keyword filter (later: full-text search)
-        query = query.filter(Business.search_keywords.ilike(f"%{q}%"))
-    results = query.all()
-    return render_template("search_results.html", results=results, q=q, category=category)
-
-@app.route("/category/<name>")
-def category_browse(name):
-    results = Business.query.filter(Business.category == name).all()
-    return render_template("category_results.html", results=results, category=name)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -606,8 +586,6 @@ def business_dashboard():
         return request.form.get(f"service_{n}", "")
 
     if request.method == "POST":
-        if 'business_name' in request.form:
-            biz.business_name = request.form.get('business_name', biz.business_name)
         if ('profile_photo' in request.files or
             any(x in request.form for x in [
                 'phone_number', 'address', 'latitude', 'longitude', 'hours_of_operation',
