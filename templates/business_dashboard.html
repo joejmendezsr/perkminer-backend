@@ -166,23 +166,19 @@ footer {
 </nav>
 <div class="container py-4">
   <div class="card mb-4 p-4">
-    <div class="d-flex align-items-center flex-wrap mb-3">
-      {% if profile_img_url %}
-        <img src="{{ profile_img_url }}" alt="Profile Photo" class="profile-pic me-3">
-      {% else %}
-        <div class="placeholder-pic me-3"><i class="bi bi-person"></i></div>
-      {% endif %}
-      <div>
-        <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
-        <div><small class="text-muted">Referral Code: <b>{{ referral_code }}</b></small></div>
-        {% if sponsor %}
-          <div class="mt-2">Sponsored by: <span class="text-success">{{ sponsor }}</span></div>
-        {% endif %}
-      </div>
-      <div class="ms-auto d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
-      </div>
+  <div class="d-flex align-items-center flex-wrap mb-3">
+    {% if profile_img_url %}
+      <img src="{{ profile_img_url }}" alt="Profile Photo" class="profile-pic me-3">
+    {% else %}
+      <div class="placeholder-pic me-3"><i class="bi bi-person"></i></div>
+    {% endif %}
+    <div>
+      <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
     </div>
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+    </div>
+  </div>
 
     <!-- Invite Others Button -->
     <div class="mb-4">
@@ -225,7 +221,7 @@ footer {
 <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
   {{ profile_form.hidden_tag() }}
   <!-- Profile Photo -->
-  <div class="col-12 col-md-auto mb-3 mb-md-0 text-center">
+  <div class="col-12 mb-3 text-center">
     {% if profile_img_url %}
       <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
     {% else %}
@@ -233,22 +229,22 @@ footer {
     {% endif %}
     <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
   </div>
-</br>
+
   <!-- Business Name -->
-  <div class="mb-3 col-12 col-md-6">
+  <div class="col-12 mb-3">
     <label class="form-label">Business Name</label>
     {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
   </div>
-</br>
+
   <!-- Phone Number -->
-  <div class="mb-3 col-12 col-md-6">
+  <div class="col-12 mb-3">
     <label class="form-label">Phone Number</label>
     {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555") }}
     <div class="form-text">Format: (555) 555-5555</div>
   </div>
-</br>
+
   <!-- Business Address + Map -->
-  <div class="mb-3 col-12 col-md-6">
+  <div class="col-12 mb-3">
     <label class="form-label">Business Address</label>
     {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
     <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
@@ -256,7 +252,7 @@ footer {
     <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
     <div id="map"></div>
   </div>
-</br>
+
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
@@ -289,14 +285,14 @@ footer {
       <small class="text-muted d-block mt-1">Max 10 services.</small>
     </div>
   </div>
-</br>
+
   <!-- Keywords -->
   <div class="col-12 mt-3">
     <label class="form-label">Keywords (for search, separated by commas)</label>
     <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
-</br>
+
   <!-- Preview and Save Buttons -->
   <div class="col-12 mt-3 d-flex gap-2">
     <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
@@ -306,7 +302,16 @@ footer {
       </div>
     </div>
   </div>
-
+  <!-- Referral Code Section -->
+  <div class="card p-4 mb-4">
+    <h4>Your Referral Code</h4>
+    <div class="mb-0"><b>{{ referral_code }}</b></div>
+  </div>
+      {% if sponsor %}
+        <div class="card p-4 mb-4">
+          <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor }}</span></small></div>
+        </div>
+      {% endif %}
   <div class="card p-4 mb-4">
     <h4>Estimate Your Rewards From One Single Purchase</h4>
     <div class="row g-3 mb-3">

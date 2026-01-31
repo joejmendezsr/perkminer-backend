@@ -166,11 +166,6 @@ footer {
       {% endif %}
       <div>
         <h2 class="mb-0">Welcome, {{ user_name if user_name else email }}!</h2>
-        <div><small class="text-muted">Referral Code: <b>{{ referral_code }}</b></small></div>
-        {% if sponsor %}
-          <div class="mt-2">Sponsored by: <span class="text-success">{{ sponsor }}</span></div>
-        {% endif %}
-      </div>
       <div class="ms-auto d-flex gap-2 flex-wrap">
         <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
@@ -236,6 +231,16 @@ footer {
     </div>
   </div>
 
+        <div class="card p-4 mb-4">
+          <h4>Your Referral Code</h4>
+          <div class="mb-0"><b>{{ referral_code }}</b></div>
+        </div>
+        {% if sponsor %}
+          <div class="card p-4 mb-4">
+            <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor }}</span></small></div>
+          </div>
+        {% endif %}
+      </div>
   <div class="card p-4 mb-4">
     <h4>Estimate Your Rewards From One Single Purchase</h4>
     <div class="row g-3 mb-3">
