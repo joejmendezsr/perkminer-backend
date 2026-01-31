@@ -240,19 +240,16 @@ footer {
           <h4>Your Referral Code</h4>
           <div class="mb-0"><b>{{ referral_code }}</b></div>
         </div>
-        {% if sponsor %}
           <div class="card p-4 mb-4">
             <div>
               <small class="text-muted">
-                Sponsored by:
-                <span class="text-success">
-                  {{ sponsor.name if sponsor.name else sponsor.email }}
-                </span>
+                {% if sponsor %}
+                  Sponsored by: {{ sponsor.name or sponsor.email }}
+                {% endif %}
               </small>
             </div>
           </div>
-        {% endif %}
-      </div>
+ 
   <div class="card p-4 mb-4">
     <h4>Estimate Your Rewards From One Single Purchase</h4>
     <div class="row g-3 mb-3">

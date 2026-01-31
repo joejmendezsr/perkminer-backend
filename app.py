@@ -428,7 +428,7 @@ def dashboard():
                 level5.extend(l5s)
     return render_template("dashboard.html", form=form, profile_form=profile_form, invite_form=invite_form,
          email=current_user.email,
-         referral_code=current_user.referral_code, sponsor=sponsor.email if sponsor else None,
+         referral_code=current_user.referral_code, sponsor=sponsor if sponsor else None,
          rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5,
          user_name=current_user.name,
          profile_img_url=url_for('uploaded_file', filename=current_user.profile_photo) if current_user.profile_photo else None)
