@@ -8,6 +8,14 @@ from wtforms import StringField, PasswordField, SubmitField, DecimalField, Selec
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from werkzeug.utils import secure_filename
 import os, re, random, string, time, logging
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+  cloud_name = 'dmrntlcfd',
+  api_key = '786387955898581',
+  api_secret = 'CLOUDINARY_URL=cloudinary://786387955898581:**********@dmrntlcfd'
+)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret')
@@ -372,13 +380,10 @@ def dashboard():
         user = current_user
         if profile_form.name.data:
             user.name = profile_form.name.data
-        file = request.files.get('profile_photo')
-        if file and allowed_file(file.filename):
-            filename = f"user_{user.id}_{int(time.time())}_{secure_filename(file.filename)}"
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(path)
-            user.profile_photo = filename
-        db.session.commit()
+            file = request.files.get('profile_photo')
+            if file and allowed_file(file.filename):
+                upload_result = cloudinary.uploader.upload(file)
+                user.profile_photo = upload_result.get('secure_url')  # this is the image URL        db.session.commit()
         flash("Profile updated!")
         return redirect(url_for('dashboard'))
 
@@ -629,11 +634,8 @@ def business_dashboard():
                 pass
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
-                filename = f"biz_{biz.id}_{int(time.time())}_{secure_filename(file.filename)}"
-                path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(path)
-                biz.profile_photo = filename
-            biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+                upload_result = cloudinary.uploader.upload(file)
+                biz.profile_photo = upload_result.get('secure_url')            biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
             biz.website_url = request.form.get('website_url', biz.website_url)
             biz.about_us = request.form.get('about_us', biz.about_us)
             biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
