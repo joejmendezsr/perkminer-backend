@@ -189,7 +189,7 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Secondary Image -->
     <tr>
         <td style="padding: 0 40px 30px;">
-            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80" width="520" alt="PerkMiner Features"
+            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769977034/Serious_cashback_g1ro0j.jpg" width="520" alt="PerkMiner Features"
             style="display:block; width:100%; max-width:520px; height:auto; border-radius:10px; border:0;" border="0">
         </td>
     </tr>
