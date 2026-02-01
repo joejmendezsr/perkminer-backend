@@ -16,6 +16,7 @@
       background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #0002;
       padding: 24px 18px 36px 18px; max-width: 430px; flex: 1 1 380px; min-width: 320px;
       display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 0;
     }
     .video-title {
       font-size: 1.4em; font-weight: bold; margin-bottom: 16px; color: #23223f;
@@ -24,11 +25,15 @@
     .join-btn {
       background: #6366f1; color: white;
       font-size: 1.12em; padding: 16px 48px;
-      border: none; border-radius: 8px; margin-top: 32px;
+      border: none; border-radius: 8px; margin: 38px auto 0 auto;
       cursor: pointer; font-weight: bold;
       text-decoration: none; display: inline-block;
     }
     .join-btn:hover { background: #4f46e5; }
+    @media (max-width: 900px) {
+      .videos-row { flex-direction: column; align-items: center; }
+      .video-card { margin-bottom: 28px; }
+    }
   </style>
 </head>
 <body>
@@ -36,11 +41,11 @@
   <div class="header">
     <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769980535/PerkMiner_Logo_o2qgfy.jpg" alt="PerkMiner Logo">
   </div>
-  <!-- VIDEO WINDOWS -->
+  <!-- SIDE-BY-SIDE VIDEO WINDOWS -->
   <div class="videos-row">
     <!-- USER VIDEO CARD -->
     <div class="video-card">
-      <div class="video-title">For Members/div>
+      <div class="video-title">For Our Members/div>
       <video
         id="user-video"
         controls controlsList="nodownload"
@@ -65,7 +70,10 @@
       </video>
     </div>
   </div>
-  <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
+  <!-- JOIN BUTTON BELOW BOTH VIDEOS -->
+  <div>
+    <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
+  </div>
   <script>
     // Pass referral code through to the Join button
     const urlParams = new URLSearchParams(window.location.search);
