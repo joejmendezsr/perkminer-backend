@@ -162,14 +162,9 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Hero Banner with Logo -->
                 <tr>
                     <td style="position:relative;">
-                        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769974838/Email_Background_hiolrm.jpg" width="600"
+                        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769979390/Email_Background_yn4vvi.jpg" width="600"
                         alt="PerkMiner Hero Banner"
                         style="display:block; width:100%; height:auto; border:0;" border="0">
-        <!-- Logo overlay (centered) -->
-            <div style="position:absolute; top:45%; left:50%; transform:translate(-50%,-50%);">
-                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769977594/PerkMiner_Logo_w1qckx.jpg" width="220" alt="PerkMiner Logo"
-                style="display:block; max-width:220px; height:auto;">
-            </div>
         </td>
     </tr>
 
