@@ -661,7 +661,8 @@ def business_invite():
     invitee_email = invite_form.invitee_email.data.strip()
     subject = f"{biz.business_name} has invited you to join Perkminer."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
-    video_url = get_signed_video_url('Perkminer_-_Cashback_pro_vlefos')  # <--- Use your helper here!
+    video_url = get_signed_video_url('Perkminer_-_Cashback_pro_vlefos')
+
     html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -678,7 +679,7 @@ def business_invite():
             {biz.business_name} invites you to join PerkMiner as a business!
           </h2>
           <p style="margin:0 0 16px 0;font-size:18px;color:#222;">
-            Grow your business, connect with our members with our unique cashback network.</br>
+            Grow your business, connect with our members with our unique cashback network.<br>
             Click below to get started:
           </p>
           <a href="{reg_url}" style="background:#ffd66b;color:#222;padding:18px 28px;text-decoration:none;font-weight:bold;border-radius:8px;display:inline-block;font-size:17px;margin-top:16px;">
@@ -709,7 +710,8 @@ def business_invite():
     </table>
   </body>
 </html>
-"""
+"""  # <--- This closing triple quote must be EXACTLY here, after your HTML, before any Python code
+
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
