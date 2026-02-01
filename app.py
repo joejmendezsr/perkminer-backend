@@ -622,7 +622,6 @@ def business_invite():
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
-    """
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
