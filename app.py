@@ -166,7 +166,7 @@ def build_invite_email(inviter_name, join_url, video_url):
                         alt="PerkMiner Hero Banner"
                         style="display:block; width:100%; height:auto; border:0;" border="0">
         <!-- Logo overlay (centered) -->
-            <div style="position:absolute; top:40%; left:50%; transform:translate(-50%,-50%);">
+            <div style="position:absolute; top:45%; left:50%; transform:translate(-50%,-50%);">
                 <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769975757/PerkMiner_Logo_ybrh3m.jpg" width="220" alt="PerkMiner Logo"
                 style="display:block; max-width:220px; height:auto;">
             </div>
