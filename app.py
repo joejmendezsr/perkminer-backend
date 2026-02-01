@@ -713,7 +713,7 @@ def business_invite():
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
-
+"""
 @app.route("/business/dashboard", methods=["GET", "POST"])
 def business_dashboard():
     form = BusinessRewardForm(request.form)
