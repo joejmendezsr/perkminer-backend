@@ -703,7 +703,7 @@ def business_invite():
     invitee_email = invite_form.invitee_email.data.strip()
     subject = f"You have been invited by {biz.business_name} to join PerkMiner."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
-    video_url = url_for('intro', ref=current_biz.referral_code, _external=True)
+    video_url = url_for('intro', ref=biz.referral_code, _external=True)
     html_body = build_invite_email(biz.business_name, reg_url, video_url)
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
