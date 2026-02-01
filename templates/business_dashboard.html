@@ -202,7 +202,7 @@ footer {
     <!-- Invite Modal -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
       <div class="modal-dialog">
-        <form class="modal-content" method="post" action="{{ url_for('invite') }}">
+        <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
           {{ invite_form.hidden_tag() }}
           <div class="modal-header">
             <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
