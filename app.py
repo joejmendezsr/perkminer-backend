@@ -595,7 +595,7 @@ def business_invite():
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
     html_body = f"""
     <p>You have been invited by {biz.business_name} to join PerkMiner. Here are the benefits of joining.</p>
-    <p><a href="{reg_url}">Join PerkMiner as a Business</a></p>
+    <p><a href="{business_invite}">Join PerkMiner as a Business</a></p>
     """
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
