@@ -414,7 +414,7 @@ def invite():
         <td bgcolor="#fff" style="padding:28px 40px 38px 40px; border-radius: 0 0 12px 12px;">
           <img src="https://your-s3-or-cloudinary-image.com/rewards_banner.jpg" alt="PerkMiner Rewards" width="100%" style="border-radius:8px;margin:10px 0 22px 0;">
           <h3 style="color:#2a5859;margin:0 0 9px 0; font-size:21px;">
-            🎬 Quick Video Intro
+              &#127916; Quick Video Intro
           </h3>
           <p style="font-size:16px; margin:0 0 12px 0;">
             See how easy it is to earn cash back rewards:
@@ -690,7 +690,7 @@ def business_invite():
         <td bgcolor="#fff" style="padding:28px 40px 38px 40px; border-radius: 0 0 12px 12px;">
           <img src="https://your-s3-or-cloudinary-image.com/business_banner.jpg" alt="Grow with PerkMiner" width="100%" style="border-radius:8px;margin:10px 0 22px 0;">
           <h3 style="color:#2a5859;margin:0 0 9px 0; font-size:21px;">
-            🎬 Discover What PerkMiner Can Do For You
+            &#127916; Quick Video Intro
           </h3>
           <p style="font-size:16px; margin:0 0 12px 0;">
             Watch a short intro video to see how easy it is to participate and benefit:
