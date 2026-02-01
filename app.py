@@ -475,7 +475,7 @@ def invite():
     subject = f"You have been invited by {inviter_name} to join PerkMiner."
     reg_url = url_for('register', ref=current_user.referral_code, _external=True)
     video_url = url_for('intro', ref=current_user.referral_code, _external=True)
-    html_body = build_invite_email(inviter_name, reg_url)
+    html_body = build_invite_email(inviter_name, reg_url, video_url)
     send_email(invitee_email, subject, html_body)
     flash('Invitation sent!')
     return redirect(url_for('dashboard'))
@@ -704,7 +704,7 @@ def business_invite():
     subject = f"You have been invited by {biz.business_name} to join PerkMiner."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
     video_url = url_for('intro', ref=current_biz.referral_code, _external=True)
-    html_body = build_invite_email(biz.business_name, reg_url)
+    html_body = build_invite_email(biz.business_name, reg_url, video_url)
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
