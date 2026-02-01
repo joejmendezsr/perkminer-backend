@@ -25,7 +25,7 @@ def get_signed_video_url(public_id, expires_in_seconds=300):
         public_id,
         resource_type='video',
         type='authenticated',  # forces signed URL
-        format="m3u8",         # returns HLS adaptive stream
+        format="mp4",         # returns HLS adaptive stream
         expires_at=expires_at,
         attachment=False       # deters direct download in most browsers
     )
