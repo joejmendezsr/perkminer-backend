@@ -162,12 +162,12 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Hero Banner with Logo -->
                 <tr>
                     <td style="position:relative;">
-                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&auto=format&fit=crop&q=80" width="600"
+                        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769974838/Email_Background_hiolrm.jpg" width="600"
                         alt="PerkMiner Hero Banner"
                         style="display:block; width:100%; height:auto; border:0;" border="0">
         <!-- Logo overlay (centered) -->
             <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
-                <img src="https://via.placeholder.com/220x80/6366f1/ffffff?text=PerkMiner" width="220" alt="PerkMiner Logo"
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769974838/PerkMiner_Logo_fe5jut.jpg" width="220" alt="PerkMiner Logo"
                 style="display:block; max-width:220px; height:auto;">
             </div>
         </td>
@@ -472,7 +472,7 @@ def invite():
         return redirect(url_for('dashboard'))
     invitee_email = invite_form.invitee_email.data.strip()
     inviter_name = current_user.name if current_user.name else current_user.email
-    subject = f"You have been invited by {inviter_name} to join PerkMiner."
+    subject = f"{inviter_name} has invited you to join PerkMiner."
     reg_url = url_for('register', ref=current_user.referral_code, _external=True)
     video_url = url_for('intro', ref=current_user.referral_code, _external=True)
     html_body = build_invite_email(inviter_name, reg_url, video_url)
@@ -701,7 +701,7 @@ def business_invite():
         flash("Business invite failed. Please log in and use a valid email.")
         return redirect(url_for("business_login"))
     invitee_email = invite_form.invitee_email.data.strip()
-    subject = f"You have been invited by {biz.business_name} to join PerkMiner."
+    subject = f"{biz.business_name} has invited you to join PerkMiner."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
     video_url = url_for('intro', ref=biz.referral_code, _external=True)
     html_body = build_invite_email(biz.business_name, reg_url, video_url)
