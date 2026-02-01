@@ -678,7 +678,7 @@ def business_invite():
             {biz.business_name} invites you to join PerkMiner as a business!
           </h2>
           <p style="margin:0 0 16px 0;font-size:18px;color:#222;">
-            Grow your business, reward loyal customers, and connect with new clients using PerkMiner’s cash back network.<br>
+            Grow your business, reward loyal customers, and connect with new clients using PerkMiner's cash back network.<br>
             Click below to get started:
           </p>
           <a href="{reg_url}" style="background:#ffd66b;color:#222;padding:18px 28px;text-decoration:none;font-weight:bold;border-radius:8px;display:inline-block;font-size:17px;margin-top:16px;">
