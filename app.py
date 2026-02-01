@@ -109,20 +109,48 @@ def random_business_code(business_name):
         code = f"{base_code}{counter}"
         counter += 1
     return code
-def send_email(to, subject, html_body):
-    msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
-    try: mail.send(msg)
-    except Exception as e: logging.error("EMAIL SEND ERROR: %s", e)
+def build_invite_email(inviter_name, join_url):
+    html_body = f"""
+    <html>
+    <body style="background:#f5f6fa; margin:0; padding:0; font-family: Arial, sans-serif;">
+      <table style="max-width:480px; width:100%; background:#fff; margin:40px auto; border-radius:8px; overflow:hidden; box-shadow:0 1px 8px #dbe7f7;">
+        <tr>
+          <td style="background:#232d47; text-align:center; padding:24px 0;">
+            <img src="https://via.placeholder.com/160x60.png?text=PerkMiner+Logo" alt="PerkMiner" style="height:60px;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 24px 16px 24px; background:#fff;">
+            <h2 style="color:#222; margin-bottom:8px;">You’ve Been Invited!</h2>
+            <p style="color:#444; font-size:16px; margin:0 0 16px 0;">
+              <strong>{inviter_name}</strong> invited you to join <b>PerkMiner</b>.<br>
+              Access rewards, network, and more.
+            </p>
+            <a href="{join_url}" style="display:inline-block; background:#ffd66b; color:#232d47; padding:16px 32px; border-radius:24px;
+              text-decoration:none; font-weight:bold; font-size:18px; margin:16px 0; box-shadow:0 2px 6px #eee;">
+                Join PerkMiner Now
+            </a>
+            <p style="color:#888; font-size:13px; margin-top:32px;">
+                Or copy and paste this link into your browser:<br>
+                <span style="color:#2971e7;">{join_url}</span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f5f6fa; text-align:center; color:#aaa; font-size:12px; padding:18px;">
+            PerkMiner &copy; 2026
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    """
+    return html_body
 def send_verification_email(user):
     code = user.email_code
     verify_url = url_for("activate", code=code, _external=True)
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your email, or use code: <b>{code}</b></p>"""
     send_email(user.email, "Confirm your PerkMiner email!", html_body)
-def send_business_verification_email(biz):
-    code = biz.email_code
-    verify_url = url_for("business_activate", code=code, _external=True)
-    html_body = f"""<p>Click <a href="{verify_url}">here</a> to verify your business email, or use code: <b>{code}</b></p>"""
-    send_email(biz.business_email, "[PerkMiner] Verify your business email!", html_body)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -360,12 +388,9 @@ def invite():
         return redirect(url_for('dashboard'))
     invitee_email = invite_form.invitee_email.data.strip()
     inviter_name = current_user.name if current_user.name else current_user.email
-    subject = f"You have been invited by {inviter_name} to join Perkminer."
+    subject = f"You have been invited by {inviter_name} to join PerkMiner."
     reg_url = url_for('register', ref=current_user.referral_code, _external=True)
-    html_body = f"""
-    <p>You have been invited by {inviter_name} to join PerkMiner. Here are the benefits of joining.</p>
-    <p><a href="{reg_url}">Join PerkMiner</a></p>
-    """
+    html_body = build_invite_email(inviter_name, reg_url)
     send_email(invitee_email, subject, html_body)
     flash('Invitation sent!')
     return redirect(url_for('dashboard'))
@@ -584,7 +609,6 @@ def business_login():
 
 @app.route('/business/invite', methods=['POST'])
 def business_invite():
-    print("Current session keys:", session.keys())
     invite_form = BusinessInviteForm()
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id) if biz_id else None
@@ -592,11 +616,12 @@ def business_invite():
         flash("Business invite failed. Please log in and use a valid email.")
         return redirect(url_for("business_login"))
     invitee_email = invite_form.invitee_email.data.strip()
-    subject = f"You have been invited by {biz.business_name} to join Perkminer."
+    subject = f"You have been invited by {biz.business_name} to join PerkMiner."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
-    html_body = f"""
-    <p>You have been invited by {biz.business_name} to join PerkMiner. Here are the benefits of joining.</p>
-    <p><a href="{business_invite}">Join PerkMiner as a Business</a></p>
+    html_body = build_invite_email(biz.business_name, reg_url)
+    send_email(invitee_email, subject, html_body)
+    flash('Business invitation sent!')
+    return redirect(url_for('business_dashboard'))
     """
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
