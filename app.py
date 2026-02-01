@@ -378,13 +378,18 @@ def dashboard():
     invite_form = InviteForm()
     if request.method == "POST" and profile_form.submit.data and profile_form.validate():
         user = current_user
-        if profile_form.name.data:
+        updated = False
+        if profile_form.name.data and profile_form.name.data != user.name:
             user.name = profile_form.name.data
-            file = request.files.get('profile_photo')
-            if file and allowed_file(file.filename):
-                upload_result = cloudinary.uploader.upload(file)
-                user.profile_photo = upload_result.get('secure_url')  # this is the image URL        db.session.commit()
-        flash("Profile updated!")
+            updated = True
+        file = request.files.get('profile_photo')
+        if file and allowed_file(file.filename):
+            upload_result = cloudinary.uploader.upload(file)
+            user.profile_photo = upload_result.get('secure_url')
+            updated = True
+        if updated:
+            db.session.commit()
+            flash("Profile updated!")
         return redirect(url_for('dashboard'))
 
     if request.method == "GET":
@@ -612,46 +617,44 @@ def business_dashboard():
         return request.form.get(f"service_{n}", "")
 
     if request.method == "POST":
+        updated = False
+        # Business profile fields—set updated=True for any real change
         if 'business_name' in request.form:
             biz.business_name = request.form.get('business_name', biz.business_name)
-
-        if (
-            'profile_photo' in request.files or
-            any(x in request.form for x in [
-                'phone_number', 'address', 'latitude', 'longitude', 'hours_of_operation',
-                'website_url', 'about_us', 'category', 'search_keywords', 'service_1'
-            ])
-        ):
-            if 'category' in request.form:
-                biz.category = request.form.get('category', biz.category)
-            biz.phone_number = request.form.get('phone_number', biz.phone_number)
-            biz.address = request.form.get('address', biz.address)
-            try:
-                if request.form.get('latitude'):
-                    biz.latitude = float(request.form.get('latitude'))
-                if request.form.get('longitude'):
-                    biz.longitude = float(request.form.get('longitude'))
-            except ValueError:
-                pass
-            file = request.files.get('profile_photo')
-            if file and allowed_file(file.filename):
-                upload_result = cloudinary.uploader.upload(file)
-                biz.profile_photo = upload_result.get('secure_url')
-                biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
-            biz.website_url = request.form.get('website_url', biz.website_url)
-            biz.about_us = request.form.get('about_us', biz.about_us)
-            biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
-            for n in range(1, 11):
-                setattr(biz, f'service_{n}', get_service_field(n))
+            updated = True
+        if 'category' in request.form:
+            biz.category = request.form.get('category', biz.category)
+            updated = True
+        biz.phone_number = request.form.get('phone_number', biz.phone_number)
+        biz.address = request.form.get('address', biz.address)
+        try:
+            if request.form.get('latitude'):
+                biz.latitude = float(request.form.get('latitude'))
+            if request.form.get('longitude'):
+                biz.longitude = float(request.form.get('longitude'))
+        except ValueError:
+            pass
+        file = request.files.get('profile_photo')
+        if file and allowed_file(file.filename):
+            upload_result = cloudinary.uploader.upload(file)
+            biz.profile_photo = upload_result.get('secure_url')
+            updated = True
+        biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+        biz.website_url = request.form.get('website_url', biz.website_url)
+        biz.about_us = request.form.get('about_us', biz.about_us)
+        biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
+        for n in range(1, 11):
+            setattr(biz, f'service_{n}', get_service_field(n))
+        if updated:
             db.session.commit()
             flash("Business profile updated!")
-            return redirect(url_for('business_dashboard'))
+        return redirect(url_for('business_dashboard'))
 
     latitude = biz.latitude if biz.latitude else ""
     longitude = biz.longitude if biz.longitude else ""
-    profile_img_url = url_for('uploaded_file', filename=biz.profile_photo) if biz.profile_photo else None
+    profile_img_url = biz.profile_photo if biz.profile_photo else None
 
-    # Calculators - unchanged!
+    # Reward calculator logic (unchanged)
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
