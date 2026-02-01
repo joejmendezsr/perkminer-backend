@@ -109,6 +109,12 @@ def random_business_code(business_name):
         code = f"{base_code}{counter}"
         counter += 1
     return code
+def send_email(to, subject, html_body):
+    msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
+    try:
+        mail.send(msg)
+    except Exception as e:
+        logging.error("EMAIL SEND ERROR: %s", e)
 def build_invite_email(inviter_name, join_url):
     html_body = f"""
     <html>
