@@ -117,39 +117,114 @@ def send_email(to, subject, html_body):
         logging.error("EMAIL SEND ERROR: %s", e)
 def build_invite_email(inviter_name, join_url):
     html_body = f"""
-    <html>
-    <body style="background:#f5f6fa; margin:0; padding:0; font-family: Arial, sans-serif;">
-      <table style="max-width:480px; width:100%; background:#fff; margin:40px auto; border-radius:8px; overflow:hidden; box-shadow:0 1px 8px #dbe7f7;">
-        <tr>
-          <td style="background:#232d47; text-align:center; padding:24px 0;">
-            <img src="https://via.placeholder.com/160x60.png?text=PerkMiner+Logo" alt="PerkMiner" style="height:60px;">
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px 24px 16px 24px; background:#fff;">
-            <h2 style="color:#222; margin-bottom:8px;">You’ve Been Invited!</h2>
-            <p style="color:#444; font-size:16px; margin:0 0 16px 0;">
-              <strong>{inviter_name}</strong> invited you to join <b>PerkMiner</b>.<br>
-              Access rewards, network, and more.
-            </p>
-            <a href="{join_url}" style="display:inline-block; background:#ffd66b; color:#232d47; padding:16px 32px; border-radius:24px;
-              text-decoration:none; font-weight:bold; font-size:18px; margin:16px 0; box-shadow:0 2px 6px #eee;">
-                Join PerkMiner Now
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joe has invited you to join PerkMiner!</title>
+<style type="text/css">
+body { margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+table, td { border-collapse: collapse; }
+a { color: #0066cc; text-decoration: none; }
+.button {
+display: inline-block;
+padding: 16px 36px;
+background-color: #6366f1;
+color: white !important;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 18px;
+font-weight: bold;
+text-decoration: none;
+border-radius: 8px;
+line-height: 1;
+}
+.button:hover { background-color: #4f46e5 !important; }
+</style>
+</head>
+    <body style="margin:0; padding:0; background-color:#f3f4f6;">
+
+        <!-- Main Wrapper -->
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#f3f4f6;">
+                <tr>
+                    <td align="center" style="padding: 20px 10px;">
+
+        <!-- Container -->
+            <table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:600px;">
+
+        <!-- Top Message -->
+                <tr>
+                    <td align="center" style="padding: 40px 30px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 28px; font-weight: bold; color: #1f2937; line-height: 1.2;">
+                        {inviter_name} has invited you to join PerkMiner!
+                    </td>
+                </tr>
+
+        <!-- Hero Banner with Logo -->
+                <tr>
+                    <td style="position:relative;">
+                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&auto=format&fit=crop&q=80" width="600"
+                        alt="PerkMiner Hero Banner"
+                        style="display:block; width:100%; height:auto; border:0;" border="0">
+        <!-- Logo overlay (centered) -->
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+                <img src="https://via.placeholder.com/220x80/6366f1/ffffff?text=PerkMiner" width="220" alt="PerkMiner Logo"
+                style="display:block; max-width:220px; height:auto;">
+            </div>
+        </td>
+    </tr>
+
+        <!-- Intro Text + Watch Video Button -->
+    <tr>
+        <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #374151; line-height: 1.6; text-align:center;">
+            <p style="margin:0 0 24px;">Discover how you earn cashback with PerkMiner.  Don't just settle for pennies, CashBack like a pro on products and services you're looking for!</p>
+
+                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="button" target="_blank"
+                style "margin: 12px 0 32px;">
+                Watch our intro video
+                </a>
+
+            <p style="margin:0 0 12px;">It only takes 60 seconds to see how thousands are already earning perks every day.</p>
+        </td>
+    </tr>
+
+        <!-- Secondary Image -->
+    <tr>
+        <td style="padding: 0 40px 30px;">
+            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80" width="520" alt="PerkMiner Features"
+            style="display:block; width:100%; max-width:520px; height:auto; border-radius:10px; border:0;" border="0">
+        </td>
+    </tr>
+
+        <!-- Join Button -->
+    <tr>
+        <td align="center" style="padding: 0 40px 50px;">
+            <a href="{join_url}" class="button" target="_blank" style="font-size:20px; padding:18px 48px;">
+            Join PerkMiner Now
             </a>
-            <p style="color:#888; font-size:13px; margin-top:32px;">
-                Or copy and paste this link into your browser:<br>
-                <span style="color:#2971e7;">{join_url}</span>
+        </td>
+    </tr>
+
+        <!-- Footer -->
+    <tr>
+        <td align="center" style="padding: 30px 40px; background-color:#f8f9fa; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #6b7280; line-height:1.5; border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 8px;">
+                For questions regarding this email, contact
+                <a href="mailto:fromperkminer@gmail.com" style="color:#4f46e5;">support@perkminer.com</a>
             </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f5f6fa; text-align:center; color:#aaa; font-size:12px; padding:18px;">
-            PerkMiner &copy; 2026
-          </td>
-        </tr>
-      </table>
+            <p style="margin:0;">
+                Copyright © PerkMiner 2026. All rights reserved.
+            </p>
+            </td>
+                </tr>
+
+                    </table>
+
+                </td>
+            </tr>
+        </table>
+
     </body>
-    </html>
+</html>
     """
     return html_body
 def send_verification_email(user):
