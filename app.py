@@ -646,8 +646,6 @@ def business_login():
             message = "Login failed. Check business email and password."
     return render_template("business_login.html", message=message, form=form)
 
-Old business invitation app route:
-
 @app.route('/business/invite', methods=['POST'])
 def business_invite():
     invite_form = BusinessInviteForm()
@@ -677,7 +675,7 @@ def business_invite():
             {biz.business_name} invites you to join PerkMiner as a business!
           </h2>
           <p style="margin:0 0 16px 0;font-size:18px;color:#222;">
-            Grow your business, connect with our members with our unique cashback network.<br>
+            Grow your business, reward loyal customers, and connect with new clients using PerkMiner's unique cashback network.<br>
             Click below to get started:
           </p>
           <a href="{reg_url}" style="background:#ffd66b;color:#222;padding:18px 28px;text-decoration:none;font-weight:bold;border-radius:8px;display:inline-block;font-size:17px;margin-top:16px;">
@@ -689,7 +687,7 @@ def business_invite():
         <td bgcolor="#fff" style="padding:28px 40px 38px 40px; border-radius: 0 0 12px 12px;">
           <img src="https://your-s3-or-cloudinary-image.com/business_banner.jpg" alt="Grow with PerkMiner" width="100%" style="border-radius:8px;margin:10px 0 22px 0;">
           <h3 style="color:#2a5859;margin:0 0 9px 0; font-size:21px;">
-            &#127916; Quick Video Intro
+            Quick Video Intro
           </h3>
           <p style="font-size:16px; margin:0 0 12px 0;">
             Watch a short intro video to see how easy it is to participate and benefit:
@@ -713,7 +711,6 @@ def business_invite():
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
-
 
 @app.route("/business/dashboard", methods=["GET", "POST"])
 def business_dashboard():
