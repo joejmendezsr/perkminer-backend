@@ -124,10 +124,10 @@ def build_invite_email(inviter_name, join_url):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Joe has invited you to join PerkMiner!</title>
         <style type="text/css">
-            body { margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-            table, td { border-collapse: collapse; }
-            a { color: #0066cc; text-decoration: none; }
-            .button {
+            body {{ margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }}
+            table, td {{ border-collapse: collapse; }}
+            a {{ color: #0066cc; text-decoration: none; }}
+            .button {{
             display: inline-block;
             padding: 16px 36px;
             background-color: #6366f1;
@@ -138,8 +138,8 @@ def build_invite_email(inviter_name, join_url):
             text-decoration: none;
             border-radius: 8px;
             line-height: 1;
-            }
-            .button:hover { background-color: #4f46e5 !important; }
+            }}
+            .button:hover {{ background-color: #4f46e5 !important; }}
         </style>
     </head>
         <body style="margin:0; padding:0; background-color:#f3f4f6;">
