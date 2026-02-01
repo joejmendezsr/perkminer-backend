@@ -666,52 +666,19 @@ def business_invite():
     html_body = f"""
 <!DOCTYPE html>
 <html>
-  <body style="margin:0;padding:0;background:#f5f8fa;font-family:Arial,sans-serif;">
-    <table align="center" width="100%" bgcolor="#f5f8fa" cellpadding="0" cellspacing="0" style="max-width:600px;">
-      <tr>
-        <td align="center" style="padding:40px 0 10px 0;">
-          <img src="https://your-company-logo-url.com/logo.png" alt="PerkMiner for Business" width="120" style="display:block;margin-bottom:14px;">
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#fff" style="border-radius:12px 12px 0 0; padding:36px 36px 18px 36px;">
-          <h2 style="color:#2a5859;margin:0 0 12px 0;font-size:28px;">
-            {biz.business_name} invites you to join PerkMiner as a business!
-          </h2>
-          <p style="margin:0 0 16px 0;font-size:18px;color:#222;">
-            Grow your business, connect with our members with our unique cashback network.<br>
-            Click below to get started:
-          </p>
-          <a href="{reg_url}" style="background:#ffd66b;color:#222;padding:18px 28px;text-decoration:none;font-weight:bold;border-radius:8px;display:inline-block;font-size:17px;margin-top:16px;">
-            Register Your Business Now
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#fff" style="padding:28px 40px 38px 40px; border-radius: 0 0 12px 12px;">
-          <img src="https://your-s3-or-cloudinary-image.com/business_banner.jpg" alt="Grow with PerkMiner" width="100%" style="border-radius:8px;margin:10px 0 22px 0;">
-          <h3 style="color:#2a5859;margin:0 0 9px 0; font-size:21px;">
-            &#127916; Quick Video Intro
-          </h3>
-          <p style="font-size:16px; margin:0 0 12px 0;">
-            Watch a short intro video to see how easy it is to participate and benefit:
-          </p>
-          <a href="{video_url}" style="background:#2a5859;color:#fff;padding:10px 22px;text-decoration:none;font-weight:bold;border-radius:6px;display:inline-block;font-size:16px;">Watch Video</a>
-          <p style="color:#888;font-size:13px;margin-top:20px;">
-            Have questions? Just reply to this email or contact <a href="mailto:support@perkminer.com" style="color:#2a5859;">support@perkminer.com</a>
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:18px 0 32px 0;color:#bbb;font-size:12px;">
-          PerkMiner &copy; 2026 &mdash; <a href="https://perkminer.com" style="color:#aaa;">Visit Website</a>
-        </td>
-      </tr>
-    </table>
+  <body>
+    <h1>{biz.business_name} invites you to PerkMiner for Business!</h1>
+    <p>Grow your business, connect with our members with our unique cashback network.<br>
+    Click below to get started:</p>
+    <a href="{reg_url}">Register Your Business Now</a>
+    <h3>Quick Video Intro</h3>
+    <p>
+      <a href="{video_url}">Watch Video</a>
+    </p>
+    <p>Questions? Reply or contact <a href="mailto:support@perkminer.com">support@perkminer.com</a></p>
   </body>
 </html>
-"""  # <--- This closing triple quote must be EXACTLY here, after your HTML, before any Python code
-
+"""
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
