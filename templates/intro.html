@@ -4,12 +4,27 @@
   <meta charset="utf-8">
   <title>Welcome to PerkMiner</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f7f7fb; text-align: center; }
-    .video-container { margin: 30px auto; max-width: 800px; }
+    body { font-family: Arial, sans-serif; background: #f7f7fb; text-align: center; margin:0; }
+    .header {
+      width: 100%; background: #fff; padding: 30px 0 16px 0; box-shadow: 0 2px 8px #0001;
+    }
+    .header img { max-width: 260px; height: auto; }
+    .videos-row {
+      display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; padding: 36px 0 8px 0;
+    }
+    .video-card {
+      background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #0002;
+      padding: 24px 18px 36px 18px; max-width: 430px; flex: 1 1 380px; min-width: 320px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .video-title {
+      font-size: 1.4em; font-weight: bold; margin-bottom: 16px; color: #23223f;
+    }
+    video { width: 100%; max-width: 390px; border-radius: 8px; margin-bottom: 12px;}
     .join-btn {
       background: #6366f1; color: white;
-      font-size: 1.4em; padding: 16px 48px;
-      margin-top: 32px; border: none; border-radius: 8px;
+      font-size: 1.12em; padding: 16px 48px;
+      border: none; border-radius: 8px; margin-top: 32px;
       cursor: pointer; font-weight: bold;
       text-decoration: none; display: inline-block;
     }
@@ -17,21 +32,40 @@
   </style>
 </head>
 <body>
-  <div class="video-container">
-    <video
-      id="perkminer-video"
-      width="800"
-      controls
-      controlsList="nodownload"
-      oncontextmenu="return false;"
-      preload="auto"
-      poster="https://via.placeholder.com/800x450/6366f1/ffffff?text=PerkMiner">
-      <source src="https://res.cloudinary.com/dmrntlcfd/video/upload/v1769913409/Perkminer_-_Cashback_pro_vlefos.mp4" type="video/mp4">
-      Sorry, your browser doesn't support embedded videos.
-    </video>
-    <br>
-    <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
+  <!-- HEADER WITH LOGO -->
+  <div class="header">
+    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769980535/PerkMiner_Logo_o2qgfy.jpg" alt="PerkMiner Logo">
   </div>
+  <!-- VIDEO WINDOWS -->
+  <div class="videos-row">
+    <!-- USER VIDEO CARD -->
+    <div class="video-card">
+      <div class="video-title">For Members/div>
+      <video
+        id="user-video"
+        controls controlsList="nodownload"
+        oncontextmenu="return false;"
+        preload="auto"
+        poster="https://via.placeholder.com/800x450/6366f1/ffffff?text=Shopper+Intro">
+        <source src="https://res.cloudinary.com/dmrntlcfd/video/upload/v1769913409/Perkminer_-_Cashback_pro_vlefos.mp4" type="video/mp4">
+        Sorry, your browser doesn't support embedded videos.
+      </video>
+    </div>
+    <!-- BUSINESS VIDEO CARD -->
+    <div class="video-card">
+      <div class="video-title">For Business Owners</div>
+      <video
+        id="biz-video"
+        controls controlsList="nodownload"
+        oncontextmenu="return false;"
+        preload="auto"
+        poster="https://via.placeholder.com/800x450/232323/ffffff?text=Business+Intro">
+        <source src="https://res.cloudinary.com/dmrntlcfd/video/upload/v1769913409/Perkminer_-_Cashback_pro_vlefos.mp4" type="video/mp4">
+        Sorry, your browser doesn't support embedded videos.
+      </video>
+    </div>
+  </div>
+  <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
   <script>
     // Pass referral code through to the Join button
     const urlParams = new URLSearchParams(window.location.search);
@@ -41,17 +75,21 @@
     if (ref) joinUrl += '?ref=' + encodeURIComponent(ref);
     joinBtn.href = joinUrl;
 
-    // Try to block right-click/download as much as possible
-    const video = document.getElementById('perkminer-video');
-    video.addEventListener('contextmenu', (e) => e.preventDefault());
-    video.addEventListener('keydown', function(e){
-      if ((e.ctrlKey && e.key === "s") || (e.key === "S" && e.metaKey)) {
-        e.preventDefault();
-      }
-    });
-    video.addEventListener('mouseover', function(){
-      video.setAttribute('controlsList', 'nodownload');
-    });
+    // Restrict right-click and downloads for both videos
+    function protectVideo(id) {
+      const video = document.getElementById(id);
+      video.addEventListener('contextmenu', (e) => e.preventDefault());
+      video.addEventListener('keydown', function(e){
+        if ((e.ctrlKey && e.key === "s") || (e.key === "S" && e.metaKey)) {
+          e.preventDefault();
+        }
+      });
+      video.addEventListener('mouseover', function(){
+        video.setAttribute('controlsList', 'nodownload');
+      });
+    }
+    protectVideo('user-video');
+    protectVideo('biz-video');
   </script>
 </body>
 </html>
