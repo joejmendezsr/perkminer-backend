@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Welcome to PerkMiner</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7fb; text-align: center; }
+    .video-container { margin: 30px auto; max-width: 800px; }
+    .join-btn {
+      background: #6366f1; color: white;
+      font-size: 1.4em; padding: 16px 48px;
+      margin-top: 32px; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: bold;
+      text-decoration: none; display: inline-block;
+    }
+    .join-btn:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <div class="video-container">
+    <video
+      id="perkminer-video"
+      width="800"
+      controls
+      controlsList="nodownload"
+      oncontextmenu="return false;"
+      preload="auto"
+      poster="https://via.placeholder.com/800x450/6366f1/ffffff?text=PerkMiner">
+      <source src="https://res.cloudinary.com/dmrntlcfd/video/upload/v1769913409/Perkminer_-_Cashback_pro_vlefos.mp4" type="video/mp4">
+      Sorry, your browser doesn't support embedded videos.
+    </video>
+    <br>
+    <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
+  </div>
+  <script>
+    // Pass referral code through to the Join button
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    const joinBtn = document.getElementById('join-btn');
+    let joinUrl = '/register';
+    if (ref) joinUrl += '?ref=' + encodeURIComponent(ref);
+    joinBtn.href = joinUrl;
+
+    // Try to block right-click/download as much as possible
+    const video = document.getElementById('perkminer-video');
+    video.addEventListener('contextmenu', (e) => e.preventDefault());
+    video.addEventListener('keydown', function(e){
+      if ((e.ctrlKey && e.key === "s") || (e.key === "S" && e.metaKey)) {
+        e.preventDefault();
+      }
+    });
+    video.addEventListener('mouseover', function(){
+      video.setAttribute('controlsList', 'nodownload');
+    });
+  </script>
+</body>
+</html>

@@ -332,6 +332,10 @@ def category_browse(name):
     results = Business.query.filter(Business.category == name).all()
     return render_template("category_results.html", results=results, category=name)
 
+@app.route("/intro")
+def intro():
+    return render_template("intro.html")
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
