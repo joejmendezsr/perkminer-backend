@@ -10,7 +10,26 @@ from werkzeug.utils import secure_filename
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
+import cloudinary.utils
 
+def get_signed_video_url(public_id, expires_in_seconds=300):
+    """
+    Generate a signed Cloudinary video URL with a time-limited token.
+    - public_id: your Cloudinary asset's public ID (e.g. 'your_folder/your_video_name')
+    - expires_in_seconds: link will expire after this many seconds (default 5 minutes)
+    Returns a URL string.
+    """
+    import time
+    expires_at = int(time.time()) + expires_in_seconds
+    url, options = cloudinary.utils.cloudinary_url(
+        public_id,
+        resource_type='video',
+        type='authenticated',  # forces signed URL
+        format="m3u8",         # returns HLS adaptive stream
+        expires_at=expires_at,
+        attachment=False       # deters direct download in most browsers
+    )
+    return url
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -360,11 +379,13 @@ def invite():
         return redirect(url_for('dashboard'))
     invitee_email = invite_form.invitee_email.data.strip()
     inviter_name = current_user.name if current_user.name else current_user.email
-    subject = f"You have been invited by {inviter_name} to join Perkminer."
+    subject = f"{inviter_name} has invited you to join Perkminer."
     reg_url = url_for('register', ref=current_user.referral_code, _external=True)
+    video_url = get_signed_video_url('Perkminer_-_Cashback_pro_vlefos')
     html_body = f"""
     <p>You have been invited by {inviter_name} to join PerkMiner. Here are the benefits of joining.</p>
     <p><a href="{reg_url}">Join PerkMiner</a></p>
+    <p><a href="{video_url}">📹 Watch our quick intro video</a></p>
     """
     send_email(invitee_email, subject, html_body)
     flash('Invitation sent!')
@@ -591,11 +612,13 @@ def business_invite():
         flash("Business invite failed. Please log in and use a valid email.")
         return redirect(url_for("business_login"))
     invitee_email = invite_form.invitee_email.data.strip()
-    subject = f"You have been invited by {biz.business_name} to join Perkminer."
+    subject = f"{biz.business_name} has invited you to join Perkminer."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
+    video_url = get_signed_video_url('Perkminer_-_Cashback_pro_vlefos')  # <--- Use your helper here!
     html_body = f"""
     <p>You have been invited by {biz.business_name} to join PerkMiner. Here are the benefits of joining.</p>
     <p><a href="{reg_url}">Join PerkMiner as a Business</a></p>
+    <p><a href="{video_url}">📹 Watch our quick intro video</a></p>
     """
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
