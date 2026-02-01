@@ -10,26 +10,7 @@ from werkzeug.utils import secure_filename
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
-import cloudinary.utils
 
-def get_signed_video_url(public_id, expires_in_seconds=300):
-    """
-    Generate a signed Cloudinary video URL with a time-limited token.
-    - public_id: your Cloudinary asset's public ID (e.g. 'your_folder/your_video_name')
-    - expires_in_seconds: link will expire after this many seconds (default 5 minutes)
-    Returns a URL string.
-    """
-    import time
-    expires_at = int(time.time()) + expires_in_seconds
-    url, options = cloudinary.utils.cloudinary_url(
-        public_id,
-        resource_type='video',
-        type='authenticated',  # forces signed URL
-        format="mp4",         # returns HLS adaptive stream
-        expires_at=expires_at,
-        attachment=False       # deters direct download in most browsers
-    )
-    return url
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -379,57 +360,12 @@ def invite():
         return redirect(url_for('dashboard'))
     invitee_email = invite_form.invitee_email.data.strip()
     inviter_name = current_user.name if current_user.name else current_user.email
-    subject = f"{inviter_name} has invited you to join Perkminer."
+    subject = f"You have been invited by {inviter_name} to join Perkminer."
     reg_url = url_for('register', ref=current_user.referral_code, _external=True)
-    video_url = get_signed_video_url('Perkminer_-_Cashback_pro_vlefos')
     html_body = f"""
-<!DOCTYPE html>
-<html>
-  <body style="margin:0;padding:0;background:#f5f8fa;font-family:Arial,sans-serif;">
-    <table align="center" width="100%" bgcolor="#f5f8fa" cellpadding="0" cellspacing="0" style="max-width:600px;">
-      <tr>
-        <td align="center" style="padding:40px 0 10px 0;">
-          <img src="https://your-company-logo-url.com/logo.png" alt="PerkMiner" width="120" style="display:block;margin-bottom:14px;">
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#fff" style="border-radius:12px 12px 0 0; padding:36px 36px 18px 36px;">
-          <h2 style="color:#2a5859;margin:0 0 12px 0;font-size:28px;">
-             {inviter_name} has invited you to join PerkMiner!
-          </h2>
-          <p style="margin:0 0 16px 0;font-size:18px;color:#222;">
-            Unlock cash rewards by joining our referral network.<br>
-            Click below to get started:
-          </p>
-          <a href="{reg_url}" style="background:#ffd66b;color:#222;padding:18px 28px;text-decoration:none;font-weight:bold;border-radius:8px;display:inline-block;font-size:17px;margin-top:16px;">
-            Join PerkMiner Now
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#fff" style="padding:28px 40px 38px 40px; border-radius: 0 0 12px 12px;">
-          <img src="https://your-s3-or-cloudinary-image.com/rewards_banner.jpg" alt="PerkMiner Rewards" width="100%" style="border-radius:8px;margin:10px 0 22px 0;">
-          <h3 style="color:#2a5859;margin:0 0 9px 0; font-size:21px;">
-              Quick Video Intro
-          </h3>
-          <p style="font-size:16px; margin:0 0 12px 0;">
-            See how easy it is to earn cash back rewards:
-          </p>
-          <a href="{video_url}" style="background:#2a5859;color:#fff;padding:10px 22px;text-decoration:none;font-weight:bold;border-radius:6px;display:inline-block;font-size:16px;">Watch Video</a>
-          <p style="color:#888;font-size:13px;margin-top:20px;">
-            If you have questions, just reply to this email or contact support@perkminer.com.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:18px 0 32px 0;color:#bbb;font-size:12px;">
-          PerkMiner &copy; 2026 &mdash; <a href="https://perkminer.com" style="color:#aaa;">Visit Website</a>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-"""
+    <p>You have been invited by {inviter_name} to join PerkMiner. Here are the benefits of joining.</p>
+    <p><a href="{reg_url}">Join PerkMiner</a></p>
+    """
     send_email(invitee_email, subject, html_body)
     flash('Invitation sent!')
     return redirect(url_for('dashboard'))
@@ -655,59 +591,12 @@ def business_invite():
         flash("Business invite failed. Please log in and use a valid email.")
         return redirect(url_for("business_login"))
     invitee_email = invite_form.invitee_email.data.strip()
-    subject = f"{biz.business_name} has invited you to join Perkminer."
+    subject = f"You have been invited by {biz.business_name} to join Perkminer."
     reg_url = url_for('business_register', ref=biz.referral_code, _external=True)
-    video_url = get_signed_video_url('Perkminer_-_Cashback_pro_vlefos')
-
     html_body = f"""
-<!DOCTYPE html>
-<html>
-  <body style="margin:0;padding:0;background:#f5f8fa;font-family:Arial,sans-serif;">
-    <table align="center" width="100%" bgcolor="#f5f8fa" cellpadding="0" cellspacing="0" style="max-width:600px;">
-      <tr>
-        <td align="center" style="padding:40px 0 10px 0;">
-          <img src="https://your-company-logo-url.com/logo.png" alt="PerkMiner for Business" width="120" style="display:block;margin-bottom:14px;">
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#fff" style="border-radius:12px 12px 0 0; padding:36px 36px 18px 36px;">
-          <h2 style="color:#2a5859;margin:0 0 12px 0;font-size:28px;">
-            {biz.business_name} invites you to join PerkMiner as a business!
-          </h2>
-          <p style="margin:0 0 16px 0;font-size:18px;color:#222;">
-            Grow your business, reward loyal customers, and connect with new clients using PerkMiner's unique cashback network.<br>
-            Click below to get started:
-          </p>
-          <a href="{reg_url}" style="background:#ffd66b;color:#222;padding:18px 28px;text-decoration:none;font-weight:bold;border-radius:8px;display:inline-block;font-size:17px;margin-top:16px;">
-            Register Your Business Now
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#fff" style="padding:28px 40px 38px 40px; border-radius: 0 0 12px 12px;">
-          <img src="https://your-s3-or-cloudinary-image.com/business_banner.jpg" alt="Grow with PerkMiner" width="100%" style="border-radius:8px;margin:10px 0 22px 0;">
-          <h3 style="color:#2a5859;margin:0 0 9px 0; font-size:21px;">
-            Quick Video Intro
-          </h3>
-          <p style="font-size:16px; margin:0 0 12px 0;">
-            Watch a short intro video to see how easy it is to participate and benefit:
-          </p>
-          <a href="{video_url}" style="background:#2a5859;color:#fff;padding:10px 22px;text-decoration:none;font-weight:bold;border-radius:6px;display:inline-block;font-size:16px;">Watch Video</a>
-          <p style="color:#888;font-size:13px;margin-top:20px;">
-            Have questions? Just reply to this email or contact <a href="mailto:support@perkminer.com" style="color:#2a5859;">support@perkminer.com</a>
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding:18px 0 32px 0;color:#bbb;font-size:12px;">
-          PerkMiner &copy; 2026 &mdash; <a href="https://perkminer.com" style="color:#aaa;">Visit Website</a>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-"""
-
+    <p>You have been invited by {biz.business_name} to join PerkMiner. Here are the benefits of joining.</p>
+    <p><a href="{reg_url}">Join PerkMiner as a Business</a></p>
+    """
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
