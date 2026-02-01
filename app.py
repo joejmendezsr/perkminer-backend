@@ -178,8 +178,7 @@ def build_invite_email(inviter_name, join_url):
         <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #374151; line-height: 1.6; text-align:center;">
             <p style="margin:0 0 24px;">Discover how you earn cashback with PerkMiner.  Don't just settle for pennies, CashBack like a pro on products and services you're looking for!</p>
 
-                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="button" target="_blank"
-                style "margin: 12px 0 32px;">
+                <a href="{video_url}" class="button" target="_blank" style="margin: 12px 0 32px;">
                 Watch our intro video
                 </a>
 
@@ -475,6 +474,7 @@ def invite():
     inviter_name = current_user.name if current_user.name else current_user.email
     subject = f"You have been invited by {inviter_name} to join PerkMiner."
     reg_url = url_for('register', ref=current_user.referral_code, _external=True)
+    video_url = url_for('intro', ref=current_user.referral_code, _external=True)
     html_body = build_invite_email(inviter_name, reg_url)
     send_email(invitee_email, subject, html_body)
     flash('Invitation sent!')
