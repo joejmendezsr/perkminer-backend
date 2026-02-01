@@ -584,6 +584,7 @@ def business_login():
 
 @app.route('/business/invite', methods=['POST'])
 def business_invite():
+    print("Current session keys:", session.keys())
     invite_form = BusinessInviteForm()
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id) if biz_id else None
