@@ -7,6 +7,18 @@ from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from werkzeug.utils import secure_filename
+from functools import wraps
+from flask import abort
+from flask_login import current_user, login_required
+
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not any(r.name == 'super_admin' for r in current_user.roles):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
@@ -33,6 +45,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 db = SQLAlchemy(app)
+from flask_migrate import Migrate
+migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
 bcrypt = Bcrypt(app)
@@ -58,6 +72,7 @@ class User(db.Model, UserMixin):
     email_code = db.Column(db.String(16))
     name = db.Column(db.String(100))
     profile_photo = db.Column(db.String(200))
+    roles = db.relationship('Role', secondary='user_roles', backref='users')
 
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -88,6 +103,19 @@ class Business(db.Model):
     service_9 = db.Column(db.String(100))
     service_10 = db.Column(db.String(100))
     search_keywords = db.Column(db.String(500))
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+
+class UserRoles(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+
+    # Optional: User and Role relationships for convenience
+    user = db.relationship('User', backref=db.backref('user_roles', cascade='all, delete-orphan'))
+    role = db.relationship('Role', backref=db.backref('user_roles', cascade='all, delete-orphan'))
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
 def valid_email(email): return re.match(EMAIL_REGEX, email or "")
@@ -827,6 +855,32 @@ def business_logout():
     session.pop('business_id', None)
     flash("Logged out as business.")
     return redirect(url_for("business_home"))
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    form = LoginForm()
+    message = ""
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        password = form.password.data
+        user = User.query.filter_by(email=email).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            # Require that this user has a super_admin role
+            if user.roles and any(r.name == "super_admin" for r in user.roles):
+                login_user(user)
+                return redirect(url_for("admin_dashboard"))
+            else:
+                message = "You are not an admin."
+        else:
+            message = "Login failed. Check email and password."
+    return render_template("admin_login.html", message=message, form=form)
+
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    users = User.query.all()
+    businesses = Business.query.all()
+    return render_template("admin_dashboard.html", users=users, businesses=businesses)
 
 for rule in app.url_map.iter_rules():
     print(f"{rule.endpoint:25s} {rule.methods} {rule}")
