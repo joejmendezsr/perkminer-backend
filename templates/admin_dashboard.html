@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - PerkMiner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container py-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <!-- Navigation tabs -->
+    <ul class="nav nav-tabs mb-3" id="dashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">Users</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="businesses-tab" data-bs-toggle="tab" data-bs-target="#businesses" type="button" role="tab">Businesses</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+
+      <!-- Users Table -->
+      <div class="tab-pane fade show active" id="users" role="tabpanel">
+        <h4>Registered Users</h4>
+        <button class="btn btn-secondary mb-2" onclick="window.print()">Print Users Table</button>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Name/Email</th>
+                <th>Email Verified</th>
+                <th>Referral Code</th>
+                <th>Roles</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>
+                  {{ user.name or '' }}<br>
+                  <small>{{ user.email }}</small>
+                </td>
+                <td>
+                  {% if user.email_confirmed %}
+                    <span class="badge bg-success">Yes</span>
+                  {% else %}
+                    <span class="badge bg-secondary">No</span>
+                  {% endif %}
+                </td>
+                <td>{{ user.referral_code }}</td>
+                <td>
+                  {% for role in user.roles %}
+                    <span class="badge bg-info text-dark">{{ role.name }}</span>
+                  {% endfor %}
+                </td>
+                <td>
+                  <!-- These buttons are for future use: wire up with links/actions later -->
+                  <button class="btn btn-sm btn-warning disabled">Edit</button>
+                  <button class="btn btn-sm btn-danger disabled">Delete</button>
+                  <button class="btn btn-sm btn-secondary disabled">Suspend</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Businesses Table -->
+      <div class="tab-pane fade" id="businesses" role="tabpanel">
+        <h4>Registered Businesses</h4>
+        <button class="btn btn-secondary mb-2" onclick="window.print()">Print Businesses Table</button>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Name/Email</th>
+                <th>Email Verified</th>
+                <th>Category</th>
+                <th>Referral Code</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for biz in businesses %}
+              <tr>
+                <td>{{ biz.id }}</td>
+                <td>
+                  {{ biz.business_name or '' }}<br>
+                  <small>{{ biz.business_email }}</small>
+                </td>
+                <td>
+                  {% if biz.email_confirmed %}
+                    <span class="badge bg-success">Yes</span>
+                  {% else %}
+                    <span class="badge bg-secondary">No</span>
+                  {% endif %}
+                </td>
+                <td>{{ biz.category }}</td>
+                <td>{{ biz.referral_code }}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning disabled">Edit</button>
+                  <button class="btn btn-sm btn-danger disabled">Delete</button>
+                  <button class="btn btn-sm btn-secondary disabled">Suspend</button>
+                  <button class="btn btn-sm btn-success disabled">Approve Listing</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Optional: Quick Logout -->
+    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger mt-4">Logout</a>
+</div>
+
+<!-- Bootstrap JS for tabs -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
