@@ -290,6 +290,13 @@ def send_verification_email(user):
     verify_url = url_for("activate", code=code, _external=True)
     html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your email, or use code: <b>{code}</b></p>"""
     send_email(user.email, "Confirm your PerkMiner email!", html_body)
+
+def send_business_verification_email(biz):
+    code = biz.email_code
+    verify_url = url_for("business_activate", code=code, _external=True)
+    html_body = f"""<p>Click <a href="{verify_url}">here</a> to confirm your business email, or use code: <b>{code}</b></p>"""
+    send_email(biz.business_email, "Confirm your PerkMiner business email!", html_body)
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
