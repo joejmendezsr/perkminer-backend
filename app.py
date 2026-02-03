@@ -308,6 +308,7 @@ class RegisterForm(FlaskForm):
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
+    recaptcha = RecaptchaField()
     submit = SubmitField('Login')
 class RewardForm(FlaskForm):
     invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
@@ -333,6 +334,7 @@ class BusinessRegisterForm(FlaskForm):
 class BusinessLoginForm(FlaskForm):
     business_email = StringField('Business Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
+    recaptcha = RecaptchaField()
     submit = SubmitField('Login')
 class BusinessRewardForm(FlaskForm):
     invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
@@ -775,11 +777,38 @@ def business_login():
                 session['pending_business_email'] = business_email
                 return redirect(url_for("business_verify_email"))
             else:
-                session['business_id'] = biz.id
-                return redirect(url_for("business_dashboard"))
+                # --- 2FA CODE ---
+                code = str(random.randint(100000, 999999))
+                session['pending_2fa_code'] = code
+                session['pending_2fa_biz_id'] = biz.id
+                send_email(
+                    biz.business_email,
+                    "Your PerkMiner Business Login Code",
+                    f"<p>Your PerkMiner business login code is: <b>{code}</b></p>"
+                )
+                flash("A login code has been sent to your email.")
+                return redirect(url_for("two_factor_biz"))
+                # --- END 2FA ---
         else:
             message = "Login failed. Check business email and password."
     return render_template("business_login.html", message=message, form=form)
+
+@app.route("/two_factor_biz", methods=["GET", "POST"])
+def two_factor_biz():
+    form = TwoFactorForm()
+    if form.validate_on_submit():
+        code_entered = form.code.data.strip()
+        code_expected = session.get('pending_2fa_code')
+        biz_id = session.get('pending_2fa_biz_id')
+        if code_expected and code_entered == code_expected and biz_id:
+            session['business_id'] = biz_id
+            # Clean up session
+            session.pop('pending_2fa_code', None)
+            session.pop('pending_2fa_biz_id', None)
+            flash("Login successful!")
+            return redirect(url_for("business_dashboard"))
+        flash("Incorrect code. Please try again.")
+    return render_template("two_factor_biz.html", form=form)
 
 @app.route('/business/invite', methods=['POST'])
 def business_invite():
@@ -933,13 +962,41 @@ def admin_login():
         if user and bcrypt.check_password_hash(user.password, password):
             # Require that this user has a super_admin role
             if user.roles and any(r.name == "super_admin" for r in user.roles):
-                login_user(user)
-                return redirect(url_for("admin_dashboard"))
+                # 2FA logic starts here
+                code = str(random.randint(100000, 999999))
+                session['pending_2fa_code'] = code
+                session['pending_2fa_admin_id'] = user.id
+                send_email(
+                    user.email,
+                    "Your PerkMiner Admin Login Code",
+                    f"<p>Your PerkMiner admin login code is: <b>{code}</b></p>"
+                )
+                flash("A login code has been sent to your admin email.")
+                return redirect(url_for("two_factor_admin"))
             else:
                 message = "You are not an admin."
         else:
             message = "Login failed. Check email and password."
     return render_template("admin_login.html", message=message, form=form)
+
+@app.route("/two_factor_admin", methods=["GET", "POST"])
+def two_factor_admin():
+    form = TwoFactorForm()
+    if form.validate_on_submit():
+        code_entered = form.code.data.strip()
+        code_expected = session.get('pending_2fa_code')
+        admin_id = session.get('pending_2fa_admin_id')
+        if code_expected and code_entered == code_expected and admin_id:
+            user = User.query.get(admin_id)
+            if user:
+                login_user(user)
+                # Clean up session
+                session.pop('pending_2fa_code', None)
+                session.pop('pending_2fa_admin_id', None)
+                flash("Admin login successful!")
+                return redirect(url_for("admin_dashboard"))
+        flash("Incorrect code. Please try again.")
+    return render_template("two_factor_admin.html", form=form)
 
 @app.route("/admin/dashboard")
 @admin_required
