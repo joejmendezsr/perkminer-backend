@@ -25,6 +25,14 @@
                                 <div class="text-danger small">{{ form.password.errors[0] }}</div>
                             {% endif %}
                         </div>
+                        {% if form.recaptcha %}
+                        <div class="mb-3">
+                            {{ form.recaptcha }}
+                            {% for err in form.recaptcha.errors %}
+                                <div class="text-danger small">{{ err }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                         {{ form.submit(class="btn btn-primary w-100") }}
                     </form>
                     <a href="{{ url_for('business_register') }}" class="d-block mb-2 text-center">Register your business</a>

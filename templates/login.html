@@ -17,12 +17,14 @@
             {{ form.password.label(class="form-label") }}
             {{ form.password(class="form-control") }}
         </div>
-        <!-- Add captcha here in the future if needed -->
-        {%- if form.recaptcha %}
+        {% if form.recaptcha %}
         <div class="mb-3">
             {{ form.recaptcha }}
+            {% for err in form.recaptcha.errors %}
+                <div class="text-danger small">{{ err }}</div>
+            {% endfor %}
         </div>
-        {%- endif %}
+        {% endif %}
         <button type="submit" class="btn btn-primary w-100">{{ form.submit.label.text }}</button>
     </form>
 
