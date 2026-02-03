@@ -35,6 +35,17 @@ def admin_required(f):
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
+def role_required(role_name):
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_role(role_name):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
@@ -95,6 +106,9 @@ class User(db.Model, UserMixin):
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
+
+    def has_role(self, role_name):
+        return any(role.name == role_name for role in self.roles)
 
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1145,6 +1159,11 @@ def admin_dashboard():
         businesses=businesses,
         business_forms=business_forms
     )
+
+@app.route("/finance-dashboard")
+@role_required("finance")
+def finance_dashboard():
+    return "Finance dashboard (protected view)"
 
 @app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
 @admin_required
