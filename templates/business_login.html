@@ -36,6 +36,7 @@
                         {{ form.submit(class="btn btn-primary w-100") }}
                     </form>
                     <a href="{{ url_for('business_register') }}" class="d-block mb-2 text-center">Register your business</a>
+                    <a href="{{ url_for('business_forgot_password') }}" class="d-block mb-2 text-center">Forgot password?</a>
                     {% if message %}
                       <div style="color:red;text-align:center;">{{ message }}</div>
                     {% endif %}
