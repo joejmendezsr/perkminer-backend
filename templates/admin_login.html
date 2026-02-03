@@ -35,10 +35,10 @@
                         {% endif %}
                         {{ form.submit(class="btn btn-primary w-100") }}
                     </form>
+                    <a href="{{ url_for('admin_forgot_password') }}" class="d-block mb-2 text-center">Forgot password?</a>
                     {% if message %}
                       <div style="color:red; text-align:center;">{{ message }}</div>
                     {% endif %}
-                    <a href="{{ url_for('register') }}" class="d-block mb-2 text-center">Register here</a>
                     {% with messages = get_flashed_messages() %}
                       {% if messages %}
                         <div class="alert alert-warning mt-3 text-center">

@@ -17,6 +17,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Length
 from flask_wtf import RecaptchaField
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 class TwoFactorForm(FlaskForm):
     code = StringField('Enter the 6-digit code', validators=[DataRequired(), Length(min=6, max=6)])
@@ -61,6 +62,8 @@ UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 db = SQLAlchemy(app)
 from flask_migrate import Migrate
@@ -290,6 +293,26 @@ def send_verification_email(user):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def generate_reset_token(email, user_type):
+    return serializer.dumps({'email': email, 'type': user_type})
+
+def verify_reset_token(token, user_type, max_age=3600):
+    try:
+        data = serializer.loads(token, max_age=max_age)
+        if data.get('type') == user_type:
+            return data.get('email')
+    except (SignatureExpired, BadSignature):
+        return None
+    return None
+
+def send_reset_email(recipient_email, reset_url):
+    send_email(
+        recipient_email,
+        "PerkMiner password reset",
+        f"<p>You requested a password reset. Click <a href='{reset_url}'>here</a> to reset your password.</p>"
+        "<p>If you didn't request this, please ignore this email.</p>"
+    )
+
 class InviteForm(FlaskForm):
     invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Send Invitation')
@@ -366,6 +389,14 @@ class BusinessProfileForm(FlaskForm):
 
 class EmptyForm(FlaskForm):
     submit = SubmitField('Submit')
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send reset link')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    submit = SubmitField('Reset Password')
 
 # ...ROUTES start below...
 @app.route("/")
@@ -549,6 +580,37 @@ def two_factor():
                 return redirect(url_for("dashboard"))
         flash("Incorrect code. Please try again.")
     return render_template("two_factor.html", form=form)
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = generate_reset_token(email, "user")
+            reset_url = url_for('reset_password', token=token, _external=True)
+            send_reset_email(email, reset_url)
+        flash("If an account with that email exists, a link has been sent.")
+        return redirect(url_for('login'))
+    return render_template('forgot_password.html', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    email = verify_reset_token(token, "user")
+    if not email:
+        flash("Reset link invalid or expired.")
+        return redirect(url_for('login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            db.session.commit()
+            flash("Password reset, please log in.")
+            return redirect(url_for('login'))
+        flash("Account not found.")
+    return render_template('reset_password.html', form=form)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -810,6 +872,37 @@ def two_factor_biz():
         flash("Incorrect code. Please try again.")
     return render_template("two_factor_biz.html", form=form)
 
+@app.route('/business/forgot_password', methods=['GET', 'POST'])
+def business_forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        business_email = form.email.data.strip().lower()
+        biz = Business.query.filter_by(business_email=business_email).first()
+        if biz:
+            token = generate_reset_token(business_email, "biz")
+            reset_url = url_for('business_reset_password', token=token, _external=True)
+            send_reset_email(business_email, reset_url)
+        flash("If a business account with that email exists, a link has been sent.")
+        return redirect(url_for('business_login'))
+    return render_template('forgot_password.html', form=form)
+
+@app.route('/business/reset_password/<token>', methods=['GET', 'POST'])
+def business_reset_password(token):
+    email = verify_reset_token(token, "biz")
+    if not email:
+        flash("Reset link invalid or expired.")
+        return redirect(url_for('business_login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        biz = Business.query.filter_by(business_email=email).first()
+        if biz:
+            biz.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            db.session.commit()
+            flash("Password reset. Please log in.")
+            return redirect(url_for('business_login'))
+        flash("Account not found.")
+    return render_template('reset_password.html', form=form)
+
 @app.route('/business/invite', methods=['POST'])
 def business_invite():
     invite_form = BusinessInviteForm()
@@ -997,6 +1090,38 @@ def two_factor_admin():
                 return redirect(url_for("admin_dashboard"))
         flash("Incorrect code. Please try again.")
     return render_template("two_factor_admin.html", form=form)
+
+@app.route('/admin/forgot_password', methods=['GET', 'POST'])
+def admin_forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        user = User.query.filter_by(email=email).first()
+        # Only send if super_admin
+        if user and user.roles and any(r.name == "super_admin" for r in user.roles):
+            token = generate_reset_token(email, "admin")
+            reset_url = url_for('admin_reset_password', token=token, _external=True)
+            send_reset_email(email, reset_url)
+        flash("If an admin account with that email exists, a link has been sent.")
+        return redirect(url_for('admin_login'))
+    return render_template('forgot_password.html', form=form)
+
+@app.route('/admin/reset_password/<token>', methods=['GET', 'POST'])
+def admin_reset_password(token):
+    email = verify_reset_token(token, "admin")
+    if not email:
+        flash("Reset link invalid or expired.")
+        return redirect(url_for('admin_login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=email).first()
+        if user and user.roles and any(r.name == "super_admin" for r in user.roles):
+            user.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            db.session.commit()
+            flash("Password reset. Please log in.")
+            return redirect(url_for('admin_login'))
+        flash("Admin account not found.")
+    return render_template('reset_password.html', form=form)
 
 @app.route("/admin/dashboard")
 @admin_required
