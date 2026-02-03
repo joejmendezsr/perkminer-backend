@@ -303,6 +303,7 @@ class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
     referral_code = StringField('Referral Code', validators=[Optional()])
+    recaptcha = RecaptchaField()
     submit = SubmitField('Register')
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
