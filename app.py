@@ -10,7 +10,14 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask import abort
 from flask_login import current_user, login_required
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Email, Optional
 
+class EditUserForm(FlaskForm):
+    name = StringField('Name', validators=[Optional()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Save')
 def admin_required(f):
     @wraps(f)
     @login_required
@@ -73,6 +80,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100))
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
+    is_suspended = db.Column(db.Boolean, default=False)
 
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,6 +111,7 @@ class Business(db.Model):
     service_9 = db.Column(db.String(100))
     service_10 = db.Column(db.String(100))
     search_keywords = db.Column(db.String(500))
+    is_suspended = db.Column(db.Boolean, default=False)
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -116,6 +125,19 @@ class UserRoles(db.Model):
     # Optional: User and Role relationships for convenience
     user = db.relationship('User', backref=db.backref('user_roles', cascade='all, delete-orphan'))
     role = db.relationship('Role', backref=db.backref('user_roles', cascade='all, delete-orphan'))
+
+class EditUserForm(FlaskForm):
+    name = StringField('Name', validators=[Optional()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Save')
+
+class BusinessEditForm(FlaskForm):
+    business_name = StringField('Business Name', validators=[Optional()])
+    business_email = StringField('Business Email', validators=[DataRequired(), Email()])
+    category = StringField('Category', validators=[Optional()])
+    phone_number = StringField('Phone Number', validators=[Optional()])
+    address = StringField('Address', validators=[Optional()])
+    submit = SubmitField('Save')
 
 EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
 def valid_email(email): return re.match(EMAIL_REGEX, email or "")
@@ -327,6 +349,9 @@ class BusinessProfileForm(FlaskForm):
     latitude = StringField('Latitude', validators=[Optional()])
     longitude = StringField('Longitude', validators=[Optional()])
     submit = SubmitField('Save Profile')
+
+class EmptyForm(FlaskForm):
+    submit = SubmitField('Submit')
 
 # ...ROUTES start below...
 @app.route("/")
@@ -880,7 +905,89 @@ def admin_login():
 def admin_dashboard():
     users = User.query.all()
     businesses = Business.query.all()
-    return render_template("admin_dashboard.html", users=users, businesses=businesses)
+    EmptyFormInstance = EmptyForm  # Alias if you prefer
+
+    # Create a form instance for each business (by id)
+    business_forms = {biz.id: EmptyFormInstance() for biz in businesses}
+    return render_template(
+        "admin_dashboard.html",
+        users=users,
+        businesses=businesses,
+        business_forms=business_forms
+    )
+
+@app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if any(r.name == 'super_admin' for r in user.roles):
+        flash("Cannot delete a super_admin user.")
+        return redirect(url_for("admin_dashboard"))
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"User {user.email} deleted.")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/user/<int:user_id>/suspend", methods=["POST"])
+@admin_required
+def admin_suspend_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if any(r.name == 'super_admin' for r in user.roles):
+        flash("Cannot suspend a super_admin user.")
+        return redirect(url_for("admin_dashboard"))
+    user.is_suspended = not user.is_suspended
+    db.session.commit()
+    action = "Suspended" if user.is_suspended else "Unsuspended"
+    flash(f"User {user.email} {action.lower()}.")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/user/<int:user_id>/edit", methods=["GET", "POST"])
+@admin_required
+def admin_edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = EditUserForm(obj=user)
+    if form.validate_on_submit():
+        user.name = form.name.data
+        user.email = form.email.data
+        db.session.commit()
+        flash("User updated.")
+        return redirect(url_for("admin_dashboard"))
+    return render_template("admin_edit_user.html", user=user, form=form)
+
+@app.route("/admin/business/<int:business_id>/edit", methods=["GET", "POST"])
+@admin_required
+def admin_edit_business(business_id):
+    biz = Business.query.get_or_404(business_id)
+    form = BusinessEditForm(obj=biz)
+    if form.validate_on_submit():
+        biz.business_name = form.business_name.data
+        biz.business_email = form.business_email.data
+        biz.category = form.category.data
+        biz.phone_number = form.phone_number.data
+        biz.address = form.address.data
+        db.session.commit()
+        flash("Business updated.")
+        return redirect(url_for("admin_dashboard"))
+    return render_template("admin_edit_business.html", biz=biz, form=form)
+
+@app.route("/admin/business/<int:business_id>/suspend", methods=["POST"])
+@admin_required
+def admin_suspend_business(business_id):
+    biz = Business.query.get_or_404(business_id)
+    biz.is_suspended = not biz.is_suspended
+    db.session.commit()
+    action = "Suspended" if biz.is_suspended else "Unsuspended"
+    flash(f"Business {biz.business_name} {action.lower()}.")
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/business/<int:business_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_business(business_id):
+    biz = Business.query.get_or_404(business_id)
+    db.session.delete(biz)
+    db.session.commit()
+    flash(f"Business {biz.business_name} deleted.")
+    return redirect(url_for("admin_dashboard"))
 
 for rule in app.url_map.iter_rules():
     print(f"{rule.endpoint:25s} {rule.methods} {rule}")

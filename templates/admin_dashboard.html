@@ -60,9 +60,19 @@
                 </td>
                 <td>
                   <!-- These buttons are for future use: wire up with links/actions later -->
-                  <button class="btn btn-sm btn-warning disabled">Edit</button>
-                  <button class="btn btn-sm btn-danger disabled">Delete</button>
-                  <button class="btn btn-sm btn-secondary disabled">Suspend</button>
+                  <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                  <form method="post" action="{{ url_for('admin_delete_user', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                  </form>
+                  <form method="post" action="{{ url_for('admin_suspend_user', user_id=user.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if user.is_suspended %}
+                      <button type="submit" class="btn btn-sm btn-success" title="Unsuspend">Unsuspend</button>
+                    {% else %}
+                      <button type="submit" class="btn btn-sm btn-secondary" title="Suspend">Suspend</button>
+                    {% endif %}
+                  </form>
                 </td>
               </tr>
               {% endfor %}
@@ -105,9 +115,22 @@
                 <td>{{ biz.category }}</td>
                 <td>{{ biz.referral_code }}</td>
                 <td>
-                  <button class="btn btn-sm btn-warning disabled">Edit</button>
-                  <button class="btn btn-sm btn-danger disabled">Delete</button>
-                  <button class="btn btn-sm btn-secondary disabled">Suspend</button>
+                  <a href="{{ url_for('admin_edit_business', business_id=biz.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                  <form method="post" action="{{ url_for('admin_delete_business', business_id=biz.id) }}" style="display:inline;" onsubmit="return confirm('Delete this business?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      {{ business_forms[biz.id].hidden_tag() }}
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                  </form>
+                  <form method="post" action="{{ url_for('admin_suspend_business', business_id=biz.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      {{ business_forms[biz.id].hidden_tag() }}
+                      {% if biz.is_suspended %}
+                        <button type="submit" class="btn btn-sm btn-success" title="Unsuspend">Unsuspend</button>
+                      {% else %}
+                        <button type="submit" class="btn btn-sm btn-secondary" title="Suspend">Suspend</button>
+                      {% endif %}
+                  </form>
+                  <button class="btn btn-sm btn-success disabled">Approve Listing</button>
                   <button class="btn btn-sm btn-success disabled">Approve Listing</button>
                 </td>
               </tr>
