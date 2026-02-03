@@ -17,13 +17,18 @@
                 <div class="text-danger small">{{ err }}</div>
             {% endfor %}
         </div>
-        <div class="mb-3">
+
+        <div class="mb-3 position-relative">
             {{ form.password.label(class="form-label") }}
-            {{ form.password(class="form-control") }}
+            {{ form.password(class="form-control", id="password-field") }}
+            <button type="button" class="btn btn-outline-secondary btn-sm position-absolute top-50 end-0 translate-middle-y me-2" id="toggle-password" tabindex="-1">
+                <span id="toggle-password-icon">&#128065;</span>
+            </button>
             {% for err in form.password.errors %}
                 <div class="text-danger small">{{ err }}</div>
             {% endfor %}
         </div>
+
         <div class="mb-3">
             {{ form.referral_code.label(class="form-label") }}
             {{ form.referral_code(class="form-control") }}
@@ -54,5 +59,23 @@
         <a href="{{ url_for('login') }}">Already have an account? Log in</a>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var pwField = document.getElementById('password-field');
+    var toggleBtn = document.getElementById('toggle-password');
+    var toggleIcon = document.getElementById('toggle-password-icon');
+    if (pwField && toggleBtn && toggleIcon) {
+        toggleBtn.addEventListener('click', function() {
+            if (pwField.type === "password") {
+                pwField.type = "text";
+                toggleIcon.innerHTML = "&#128068;";
+            } else {
+                pwField.type = "password";
+                toggleIcon.innerHTML = "&#128065;";
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>
