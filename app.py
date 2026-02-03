@@ -13,6 +13,14 @@ from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Email, Optional
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Length
+from flask_wtf import RecaptchaField
+
+class TwoFactorForm(FlaskForm):
+    code = StringField('Enter the 6-digit code', validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField('Verify')
 
 class EditUserForm(FlaskForm):
     name = StringField('Name', validators=[Optional()])
@@ -29,6 +37,7 @@ def admin_required(f):
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
+import random  # put this at the top of your file if not already imported
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -45,6 +54,8 @@ app.config['MAIL_PORT']     = int(os.environ.get('MAIL_PORT', 465))
 app.config['MAIL_USE_SSL']  = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
+app.config['RECAPTCHA_PUBLIC_KEY'] = '6LdhAV8sAAAAABwITf0HytcbADISlcMd87NP-i2H'
+app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdhAV8sAAAAAFi9YjxnZqFLUl3SlQjHc1g7IEOq'
 
 UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -501,11 +512,40 @@ def login():
                 session['pending_email'] = email
                 return redirect(url_for("verify_email"))
             else:
-                login_user(user)
-                return redirect(url_for("dashboard"))
+                # --- 2FA LOGIC ---
+                import random  # make sure this is also at the top of your file
+                code = str(random.randint(100000, 999999))
+                session['pending_2fa_code'] = code
+                session['pending_2fa_user_id'] = user.id
+                send_email(
+                    user.email,
+                    "Your PerkMiner Login Code",
+                    f"<p>Your PerkMiner login code is: <b>{code}</b></p>"
+                )
+                flash("A login code has been sent to your email.")
+                return redirect(url_for("two_factor"))
         else:
             message = "Login failed. Check email and password."
     return render_template("login.html", message=message, form=form)
+
+@app.route("/two_factor", methods=["GET", "POST"])
+def two_factor():
+    form = TwoFactorForm()
+    if form.validate_on_submit():
+        code_entered = form.code.data.strip()
+        code_expected = session.get('pending_2fa_code')
+        user_id = session.get('pending_2fa_user_id')
+        if code_expected and code_entered == code_expected and user_id:
+            user = User.query.get(user_id)
+            if user:
+                login_user(user)
+                # Clean up session
+                session.pop('pending_2fa_code', None)
+                session.pop('pending_2fa_user_id', None)
+                flash("Login successful!")
+                return redirect(url_for("dashboard"))
+        flash("Incorrect code. Please try again.")
+    return render_template("two_factor.html", form=form)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
