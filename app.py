@@ -657,6 +657,7 @@ def invite():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
+    print("Current user roles:", [role.name for role in current_user.roles])
     form = RewardForm(request.form)
     profile_form = UserProfileForm()
     invite_form = InviteForm()
