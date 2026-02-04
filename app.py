@@ -1240,14 +1240,11 @@ def listing_disclaimer():
         listing_id = request.form.get("listing_id")
         referral_code = request.form.get("referral_code")
         return render_template(
-            "listing_disclaimer.html", 
-            listing_id=listing_id, 
+            "listing_disclaimer.html",
+            listing_id=listing_id,
             referral_code=referral_code
         )
-    # Optional: For GET requests, just redirect to dashboard
     return redirect(url_for("business_dashboard"))
-
-    return render_template("assign_roles.html", users=users, roles=roles)
 
 @app.route("/send-for-review", methods=["POST"])
 def send_for_review():
