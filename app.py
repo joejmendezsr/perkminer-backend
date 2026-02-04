@@ -140,6 +140,7 @@ class Business(db.Model):
     service_10 = db.Column(db.String(100))
     search_keywords = db.Column(db.String(500))
     is_suspended = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), nullable=False, default='not_submitted')
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
