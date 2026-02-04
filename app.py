@@ -1238,6 +1238,62 @@ def admin_delete_business(business_id):
     flash(f"Business {biz.business_name} deleted.")
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/seed_admins_once")
+def seed_admins_once():
+    from app import db, User, Role, bcrypt
+    # --- Roles to create ---
+    role_names = [
+        "approve_reject_listings",
+        "finance",
+        "feedback_moderation",
+        "customer_support"
+    ]
+    roles = {}
+    for name in role_names:
+        role = Role.query.filter_by(name=name).first()
+        if not role:
+            role = Role(name=name)
+            db.session.add(role)
+        roles[name] = role
+    db.session.commit()
+
+    # --- Demo admins ---
+    admins = [
+        {
+            "email": "admin1@perkminer.com",
+            "password": "admin1secure",
+            "role_names": [
+                "approve_reject_listings", "feedback_moderation", "customer_support"
+            ]
+        },
+        {
+            "email": "finance1@perkminer.com",
+            "password": "finance1secure",
+            "role_names": ["finance"]
+        }
+    ]
+    responses = []
+    for admin in admins:
+        user = User.query.filter_by(email=admin["email"]).first()
+        if not user:
+            hashed_pw = bcrypt.generate_password_hash(admin["password"]).decode("utf-8")
+            user = User(
+                email=admin["email"],
+                password=hashed_pw,
+                email_confirmed=True
+            )
+            db.session.add(user)
+            db.session.commit()
+            responses.append(f"Created: {admin['email']}")
+        for role_name in admin["role_names"]:
+            role = Role.query.filter_by(name=role_name).first()
+            if role not in user.roles:
+                user.roles.append(role)
+                responses.append(f"Granted {role_name} to {admin['email']}")
+        db.session.commit()
+    responses.append("Seeding complete!")
+    return "<br>".join(responses)
+
 for rule in app.url_map.iter_rules():
     print(f"{rule.endpoint:25s} {rule.methods} {rule}")
 
