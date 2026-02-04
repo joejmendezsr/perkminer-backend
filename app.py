@@ -1181,6 +1181,21 @@ def approve_reject_dashboard():
 def feedback_dashboard():
     return render_template("feedback_dashboard.html")
 
+@app.route("/approve-reject-dashboard")
+@role_required("approve_reject_listings")
+def approve_reject_dashboard():
+    return render_template("approve_reject_dashboard.html")
+
+@app.route("/feedback-dashboard")
+@role_required("feedback_moderation")
+def feedback_dashboard():
+    return render_template("feedback_dashboard.html")
+
+@app.route("/support-dashboard")
+@role_required("customer_support")
+def support_dashboard():
+    return render_template("support_dashboard.html")
+
 @app.route("/support-dashboard")
 @role_required("customer_support")
 def support_dashboard():
