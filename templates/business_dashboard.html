@@ -318,8 +318,7 @@ footer {
     <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
-
-  <!-- Preview and Save Buttons -->
+<!-- Status display -->
 {% if biz.status %}
   <div class="col-12 mb-2">
     <div class="alert alert-info p-2 mb-0" style="font-size:1.09em; text-align:center;">
@@ -341,6 +340,8 @@ footer {
     </div>
   </div>
 {% endif %}
+
+<!-- Submit for Review button (separate form, outside the main profile form) -->
 {% if biz.status == "not_submitted" or biz.status == "rejected" %}
   <div class="col-12 mt-3 d-flex gap-2">
     <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
@@ -350,11 +351,12 @@ footer {
     </form>
   </div>
 {% endif %}
+
   <div class="col-12 mt-3 d-flex gap-2">
     <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
     {{ profile_form.submit(class="btn btn-success") }}
   </div>
-</form>
+
       </div>
     </div>
   </div>
