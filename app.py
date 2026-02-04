@@ -420,6 +420,11 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 # ...ROUTES start below...
+@app.route("/admin-roles")
+@login_required
+def admin_roles_landing():
+    return render_template("admin_roles_landing.html")
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -1160,11 +1165,6 @@ def admin_dashboard():
         businesses=businesses,
         business_forms=business_forms
     )
-
-@app.route("/admin-roles")
-@login_required
-def admin_roles_landing():
-    return render_template("admin_roles_landing.html")
 
 @app.route("/finance-dashboard")
 @role_required("finance")
