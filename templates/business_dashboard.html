@@ -319,7 +319,30 @@ footer {
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
 
+
+
   <!-- Preview and Save Buttons -->
+{% if biz.status %}
+  <div class="col-12 mb-2">
+    <div class="alert alert-info p-2 mb-0" style="font-size:1.09em; text-align:center;">
+      Status: <strong>
+        {% if biz.status == "not_submitted" %}
+          Not Submitted
+        {% elif biz.status == "pending" %}
+          Pending Review
+        {% elif biz.status == "in_review" %}
+          In Review
+        {% elif biz.status == "rejected" %}
+          Rejected
+        {% elif biz.status == "approved" %}
+          Approved
+        {% else %}
+          {{ biz.status }}
+        {% endif %}
+      </strong>
+    </div>
+  </div>
+{% endif %}
   <div class="col-12 mt-3 d-flex gap-2">
     <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
     {{ profile_form.submit(class="btn btn-success") }}
