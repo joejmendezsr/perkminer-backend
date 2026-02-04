@@ -319,8 +319,6 @@ footer {
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
 
-
-
   <!-- Preview and Save Buttons -->
 {% if biz.status %}
   <div class="col-12 mb-2">
@@ -341,6 +339,15 @@ footer {
         {% endif %}
       </strong>
     </div>
+  </div>
+{% endif %}
+{% if biz.status == "not_submitted" or biz.status == "rejected" %}
+  <div class="col-12 mt-3 d-flex gap-2">
+    <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
+      <input type="hidden" name="listing_id" value="{{ biz.id }}">
+      <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
+      <button type="submit" class="btn btn-warning w-100">Submit for Review</button>
+    </form>
   </div>
 {% endif %}
   <div class="col-12 mt-3 d-flex gap-2">

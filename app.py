@@ -1234,7 +1234,39 @@ def assign_roles():
             db.session.commit()
             flash("Roles updated!", "success")
 
+@app.route("/listing-disclaimer", methods=["POST", "GET"])
+def listing_disclaimer():
+    if request.method == "POST":
+        listing_id = request.form.get("listing_id")
+        referral_code = request.form.get("referral_code")
+        return render_template(
+            "listing_disclaimer.html", 
+            listing_id=listing_id, 
+            referral_code=referral_code
+        )
+    # Optional: For GET requests, just redirect to dashboard
+    return redirect(url_for("business_dashboard"))
+
     return render_template("assign_roles.html", users=users, roles=roles)
+
+@app.route("/send-for-review", methods=["POST"])
+def send_for_review():
+    listing_id = request.form.get("listing_id")
+    referral_code = request.form.get("referral_code")
+    accept_terms = request.form.get("accept_terms")
+    if not accept_terms:
+        flash("You must accept the terms and conditions.")
+        return redirect(url_for("listing_disclaimer"))
+
+    biz = Business.query.get(listing_id)
+    if biz:
+        biz.status = "pending"
+        db.session.commit()
+        flash("Listing submitted for admin review. You will be notified after a decision.")
+    else:
+        flash("Listing not found.")
+
+    return redirect(url_for("business_dashboard"))
 
 @app.route("/admin/user/<int:user_id>/edit", methods=["GET", "POST"])
 @admin_required
