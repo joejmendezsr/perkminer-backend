@@ -1169,7 +1169,7 @@ def admin_dashboard():
 @app.route("/finance-dashboard")
 @role_required("finance")
 def finance_dashboard():
-    return "Finance dashboard (protected view)"
+    return render_template("finance_dashboard.html")
 
 @app.route("/approve-reject-dashboard")
 @role_required("approve_reject_listings")
