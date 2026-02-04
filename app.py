@@ -1211,6 +1211,30 @@ def admin_suspend_user(user_id):
     flash(f"User {user.email} {action.lower()}.")
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/admin/assign-roles", methods=["GET", "POST"])
+@role_required("super_admin")
+def assign_roles():
+    users = User.query.all()
+    roles = Role.query.all()
+
+    if request.method == "POST":
+        # Get the form data (user_id and roles to assign)
+        user_id = int(request.form["user_id"])
+        chosen_roles = request.form.getlist("roles")
+
+        user = User.query.get(user_id)
+        if user:
+            # Remove all roles, then add selected ones
+            user.roles = []
+            for role_name in chosen_roles:
+                role = Role.query.filter_by(name=role_name).first()
+                if role:
+                    user.roles.append(role)
+            db.session.commit()
+            flash("Roles updated!", "success")
+
+    return render_template("assign_roles.html", users=users, roles=roles)
+
 @app.route("/admin/user/<int:user_id>/edit", methods=["GET", "POST"])
 @admin_required
 def admin_edit_user(user_id):
