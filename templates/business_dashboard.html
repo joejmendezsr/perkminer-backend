@@ -341,7 +341,16 @@ footer {
   </div>
 {% endif %}
 
-<!-- Submit for Review button (separate form, outside the main profile form) -->
+  <div class="col-12 mt-3 d-flex gap-2">
+    <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
+    {{ profile_form.submit(class="btn btn-success") }}
+  </div>
+
+      </div>
+    </div>
+  </div>
+
+<!-- Submit for Review button (completely outside main profile form) -->
 {% if biz.status == "not_submitted" or biz.status == "rejected" %}
   <div class="col-12 mt-3 d-flex gap-2">
     <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
@@ -352,14 +361,6 @@ footer {
   </div>
 {% endif %}
 
-  <div class="col-12 mt-3 d-flex gap-2">
-    <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
-    {{ profile_form.submit(class="btn btn-success") }}
-  </div>
-
-      </div>
-    </div>
-  </div>
   <!-- Referral Code Section -->
   <div class="card p-4 mb-4">
     <h4>Your Referral Code</h4>
