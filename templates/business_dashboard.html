@@ -298,7 +298,7 @@ footer {
   </div>
 
 </form>
-<!-- Submit for Review button OUTSIDE and just after the main profile form -->
+<!-- Submit for Review button OUTSIDE the main profile form -->
 {% if biz.status == "not_submitted" or biz.status == "rejected" %}
   <div class="col-12 mt-3 d-flex gap-2">
     <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
@@ -324,16 +324,7 @@ footer {
     </div>
   {% endif %}
 
-    <!-- Referral Code Section -->
-  <div class="card p-4 mb-4">
-    <h4>Your Referral Code</h4>
-    <div class="mb-0"><b>{{ referral_code }}</b></div>
-  </div>
-      {% if sponsor %}
-        <div class="card p-4 mb-4">
-          <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor.business_name }}</span></small></div>
-        </div>
-      {% endif %}
+  <!-- Reward calculators and Network tree -->
   <div class="card p-4 mb-4">
     <h4>Estimate Your Rewards From One Single Purchase</h4>
     <div class="row g-3 mb-3">
@@ -453,7 +444,7 @@ footer {
       <a href="/" style="color:var(--pm-primary);font-weight:600;text-decoration:none;">PerkMiner</a> &copy; 2026
     </div>
     <div>
-      <small>Need help? <a href="mailto:fromperkminer@gmail.com" style="color:var(--pm-primary);">Contact Support</a></small>
+      <small>Need help? <a href="mailto:support@perkminer.com" style="color:var(--pm-primary);">Contact Support</a></small>
     </div>
     <div class="mt-1">
       <a href="#" style="color:#3dbbee; margin:0 6px;text-decoration:none;">Privacy</a>
@@ -462,52 +453,136 @@ footer {
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- ...your JS here... -->
 <script>
+function calculateNetworkEarnings() {
+  let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
+  let amount = parseFloat(document.getElementById('network_amount').value) || 0;
+  if (amount > 2500) amount = 2500;
+  document.getElementById('network_amount').value = amount;
+  let t1 = 0.02 * amount;
+  let t2 = 0.0025 * amount * numPeople;
+  let t3 = 0.0025 * amount * Math.pow(numPeople, 2);
+  let t4 = 0.0025 * amount * Math.pow(numPeople, 3);
+  let t5 = 0.02 * amount * Math.pow(numPeople, 4);
+  let total = t1 + t2 + t3 + t4 + t5;
+  document.getElementById('network_t1').innerText = t1.toFixed(2);
+  document.getElementById('network_t2').innerText = t2.toFixed(2);
+  document.getElementById('network_t3').innerText = t3.toFixed(2);
+  document.getElementById('network_t4').innerText = t4.toFixed(2);
+  document.getElementById('network_t5').innerText = t5.toFixed(2);
+  document.getElementById('network_total').innerText = total.toFixed(2);
+  document.getElementById('network_results').style.display = 'block';
+}
+function calculateSingleReward() {
+  let amount = parseFloat(document.getElementById('reward_amount').value) || 0;
+  if (amount > 2500) amount = 2500;
+  document.getElementById('reward_amount').value = amount;
+  let tier = document.getElementById('reward_tier').value;
+  let reward = 0;
+  let desc = "";
+  let cap = null;
+  if (tier === "1") {
+    reward = amount * 0.02; desc = "As the customer, from a purchase you make";
+  } else if (["2","3","4"].includes(tier)) {
+    reward = amount * 0.0025;
+    cap = 6.25;
+    if (reward > cap) reward = cap;
+    desc = `If your Tier ${tier} referral makes a purchase`;
+  } else if (tier === "5") {
+    reward = amount * 0.02;
+    cap = 50;
+    if (reward > cap) reward = cap;
+    desc = "If your Tier 5 referral makes a purchase";
+  }
+  let out = '';
+  if (amount > 0) {
+    out += `<h5 class='mt-4 mb-2'>${desc} of $${amount.toFixed(2)}:</h5>`;
+    out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
+  }
+  document.getElementById('rewards_output').innerHTML = out;
+}
 let marker, map, autocomplete;
 function initMap() {
-    const latInput = document.getElementById('latitude');
-    const lngInput = document.getElementById('longitude');
-    let lat = parseFloat(latInput.value) || 39.8283;  // center on USA if blank
-    let lng = parseFloat(lngInput.value) || -98.5795;
-    let center = {lat: lat, lng: lng};
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: (latInput.value && lngInput.value) ? 16 : 4,
-        center: center
+  const latInput = document.getElementById('latitude');
+  const lngInput = document.getElementById('longitude');
+  let lat = parseFloat(latInput.value) || 39.8283;  // center on USA if blank
+  let lng = parseFloat(lngInput.value) || -98.5795;
+  let center = {lat: lat, lng: lng};
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: (latInput.value && lngInput.value) ? 16 : 4,
+    center: center
+  });
+  marker = new google.maps.Marker({
+    position: center,
+    map: map,
+    draggable: true
+  });
+  google.maps.event.addListener(marker, 'dragend', function(event) {
+    latInput.value = event.latLng.lat();
+    lngInput.value = event.latLng.lng();
+  });
+  // Click on map moves marker
+  map.addListener && map.addListener('click', function(e) {
+    marker.setPosition(e.latLng);
+    latInput.value = e.latLng.lat();
+    lngInput.value = e.latLng.lng();
+  });
+  // Address autocomplete
+  const input = document.getElementById('address-autocomplete');
+  if (input) {
+    autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
+    autocomplete.addListener('place_changed', function () {
+      const place = autocomplete.getPlace();
+      if (!place.geometry) return;
+      const loc = place.geometry.location;
+      latInput.value = loc.lat();
+      lngInput.value = loc.lng();
+      marker.setPosition(loc);
+      map.setCenter(loc);
+      map.setZoom(16);
     });
-    marker = new google.maps.Marker({
-        position: center,
-        map: map,
-        draggable: true
-    });
-    google.maps.event.addListener(marker, 'dragend', function(event) {
-        latInput.value = event.latLng.lat();
-        lngInput.value = event.latLng.lng();
-    });
-    // Click on map moves marker
-    map.addListener && map.addListener('click', function(e) {
-        marker.setPosition(e.latLng);
-        latInput.value = e.latLng.lat();
-        lngInput.value = e.latLng.lng();
-    });
-    // Address autocomplete
-    const input = document.getElementById('address-autocomplete');
-    if (input) {
-      autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
-      autocomplete.addListener('place_changed', function () {
-          const place = autocomplete.getPlace();
-          if (!place.geometry) return;
-          const loc = place.geometry.location;
-          latInput.value = loc.lat();
-          lngInput.value = loc.lng();
-          marker.setPosition(loc);
-          map.setCenter(loc);
-          map.setZoom(16);
-      });
-    }
+  }
 }
-</script>
-<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const servicesList = document.getElementById('services-list');
+  const addBtn = document.getElementById('addServiceBtn');
+  addBtn.addEventListener('click', function() {
+    const count = servicesList.querySelectorAll('.service-field').length;
+    if (count >= 10) return;
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2 service-field';
+    div.setAttribute('data-index', count);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control';
+    input.name = 'service_' + (count + 1);
+    input.maxLength = 100;
+    input.placeholder = 'Service #' + (count + 1);
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline-danger service-remove';
+    btn.type = 'button';
+    btn.innerHTML = '&minus;';
+    btn.addEventListener('click', function() {
+      if (servicesList.querySelectorAll('.service-field').length > 2) {
+        div.remove();
+      }
+    });
+    if (count < 2) btn.disabled = true;
+    div.appendChild(input);
+    div.appendChild(btn);
+    servicesList.appendChild(div);
+  });
+  servicesList.querySelectorAll('.service-field .service-remove').forEach(function(btn, idx) {
+    if (idx >= 2) btn.disabled = false;
+    btn.addEventListener('click', function() {
+      if (servicesList.querySelectorAll('.service-field').length > 2) {
+        btn.parentElement.remove();
+      }
+    });
+  });
+});
+
+// For Preview Modal
 window.addEventListener('DOMContentLoaded', function() {
   let previewBtn = document.getElementById('previewListingBtn');
   let modal = document.getElementById('listingPreviewModal');
@@ -522,127 +597,62 @@ window.addEventListener('DOMContentLoaded', function() {
     let website = document.getElementById('website_url')?.value || "{{ biz.website_url }}";
     let about = document.getElementById('about_us')?.value || "{{ biz.about_us }}";
     let keywords = document.getElementById('search_keywords')?.value || "{{ biz.search_keywords }}";
-// For services, you’ll need to loop Jinja or parse inputs
-
-let services = [];
-document.querySelectorAll('#services-list input').forEach(input => {
-  if(input.value.trim()!="") services.push(input.value.trim());
-});
-
+    let services = [];
+    document.querySelectorAll('#services-list input').forEach(input => {
+      if(input.value.trim()!="") services.push(input.value.trim());
+    });
     let img = '{{ profile_img_url if profile_img_url else "" }}';
-
     let smallListing = `
-  <div class="card mb-3">
-    <div class="row g-0 align-items-center">
-      <div class="col-md-3 text-center">
-        ${img? `<img src="${img}" class="rounded-circle" style="width:60px;height:60px;object-fit:cover;">` : ""}
+      <div class="card mb-3">
+        <div class="row g-0 align-items-center">
+          <div class="col-md-3 text-center">
+            ${img? `<img src="${img}" class="rounded-circle" style="width:60px;height:60px;object-fit:cover;">` : ""}
+          </div>
+          <div class="col-md-9">
+            <b>${name}</b><br/>
+            <span class="text-muted">${category}</span><br/>
+            <span>${address}</span><br/>
+            <small>Services: ${services.length ? services.join(', ') : 'N/A'}</small>
+          </div>
+        </div>
       </div>
-      <div class="col-md-9">
-        <b>${name}</b><br/>
-        <span class="text-muted">${category}</span><br/>
-        <span>${address}</span><br/>
-        <small>Services: ${services.length ? services.join(', ') : 'N/A'}</small>
-      </div>
-    </div>
-  </div>
-`;
-
+    `;
     let largeListing = `
-  <div>
-    ${img? `<div class="mb-3 text-center"><img src="${img}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;"></div>` : ""}
-    <h3>${name}</h3>
-    <div><strong>Category:</strong> ${category}</div>
-    <div><strong>Address:</strong> ${address}</div>
-    <div id="preview-map" style="width:100%;height:150px;border-radius:8px;margin:8px 0;"></div>
-    <div><strong>Phone:</strong> ${phone}</div>
-    <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
-    <div><strong>Email:</strong> {{ biz.business_email }}</div>
-    <div><strong>About us:</strong> ${about}</div>
-    <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
-  </div>
-`;
-
-// Display the cards in your modal
+      <div>
+        ${img? `<div class="mb-3 text-center"><img src="${img}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;"></div>` : ""}
+        <h3>${name}</h3>
+        <div><strong>Category:</strong> ${category}</div>
+        <div><strong>Address:</strong> ${address}</div>
+        <div id="preview-map" style="width:100%;height:150px;border-radius:8px;margin:8px 0;"></div>
+        <div><strong>Phone:</strong> ${phone}</div>
+        <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
+        <div><strong>Email:</strong> {{ biz.business_email }}</div>
+        <div><strong>About us:</strong> ${about}</div>
+        <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
+      </div>
+    `;
     let html = `
-  <div>
-    <h5>Small Listing Preview</h5>
-    ${smallListing}
-    <hr/>
-    <h5>Large Listing Preview</h5>
-    ${largeListing}
-  </div>
-`;
-
-modalContent.innerHTML = html;
-
-// Add map rendering logic inside the preview modal if you want (see below)
-
-
+      <div>
+        <h5>Small Listing Preview</h5>
+        ${smallListing}
+        <hr/>
+        <h5>Large Listing Preview</h5>
+        ${largeListing}
+      </div>
+    `;
     modalContent.innerHTML = html;
-// Render a mini map in preview if there is a lat/lng
-setTimeout(function() {
-  let lat = Number(document.getElementById('latitude')?.value) || 39.8283;
-  let lng = Number(document.getElementById('longitude')?.value) || -98.5795;
-
-  if (window.google && document.getElementById('preview-map')) {
-    let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
-      center: {lat: lat, lng: lng},
-      zoom: 16
-    });
-    new google.maps.Marker({position: {lat: lat, lng: lng}, map: previewMap});
-  }
-}, 200);
+    setTimeout(function() {
+      let lat = Number(document.getElementById('latitude')?.value) || 39.8283;
+      let lng = Number(document.getElementById('longitude')?.value) || -98.5795;
+      if (window.google && document.getElementById('preview-map')) {
+        let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
+          center: {lat: lat, lng: lng},
+          zoom: 16
+        });
+        new google.maps.Marker({position: {lat: lat, lng: lng}, map: previewMap});
+      }
+    }, 200);
     previewModal && previewModal.show();
-  });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const servicesList = document.getElementById('services-list');
-  const addBtn = document.getElementById('addServiceBtn');
-
-  addBtn.addEventListener('click', function() {
-    // Count current fields
-    const count = servicesList.querySelectorAll('.service-field').length;
-    if (count >= 10) return; // Max 10
-
-    // Create new service input group
-    const div = document.createElement('div');
-    div.className = 'input-group mb-2 service-field';
-    div.setAttribute('data-index', count);
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'form-control';
-    input.name = 'service_' + (count + 1);
-    input.maxLength = 100;
-    input.placeholder = 'Service #' + (count + 1);
-
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-outline-danger service-remove';
-    btn.type = 'button';
-    btn.innerHTML = '&minus;';
-    btn.addEventListener('click', function() {
-      if (servicesList.querySelectorAll('.service-field').length > 2) {
-        div.remove();
-      }
-    });
-    // Disable remove for first two fields
-    if (count < 2) btn.disabled = true;
-
-    div.appendChild(input);
-    div.appendChild(btn);
-    servicesList.appendChild(div);
-  });
-
-  // Re-enable remove buttons for >2 fields
-  servicesList.querySelectorAll('.service-field .service-remove').forEach(function(btn, idx) {
-    if (idx >= 2) btn.disabled = false;
-    btn.addEventListener('click', function() {
-      if (servicesList.querySelectorAll('.service-field').length > 2) {
-        btn.parentElement.remove();
-      }
-    });
   });
 });
 </script>
@@ -661,6 +671,5 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 </div>
-
 </body>
 </html>
