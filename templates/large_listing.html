@@ -109,12 +109,15 @@
           {% endif %}
         </div>
         <div class="mb-3 text-center">
+            <a href="javascript:history.back()" class="btn btn-secondary btn-action me-1">
+                &larr; Back to results
+            </a>
             <a href="#" class="btn btn-success btn-action"
-               onclick="alert('Payment portal coming soon!'); return false;">
-              Complete a Purchase
+                onclick="alert('Payment portal coming soon!'); return false;">
+                Complete a Purchase
             </a>
             <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action">
-              Request for Service
+                Request for Service
             </a>
         </div>
     </div>
