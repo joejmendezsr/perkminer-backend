@@ -95,7 +95,6 @@ footer {
   font-size: 1em;
   border-top: 1px solid #e1e7ea;
 }
-
 #map {
   width: 100%;
   height: 300px !important;
@@ -124,7 +123,7 @@ footer {
       {% endif %}
       <div>
         <h2 class="mb-0">
-          Welcome, {{ biz.business_name if biz.business_name else (user_name if user_name else email) }}!
+          Welcome, {{ biz.draft_business_name or biz.business_name or (user_name if user_name else email) }}!
         </h2>
       </div>
       <div class="ms-auto d-flex gap-2 flex-wrap">
@@ -176,6 +175,7 @@ footer {
         <h4>Your Profile</h4>
 <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
   {{ profile_form.hidden_tag() }}
+
   <!-- Profile Photo -->
   <div class="col-12 mb-3 text-center">
     {% if profile_img_url %}
@@ -189,31 +189,53 @@ footer {
   <!-- Business Name -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Name</label>
-    {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
+    <input class="form-control"
+           type="text"
+           name="business_name"
+           value="{{ biz.draft_business_name or biz.business_name }}"
+           placeholder="Enter your business name">
   </div>
 
   <!-- Phone Number -->
   <div class="col-12 mb-3">
     <label class="form-label">Phone Number</label>
-    {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555") }}
+    <input class="form-control"
+           type="text"
+           name="phone_number"
+           id="us-phone"
+           value="{{ biz.draft_phone_number or biz.phone_number }}"
+           placeholder="(555) 555-5555">
     <div class="form-text">Format: (555) 555-5555</div>
   </div>
 
   <!-- Business Address + Map -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Address</label>
-    {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
-    <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
-    <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
+    <input type="text"
+           class="form-control"
+           name="address"
+           id="address-autocomplete"
+           value="{{ biz.draft_address or biz.address }}"
+           placeholder="Business address" autocomplete="off">
+    <input type="hidden" name="latitude" id="latitude" value="{{ biz.draft_latitude or biz.latitude or '' }}">
+    <input type="hidden" name="longitude" id="longitude" value="{{ biz.draft_longitude or biz.longitude or '' }}">
     <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
     <div id="map"></div>
   </div>
+
+  <!-- Website -->
   <div class="col-12 mb-3">
     <label class="form-label">Website</label>
-    <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
-           value="{{ biz.website_url or '' }}" placeholder="https://your-website.com">
+    <input type="url"
+           class="form-control"
+           id="website_url"
+           name="website_url"
+           maxlength="255"
+           value="{{ biz.draft_website_url or biz.website_url or '' }}"
+           placeholder="https://your-website.com">
   </div>
-  <!-- Services Offered Collapse -->
+
+  <!-- Services -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
       Products or Services Offered
@@ -221,16 +243,16 @@ footer {
     <div class="collapse mt-2" id="servicesCollapse">
       <div id="services-list">
         {% set services = [
-          biz.service_1 or '',
-          biz.service_2 or '',
-          biz.service_3 or '',
-          biz.service_4 or '',
-          biz.service_5 or '',
-          biz.service_6 or '',
-          biz.service_7 or '',
-          biz.service_8 or '',
-          biz.service_9 or '',
-          biz.service_10 or ''
+            biz.draft_service1 or biz.service_1 or '',
+            biz.draft_service2 or biz.service_2 or '',
+            biz.draft_service3 or biz.service_3 or '',
+            biz.draft_service4 or biz.service_4 or '',
+            biz.draft_service5 or biz.service_5 or '',
+            biz.draft_service6 or biz.service_6 or '',
+            biz.draft_service7 or biz.service_7 or '',
+            biz.draft_service8 or biz.service_8 or '',
+            biz.draft_service9 or biz.service_9 or '',
+            biz.draft_service10 or biz.service_10 or ''
         ] %}
         {% for s in range(0, 10) %}
           {% if services[s] or s < 2 %}
@@ -245,31 +267,47 @@ footer {
       <small class="text-muted d-block mt-1">Max 10 services.</small>
     </div>
   </div>
+
+  <!-- About Us -->
   <div class="col-12 mb-3">
     <label class="form-label">About Us</label>
-    <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ biz.about_us or '' }}</textarea>
+    <textarea class="form-control"
+              id="about_us"
+              name="about_us"
+              rows="3"
+              maxlength="1000"
+              placeholder="Write about your business (max 1000 characters)">{{ biz.draft_about_us or biz.about_us }}</textarea>
     <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
   </div>
+
+  <!-- Category -->
   <div class="col-12 mb-3">
     <label class="form-label">Category</label>
     <select class="form-select" name="category" id="business_category" required>
       <option value="">Select category...</option>
-      <option value="Handyman-Contractor" {% if biz.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
-      <option value="Auto Parts & Service" {% if biz.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
-      <option value="Home and Garden" {% if biz.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
-      <option value="Retail Outlet" {% if biz.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
-      <option value="Professional Services" {% if biz.category == 'Professional Services' %}selected{% endif %}>Professional Services</option>
-      <option value="Restaurant" {% if biz.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
-      <option value="Real Estate" {% if biz.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+      <option value="Handyman-Contractor" {% if (biz.draft_category or biz.category) == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
+      <option value="Auto Parts & Service" {% if (biz.draft_category or biz.category) == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
+      <option value="Home and Garden" {% if (biz.draft_category or biz.category) == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
+      <option value="Retail Outlet" {% if (biz.draft_category or biz.category) == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
+      <option value="Professional Services" {% if (biz.draft_category or biz.category) == 'Professional Services' %}selected{% endif %}>Professional Services</option>
+      <option value="Restaurant" {% if (biz.draft_category or biz.category) == 'Restaurant' %}selected{% endif %}>Restaurant</option>
+      <option value="Real Estate" {% if (biz.draft_category or biz.category) == 'Real Estate' %}selected{% endif %}>Real Estate</option>
     </select>
   </div>
+
   <!-- Keywords -->
   <div class="col-12 mt-3">
     <label class="form-label">Keywords (for search, separated by commas)</label>
-    <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
+    <input type="text"
+           class="form-control"
+           id="search_keywords"
+           name="search_keywords"
+           maxlength="500"
+           value="{{ biz.draft_search_keywords or biz.search_keywords or '' }}"
+           placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
-  <!-- Status display -->
+
   {% if biz.status %}
     <div class="col-12 mb-2">
       <div class="alert alert-info p-2 mb-0" style="font-size:1.09em; text-align:center;">
@@ -296,10 +334,8 @@ footer {
     <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
     {{ profile_form.submit(class="btn btn-success") }}
   </div>
-
 </form>
-<!-- Submit for Review button OUTSIDE the main profile form -->
-{% if biz.status == "not_submitted" or biz.status == "rejected" %}
+{% if biz.status == "not_submitted" or biz.status == "rejected" or (biz.status == "approved" and (biz.draft_business_name or biz.draft_profile_photo or biz.draft_phone_number or biz.draft_address or biz.draft_latitude or biz.draft_longitude or biz.draft_hours_of_operation or biz.draft_website_url or biz.draft_about_us or biz.draft_search_keywords or biz.draft_service1 or biz.draft_service2 or biz.draft_service3 or biz.draft_service4 or biz.draft_service5 or biz.draft_service6 or biz.draft_service7 or biz.draft_service8 or biz.draft_service9 or biz.draft_service10 or biz.draft_category)) %}
   <div class="col-12 mt-3 d-flex gap-2">
     <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
