@@ -428,7 +428,9 @@ def admin_roles_landing():
 
 @app.route("/")
 def home():
-    return render_template("home.html")
+    approved_listings = Business.query.filter_by(status="approved").all()
+    return render_template("home.html", approved_listings=approved_listings)
+
 @app.route("/business")
 def business_home():
     return render_template("business_home.html")
@@ -437,18 +439,17 @@ def business_home():
 def search():
     q = request.args.get("q", "").strip()
     category = request.args.get("category", "").strip()
-    query = Business.query
+    query = Business.query.filter_by(status="approved")  # add this!
     if category:
         query = query.filter(Business.category == category)
     if q:
-        # Simple ILIKE keyword filter (later: full-text search)
         query = query.filter(Business.search_keywords.ilike(f"%{q}%"))
     results = query.all()
     return render_template("search_results.html", results=results, q=q, category=category)
 
 @app.route("/category/<name>")
 def category_browse(name):
-    results = Business.query.filter(Business.category == name).all()
+    results = Business.query.filter_by(category=name, status="approved").all()  # filter by approved!
     return render_template("category_results.html", results=results, category=name)
 
 @app.route("/intro")
