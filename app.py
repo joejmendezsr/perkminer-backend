@@ -1214,6 +1214,36 @@ def admin_suspend_user(user_id):
     flash(f"User {user.email} {action.lower()}.")
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/admin/listing/<int:listing_id>/start_review", methods=["POST"])
+@role_required("approve_reject_listings")
+def start_review(listing_id):
+    biz = Business.query.get_or_404(listing_id)
+    if biz.status == "pending":
+        biz.status = "in_review"
+        db.session.commit()
+        flash(f"Listing {biz.business_name} is now in review.")
+    return redirect(url_for("approve_reject_dashboard"))
+
+@app.route("/admin/listing/<int:listing_id>/approve", methods=["POST"])
+@role_required("approve_reject_listings")
+def approve_listing(listing_id):
+    biz = Business.query.get_or_404(listing_id)
+    if biz.status in ["pending", "in_review"]:
+        biz.status = "approved"
+        db.session.commit()
+        flash(f"Listing {biz.business_name} approved!")
+    return redirect(url_for("approve_reject_dashboard"))
+
+@app.route("/admin/listing/<int:listing_id>/reject", methods=["POST"])
+@role_required("approve_reject_listings")
+def reject_listing(listing_id):
+    biz = Business.query.get_or_404(listing_id)
+    if biz.status in ["pending", "in_review"]:
+        biz.status = "rejected"
+        db.session.commit()
+        flash(f"Listing {biz.business_name} rejected.")
+    return redirect(url_for("approve_reject_dashboard"))
+
 @app.route("/admin/assign-roles", methods=["GET", "POST"])
 @role_required("super_admin")
 def assign_roles():
