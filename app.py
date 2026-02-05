@@ -160,6 +160,27 @@ class Business(db.Model):
     service_9 = db.Column(db.String(100))
     service_10 = db.Column(db.String(100))
     search_keywords = db.Column(db.String(500))
+    draft_business_name = db.Column(db.String(100))
+    draft_profile_photo = db.Column(db.String(200))
+    draft_phone_number = db.Column(db.String(30))
+    draft_address = db.Column(db.String(255))
+    draft_latitude = db.Column(db.Float)
+    draft_longitude = db.Column(db.Float)
+    draft_hours_of_operation = db.Column(db.String(100))
+    draft_website_url = db.Column(db.String(255))
+    draft_about_us = db.Column(db.Text)
+    draft_search_keywords = db.Column(db.String(500))
+    draft_service1 = db.Column(db.String(100))
+    draft_service2 = db.Column(db.String(100))
+    draft_service3 = db.Column(db.String(100))
+    draft_service4 = db.Column(db.String(100))
+    draft_service5 = db.Column(db.String(100))
+    draft_service6 = db.Column(db.String(100))
+    draft_service7 = db.Column(db.String(100))
+    draft_service8 = db.Column(db.String(100))
+    draft_service9 = db.Column(db.String(100))
+    draft_service10 = db.Column(db.String(100))
+    draft_category = db.Column(db.String(50))
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
 
@@ -989,42 +1010,72 @@ def business_dashboard():
         return request.form.get(f"service_{n}", "")
 
     if request.method == "POST":
-        updated = False
-        # Business profile fields—set updated=True for any real change
-        if 'business_name' in request.form:
+        # Choose draft or live editing based on status
+        if biz.status == "approved":
+            # Save ONLY to draft fields
+            biz.draft_business_name = request.form.get('business_name', biz.business_name)
+            biz.draft_category = request.form.get('category', biz.category)
+            biz.draft_phone_number = request.form.get('phone_number', biz.phone_number)
+            biz.draft_address = request.form.get('address', biz.address)
+            try:
+                if request.form.get('latitude'):
+                    biz.draft_latitude = float(request.form.get('latitude'))
+                if request.form.get('longitude'):
+                    biz.draft_longitude = float(request.form.get('longitude'))
+            except ValueError:
+                pass
+            file = request.files.get('profile_photo')
+            if file and allowed_file(file.filename):
+                upload_result = cloudinary.uploader.upload(file)
+                biz.draft_profile_photo = upload_result.get('secure_url')
+            biz.draft_hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+            biz.draft_website_url = request.form.get('website_url', biz.website_url)
+            biz.draft_about_us = request.form.get('about_us', biz.about_us)
+            biz.draft_search_keywords = request.form.get('search_keywords', biz.search_keywords)
+            for n in range(1, 11):
+                biz.__setattr__(f'draft_service{n}', request.form.get(f'service_{n}', getattr(biz, f'service_{n}')))
+            db.session.commit()
+            flash("Changes saved! Click 'Submit for Approval' to make your edits live.")
+
+        else:
+            # If not approved/pending, update live/main fields (as before)
             biz.business_name = request.form.get('business_name', biz.business_name)
-            updated = True
-        if 'category' in request.form:
             biz.category = request.form.get('category', biz.category)
-            updated = True
-        biz.phone_number = request.form.get('phone_number', biz.phone_number)
-        biz.address = request.form.get('address', biz.address)
-        try:
-            if request.form.get('latitude'):
-                biz.latitude = float(request.form.get('latitude'))
-            if request.form.get('longitude'):
-                biz.longitude = float(request.form.get('longitude'))
-        except ValueError:
-            pass
-        file = request.files.get('profile_photo')
-        if file and allowed_file(file.filename):
-            upload_result = cloudinary.uploader.upload(file)
-            biz.profile_photo = upload_result.get('secure_url')
-            updated = True
-        biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
-        biz.website_url = request.form.get('website_url', biz.website_url)
-        biz.about_us = request.form.get('about_us', biz.about_us)
-        biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
-        for n in range(1, 11):
-            setattr(biz, f'service_{n}', get_service_field(n))
-        if updated:
+            biz.phone_number = request.form.get('phone_number', biz.phone_number)
+            biz.address = request.form.get('address', biz.address)
+            try:
+                if request.form.get('latitude'):
+                    biz.latitude = float(request.form.get('latitude'))
+                if request.form.get('longitude'):
+                    biz.longitude = float(request.form.get('longitude'))
+            except ValueError:
+                pass
+            file = request.files.get('profile_photo')
+            if file and allowed_file(file.filename):
+                upload_result = cloudinary.uploader.upload(file)
+                biz.profile_photo = upload_result.get('secure_url')
+            biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+            biz.website_url = request.form.get('website_url', biz.website_url)
+            biz.about_us = request.form.get('about_us', biz.about_us)
+            biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
+            for n in range(1, 11):
+                biz.__setattr__(f'service_{n}', request.form.get(f'service_{n}', getattr(biz, f'service_{n}')))
             db.session.commit()
             flash("Business profile updated!")
+
         return redirect(url_for('business_dashboard'))
 
-    latitude = biz.latitude if biz.latitude else ""
-    longitude = biz.longitude if biz.longitude else ""
-    profile_img_url = biz.profile_photo if biz.profile_photo else None
+    # Use draft fields for the form display if they exist, otherwise the live values
+    def get_field(field, draft_field):
+        draft_val = getattr(biz, draft_field, None)
+        live_val = getattr(biz, field, "")
+        return draft_val if draft_val is not None else live_val
+
+    latitude = get_field('latitude', 'draft_latitude')
+    longitude = get_field('longitude', 'draft_longitude')
+    profile_img_url = get_field('profile_photo', 'draft_profile_photo')
+    phone_number = get_field('phone_number', 'draft_phone_number')
+    address = get_field('address', 'draft_address')
 
     # Reward calculator logic (unchanged)
     if request.method == "GET":
@@ -1082,8 +1133,8 @@ def business_dashboard():
         rewards_table=rewards_table,
         level2=level2, level3=level3, level4=level4, level5=level5,
         profile_img_url=profile_img_url,
-        phone_number=biz.phone_number,
-        address=biz.address,
+        phone_number=phone_number,
+        address=address,
         latitude=latitude,
         longitude=longitude
     )
@@ -1311,6 +1362,20 @@ def send_for_review():
 
     biz = Business.query.get(listing_id)
     if biz:
+        # List all fields that use draft columns
+        draft_fields = [
+            "business_name", "profile_photo", "phone_number", "address",
+            "latitude", "longitude", "hours_of_operation", "website_url",
+            "about_us", "search_keywords", "category"
+        ] + [f"service{n}" for n in range(1, 11)]
+
+        # Copy drafts to main fields and clear the drafts
+        for field in draft_fields:
+            draft_val = getattr(biz, f"draft_{field}", None)
+            if draft_val not in [None, ""]:
+                setattr(biz, field if not field.startswith("service") else f"service_{field[-1]}", draft_val)
+            setattr(biz, f"draft_{field}", None)
+
         biz.status = "pending"
         db.session.commit()
         flash("Listing submitted for admin review. You will be notified after a decision.")
