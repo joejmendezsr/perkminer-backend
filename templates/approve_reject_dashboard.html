@@ -38,9 +38,31 @@
                     <span class="badge rounded-pill bg-warning text-dark">In Review</span>
                   {% endif %}
                 </td>
-                <td>
-                  <!-- Your approve/reject/in-review buttons go here in the next steps -->
-                  <button class="btn btn-primary btn-sm" disabled>Review</button>
+                <td class="d-flex gap-1">
+                  <!-- Start Review -->
+                  <form method="post" action="{{ url_for('start_review', listing_id=biz.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-sm"
+                      {% if biz.status != "pending" %}disabled{% endif %}>
+                      Start Review
+                    </button>
+                  </form>
+                  <!-- Approve -->
+                  <form method="post" action="{{ url_for('approve_listing', listing_id=biz.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success btn-sm"
+                      {% if biz.status != "in_review" %}disabled{% endif %}>
+                      Approve
+                    </button>
+                  </form>
+                  <!-- Reject -->
+                  <form method="post" action="{{ url_for('reject_listing', listing_id=biz.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                      {% if biz.status != "in_review" %}disabled{% endif %}>
+                      Reject
+                    </button>
+                  </form>
                 </td>
               </tr>
             {% endfor %}
