@@ -302,6 +302,7 @@ footer {
 {% if biz.status == "not_submitted" or biz.status == "rejected" %}
   <div class="col-12 mt-3 d-flex gap-2">
     <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="listing_id" value="{{ biz.id }}">
       <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
       <button type="submit" class="btn btn-warning w-100">Submit for Review</button>
@@ -425,7 +426,7 @@ footer {
   </div>
   <div class="card p-4 text-center">
     <h4>This is your dashboard.</h4>
-    <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+    <p class="mb-0">Congrats on registering your business with PerkMiner!</p>
   </div>
   {% with messages = get_flashed_messages() %}
     {% if messages %}
