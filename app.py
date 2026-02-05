@@ -1346,6 +1346,14 @@ def admin_delete_business(business_id):
     flash(f"Business {biz.business_name} deleted.")
     return redirect(url_for("admin_dashboard"))
 
+from flask_login import login_required
+
+@app.route("/listing/<int:biz_id>")
+@login_required
+def view_listing(biz_id):
+    biz = Business.query.get_or_404(biz_id)
+    return render_template("large_listing.html", biz=biz)
+
 @app.route("/seed_admins_once")
 def seed_admins_once():
     from app import db, User, Role, bcrypt
