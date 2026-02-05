@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ biz.business_name }} - Details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+    :root {
+        --pm-primary: #2a5859;
+        --pm-accent: #ffd66b;
+    }
+    .profile-pic {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 50%;
+        background: #e6f6f5;
+        border: 2px solid var(--pm-primary);
+        margin-bottom: 18px;
+        margin-top: 8px;
+    }
+    .main-info div { margin-bottom: 8px; }
+    .btn-action {
+        min-width: 190px;
+        font-weight: 500;
+        margin: 8px 12px 8px 0;
+    }
+    .service-list { margin:0; padding-left:20px; }
+    </style>
+</head>
+<body>
+<div class="container py-4" style="max-width:700px;">
+    <div class="card shadow p-4">
+        <div class="text-center">
+            {% if biz.profile_photo %}
+                <img src="{{ biz.profile_photo }}" alt="Logo" class="profile-pic">
+            {% else %}
+                <div class="profile-pic d-flex align-items-center justify-content-center bg-light border">
+                    <i class="bi bi-buildings" style="font-size:2.4em; color:var(--pm-primary);"></i>
+                </div>
+            {% endif %}
+            <h2 class="fw-bold mb-1 mt-2">{{ biz.business_name }}</h2>
+            <div class="text-muted fst-italic mb-2">{{ biz.category }}</div>
+        </div>
+        <div class="main-info mt-3">
+            <div>
+                <i class="bi bi-pin-map me-1"></i>
+                <strong>Address:</strong> {{ biz.address or '-' }}
+            </div>
+            <div>
+                <i class="bi bi-telephone me-1"></i>
+                <strong>Phone:</strong> {{ biz.phone_number or '-' }}
+            </div>
+            <div>
+                <i class="bi bi-envelope me-1"></i>
+                <strong>Email:</strong> {{ biz.business_email or '-' }}
+            </div>
+            <div>
+                <i class="bi bi-globe me-1"></i>
+                <strong>Website:</strong>
+                {% if biz.website_url %}
+                  <a href="{{ biz.website_url }}" target="_blank" rel="noopener">{{ biz.website_url }}</a>
+                {% else %} - {% endif %}
+            </div>
+        </div>
+        <div class="my-3">
+            <strong>About Us:</strong>
+            <div class="border rounded p-2 bg-light" style="min-height:60px;">
+                {{ biz.about_us or '—' }}
+            </div>
+        </div>
+        <div class="mb-3">
+            <strong>Products or Services Offered:</strong>
+            <ul class="service-list">
+                {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+                {% set shown = false %}
+                {% for s in services %}{% if s %}
+                    <li>{{ s }}</li>
+                    {% set shown = true %}
+                {% endif %}{% endfor %}
+                {% if not shown %}
+                  <li>N/A</li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="mb-4">
+          <strong>Location Map:</strong>
+          {% if biz.latitude and biz.longitude %}
+            <div style="width:100%;height:230px; border-radius:10px; overflow:hidden;">
+              <iframe
+                width="100%" height="230" style="border:0"
+                loading="lazy" allowfullscreen
+                referrerpolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4
+                &q={{ biz.latitude }},{{ biz.longitude }}">
+              </iframe>
+            </div>
+          {% else %}
+            <div class="text-muted">Map unavailable</div>
+          {% endif %}
+        </div>
+        <div class="mb-3 text-center">
+            <a href="#" class="btn btn-success btn-action"
+               onclick="alert('Payment portal coming soon!'); return false;">
+              Complete a Purchase
+            </a>
+            <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action">
+              Request for Service
+            </a>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
