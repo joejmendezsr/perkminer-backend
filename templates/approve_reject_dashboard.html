@@ -38,7 +38,7 @@
                     <span class="badge rounded-pill bg-warning text-dark">In Review</span>
                   {% endif %}
                 </td>
-                <td class="d-flex gap-1">
+                <td class="d-flex gap-1 align-items-center" style="min-width:200px;">
                   <!-- Start Review -->
                   <form method="post" action="{{ url_for('start_review', listing_id=biz.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -63,6 +63,59 @@
                       Reject
                     </button>
                   </form>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="6" class="bg-light">
+                  <!-- Small Listing Preview -->
+                  <div class="mb-3 p-2 border rounded bg-white">
+                    <strong>Small Preview</strong>
+                    <div class="d-flex align-items-center mt-1 mb-2">
+                      {% if biz.profile_photo %}
+                        <img src="{{ biz.profile_photo }}" class="rounded-circle me-3" style="width:60px; height:60px; object-fit:cover;">
+                      {% endif %}
+                      <div>
+                        <b>{{ biz.business_name }}</b><br/>
+                        <span class="text-muted">{{ biz.category }}</span><br/>
+                        <span>{{ biz.address }}</span><br/>
+                        <small>
+                          Services:
+                          {%- set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+                          {{ services|select('string')|reject('equalto','')|join(', ') if services|select('string')|reject('equalto','')|list else 'N/A' }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Large Listing Preview -->
+                  <div class="p-2 border rounded bg-white">
+                    <strong>Large Preview</strong>
+                    <div class="mb-2">
+                      {% if biz.profile_photo %}
+                        <img src="{{ biz.profile_photo }}" class="rounded-circle mb-2" style="width:100px; height:100px; object-fit:cover;">
+                      {% endif %}
+                      <h4>{{ biz.business_name }}</h4>
+                      <div><b>Category:</b> {{ biz.category }}</div>
+                      <div><b>Address:</b> {{ biz.address }}</div>
+                      <div><b>Phone:</b> {{ biz.phone_number }}</div>
+                      <div><b>Email:</b> {{ biz.business_email }}</div>
+                      <div><b>Website:</b>
+                        {% if biz.website_url %}
+                          <a href="{{ biz.website_url }}" target="_blank">{{ biz.website_url }}</a>
+                        {% else %} - {% endif %}
+                      </div>
+                      <div><b>About us:</b> {{ biz.about_us }}</div>
+                      <div><b>Services:</b>
+                        <ul style="padding-left: 20px;">
+                          {%- for s in [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] if s %}
+                            <li>{{ s }}</li>
+                          {%- endfor %}
+                          {% if not (biz.service_1 or biz.service_2 or biz.service_3 or biz.service_4 or biz.service_5 or biz.service_6 or biz.service_7 or biz.service_8 or biz.service_9 or biz.service_10) %}
+                            <li>N/A</li>
+                          {% endif %}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             {% endfor %}
