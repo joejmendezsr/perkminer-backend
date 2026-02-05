@@ -1265,11 +1265,6 @@ def reject_listing(listing_id):
         flash(f"Listing {biz.business_name} rejected.")
     return redirect(url_for("approve_reject_dashboard"))
 
-@app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
-@login_required
-def service_request(biz_id):
-    ...
-
 @app.route("/admin/assign-roles", methods=["GET", "POST"])
 @role_required("super_admin")
 def assign_roles():
