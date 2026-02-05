@@ -30,6 +30,7 @@ body > nav {
   opacity: 0;
   transform: translateY(30px);
   animation: fadeinCard 0.7s ease forwards;
+  cursor: pointer;
 }
 @keyframes fadeinCard {
   to { opacity: 1; transform: none; }
@@ -160,10 +161,12 @@ footer {
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="biz-results" aria-busy="false">
         {% for biz in results %}
           <div class="col">
-            <div class="card h-100 shadow-sm" tabindex="0" aria-label="{{ biz.business_name }}">
+            <div class="card h-100 shadow-sm small-listing-card"
+                tabindex="0" aria-label="{{ biz.business_name }}"
+                onclick="window.location.href='{{ url_for('view_listing', biz_id=biz.id) }}'">
               <div class="card-body text-center">
                 {% if biz.profile_photo %}
-                  <img src="{{ url_for('uploaded_file', filename=biz.profile_photo) }}" class="biz-photo mb-2" alt="{{ biz.business_name }} logo" width="70" height="70">
+                  <img src="{{ biz.profile_photo }}" class="biz-photo mb-2" alt="{{ biz.business_name }} logo" width="70" height="70">
                 {% else %}
                   <i class="bi bi-{{ categories | selectattr('name','equalto',biz.category) | map(attribute='icon') | list | first or 'grid-3x3-gap' }} category-icon" aria-hidden="true"></i>
                 {% endif %}
@@ -172,17 +175,15 @@ footer {
                   <i class="bi bi-tag-fill" style="font-size:1em; color:var(--pm-primary);"></i>
                   {{ biz.category }}
                 </div>
-                {% if biz.website_url %}
-                  <div class="mb-1"><strong>Website:</strong>
-                    <a href="{{ biz.website_url }}" target="_blank" rel="noopener" style="word-break:break-all;">{{ biz.website_url }}</a>
-                  </div>
-                {% endif %}
                 {% if biz.address %}
                   <div class="mb-1"><strong>Address:</strong> {{ biz.address }}</div>
                 {% endif %}
-                {% if biz.about_us %}
-                  <div class="mb-1"><strong>About:</strong> {{ biz.about_us[:120] }}{% if biz.about_us|length > 120 %}...{% endif %}</div>
-                {% endif %}
+                <div class="mb-1">
+                  <strong>Services:</strong>
+                  {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+                  {{ services|select('string')|reject('equalto','')|join(', ') if services|select('string')|reject('equalto','')|list else 'N/A' }}
+                </div>
+                <!-- You can add feedback rating stars here in the future -->
               </div>
             </div>
           </div>
