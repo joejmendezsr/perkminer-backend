@@ -1175,7 +1175,9 @@ def finance_dashboard():
 @app.route("/approve-reject-dashboard")
 @role_required("approve_reject_listings")
 def approve_reject_dashboard():
-    return render_template("approve_reject_dashboard.html")
+    # Query all pending or in_review businesses
+    pending_listings = Business.query.filter(Business.status.in_(["pending", "in_review"])).all()
+    return render_template("approve_reject_dashboard.html", pending_listings=pending_listings)
 
 @app.route("/feedback-dashboard")
 @role_required("feedback_moderation")
