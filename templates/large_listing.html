@@ -109,7 +109,7 @@
           {% endif %}
         </div>
         <div class="mb-3 text-center">
-            <a href="javascript:history.back()" class="btn btn-secondary btn-action me-1">
+            <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action me-1">
                 &larr; Back to results
             </a>
             <a href="#" class="btn btn-success btn-action"
