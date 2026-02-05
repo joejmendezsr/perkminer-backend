@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-        /* ... your full CSS from before ... */
         :root {
           --pm-primary: #2a5859;
           --pm-accent: #ffd66b;
@@ -98,7 +97,6 @@
         }
     </style>
     <script>
-      // ... your reward/network JS unchanged ...
       function calculateNetworkEarnings() {
         let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
         let amount = parseFloat(document.getElementById('network_amount').value) || 0;
@@ -149,12 +147,20 @@
     </script>
 </head>
 <body>
-<div class="navbar-nav ms-auto">
-    <span class="nav-link disabled">{{ email }}</span>
-</div>
+<!-- Persistent navbar with home link -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+  <div class="container">
+      <a class="navbar-brand" href="/">PerkMiner</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="{{ url_for('home') }}">
+          <i class="bi bi-house-door"></i> Back to Home
+        </a>
+        <span class="nav-link disabled">{{ email }}</span>
+      </div>
+  </div>
+</nav>
 
 <!-- ==== Admin Area Button (only for admin users) ==== -->
-
 {% if current_user.has_role('finance') 
    or current_user.has_role('approve_reject_listings')
    or current_user.has_role('feedback_moderation')
@@ -167,7 +173,8 @@
   </div>
 {% endif %}
 
-<!-- The rest of your dashboard untouched -->
+<div class="container">
+
 <div class="card mb-4 p-4">
   <div class="d-flex align-items-center flex-wrap mb-3">
     {% if profile_img_url %}
@@ -184,7 +191,6 @@
   </div>
 </div>
 
-<!-- Stacked action buttons under the top card -->
 <div class="card p-4 mb-4">
   <div class="mb-3">
     <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
@@ -201,177 +207,177 @@
     </button>
   </div>
 </div>
-    <!-- Invite Modal -->
-    <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form class="modal-content" method="post" action="{{ url_for('invite') }}">
-          {{ invite_form.hidden_tag() }}
-          <div class="modal-header">
-            <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
-            {{ invite_form.invitee_email(class="form-control", id="invitee-email", placeholder="Enter email to invite", required=True) }}
-          </div>
-          <div class="modal-footer">
-            {{ invite_form.submit(class="btn btn-primary") }}
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
+<!-- Invite Modal -->
+<div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('invite') }}">
+      {{ invite_form.hidden_tag() }}
+      <div class="modal-header">
+        <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-    </div>
-
-    <!-- Profile Edit Section -->
-    <div class="collapse mb-4" id="profileCollapse">
-      <div class="card p-4">
-        <h4>Your Profile</h4>
-        <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
-          {{ profile_form.hidden_tag() }}
-          <div class="col-12 mb-3 text-center">
-            {% if profile_img_url %}
-              <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
-            {% else %}
-              <div class="placeholder-pic">No Image</div>
-            {% endif %}
-            <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
-          </div>
-          <div class="col-12 mb-3">
-            <label class="form-label">Name</label>
-            {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
-          </div>          <div class="col-12 col-md-auto">
-            {{ profile_form.submit(class="btn btn-success") }}
-          </div>
-        </form>
+      <div class="modal-body">
+        <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
+        {{ invite_form.invitee_email(class="form-control", id="invitee-email", placeholder="Enter email to invite", required=True) }}
       </div>
-    </div>
+      <div class="modal-footer">
+        {{ invite_form.submit(class="btn btn-primary") }}
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </form>
   </div>
+</div>
 
-        <div class="card p-4 mb-4">
-          <h4>Your Referral Code</h4>
-          <div class="mb-0"><b>{{ referral_code }}</b></div>
-        </div>
-          <div class="card p-4 mb-4">
-            <div>
-              <small class="text-muted">
-                {% if sponsor %}
-                  Sponsored by: {{ sponsor.name or sponsor.email }}
-                {% endif %}
-              </small>
-            </div>
-          </div>
- 
-  <div class="card p-4 mb-4">
-    <h4>Estimate Your Rewards From One Single Purchase</h4>
-    <div class="row g-3 mb-3">
-      <div class="col-12 col-md-auto">
-        <input id="reward_amount" type="number" class="form-control" placeholder="Amount (e.g. 500)" max="2500" required>
+<!-- Profile Edit Section -->
+<div class="collapse mb-4" id="profileCollapse">
+  <div class="card p-4">
+    <h4>Your Profile</h4>
+    <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+      {{ profile_form.hidden_tag() }}
+      <div class="col-12 mb-3 text-center">
+        {% if profile_img_url %}
+          <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
+        {% else %}
+          <div class="placeholder-pic">No Image</div>
+        {% endif %}
+        <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
+      </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">Name</label>
+        {{ profile_form.name(class="form-control", value=user_name, placeholder="Enter your name") }}
       </div>
       <div class="col-12 col-md-auto">
-        <select id="reward_tier" class="form-select" required>
-            <option value="1" selected>Tier 1 (your purchases)</option>
-            <option value="2">Tier 2 (direct referral purchases)</option>
-            <option value="3">Tier 3 (Tier 2 referral purchases)</option>
-            <option value="4">Tier 4 (Tier 3 referral purchases)</option>
-            <option value="5">Tier 5 (Tier 4 referral purchases)</option>
-        </select>
+        {{ profile_form.submit(class="btn btn-success") }}
       </div>
-      <div class="col-12 col-md-auto">
-        <button type="button" class="btn btn-primary" onclick="calculateSingleReward()">Calculate My Reward</button>
-      </div>
-    </div>
-    <div id="rewards_output">
-      {{ rewards_table | safe }}
-    </div>
+    </form>
   </div>
+</div>
 
-  <div class="card p-4 mb-4">
-    <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
-    <div class="mb-2">
-      <label>If you and everyone in your network refers 
-        <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
-        people and you each make one purchase during the month in the amount of $ 
-        <input id="network_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
-        , this is how much you would earn in Cashback Rewards for the month:
-      </label>
-      <small class="text-muted d-block">*Maximum purchase amount allowed is $2,500</small>
+<div class="card p-4 mb-4">
+  <h4>Your Referral Code</h4>
+  <div class="mb-0"><b>{{ referral_code }}</b></div>
+</div>
+<div class="card p-4 mb-4">
+    <div>
+      <small class="text-muted">
+        {% if sponsor %}
+          Sponsored by: {{ sponsor.name or sponsor.email }}
+        {% endif %}
+      </small>
     </div>
-    <button class="btn btn-info mb-2" type="button" onclick="calculateNetworkEarnings()">Calculate</button>
-    <div id="network_results" style="display:none;">
-      <ul class="mb-1">
-        <li>Tier One: (Your purchases) = <span id="network_t1"></span></li>
-        <li>Tier Two: (Purchases from your direct referrals) = <span id="network_t2"></span></li>
-        <li>Tier Three: (Purchases from 2nd Tier referrals) = <span id="network_t3"></span></li>
-        <li>Tier Four: (Purchases from 3rd Tier referrals) = <span id="network_t4"></span></li>
-        <li>Tier Five: (Purchases from 4th Tier referrals) = <span id="network_t5"></span></li>
-      </ul>
-      <strong>Your total cashback earnings for the month would be $<span id="network_total"></span></strong>
+</div>
+
+<div class="card p-4 mb-4">
+  <h4>Estimate Your Rewards From One Single Purchase</h4>
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-md-auto">
+      <input id="reward_amount" type="number" class="form-control" placeholder="Amount (e.g. 500)" max="2500" required>
+    </div>
+    <div class="col-12 col-md-auto">
+      <select id="reward_tier" class="form-select" required>
+          <option value="1" selected>Tier 1 (your purchases)</option>
+          <option value="2">Tier 2 (direct referral purchases)</option>
+          <option value="3">Tier 3 (Tier 2 referral purchases)</option>
+          <option value="4">Tier 4 (Tier 3 referral purchases)</option>
+          <option value="5">Tier 5 (Tier 4 referral purchases)</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-auto">
+      <button type="button" class="btn btn-primary" onclick="calculateSingleReward()">Calculate My Reward</button>
     </div>
   </div>
-  <div class="card p-4 mb-4">
-    <h4>My Network</h4>
-    <div>
-      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier2" aria-expanded="false" aria-controls="tier2">
-        Tier 2 (direct referrals)
-      </a>
-      <div class="collapse mt-2" id="tier2">
-        {% if level2 %}
-          <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-        {% else %}
-          <span>None</span>
-        {% endif %}
-      </div>
-    </div>
-    <div>
-      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier3" aria-expanded="false" aria-controls="tier3">
-        Tier 3 (referred by Tier 2 people)
-      </a>
-      <div class="collapse mt-2" id="tier3">
-        {% if level3 %}
-          <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-        {% else %}
-          <span>None</span>
-        {% endif %}
-      </div>
-    </div>
-    <div>
-      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier4" aria-expanded="false" aria-controls="tier4">
-        Tier 4 (referred by Tier 3 people)
-      </a>
-      <div class="collapse mt-2" id="tier4">
-        {% if level4 %}
-          <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-        {% else %}
-          <span>None</span>
-        {% endif %}
-      </div>
-    </div>
-    <div>
-      <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier5" aria-expanded="false" aria-controls="tier5">
-        Tier 5 (referred by Tier 4 people)
-      </a>
-      <div class="collapse mt-2" id="tier5">
-        {% if level5 %}
-          <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
-        {% else %}
-          <span>None</span>
-        {% endif %}
-      </div>
+  <div id="rewards_output">
+    {{ rewards_table | safe }}
+  </div>
+</div>
+
+<div class="card p-4 mb-4">
+  <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
+  <div class="mb-2">
+    <label>If you and everyone in your network refers 
+      <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="2" style="width:80px;" />
+      people and you each make one purchase during the month in the amount of $ 
+      <input id="network_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
+      , this is how much you would earn in Cashback Rewards for the month:
+    </label>
+    <small class="text-muted d-block">*Maximum purchase amount allowed is $2,500</small>
+  </div>
+  <button class="btn btn-info mb-2" type="button" onclick="calculateNetworkEarnings()">Calculate</button>
+  <div id="network_results" style="display:none;">
+    <ul class="mb-1">
+      <li>Tier One: (Your purchases) = <span id="network_t1"></span></li>
+      <li>Tier Two: (Purchases from your direct referrals) = <span id="network_t2"></span></li>
+      <li>Tier Three: (Purchases from 2nd Tier referrals) = <span id="network_t3"></span></li>
+      <li>Tier Four: (Purchases from 3rd Tier referrals) = <span id="network_t4"></span></li>
+      <li>Tier Five: (Purchases from 4th Tier referrals) = <span id="network_t5"></span></li>
+    </ul>
+    <strong>Your total cashback earnings for the month would be $<span id="network_total"></span></strong>
+  </div>
+</div>
+<div class="card p-4 mb-4">
+  <h4>My Network</h4>
+  <div>
+    <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier2" aria-expanded="false" aria-controls="tier2">
+      Tier 2 (direct referrals)
+    </a>
+    <div class="collapse mt-2" id="tier2">
+      {% if level2 %}
+        <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+      {% else %}
+        <span>None</span>
+      {% endif %}
     </div>
   </div>
-  <div class="card p-4 text-center">
-    <h4>This is your dashboard.</h4>
-    <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+  <div>
+    <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier3" aria-expanded="false" aria-controls="tier3">
+      Tier 3 (referred by Tier 2 people)
+    </a>
+    <div class="collapse mt-2" id="tier3">
+      {% if level3 %}
+        <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+      {% else %}
+        <span>None</span>
+      {% endif %}
+    </div>
   </div>
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div class="alert alert-warning mt-3">
-        {% for message in messages %}
-          {{ message }}<br>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+  <div>
+    <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier4" aria-expanded="false" aria-controls="tier4">
+      Tier 4 (referred by Tier 3 people)
+    </a>
+    <div class="collapse mt-2" id="tier4">
+      {% if level4 %}
+        <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+      {% else %}
+        <span>None</span>
+      {% endif %}
+    </div>
+  </div>
+  <div>
+    <a role="button" class="fw-semibold text-primary" data-bs-toggle="collapse" href="#tier5" aria-expanded="false" aria-controls="tier5">
+      Tier 5 (referred by Tier 4 people)
+    </a>
+    <div class="collapse mt-2" id="tier5">
+      {% if level5 %}
+        <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+      {% else %}
+        <span>None</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="card p-4 text-center">
+  <h4>This is your dashboard.</h4>
+  <p class="mb-0">Congrats on building a secure, styled Python web app!</p>
+</div>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="alert alert-warning mt-3">
+      {% for message in messages %}
+        {{ message }}<br>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
 </div>
 <footer>

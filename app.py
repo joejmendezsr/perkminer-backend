@@ -18,6 +18,26 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Length
 from flask_wtf import RecaptchaField
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from flask_wtf import FlaskForm
+from wtforms import SelectField, TextAreaField, DecimalField, SubmitField
+from wtforms.validators import DataRequired, NumberRange, Length
+
+class ServiceRequestForm(FlaskForm):
+    service_type = SelectField(
+        "Type of Service Requested",
+        choices=[
+            ("handyman", "Handyman Service"),
+            ("contractor", "Contractor Services"),
+            ("cleaning", "Cleaning Services"),
+            ("lawn", "Lawn Care"),
+            # Add more as needed
+        ],
+        validators=[DataRequired()]
+    )
+    details = TextAreaField("Service Details", validators=[DataRequired(), Length(max=1000)])
+    budget_low = DecimalField("Budget (Low End)", validators=[NumberRange(min=0)], default=0)
+    budget_high = DecimalField("Budget (High End)", validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField("Submit Request")
 
 class TwoFactorForm(FlaskForm):
     code = StringField('Enter the 6-digit code', validators=[DataRequired(), Length(min=6, max=6)])
@@ -1245,6 +1265,11 @@ def reject_listing(listing_id):
         flash(f"Listing {biz.business_name} rejected.")
     return redirect(url_for("approve_reject_dashboard"))
 
+@app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
+@login_required
+def service_request(biz_id):
+    ...
+
 @app.route("/admin/assign-roles", methods=["GET", "POST"])
 @role_required("super_admin")
 def assign_roles():
@@ -1353,6 +1378,17 @@ from flask_login import login_required
 def view_listing(biz_id):
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
+
+@app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
+@login_required
+def service_request(biz_id):
+    biz = Business.query.get_or_404(biz_id)
+    form = ServiceRequestForm()
+    if form.validate_on_submit():
+        # You will save or process the request here
+        flash("Service request submitted! (AI cost suggestion coming soon.)")
+        return redirect(url_for('view_listing', biz_id=biz.id))
+    return render_template("service_request.html", form=form, biz=biz)
 
 @app.route("/seed_admins_once")
 def seed_admins_once():
