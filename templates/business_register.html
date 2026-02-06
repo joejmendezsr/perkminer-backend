@@ -12,7 +12,7 @@
                 <div class="card shadow p-4">
                     <h2 class="mb-4 text-center">Business Registration</h2>
                     <form method="post" class="mb-3">
-                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             {{ form.business_name(class="form-control", placeholder="Business Name (will be visible)", required=True) }}
                             {% if form.business_name.errors %}
