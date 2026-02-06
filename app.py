@@ -77,7 +77,7 @@ cloudinary.config(
   api_secret = 'cLtDoC44BarYjVrr3dIgi_0XiKo'
 )
 
-app = Flask(name)
+app = Flask(__name__)
 app.config['SECRET_KEY'] = 'perkminer_hardcoded_secret_2026'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
