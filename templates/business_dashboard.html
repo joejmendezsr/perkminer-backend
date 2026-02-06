@@ -14,16 +14,9 @@
   --pm-hover: #e6f6f5;
   --pm-focus: #fadd92;
 }
-body {
-  background: var(--pm-bg);
-  color: var(--pm-text);
-}
-body > nav {
-  margin-bottom: 2rem !important;
-}
-.navbar {
-  box-shadow: 0 2px 8px #f0f2f3;
-}
+body { background: var(--pm-bg); color: var(--pm-text);}
+body > nav { margin-bottom: 2rem !important;}
+.navbar { box-shadow: 0 2px 8px #f0f2f3;}
 .card, .dashboard-section {
   background: #f8fafb;
   border-radius: 16px;
@@ -31,78 +24,35 @@ body > nav {
   margin-bottom: 1.5rem;
   transition: box-shadow 0.2s;
 }
-.card:hover, .dashboard-section:hover {
-  box-shadow: 0 6px 24px #d2eced;
-}
+.card:hover, .dashboard-section:hover { box-shadow: 0 6px 24px #d2eced;}
 .profile-pic {
-  width: 84px;
-  height: 84px;
-  object-fit: cover;
-  border-radius: 50%;
-  background: var(--pm-hover);
-  border: 2px solid var(--pm-primary);
+  width: 84px; height: 84px; object-fit: cover; border-radius: 50%;
+  background: var(--pm-hover); border: 2px solid var(--pm-primary);
 }
 .placeholder-pic {
   width: 84px; height: 84px; border-radius: 50%;
-  background: #e6f6f5;
-  color: var(--pm-primary);
+  background: #e6f6f5; color: var(--pm-primary);
   display: flex; align-items: center; justify-content: center;
-  font-size: 2.4em;
-  border: 2px solid var(--pm-primary);
+  font-size: 2.4em; border: 2px solid var(--pm-primary);
 }
-.btn-primary, .btn-success {
-  background: var(--pm-primary);
-  border: none;
-  color: #fff !important;
-}
-.btn-primary:hover, .btn-success:hover {
-  background: var(--pm-accent);
-  color: var(--pm-text) !important;
-}
-.btn-outline-danger {
-  border-color: #bf3636;
-  color: #bf3636 !important;
-}
-.btn-outline-danger:hover {
-  background: #bf3636;
-  color: #fff !important;
-}
-a:focus, button:focus, input:focus {
-  outline: 2px solid var(--pm-focus);
-  outline-offset: 2px;
-}
-.input-group, .form-control, .form-select {
-  border-radius: 10px !important;
-}
-label { font-weight: 500; }
-.pointer { cursor: pointer; }
+.btn-primary, .btn-success { background: var(--pm-primary); border: none; color: #fff !important; }
+.btn-primary:hover, .btn-success:hover { background: var(--pm-accent); color: var(--pm-text) !important; }
+.btn-outline-danger { border-color: #bf3636; color: #bf3636 !important; }
+.btn-outline-danger:hover { background: #bf3636; color: #fff !important;}
+a:focus, button:focus, input:focus { outline: 2px solid var(--pm-focus); outline-offset: 2px;}
+.input-group, .form-control, .form-select { border-radius: 10px !important;}
+label {font-weight: 500;}
+.pointer { cursor: pointer;}
 @media (max-width: 600px) {
-  .card, .dashboard-section {
-    padding: 1rem;
-  }
-  .profile-pic, .placeholder-pic {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5em;
-  }
+  .card, .dashboard-section { padding: 1rem;}
+  .profile-pic, .placeholder-pic { width: 60px; height: 60px; font-size: 1.5em;}
 }
 footer {
-  background: #f8fafb;
-  color: #999;
-  padding: 1.5rem 0;
-  margin-top: 3rem;
-  text-align: center;
-  font-size: 1em;
-  border-top: 1px solid #e1e7ea;
+  background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 3rem;
+  text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea;
 }
-#map {
-  width: 100%;
-  height: 300px !important;
-  min-height: 300px !important;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
- </style>
+#map { width: 100%; height: 300px !important; min-height: 300px !important; border-radius: 8px; margin-bottom: 12px;}
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -130,8 +80,6 @@ footer {
         <a href="{{ url_for('business_logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
     </div>
-
-    <!-- Invite Others Button -->
     <div class="card p-4 mb-4">
       <div class="mb-3">
         <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
@@ -148,7 +96,6 @@ footer {
         </button>
       </div>
     </div>
-    <!-- Invite Modal -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
@@ -168,15 +115,11 @@ footer {
         </form>
       </div>
     </div>
-
-    <!-- Profile Edit Section -->
     <div class="collapse mb-4" id="profileCollapse">
       <div class="card p-4">
         <h4>Your Profile</h4>
 <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
   {{ profile_form.hidden_tag() }}
-
-  <!-- Profile Photo -->
   <div class="col-12 mb-3 text-center">
     {% if profile_img_url %}
       <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
@@ -185,8 +128,6 @@ footer {
     {% endif %}
     <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
   </div>
-
-  <!-- Business Name -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Name</label>
     <input class="form-control"
@@ -195,8 +136,6 @@ footer {
            value="{{ biz.draft_business_name or biz.business_name }}"
            placeholder="Enter your business name">
   </div>
-
-  <!-- Phone Number -->
   <div class="col-12 mb-3">
     <label class="form-label">Phone Number</label>
     <input class="form-control"
@@ -207,8 +146,6 @@ footer {
            placeholder="(555) 555-5555">
     <div class="form-text">Format: (555) 555-5555</div>
   </div>
-
-  <!-- Business Address + Map -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Address</label>
     <input type="text"
@@ -222,8 +159,6 @@ footer {
     <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
     <div id="map"></div>
   </div>
-
-  <!-- Website -->
   <div class="col-12 mb-3">
     <label class="form-label">Website</label>
     <input type="url"
@@ -234,8 +169,6 @@ footer {
            value="{{ biz.draft_website_url or biz.website_url or '' }}"
            placeholder="https://your-website.com">
   </div>
-
-  <!-- Services -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
       Products or Services Offered
@@ -243,16 +176,16 @@ footer {
     <div class="collapse mt-2" id="servicesCollapse">
       <div id="services-list">
         {% set services = [
-            biz.draft_service1 or biz.service_1 or '',
-            biz.draft_service2 or biz.service_2 or '',
-            biz.draft_service3 or biz.service_3 or '',
-            biz.draft_service4 or biz.service_4 or '',
-            biz.draft_service5 or biz.service_5 or '',
-            biz.draft_service6 or biz.service_6 or '',
-            biz.draft_service7 or biz.service_7 or '',
-            biz.draft_service8 or biz.service_8 or '',
-            biz.draft_service9 or biz.service_9 or '',
-            biz.draft_service10 or biz.service_10 or ''
+            biz.draft_service_1 or biz.service_1 or '',
+            biz.draft_service_2 or biz.service_2 or '',
+            biz.draft_service_3 or biz.service_3 or '',
+            biz.draft_service_4 or biz.service_4 or '',
+            biz.draft_service_5 or biz.service_5 or '',
+            biz.draft_service_6 or biz.service_6 or '',
+            biz.draft_service_7 or biz.service_7 or '',
+            biz.draft_service_8 or biz.service_8 or '',
+            biz.draft_service_9 or biz.service_9 or '',
+            biz.draft_service_10 or biz.service_10 or ''
         ] %}
         {% for s in range(0, 10) %}
           {% if services[s] or s < 2 %}
@@ -267,8 +200,6 @@ footer {
       <small class="text-muted d-block mt-1">Max 10 services.</small>
     </div>
   </div>
-
-  <!-- About Us -->
   <div class="col-12 mb-3">
     <label class="form-label">About Us</label>
     <textarea class="form-control"
@@ -279,8 +210,6 @@ footer {
               placeholder="Write about your business (max 1000 characters)">{{ biz.draft_about_us or biz.about_us }}</textarea>
     <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
   </div>
-
-  <!-- Category -->
   <div class="col-12 mb-3">
     <label class="form-label">Category</label>
     <select class="form-select" name="category" id="business_category" required>
@@ -294,8 +223,6 @@ footer {
       <option value="Real Estate" {% if (biz.draft_category or biz.category) == 'Real Estate' %}selected{% endif %}>Real Estate</option>
     </select>
   </div>
-
-  <!-- Keywords -->
   <div class="col-12 mt-3">
     <label class="form-label">Keywords (for search, separated by commas)</label>
     <input type="text"
@@ -307,7 +234,6 @@ footer {
            placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
-
   {% if biz.status %}
     <div class="col-12 mb-2">
       <div class="alert alert-info p-2 mb-0" style="font-size:1.09em; text-align:center;">
@@ -329,13 +255,12 @@ footer {
       </div>
     </div>
   {% endif %}
-
   <div class="col-12 mt-3 d-flex gap-2">
     <button type="button" class="btn btn-secondary" id="previewListingBtn">Preview Listing</button>
     {{ profile_form.submit(class="btn btn-success") }}
   </div>
 </form>
-{% if biz.status == "not_submitted" or biz.status == "rejected" or (biz.status == "approved" and (biz.draft_business_name or biz.draft_profile_photo or biz.draft_phone_number or biz.draft_address or biz.draft_latitude or biz.draft_longitude or biz.draft_hours_of_operation or biz.draft_website_url or biz.draft_about_us or biz.draft_search_keywords or biz.draft_service1 or biz.draft_service2 or biz.draft_service3 or biz.draft_service4 or biz.draft_service5 or biz.draft_service6 or biz.draft_service7 or biz.draft_service8 or biz.draft_service9 or biz.draft_service10 or biz.draft_category)) %}
+{% if biz.status == "not_submitted" or biz.status == "rejected" or (biz.status == "approved" and (biz.draft_business_name or biz.draft_profile_photo or biz.draft_phone_number or biz.draft_address or biz.draft_latitude or biz.draft_longitude or biz.draft_hours_of_operation or biz.draft_website_url or biz.draft_about_us or biz.draft_search_keywords or biz.draft_service_1 or biz.draft_service_2 or biz.draft_service_3 or biz.draft_service_4 or biz.draft_service_5 or biz.draft_service_6 or biz.draft_service_7 or biz.draft_service_8 or biz.draft_service_9 or biz.draft_service_10 or biz.draft_category)) %}
   <div class="col-12 mt-3 d-flex gap-2">
     <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -345,12 +270,10 @@ footer {
     </form>
   </div>
 {% endif %}
-
       </div> <!-- end .card.p-4 for profile collapse -->
     </div> <!-- end .collapse mb-4 -->
-  </div> <!-- end .card.mb-4.p-4 (dashboard main card) -->
+  </div> <!-- end .card.mb-4.p-4 -->
 
-  <!-- Referral Code Section -->
   <div class="card p-4 mb-4">
     <h4>Your Referral Code</h4>
     <div class="mb-0"><b>{{ referral_code }}</b></div>
@@ -361,7 +284,6 @@ footer {
     </div>
   {% endif %}
 
-  <!-- Reward calculators and Network tree -->
   <div class="card p-4 mb-4">
     <h4>Estimate Your Rewards From One Single Purchase</h4>
     <div class="row g-3 mb-3">
@@ -473,7 +395,6 @@ footer {
       </div>
     {% endif %}
   {% endwith %}
-
 </div>
 <footer>
   <div>
@@ -558,7 +479,7 @@ function initMap() {
     latInput.value = event.latLng.lat();
     lngInput.value = event.latLng.lng();
   });
-  // Click on map moves marker
+  // Click moves marker
   map.addListener && map.addListener('click', function(e) {
     marker.setPosition(e.latLng);
     latInput.value = e.latLng.lat();
@@ -566,7 +487,7 @@ function initMap() {
   });
   // Address autocomplete
   const input = document.getElementById('address-autocomplete');
-  if (input) {
+  if (input && window.google && google.maps && google.maps.places) {
     autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
     autocomplete.addListener('place_changed', function () {
       const place = autocomplete.getPlace();
@@ -580,10 +501,11 @@ function initMap() {
     });
   }
 }
-document.addEventListener('DOMContentLoaded', function() {
+function wireServiceHandlers() {
   const servicesList = document.getElementById('services-list');
   const addBtn = document.getElementById('addServiceBtn');
-  addBtn.addEventListener('click', function() {
+  if (!servicesList || !addBtn) return;
+  addBtn.onclick = function() {
     const count = servicesList.querySelectorAll('.service-field').length;
     if (count >= 10) return;
     const div = document.createElement('div');
@@ -599,34 +521,38 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.className = 'btn btn-outline-danger service-remove';
     btn.type = 'button';
     btn.innerHTML = '&minus;';
-    btn.addEventListener('click', function() {
-      if (servicesList.querySelectorAll('.service-field').length > 2) {
-        div.remove();
-      }
-    });
+    btn.onclick = function() {
+      if (servicesList.querySelectorAll('.service-field').length > 2) div.remove();
+    };
     if (count < 2) btn.disabled = true;
     div.appendChild(input);
     div.appendChild(btn);
     servicesList.appendChild(div);
-  });
+  };
   servicesList.querySelectorAll('.service-field .service-remove').forEach(function(btn, idx) {
     if (idx >= 2) btn.disabled = false;
-    btn.addEventListener('click', function() {
-      if (servicesList.querySelectorAll('.service-field').length > 2) {
-        btn.parentElement.remove();
-      }
-    });
+    btn.onclick = function() {
+      if (servicesList.querySelectorAll('.service-field').length > 2) btn.parentElement.remove();
+    };
   });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  initMap();
+  wireServiceHandlers();
 });
-
-// For Preview Modal
+document.getElementById('profileCollapse')?.addEventListener('shown.bs.collapse', function() {
+  setTimeout(function() {
+    if (typeof initMap === 'function') initMap();
+    wireServiceHandlers();
+  }, 200);
+});
 window.addEventListener('DOMContentLoaded', function() {
   let previewBtn = document.getElementById('previewListingBtn');
   let modal = document.getElementById('listingPreviewModal');
   let modalContent = document.getElementById('listing-preview-content');
   let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
-
-  previewBtn && previewBtn.addEventListener('click', function(){
+  if (!previewBtn) return;
+  previewBtn.onclick = function() {
     let name = document.querySelector('[name="business_name"]')?.value || "{{ biz.business_name }}";
     let address = document.getElementById('address-autocomplete')?.value || "{{ biz.address }}";
     let category = document.getElementById('business_category')?.value || "{{ biz.category }}";
@@ -690,7 +616,7 @@ window.addEventListener('DOMContentLoaded', function() {
       }
     }, 200);
     previewModal && previewModal.show();
-  });
+  };
 });
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
