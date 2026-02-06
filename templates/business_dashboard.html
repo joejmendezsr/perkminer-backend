@@ -496,26 +496,26 @@ window.addEventListener('DOMContentLoaded', function() {
   let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
 
   previewBtn && previewBtn.addEventListener('click', function(){
-    let name = document.querySelector('[name="business_name"]')?.value || "{{ biz.business_name }}";
-    let address = document.getElementById('address-autocomplete')?.value || "{{ biz.address }}";
-    let category = document.getElementById('business_category')?.value || "{{ biz.category }}";
-    let phone = document.getElementById('us-phone')?.value || "{{ biz.phone_number }}";
-    let website = document.getElementById('website_url')?.value || "{{ biz.website_url }}";
-    let about = document.getElementById('about_us')?.value || "{{ biz.about_us }}";
-    let keywords = document.getElementById('search_keywords')?.value || "{{ biz.search_keywords }}";
+    let name = document.querySelector('[name="business_name"]')?.value || {{ biz.business_name | tojson }};
+    let address = document.getElementById('address-autocomplete')?.value || {{ biz.address | tojson }};
+    let category = document.getElementById('business_category')?.value || {{ biz.category | tojson }};
+    let phone = document.getElementById('us-phone')?.value || {{ biz.phone_number | tojson }};
+    let website = document.getElementById('website_url')?.value || {{ biz.website_url | tojson }};
+    let about = document.getElementById('about_us')?.value || {{ biz.about_us | tojson }};
+    let keywords = document.getElementById('search_keywords')?.value || {{ biz.search_keywords | tojson }};
     let services = [];
     document.querySelectorAll('#services-list input').forEach(input => {
       if(input.value.trim()!="") services.push(input.value.trim());
     });
-    let img = '{{ profile_img_url if profile_img_url else "" }}';
-
+    let img = {{ profile_img_url if profile_img_url else '""' | tojson }};
+    
     // Only show submit if status is not_submitted or rejected
-    let canSubmit = "{{ biz.status }}" === "not_submitted" || "{{ biz.status }}" === "rejected";
+    let canSubmit = {{ biz.status | tojson }} === "not_submitted" || {{ biz.status | tojson }} === "rejected";
     let submitForm = canSubmit ? `
-      <form method="post" action="{{ url_for('listing_disclaimer') }}" class="mb-3 mt-2">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="listing_id" value="{{ biz.id }}">
-        <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
+      <form method="post" action={{ url_for('listing_disclaimer') | tojson }} class="mb-3 mt-2">
+        <input type="hidden" name="csrf_token" value={{ csrf_token() | tojson }}>
+        <input type="hidden" name="listing_id" value={{ biz.id | tojson }}>
+        <input type="hidden" name="referral_code" value={{ biz.referral_code | tojson }}>
         <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</button>
       </form>
     ` : "";
