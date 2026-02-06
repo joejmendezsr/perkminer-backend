@@ -521,6 +521,8 @@ window.addEventListener('DOMContentLoaded', function() {
     
     // Only show submit if status is not_submitted or rejected
     let canSubmit = {{ biz.status | tojson }} === "not_submitted" || {{ biz.status | tojson }} === "rejected";
+    console.log("biz.status:", {{ biz.status | tojson }});
+    console.log("canSubmit value:", canSubmit);
     let submitForm = canSubmit ? `
       <form method="post" action={{ url_for('listing_disclaimer') | tojson }} class="mb-3 mt-2">
         <input type="hidden" name="csrf_token" value={{ csrf_token() | tojson }}>
