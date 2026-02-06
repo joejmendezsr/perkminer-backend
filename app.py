@@ -1402,7 +1402,7 @@ def seed_admins_once():
     from app import db, User, Role, bcrypt
     response = []
 
-
+    # Roles to create
     role_names = [
         "approve_reject_listings",
         "finance",
@@ -1419,33 +1419,33 @@ def seed_admins_once():
         roles[name] = role
     db.session.commit()
 
-
-admins = [
-    {
-        "email": "admin1@perkminer.com",
-        "password": "admin1secure",
-        "role_names": [
-            "approve_reject_listings", "feedback_moderation", "customer_support"
-        ]
-    },
-    {
-        "email": "finance1@perkminer.com",
-        "password": "finance1secure",
-        "role_names": ["finance"]
-    }
-]
-for admin in admins:
-    user = User.query.filter_by(email=admin["email"]).first()
-    if not user:
-        hashed_pw = bcrypt.generate_password_hash(admin["password"]).decode("utf-8")
-        user = User(
-            email=admin["email"],
-            password=hashed_pw,
-            email_confirmed=True
-        )
-        db.session.add(user)
-        db.session.commit()
-        response.append(f"Created user: {admin['email']}")
+    # Create demo admin users if needed
+    admins = [
+        {
+            "email": "admin1@perkminer.com",
+            "password": "admin1secure",
+            "role_names": [
+                "approve_reject_listings", "feedback_moderation", "customer_support"
+            ]
+        },
+        {
+            "email": "finance1@perkminer.com",
+            "password": "finance1secure",
+            "role_names": ["finance"]
+        }
+    ]
+    for admin in admins:
+        user = User.query.filter_by(email=admin["email"]).first()
+        if not user:
+            hashed_pw = bcrypt.generate_password_hash(admin["password"]).decode("utf-8")
+            user = User(
+                email=admin["email"],
+                password=hashed_pw,
+                email_confirmed=True
+            )
+            db.session.add(user)
+            db.session.commit()
+            response.append(f"Created user: {admin['email']}")
         # Assign roles
         for role_name in admin["role_names"]:
             role = Role.query.filter_by(name=role_name).first()
@@ -1454,8 +1454,9 @@ for admin in admins:
                 response.append(f"Granted {role_name} to {admin['email']}")
         db.session.commit()
 
+    # Assign roles to your own account if needed
     target_email = "joejmendez@gmail.com"
-    target_roles = ["finance"]  # Change or add roles as needed, e.g. ["finance", "customer_support"]
+    target_roles = ["finance"]  # Change or add as needed
     user = User.query.filter_by(email=target_email).first()
     if user:
         for role_name in target_roles:
