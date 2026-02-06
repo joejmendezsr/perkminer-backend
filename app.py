@@ -69,7 +69,7 @@ def role_required(role_name):
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
-import random  # put this at the top of your file if not already imported
+import random # put this at the top of your file if not already imported
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -77,19 +77,19 @@ cloudinary.config(
   api_secret = 'cLtDoC44BarYjVrr3dIgi_0XiKo'
 )
 
-app = Flask(__name__)
+app = Flask(name)
 app.config['SECRET_KEY'] = 'perkminer_hardcoded_secret_2026'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAIL_SERVER']   = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT']     = int(os.environ.get('MAIL_PORT', 465))
-app.config['MAIL_USE_SSL']  = True
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 465))
+app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['RECAPTCHA_PUBLIC_KEY'] = '6LdhAV8sAAAAABwITf0HytcbADISlcMd87NP-i2H'
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdhAV8sAAAAAFi9YjxnZqFLUl3SlQjHc1g7IEOq'
 
-UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(file)), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -160,27 +160,7 @@ class Business(db.Model):
     service_9 = db.Column(db.String(100))
     service_10 = db.Column(db.String(100))
     search_keywords = db.Column(db.String(500))
-    draft_business_name = db.Column(db.String(100))
-    draft_profile_photo = db.Column(db.String(200))
-    draft_phone_number = db.Column(db.String(30))
-    draft_address = db.Column(db.String(255))
-    draft_latitude = db.Column(db.Float)
-    draft_longitude = db.Column(db.Float)
-    draft_hours_of_operation = db.Column(db.String(100))
-    draft_website_url = db.Column(db.String(255))
-    draft_about_us = db.Column(db.Text)
-    draft_search_keywords = db.Column(db.String(500))
-    draft_service_1 = db.Column(db.String(100))
-    draft_service_2 = db.Column(db.String(100))
-    draft_service_3 = db.Column(db.String(100))
-    draft_service_4 = db.Column(db.String(100))
-    draft_service_5 = db.Column(db.String(100))
-    draft_service_6 = db.Column(db.String(100))
-    draft_service_7 = db.Column(db.String(100))
-    draft_service_8 = db.Column(db.String(100))
-    draft_service_9 = db.Column(db.String(100))
-    draft_service_10 = db.Column(db.String(100))
-    draft_category = db.Column(db.String(50))
+
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
 
@@ -210,7 +190,7 @@ class BusinessEditForm(FlaskForm):
     address = StringField('Address', validators=[Optional()])
     submit = SubmitField('Save')
 
-EMAIL_REGEX = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+EMAIL_REGEX = r'^[\w.-]+@[\w.-]+.\w{2,}$'
 def valid_email(email): return re.match(EMAIL_REGEX, email or "")
 def valid_password(pw): return pw and len(pw) >= MIN_PASSWORD_LENGTH
 def random_email_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -238,6 +218,7 @@ def send_email(to, subject, html_body):
         logging.error("EMAIL SEND ERROR: %s", e)
 def build_invite_email(inviter_name, join_url, video_url):
     html_body = f"""
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -438,6 +419,10 @@ class BusinessRewardForm(FlaskForm):
         default='1'
     )
     submit = SubmitField('Calculate My Reward')
+class UserProfileForm(FlaskForm):
+    name = StringField('Name', validators=[Optional(), Length(max=100)])
+    profile_photo = FileField('Upload Profile Photo')
+    submit = SubmitField('Save Profile')
 class UserProfileForm(FlaskForm):
     name = StringField('Name', validators=[Optional(), Length(max=100)])
     profile_photo = FileField('Upload Profile Photo')
@@ -1010,72 +995,42 @@ def business_dashboard():
         return request.form.get(f"service_{n}", "")
 
     if request.method == "POST":
-        # Choose draft or live editing based on status
-        if biz.status == "approved":
-            # Save ONLY to draft fields
-            biz.draft_business_name = request.form.get('business_name', biz.business_name)
-            biz.draft_category = request.form.get('category', biz.category)
-            biz.draft_phone_number = request.form.get('phone_number', biz.phone_number)
-            biz.draft_address = request.form.get('address', biz.address)
-            try:
-                if request.form.get('latitude'):
-                    biz.draft_latitude = float(request.form.get('latitude'))
-                if request.form.get('longitude'):
-                    biz.draft_longitude = float(request.form.get('longitude'))
-            except ValueError:
-                pass
-            file = request.files.get('profile_photo')
-            if file and allowed_file(file.filename):
-                upload_result = cloudinary.uploader.upload(file)
-                biz.draft_profile_photo = upload_result.get('secure_url')
-            biz.draft_hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
-            biz.draft_website_url = request.form.get('website_url', biz.website_url)
-            biz.draft_about_us = request.form.get('about_us', biz.about_us)
-            biz.draft_search_keywords = request.form.get('search_keywords', biz.search_keywords)
-            for n in range(1, 11):
-                biz.__setattr__(f'draft_service{n}', request.form.get(f'service_{n}', getattr(biz, f'service_{n}')))
-            db.session.commit()
-            flash("Changes saved! Click 'Submit for Approval' to make your edits live.")
-
-        else:
-            # If not approved/pending, update live/main fields (as before)
+        updated = False
+        # Business profile fields—set updated=True for any real change
+        if 'business_name' in request.form:
             biz.business_name = request.form.get('business_name', biz.business_name)
+            updated = True
+        if 'category' in request.form:
             biz.category = request.form.get('category', biz.category)
-            biz.phone_number = request.form.get('phone_number', biz.phone_number)
-            biz.address = request.form.get('address', biz.address)
-            try:
-                if request.form.get('latitude'):
-                    biz.latitude = float(request.form.get('latitude'))
-                if request.form.get('longitude'):
-                    biz.longitude = float(request.form.get('longitude'))
-            except ValueError:
-                pass
-            file = request.files.get('profile_photo')
-            if file and allowed_file(file.filename):
-                upload_result = cloudinary.uploader.upload(file)
-                biz.profile_photo = upload_result.get('secure_url')
-            biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
-            biz.website_url = request.form.get('website_url', biz.website_url)
-            biz.about_us = request.form.get('about_us', biz.about_us)
-            biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
-            for n in range(1, 11):
-                biz.__setattr__(f'service_{n}', request.form.get(f'service_{n}', getattr(biz, f'service_{n}')))
+            updated = True
+        biz.phone_number = request.form.get('phone_number', biz.phone_number)
+        biz.address = request.form.get('address', biz.address)
+        try:
+            if request.form.get('latitude'):
+                biz.latitude = float(request.form.get('latitude'))
+            if request.form.get('longitude'):
+                biz.longitude = float(request.form.get('longitude'))
+        except ValueError:
+            pass
+        file = request.files.get('profile_photo')
+        if file and allowed_file(file.filename):
+            upload_result = cloudinary.uploader.upload(file)
+            biz.profile_photo = upload_result.get('secure_url')
+            updated = True
+        biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
+        biz.website_url = request.form.get('website_url', biz.website_url)
+        biz.about_us = request.form.get('about_us', biz.about_us)
+        biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
+        for n in range(1, 11):
+            setattr(biz, f'service_{n}', get_service_field(n))
+        if updated:
             db.session.commit()
             flash("Business profile updated!")
-
         return redirect(url_for('business_dashboard'))
 
-    # Use draft fields for the form display if they exist, otherwise the live values
-    def get_field(field, draft_field):
-        draft_val = getattr(biz, draft_field, None)
-        live_val = getattr(biz, field, "")
-        return draft_val if draft_val is not None else live_val
-
-    latitude = get_field('latitude', 'draft_latitude')
-    longitude = get_field('longitude', 'draft_longitude')
-    profile_img_url = get_field('profile_photo', 'draft_profile_photo')
-    phone_number = get_field('phone_number', 'draft_phone_number')
-    address = get_field('address', 'draft_address')
+    latitude = biz.latitude if biz.latitude else ""
+    longitude = biz.longitude if biz.longitude else ""
+    profile_img_url = biz.profile_photo if biz.profile_photo else None
 
     # Reward calculator logic (unchanged)
     if request.method == "GET":
@@ -1095,14 +1050,22 @@ def business_dashboard():
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.01; rewards_desc = "As the business, for an invoice you create and get paid for in the amount"; cap = None
+            reward = invoice_amount * 0.01
+            rewards_desc = "As the business, for an invoice you create and get paid for in the amount"
+            cap = None
         elif downline_level in [2, 3, 4]:
-            rate = 0.002; cap = 3.75; reward = min(invoice_amount * rate, cap)
+            rate = 0.002
+            cap = 3.75
+            reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If a Tier {downline_level} business creates and gets paid for an invoice in the amount"
         elif downline_level == 5:
-            rate = 0.02; cap = 25; reward = min(invoice_amount * rate, cap)
+            rate = 0.02
+            cap = 25
+            reward = min(invoice_amount * rate, cap)
             rewards_desc = "If a Tier 5 business creates and gets paid for an invoice in the amount"
-        else: reward = 0; rewards_desc = ""
+        else:
+            reward = 0
+            rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
@@ -1123,7 +1086,8 @@ def business_dashboard():
             for b4 in b4s:
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
-    return render_template("business_dashboard.html",
+    return render_template(
+        "business_dashboard.html",
         form=form,
         profile_form=profile_form,
         invite_form=invite_form,
@@ -1133,8 +1097,8 @@ def business_dashboard():
         rewards_table=rewards_table,
         level2=level2, level3=level3, level4=level4, level5=level5,
         profile_img_url=profile_img_url,
-        phone_number=phone_number,
-        address=address,
+        phone_number=biz.phone_number,
+        address=biz.address,
         latitude=latitude,
         longitude=longitude
     )
@@ -1362,20 +1326,6 @@ def send_for_review():
 
     biz = Business.query.get(listing_id)
     if biz:
-        # List all fields that use draft columns
-        draft_fields = [
-            "business_name", "profile_photo", "phone_number", "address",
-            "latitude", "longitude", "hours_of_operation", "website_url",
-            "about_us", "search_keywords", "category"
-        ] + [f"service{n}" for n in range(1, 11)]
-
-        # Copy drafts to main fields and clear the drafts
-        for field in draft_fields:
-            draft_val = getattr(biz, f"draft_{field}", None)
-            if draft_val not in [None, ""]:
-                setattr(biz, field if not field.startswith("service") else f"service_{field[-1]}", draft_val)
-            setattr(biz, f"draft_{field}", None)
-
         biz.status = "pending"
         db.session.commit()
         flash("Listing submitted for admin review. You will be notified after a decision.")
@@ -1473,33 +1423,33 @@ def seed_admins_once():
         roles[name] = role
     db.session.commit()
 
-    # --- Create demo admin users if needed ---
-    admins = [
-        {
-            "email": "admin1@perkminer.com",
-            "password": "admin1secure",
-            "role_names": [
-                "approve_reject_listings", "feedback_moderation", "customer_support"
-            ]
-        },
-        {
-            "email": "finance1@perkminer.com",
-            "password": "finance1secure",
-            "role_names": ["finance"]
-        }
-    ]
-    for admin in admins:
-        user = User.query.filter_by(email=admin["email"]).first()
-        if not user:
-            hashed_pw = bcrypt.generate_password_hash(admin["password"]).decode("utf-8")
-            user = User(
-                email=admin["email"],
-                password=hashed_pw,
-                email_confirmed=True
-            )
-            db.session.add(user)
-            db.session.commit()
-            response.append(f"Created user: {admin['email']}")
+--- Create demo admin users if needed ---
+admins = [
+    {
+        "email": "admin1@perkminer.com",
+        "password": "admin1secure",
+        "role_names": [
+            "approve_reject_listings", "feedback_moderation", "customer_support"
+        ]
+    },
+    {
+        "email": "finance1@perkminer.com",
+        "password": "finance1secure",
+        "role_names": ["finance"]
+    }
+]
+for admin in admins:
+    user = User.query.filter_by(email=admin["email"]).first()
+    if not user:
+        hashed_pw = bcrypt.generate_password_hash(admin["password"]).decode("utf-8")
+        user = User(
+            email=admin["email"],
+            password=hashed_pw,
+            email_confirmed=True
+        )
+        db.session.add(user)
+        db.session.commit()
+        response.append(f"Created user: {admin['email']}")
         # Assign roles
         for role_name in admin["role_names"]:
             role = Role.query.filter_by(name=role_name).first()
