@@ -261,21 +261,20 @@
     <label class="form-label">Business Address</label>
     {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
   </div>
-  <div class="col-12 mb-3">
-    <label class="form-label">Website</label>
-    <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
-           value="{{ biz.website_url or '' }}" placeholder="https://your-website.com">
-  </div>
 
 <!-- Address with Map in Profile Form -->
 <div class="col-12 mb-3">
-  <label class="form-label">Business Address</label>
-  {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
   <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
   <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
   <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
   <div id="profile-map" style="width:100%; height:300px; border-radius:8px; margin-bottom:12px;"></div>
 </div>
+
+  <div class="col-12 mb-3">
+    <label class="form-label">Website</label>
+    <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
+           value="{{ biz.website_url or '' }}" placeholder="https://your-website.com">
+  </div>
 
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
