@@ -507,7 +507,7 @@ window.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#services-list input').forEach(input => {
       if(input.value.trim()!="") services.push(input.value.trim());
     });
-    let img = {{ profile_img_url if profile_img_url else '""' | tojson }};
+    let img = {{ (profile_img_url if profile_img_url else "") | tojson }};
     
     // Only show submit if status is not_submitted or rejected
     let canSubmit = {{ biz.status | tojson }} === "not_submitted" || {{ biz.status | tojson }} === "rejected";
