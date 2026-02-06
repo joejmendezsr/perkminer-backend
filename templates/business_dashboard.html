@@ -494,6 +494,9 @@
 <script>
 window.addEventListener('DOMContentLoaded', function() {
   let previewBtn = document.getElementById('previewListingBtn');
+  console.log("Preview script loaded.");
+  console.log("Preview button found:", previewBtn);
+
   let modal = document.getElementById('listingPreviewModal');
   let modalContent = document.getElementById('listing-preview-content');
   let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
