@@ -211,7 +211,7 @@
 <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form class="modal-content" method="post" action="{{ url_for('invite') }}">
-      {{ invite_form.hidden_tag() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="modal-header">
         <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
