@@ -447,7 +447,6 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField('Reset Password')
 
-# ...ROUTES start below...
 @app.route("/admin-roles")
 @login_required
 def admin_roles_landing():
@@ -768,9 +767,6 @@ def dashboard():
 def logout():
     logout_user()
     return redirect(url_for("home"))
-
-# ...business user registration, verification, login, dashboard...
-# ...business invite route has already been provided above...
 
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
@@ -1406,7 +1402,7 @@ def seed_admins_once():
     from app import db, User, Role, bcrypt
     response = []
 
-    # --- Roles to create ---
+
     role_names = [
         "approve_reject_listings",
         "finance",
@@ -1423,7 +1419,7 @@ def seed_admins_once():
         roles[name] = role
     db.session.commit()
 
-    # --- Create demo admin users if needed ---
+
 admins = [
     {
         "email": "admin1@perkminer.com",
@@ -1458,7 +1454,6 @@ for admin in admins:
                 response.append(f"Granted {role_name} to {admin['email']}")
         db.session.commit()
 
-    # --- Assign roles to existing user(s) by email ---
     target_email = "joejmendez@gmail.com"
     target_roles = ["finance"]  # Change or add roles as needed, e.g. ["finance", "customer_support"]
     user = User.query.filter_by(email=target_email).first()
