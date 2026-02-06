@@ -8,7 +8,7 @@
 <div class="container py-5" style="max-width: 450px;">
     <h2 class="mb-4 text-center">Register</h2>
     <form method="post">
-        {{ form.hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="mb-3">
             {{ form.email.label(class="form-label") }}
