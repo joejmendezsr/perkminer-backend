@@ -6,104 +6,145 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-:root {
-  --pm-primary: #2a5859;
-  --pm-accent: #ffd66b;
-  --pm-bg: #fff;
-  --pm-text: #222;
-  --pm-hover: #e6f6f5;
-  --pm-focus: #fadd92;
-}
-body {
-  background: var(--pm-bg);
-  color: var(--pm-text);
-}
-body > nav {
-  margin-bottom: 2rem !important;
-}
-.navbar {
-  box-shadow: 0 2px 8px #f0f2f3;
-}
-.card, .dashboard-section {
-  background: #f8fafb;
-  border-radius: 16px;
-  box-shadow: 0 2px 16px #e3eee9;
-  margin-bottom: 1.5rem;
-  transition: box-shadow 0.2s;
-}
-.card:hover, .dashboard-section:hover {
-  box-shadow: 0 6px 24px #d2eced;
-}
-.profile-pic {
-  width: 84px;
-  height: 84px;
-  object-fit: cover;
-  border-radius: 50%;
-  background: var(--pm-hover);
-  border: 2px solid var(--pm-primary);
-}
-.placeholder-pic {
-  width: 84px; height: 84px; border-radius: 50%;
-  background: #e6f6f5;
-  color: var(--pm-primary);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2.4em;
-  border: 2px solid var(--pm-primary);
-}
-.btn-primary, .btn-success {
-  background: var(--pm-primary);
-  border: none;
-  color: #fff !important;
-}
-.btn-primary:hover, .btn-success:hover {
-  background: var(--pm-accent);
-  color: var(--pm-text) !important;
-}
-.btn-outline-danger {
-  border-color: #bf3636;
-  color: #bf3636 !important;
-}
-.btn-outline-danger:hover {
-  background: #bf3636;
-  color: #fff !important;
-}
-a:focus, button:focus, input:focus {
-  outline: 2px solid var(--pm-focus);
-  outline-offset: 2px;
-}
-.input-group, .form-control, .form-select {
-  border-radius: 10px !important;
-}
-label { font-weight: 500; }
-.pointer { cursor: pointer; }
-@media (max-width: 600px) {
-  .card, .dashboard-section {
-    padding: 1rem;
-  }
-  .profile-pic, .placeholder-pic {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5em;
-  }
-}
-footer {
-  background: #f8fafb;
-  color: #999;
-  padding: 1.5rem 0;
-  margin-top: 3rem;
-  text-align: center;
-  font-size: 1em;
-  border-top: 1px solid #e1e7ea;
-}
-
-#map {
-  width: 100%;
-  height: 300px !important;
-  min-height: 300px !important;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
- </style>
+        :root {
+          --pm-primary: #2a5859;
+          --pm-accent: #ffd66b;
+          --pm-bg: #fff;
+          --pm-text: #222;
+          --pm-hover: #e6f6f5;
+          --pm-focus: #fadd92;
+        }
+        body {
+          background: var(--pm-bg);
+          color: var(--pm-text);
+        }
+        body > nav {
+          margin-bottom: 2rem !important;
+        }
+        .navbar {
+          box-shadow: 0 2px 8px #f0f2f3;
+        }
+        .card, .dashboard-section {
+          background: #f8fafb;
+          border-radius: 16px;
+          box-shadow: 0 2px 16px #e3eee9;
+          margin-bottom: 1.5rem;
+          transition: box-shadow 0.2s;
+        }
+        .card:hover, .dashboard-section:hover {
+          box-shadow: 0 6px 24px #d2eced;
+        }
+        .profile-pic {
+          width: 84px;
+          height: 84px;
+          object-fit: cover;
+          border-radius: 50%;
+          background: var(--pm-hover);
+          border: 2px solid var(--pm-primary);
+        }
+        .placeholder-pic {
+          width: 84px; height: 84px; border-radius: 50%;
+          background: #e6f6f5;
+          color: var(--pm-primary);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 2.4em;
+          border: 2px solid var(--pm-primary);
+        }
+        .btn-primary, .btn-success {
+          background: var(--pm-primary);
+          border: none;
+          color: #fff !important;
+        }
+        .btn-primary:hover, .btn-success:hover {
+          background: var(--pm-accent);
+          color: var(--pm-text) !important;
+        }
+        .btn-outline-danger {
+          border-color: #bf3636;
+          color: #bf3636 !important;
+        }
+        .btn-outline-danger:hover {
+          background: #bf3636;
+          color: #fff !important;
+        }
+        a:focus, button:focus, input:focus {
+          outline: 2px solid var(--pm-focus);
+          outline-offset: 2px;
+        }
+        .input-group, .form-control, .form-select {
+          border-radius: 10px !important;
+        }
+        label { font-weight: 500; }
+        .pointer { cursor: pointer; }
+        @media (max-width: 600px) {
+          .card, .dashboard-section {
+            padding: 1rem;
+          }
+          .profile-pic, .placeholder-pic {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5em;
+          }
+        }
+        footer {
+          background: #f8fafb;
+          color: #999;
+          padding: 1.5rem 0;
+          margin-top: 3rem;
+          text-align: center;
+          font-size: 1em;
+          border-top: 1px solid #e1e7ea;
+        }
+    </style>
+    <script>
+      function calculateNetworkEarnings() {
+        let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
+        let amount = parseFloat(document.getElementById('network_amount').value) || 0;
+        if (amount > 2500) amount = 2500;
+        document.getElementById('network_amount').value = amount;
+        let t1 = 0.02 * amount;
+        let t2 = 0.0025 * amount * numPeople;
+        let t3 = 0.0025 * amount * Math.pow(numPeople, 2);
+        let t4 = 0.0025 * amount * Math.pow(numPeople, 3);
+        let t5 = 0.02 * amount * Math.pow(numPeople, 4);
+        let total = t1 + t2 + t3 + t4 + t5;
+        document.getElementById('network_t1').innerText = t1.toFixed(2);
+        document.getElementById('network_t2').innerText = t2.toFixed(2);
+        document.getElementById('network_t3').innerText = t3.toFixed(2);
+        document.getElementById('network_t4').innerText = t4.toFixed(2);
+        document.getElementById('network_t5').innerText = t5.toFixed(2);
+        document.getElementById('network_total').innerText = total.toFixed(2);
+        document.getElementById('network_results').style.display = 'block';
+      }
+      function calculateSingleReward() {
+        let amount = parseFloat(document.getElementById('reward_amount').value) || 0;
+        if (amount > 2500) amount = 2500;
+        document.getElementById('reward_amount').value = amount;
+        let tier = document.getElementById('reward_tier').value;
+        let reward = 0;
+        let desc = "";
+        let cap = null;
+        if (tier === "1") {
+            reward = amount * 0.02; desc = "As the customer, from a purchase you make";
+        } else if (["2","3","4"].includes(tier)) {
+            reward = amount * 0.0025;
+            cap = 6.25;
+            if (reward > cap) reward = cap;
+            desc = `If your Tier ${tier} referral makes a purchase`;
+        } else if (tier === "5") {
+            reward = amount * 0.02;
+            cap = 50;
+            if (reward > cap) reward = cap;
+            desc = "If your Tier 5 referral makes a purchase";
+        }
+        let out = '';
+        if (amount > 0) {
+          out += `<h5 class='mt-4 mb-2'>${desc} of $${amount.toFixed(2)}:</h5>`;
+          out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
+        }
+        document.getElementById('rewards_output').innerHTML = out;
+      }
+    </script>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -199,14 +240,10 @@ footer {
     <div class="form-text">Format: (555) 555-5555</div>
   </div>
 
-  <!-- Business Address + Map -->
+  <!-- Business Address -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Address</label>
     {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
-    <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
-    <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
-    <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
-    <div id="map"></div>
   </div>
   <div class="col-12 mb-3">
     <label class="form-label">Website</label>
@@ -310,8 +347,8 @@ footer {
   </div>
 {% endif %}
 
-      </div> <!-- end .card.p-4 for profile collapse -->
-    </div> <!-- end .collapse mb-4 -->
+      </div>
+    </div>
   </div> <!-- end .card.mb-4.p-4 (dashboard main card) -->
 
   <!-- Referral Code Section -->
@@ -454,224 +491,5 @@ footer {
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-console.log("JS loaded and initMap is defined:", typeof initMap);
-function calculateNetworkEarnings() {
-  let numPeople = parseInt(document.getElementById('network_people').value, 10) || 0;
-  let amount = parseFloat(document.getElementById('network_amount').value) || 0;
-  if (amount > 2500) amount = 2500;
-  document.getElementById('network_amount').value = amount;
-  let t1 = 0.02 * amount;
-  let t2 = 0.0025 * amount * numPeople;
-  let t3 = 0.0025 * amount * Math.pow(numPeople, 2);
-  let t4 = 0.0025 * amount * Math.pow(numPeople, 3);
-  let t5 = 0.02 * amount * Math.pow(numPeople, 4);
-  let total = t1 + t2 + t3 + t4 + t5;
-  document.getElementById('network_t1').innerText = t1.toFixed(2);
-  document.getElementById('network_t2').innerText = t2.toFixed(2);
-  document.getElementById('network_t3').innerText = t3.toFixed(2);
-  document.getElementById('network_t4').innerText = t4.toFixed(2);
-  document.getElementById('network_t5').innerText = t5.toFixed(2);
-  document.getElementById('network_total').innerText = total.toFixed(2);
-  document.getElementById('network_results').style.display = 'block';
-}
-function calculateSingleReward() {
-  let amount = parseFloat(document.getElementById('reward_amount').value) || 0;
-  if (amount > 2500) amount = 2500;
-  document.getElementById('reward_amount').value = amount;
-  let tier = document.getElementById('reward_tier').value;
-  let reward = 0;
-  let desc = "";
-  let cap = null;
-  if (tier === "1") {
-    reward = amount * 0.02; desc = "As the customer, from a purchase you make";
-  } else if (["2","3","4"].includes(tier)) {
-    reward = amount * 0.0025;
-    cap = 6.25;
-    if (reward > cap) reward = cap;
-    desc = `If your Tier ${tier} referral makes a purchase`;
-  } else if (tier === "5") {
-    reward = amount * 0.02;
-    cap = 50;
-    if (reward > cap) reward = cap;
-    desc = "If your Tier 5 referral makes a purchase";
-  }
-  let out = '';
-  if (amount > 0) {
-    out += `<h5 class='mt-4 mb-2'>${desc} of $${amount.toFixed(2)}:</h5>`;
-    out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
-  }
-  document.getElementById('rewards_output').innerHTML = out;
-}
-let marker, map, autocomplete;
-function initMap() {
-  const latInput = document.getElementById('latitude');
-  const lngInput = document.getElementById('longitude');
-  let lat = parseFloat(latInput.value) || 39.8283;  // center on USA if blank
-  let lng = parseFloat(lngInput.value) || -98.5795;
-  let center = {lat: lat, lng: lng};
-  map = new google.maps.Map(document.getElementById('map'), {
-    zoom: (latInput.value && lngInput.value) ? 16 : 4,
-    center: center
-  });
-  marker = new google.maps.Marker({
-    position: center,
-    map: map,
-    draggable: true
-  });
-  google.maps.event.addListener(marker, 'dragend', function(event) {
-    latInput.value = event.latLng.lat();
-    lngInput.value = event.latLng.lng();
-  });
-  // Click on map moves marker
-  map.addListener && map.addListener('click', function(e) {
-    marker.setPosition(e.latLng);
-    latInput.value = e.latLng.lat();
-    lngInput.value = e.latLng.lng();
-  });
-  // Address autocomplete
-  const input = document.getElementById('address-autocomplete');
-  if (input) {
-    autocomplete = new google.maps.places.Autocomplete(input, { types: ['geocode'] });
-    autocomplete.addListener('place_changed', function () {
-      const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-      const loc = place.geometry.location;
-      latInput.value = loc.lat();
-      lngInput.value = loc.lng();
-      marker.setPosition(loc);
-      map.setCenter(loc);
-      map.setZoom(16);
-    });
-  }
-}
-document.addEventListener('DOMContentLoaded', function() {
-  const servicesList = document.getElementById('services-list');
-  const addBtn = document.getElementById('addServiceBtn');
-  addBtn.addEventListener('click', function() {
-    const count = servicesList.querySelectorAll('.service-field').length;
-    if (count >= 10) return;
-    const div = document.createElement('div');
-    div.className = 'input-group mb-2 service-field';
-    div.setAttribute('data-index', count);
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'form-control';
-    input.name = 'service_' + (count + 1);
-    input.maxLength = 100;
-    input.placeholder = 'Service #' + (count + 1);
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-outline-danger service-remove';
-    btn.type = 'button';
-    btn.innerHTML = '&minus;';
-    btn.addEventListener('click', function() {
-      if (servicesList.querySelectorAll('.service-field').length > 2) {
-        div.remove();
-      }
-    });
-    if (count < 2) btn.disabled = true;
-    div.appendChild(input);
-    div.appendChild(btn);
-    servicesList.appendChild(div);
-  });
-  servicesList.querySelectorAll('.service-field .service-remove').forEach(function(btn, idx) {
-    if (idx >= 2) btn.disabled = false;
-    btn.addEventListener('click', function() {
-      if (servicesList.querySelectorAll('.service-field').length > 2) {
-        btn.parentElement.remove();
-      }
-    });
-  });
-});
-
-// For Preview Modal
-window.addEventListener('DOMContentLoaded', function() {
-  let previewBtn = document.getElementById('previewListingBtn');
-  let modal = document.getElementById('listingPreviewModal');
-  let modalContent = document.getElementById('listing-preview-content');
-  let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
-
-  previewBtn && previewBtn.addEventListener('click', function(){
-    let name = document.querySelector('[name="business_name"]')?.value || "{{ biz.business_name }}";
-    let address = document.getElementById('address-autocomplete')?.value || "{{ biz.address }}";
-    let category = document.getElementById('business_category')?.value || "{{ biz.category }}";
-    let phone = document.getElementById('us-phone')?.value || "{{ biz.phone_number }}";
-    let website = document.getElementById('website_url')?.value || "{{ biz.website_url }}";
-    let about = document.getElementById('about_us')?.value || "{{ biz.about_us }}";
-    let keywords = document.getElementById('search_keywords')?.value || "{{ biz.search_keywords }}";
-    let services = [];
-    document.querySelectorAll('#services-list input').forEach(input => {
-      if(input.value.trim()!="") services.push(input.value.trim());
-    });
-    let img = '{{ profile_img_url if profile_img_url else "" }}';
-    let smallListing = `
-      <div class="card mb-3">
-        <div class="row g-0 align-items-center">
-          <div class="col-md-3 text-center">
-            ${img? `<img src="${img}" class="rounded-circle" style="width:60px;height:60px;object-fit:cover;">` : ""}
-          </div>
-          <div class="col-md-9">
-            <b>${name}</b><br/>
-            <span class="text-muted">${category}</span><br/>
-            <span>${address}</span><br/>
-            <small>Services: ${services.length ? services.join(', ') : 'N/A'}</small>
-          </div>
-        </div>
-      </div>
-    `;
-    let largeListing = `
-      <div>
-        ${img? `<div class="mb-3 text-center"><img src="${img}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;"></div>` : ""}
-        <h3>${name}</h3>
-        <div><strong>Category:</strong> ${category}</div>
-        <div><strong>Address:</strong> ${address}</div>
-        <div id="preview-map" style="width:100%;height:150px;border-radius:8px;margin:8px 0;"></div>
-        <div><strong>Phone:</strong> ${phone}</div>
-        <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
-        <div><strong>Email:</strong> {{ biz.business_email }}</div>
-        <div><strong>About us:</strong> ${about}</div>
-        <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
-      </div>
-    `;
-    let html = `
-      <div>
-        <h5>Small Listing Preview</h5>
-        ${smallListing}
-        <hr/>
-        <h5>Large Listing Preview</h5>
-        ${largeListing}
-      </div>
-    `;
-    modalContent.innerHTML = html;
-    setTimeout(function() {
-      let lat = Number(document.getElementById('latitude')?.value) || 39.8283;
-      let lng = Number(document.getElementById('longitude')?.value) || -98.5795;
-      if (window.google && document.getElementById('preview-map')) {
-        let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
-          center: {lat: lat, lng: lng},
-          zoom: 16
-        });
-        new google.maps.Marker({position: {lat: lat, lng: lng}, map: previewMap});
-      }
-    }, 200);
-    previewModal && previewModal.show();
-  });
-});
-</script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places&callback=initMap" async defer></script>
-<div class="modal fade" id="listingPreviewModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Profile Preview</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="listing-preview-content"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
