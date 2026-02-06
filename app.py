@@ -30,7 +30,7 @@ class ServiceRequestForm(FlaskForm):
             ("contractor", "Contractor Services"),
             ("cleaning", "Cleaning Services"),
             ("lawn", "Lawn Care"),
-            # Add more as needed
+            # Add more as needed here
         ],
         validators=[DataRequired()]
     )
