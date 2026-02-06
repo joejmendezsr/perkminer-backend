@@ -266,6 +266,17 @@
     <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
            value="{{ biz.website_url or '' }}" placeholder="https://your-website.com">
   </div>
+
+<!-- Address with Map in Profile Form -->
+<div class="col-12 mb-3">
+  <label class="form-label">Business Address</label>
+  {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
+  <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
+  <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
+  <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
+  <div id="profile-map" style="width:100%; height:300px; border-radius:8px; margin-bottom:12px;"></div>
+</div>
+
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
@@ -541,6 +552,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <h3>${name}</h3>
         <div><strong>Category:</strong> ${category}</div>
         <div><strong>Address:</strong> ${address}</div>
+        <div id="preview-map" style="width:100%;height:150px;border-radius:8px;margin:8px 0;"></div>
         <div><strong>Phone:</strong> ${phone}</div>
         <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
         <div><strong>Email:</strong> {{ biz.business_email }}</div>
@@ -548,6 +560,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
       </div>
     `;
+
     let html = `
       ${submitForm}
       <h5>Small Listing Preview</h5>
@@ -557,8 +570,78 @@ window.addEventListener('DOMContentLoaded', function() {
       ${largeListing}
     `;
     modalContent.innerHTML = html;
+    setTimeout(function() {
+      let lat = Number(document.getElementById('latitude')?.value) || 39.8283;
+      let lng = Number(document.getElementById('longitude')?.value) || -98.5795;
+      if (window.google && document.getElementById('preview-map')) {
+        let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
+          center: {lat: lat, lng: lng},
+          zoom: 16
+        });
+        new google.maps.Marker({position: {lat: lat, lng: lng}, map: previewMap});
+      }
+    }, 200);
     previewModal && previewModal.show();
   });
+});
+</script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places"></script>
+    <script>
+function initProfileMap() {
+  const latInput = document.getElementById('latitude');
+  const lngInput = document.getElementById('longitude');
+  let lat = parseFloat(latInput.value) || 39.8283;  // Default US center
+  let lng = parseFloat(lngInput.value) || -98.5795;
+  let mapDiv = document.getElementById('profile-map');
+  if (!mapDiv) return;
+
+  let map = new google.maps.Map(mapDiv, {
+    center: {lat: lat, lng: lng},
+    zoom: (latInput.value && lngInput.value) ? 16 : 4
+  });
+  let marker = new google.maps.Marker({
+    position: {lat: lat, lng: lng},
+    map: map,
+    draggable: true
+  });
+
+  // Drag the marker to update fields
+  marker.addListener('dragend', function(event) {
+    latInput.value = event.latLng.lat();
+    lngInput.value = event.latLng.lng();
+  });
+
+  // Clicking the map sets the marker and updates fields
+  map.addListener('click', function(e) {
+    marker.setPosition(e.latLng);
+    latInput.value = e.latLng.lat();
+    lngInput.value = e.latLng.lng();
+  });
+
+  // Autocomplete logic
+  const addressInput = document.getElementById('address-autocomplete');
+  if (addressInput) {
+    let autocomplete = new google.maps.places.Autocomplete(addressInput, { types: ['geocode'] });
+    autocomplete.addListener('place_changed', function () {
+      let place = autocomplete.getPlace();
+      if (!place.geometry) return;
+      let loc = place.geometry.location;
+      latInput.value = loc.lat();
+      lngInput.value = loc.lng();
+      marker.setPosition(loc);
+      map.setCenter(loc);
+      map.setZoom(16);
+    });
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  if(window.google && google.maps) {
+    initProfileMap();
+  } else {
+    // Ensure map initializes after API loads
+    window.initProfileMap = initProfileMap;
+  }
 });
 </script>
 </body>
