@@ -1423,7 +1423,7 @@ def seed_admins_once():
         roles[name] = role
     db.session.commit()
 
---- Create demo admin users if needed ---
+    # --- Create demo admin users if needed ---
 admins = [
     {
         "email": "admin1@perkminer.com",
