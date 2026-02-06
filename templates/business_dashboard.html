@@ -175,21 +175,37 @@
 
     <!-- Invite Others Button -->
     <div class="card p-4 mb-4">
-      <div class="mb-3">
-        <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
-          <i class="bi bi-person-plus me-1"></i>Invite others to join
-        </button>
-      </div>
-      <div>
-        <button class="btn btn-primary w-100" type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#profileCollapse"
-          aria-expanded="false"
-          aria-controls="profileCollapse">
-          View/Edit Profile
-        </button>
-      </div>
+    <div class="mb-3 d-flex gap-2">
+      <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+        <i class="bi bi-person-plus me-1"></i>Invite others to join
+      </button>
+      <button class="btn btn-secondary" type="button" id="previewListingBtn">
+        Preview Listing
+      </button>
+      <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+        data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
+        View/Edit Profile
+      </button>
     </div>
+    {% if biz.status %}
+      <div class="alert alert-info p-2 mb-3" style="font-size:1.09em; text-align:center;">
+        Status: <strong>
+          {% if biz.status == "not_submitted" %}
+            Not Submitted
+          {% elif biz.status == "pending" %}
+            Pending Review
+          {% elif biz.status == "in_review" %}
+            In Review
+          {% elif biz.status == "rejected" %}
+            Rejected
+          {% elif biz.status == "approved" %}
+            Approved
+          {% else %}
+            {{ biz.status }}
+          {% endif %}
+        </strong>
+      </div>
+    {% endif %}
     <!-- Invite Modal -->
     <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -306,44 +322,11 @@
     <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
-  <!-- Status display -->
-  {% if biz.status %}
-    <div class="col-12 mb-2">
-      <div class="alert alert-info p-2 mb-0" style="font-size:1.09em; text-align:center;">
-        Status: <strong>
-          {% if biz.status == "not_submitted" %}
-            Not Submitted
-          {% elif biz.status == "pending" %}
-            Pending Review
-          {% elif biz.status == "in_review" %}
-            In Review
-          {% elif biz.status == "rejected" %}
-            Rejected
-          {% elif biz.status == "approved" %}
-            Approved
-          {% else %}
-            {{ biz.status }}
-          {% endif %}
-        </strong>
-      </div>
-    </div>
-  {% endif %}
 
   <div class="col-12 mt-3 d-flex gap-2">
     {{ profile_form.submit(class="btn btn-success") }}
   </div>
 </form>
-<!-- Submit for Review button OUTSIDE the main profile form -->
-{% if biz.status == "not_submitted" or biz.status == "rejected" %}
-  <div class="col-12 mt-3 d-flex gap-2">
-    <form method="post" action="{{ url_for('listing_disclaimer') }}" style="width:100%;">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="listing_id" value="{{ biz.id }}">
-      <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
-      <button type="submit" class="btn btn-warning w-100">Submit for Review</button>
-    </form>
-  </div>
-{% endif %}
       </div>
     </div>
   </div> <!-- end .card.mb-4.p-4 (dashboard main card) -->
@@ -487,5 +470,96 @@
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Preview Listing Modal -->
+<div class="modal fade" id="listingPreviewModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Profile Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="listing-preview-content">
+        <!-- Submit listing form goes here, filled in by JS below -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Place the preview JS script HERE: -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  let previewBtn = document.getElementById('previewListingBtn');
+  let modal = document.getElementById('listingPreviewModal');
+  let modalContent = document.getElementById('listing-preview-content');
+  let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
+
+  previewBtn && previewBtn.addEventListener('click', function(){
+    let name = document.querySelector('[name="business_name"]')?.value || "{{ biz.business_name }}";
+    let address = document.getElementById('address-autocomplete')?.value || "{{ biz.address }}";
+    let category = document.getElementById('business_category')?.value || "{{ biz.category }}";
+    let phone = document.getElementById('us-phone')?.value || "{{ biz.phone_number }}";
+    let website = document.getElementById('website_url')?.value || "{{ biz.website_url }}";
+    let about = document.getElementById('about_us')?.value || "{{ biz.about_us }}";
+    let keywords = document.getElementById('search_keywords')?.value || "{{ biz.search_keywords }}";
+    let services = [];
+    document.querySelectorAll('#services-list input').forEach(input => {
+      if(input.value.trim()!="") services.push(input.value.trim());
+    });
+    let img = '{{ profile_img_url if profile_img_url else "" }}';
+
+    // Only show submit if status is not_submitted or rejected
+    let canSubmit = "{{ biz.status }}" === "not_submitted" || "{{ biz.status }}" === "rejected";
+    let submitForm = canSubmit ? `
+      <form method="post" action="{{ url_for('listing_disclaimer') }}" class="mb-3 mt-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="listing_id" value="{{ biz.id }}">
+        <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
+        <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</button>
+      </form>
+    ` : "";
+
+    let smallListing = `
+      <div class="card mb-3">
+        <div class="row g-0 align-items-center">
+          <div class="col-md-3 text-center">
+            ${img? `<img src="${img}" class="rounded-circle" style="width:60px;height:60px;object-fit:cover;">` : ""}
+          </div>
+          <div class="col-md-9">
+            <b>${name}</b><br/>
+            <span class="text-muted">${category}</span><br/>
+            <span>${address}</span><br/>
+            <small>Services: ${services.length ? services.join(', ') : 'N/A'}</small>
+          </div>
+        </div>
+      </div>
+    `;
+    let largeListing = `
+      <div>
+        ${img? `<div class="mb-3 text-center"><img src="${img}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;"></div>` : ""}
+        <h3>${name}</h3>
+        <div><strong>Category:</strong> ${category}</div>
+        <div><strong>Address:</strong> ${address}</div>
+        <div><strong>Phone:</strong> ${phone}</div>
+        <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
+        <div><strong>Email:</strong> {{ biz.business_email }}</div>
+        <div><strong>About us:</strong> ${about}</div>
+        <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
+      </div>
+    `;
+    let html = `
+      ${submitForm}
+      <h5>Small Listing Preview</h5>
+      ${smallListing}
+      <hr/>
+      <h5>Large Listing Preview</h5>
+      ${largeListing}
+    `;
+    modalContent.innerHTML = html;
+    previewModal && previewModal.show();
+  });
+});
+</script>
 </body>
 </html>
