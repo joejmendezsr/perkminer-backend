@@ -10,7 +10,7 @@
   <div class="card shadow p-4">
     <h3 class="mb-3">Request Service from {{ biz.business_name }}</h3>
     <form method="post">
-      {{ form.hidden_tag() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div class="mb-3">
         {{ form.service_type.label(class="form-label") }}
