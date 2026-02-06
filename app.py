@@ -173,7 +173,6 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
-    # Optional: User and Role relationships for convenience
     user = db.relationship('User', backref=db.backref('user_roles', cascade='all, delete-orphan'))
     role = db.relationship('Role', backref=db.backref('user_roles', cascade='all, delete-orphan'))
 
@@ -1028,7 +1027,6 @@ def business_dashboard():
     longitude = biz.longitude if biz.longitude else ""
     profile_img_url = biz.profile_photo if biz.profile_photo else None
 
-    # Reward calculator logic (unchanged)
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
