@@ -656,6 +656,54 @@ def two_factor():
         flash("Incorrect code. Please try again.")
     return render_template("two_factor.html", form=form)
 
+@app.route("/resend_login_2fa", methods=["POST"])
+def resend_login_2fa():
+    user_id = session.get('pending_2fa_user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            code = str(random.randint(100000, 999999))
+            session['pending_2fa_code'] = code
+            send_email(
+                user.email,
+                "Your PerkMiner Login Code",
+                f"<p>Your PerkMiner login code is: <b>{code}</b></p>"
+            )
+            flash("New code sent.")
+    return redirect(url_for("two_factor"))
+
+@app.route("/resend_biz_2fa", methods=["POST"])
+def resend_login_2fa():
+    user_id = session.get('pending_2fa_user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            code = str(random.randint(100000, 999999))
+            session['pending_2fa_code'] = code
+            send_email(
+                user.email,
+                "Your PerkMiner Login Code",
+                f"<p>Your PerkMiner login code is: <b>{code}</b></p>"
+            )
+            flash("New code sent.")
+    return redirect(url_for("two_factor"))
+
+@app.route("/resend_admin_2fa", methods=["POST"])
+def resend_login_2fa():
+    user_id = session.get('pending_2fa_user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            code = str(random.randint(100000, 999999))
+            session['pending_2fa_code'] = code
+            send_email(
+                user.email,
+                "Your PerkMiner Login Code",
+                f"<p>Your PerkMiner login code is: <b>{code}</b></p>"
+            )
+            flash("New code sent.")
+    return redirect(url_for("two_factor"))
+
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     form = ForgotPasswordForm()
