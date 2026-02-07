@@ -278,9 +278,10 @@
 
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
-   <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
-      Products or Services Offered (10 max)</br>(click to add product types and services)
-    </a>
+   <button class="btn btn-outline-primary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
+     Products or Services Offered (10 max)
+     <br>(click to add product types and services)
+   </button>
     <div class="collapse mt-2" id="servicesCollapse">
       <div id="services-list">
         {% set services = [
@@ -599,6 +600,62 @@
       });
     });
     </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const servicesList = document.getElementById('services-list');
+  const addServiceBtn = document.getElementById('addServiceBtn');
+
+  function countServiceFields() {
+    return servicesList.querySelectorAll('.service-field').length;
+  }
+
+  addServiceBtn.addEventListener('click', function() {
+    let current = countServiceFields();
+    if (current < 10) {
+      // Create the new input div
+      const div = document.createElement('div');
+      div.className = 'input-group mb-2 service-field';
+      div.setAttribute('data-index', current);
+
+      // Create input
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'form-control';
+      input.name = 'service_' + (current + 1);
+      input.maxLength = 100;
+      input.placeholder = 'Service #' + (current + 1);
+
+      // Remove button
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn btn-outline-danger service-remove';
+      removeBtn.innerHTML = '&minus;';
+      removeBtn.addEventListener('click', function() {
+        if (current > 2) div.remove();
+      });
+
+      div.appendChild(input);
+      div.appendChild(removeBtn);
+
+      servicesList.appendChild(div);
+    }
+    if (countServiceFields() >= 10) {
+      addServiceBtn.disabled = true;
+    }
+  });
+
+  servicesList.querySelectorAll('.service-remove').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // Only allow remove for fields > 2
+      if (countServiceFields() > 2 && !btn.disabled) {
+        btn.parentElement.remove();
+        addServiceBtn.disabled = false;
+      }
+    });
+  });
+});
+</script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&libraries=places"></script>
     <script>
