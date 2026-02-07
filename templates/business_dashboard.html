@@ -491,7 +491,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body" id="listing-preview-content">
-            {% if biz.status == "approved" and (
+            {% if biz.status in ["not_submitted", "approved"] and (
               biz.draft_business_name or
               biz.draft_category or
               biz.draft_profile_photo or
