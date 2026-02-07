@@ -295,6 +295,15 @@
           form_data.service_9,
           form_data.service_10
         ] %}
+        {% for s in range(0, 10) %}
+          {% if services[s] or s < 2 %}
+            <div class="input-group mb-2 service-field" data-index="{{ s }}">
+              <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
+              <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
               <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
             </div>
           {% endif %}
