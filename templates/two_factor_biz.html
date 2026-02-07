@@ -16,6 +16,10 @@
         </div>
         <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
     </form>
+    <form method="post" action="{{ url_for('resend_biz_2fa') }}">
+        {{ form.hidden_tag() }}
+        <button type="submit" class="btn btn-link ps-0">Resend Code</button>
+    </form>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="alert alert-warning mt-3">
@@ -25,9 +29,6 @@
         </div>
       {% endif %}
     {% endwith %}
-    <form method="post" action="{{ url_for('resend_biz_2fa') }}">
-      <button type="submit" class="btn btn-link ps-0">Resend Code</button>
-    </form>
 </div>
 </body>
 </html>
