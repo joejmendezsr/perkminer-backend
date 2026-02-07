@@ -986,47 +986,72 @@ def business_dashboard():
         flash("Please log in and confirm your business email to access the dashboard.")
         return redirect(url_for("business_login"))
 
+    editable_fields = [
+        "business_name", "category", "phone_number", "address", "latitude", "longitude",
+        "website_url", "about_us", "hours_of_operation", "search_keywords",
+        "service_1", "service_2", "service_3", "service_4", "service_5",
+        "service_6", "service_7", "service_8", "service_9", "service_10"
+    ]
+
     def get_service_field(n):
         return request.form.get(f"service_{n}", "")
 
+    # POST: Handle profile save
     if request.method == "POST":
         updated = False
-        # Business profile fields—set updated=True for any real change
-        if 'business_name' in request.form:
-            biz.business_name = request.form.get('business_name', biz.business_name)
-            updated = True
-        if 'category' in request.form:
-            biz.category = request.form.get('category', biz.category)
-            updated = True
-        biz.phone_number = request.form.get('phone_number', biz.phone_number)
-        biz.address = request.form.get('address', biz.address)
-        try:
-            if request.form.get('latitude'):
-                biz.latitude = float(request.form.get('latitude'))
-            if request.form.get('longitude'):
-                biz.longitude = float(request.form.get('longitude'))
-        except ValueError:
-            pass
-        file = request.files.get('profile_photo')
-        if file and allowed_file(file.filename):
-            upload_result = cloudinary.uploader.upload(file)
-            biz.profile_photo = upload_result.get('secure_url')
-            updated = True
-        biz.hours_of_operation = request.form.get('hours_of_operation', biz.hours_of_operation)
-        biz.website_url = request.form.get('website_url', biz.website_url)
-        biz.about_us = request.form.get('about_us', biz.about_us)
-        biz.search_keywords = request.form.get('search_keywords', biz.search_keywords)
-        for n in range(1, 11):
-            setattr(biz, f'service_{n}', get_service_field(n))
+
+        if biz.status == "approved":
+            # Save only to draft fields!
+            for field in editable_fields:
+                val = request.form.get(field)
+                if val is not None:
+                    setattr(biz, f"draft_{field}", val)
+                    updated = True
+            # Also process image upload as a draft (optional, up to you)
+            file = request.files.get('profile_photo')
+            if file and allowed_file(file.filename):
+                upload_result = cloudinary.uploader.upload(file)
+                biz.draft_profile_photo = upload_result.get('secure_url')  # Use a separate draft_profile_photo!
+                updated = True
+        else:
+            # Save directly to live fields
+            for field in editable_fields:
+                val = request.form.get(field)
+                if val is not None:
+                    setattr(biz, field, val)
+                    updated = True
+            file = request.files.get('profile_photo')
+            if file and allowed_file(file.filename):
+                upload_result = cloudinary.uploader.upload(file)
+                biz.profile_photo = upload_result.get('secure_url')
+                updated = True
+
         if updated:
             db.session.commit()
             flash("Business profile updated!")
         return redirect(url_for('business_dashboard'))
 
-    latitude = biz.latitude if biz.latitude else ""
-    longitude = biz.longitude if biz.longitude else ""
-    profile_img_url = biz.profile_photo if biz.profile_photo else None
+    # GET: Load profile form data (prefer draft if status=approved and draft exists)
+    form_data = {}
+    for field in editable_fields:
+        draft_field = f"draft_{field}"
+        # Show draft value if status is approved and draft is non-empty, otherwise show live
+        val = getattr(biz, draft_field, None) if biz.status == "approved" else None
+        if val not in [None, ""]:
+            form_data[field] = val
+        else:
+            form_data[field] = getattr(biz, field, "")
 
+    # Profile photo logic (show draft if exists, otherwise live)
+    if hasattr(biz, "draft_profile_photo") and biz.status == "approved" and biz.draft_profile_photo:
+        profile_img_url = biz.draft_profile_photo
+    else:
+        profile_img_url = biz.profile_photo if biz.profile_photo else None
+
+    latitude = form_data["latitude"]
+    longitude = form_data["longitude"]
+
+    # --- Rewards and referral tree logic (leave unchanged) ---
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
@@ -1080,19 +1105,22 @@ def business_dashboard():
             for b4 in b4s:
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
+
+    # --- Render template, pass form_data for fields and add draft state awareness ---
     return render_template(
         "business_dashboard.html",
         form=form,
         profile_form=profile_form,
         invite_form=invite_form,
         biz=biz,
+        form_data=form_data,  # <-- Use this in your template for all field values
         sponsor=sponsor,
         referral_code=biz.referral_code,
         rewards_table=rewards_table,
         level2=level2, level3=level3, level4=level4, level5=level5,
         profile_img_url=profile_img_url,
-        phone_number=biz.phone_number,
-        address=biz.address,
+        phone_number=form_data.get("phone_number",""),
+        address=form_data.get("address",""),
         latitude=latitude,
         longitude=longitude
     )
