@@ -673,7 +673,7 @@ def resend_login_2fa():
     return redirect(url_for("two_factor"))
 
 @app.route("/resend_biz_2fa", methods=["POST"])
-def resend_login_2fa():
+def resend_biz_2fa():
     user_id = session.get('pending_2fa_user_id')
     if user_id:
         user = User.query.get(user_id)
@@ -689,7 +689,7 @@ def resend_login_2fa():
     return redirect(url_for("two_factor"))
 
 @app.route("/resend_admin_2fa", methods=["POST"])
-def resend_login_2fa():
+def resend_admin_2fa():
     user_id = session.get('pending_2fa_user_id')
     if user_id:
         user = User.query.get(user_id)
