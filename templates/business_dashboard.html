@@ -508,10 +508,10 @@ window.addEventListener('DOMContentLoaded', function() {
 previewBtn && previewBtn.addEventListener('click', function(){
   let canSubmit = {{ biz.status | tojson }} === "not_submitted" || {{ biz.status | tojson }} === "rejected";
   let submitForm = canSubmit ? `
-    <form method="post" action=${{ url_for('listing_disclaimer') | tojson }} class="mb-3 mt-2">
-      <input type="hidden" name="csrf_token" value=${{ csrf_token() | tojson }}>
-      <input type="hidden" name="listing_id" value=${{ biz.id | tojson }}>
-      <input type="hidden" name="referral_code" value=${{ biz.referral_code | tojson }}>
+    <form method="post" action="{{ url_for('listing_disclaimer') }}" class="mb-3 mt-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="listing_id" value="{{ biz.id }}">
+      <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
       <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</button>
     </form>
   ` : "";
