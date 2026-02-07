@@ -246,20 +246,20 @@
   <!-- Business Name -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Name</label>
-    {{ profile_form.business_name(class="form-control", value=biz.business_name, placeholder="Enter your business name") }}
+    <input type="text" class="form-control" name="business_name" value="{{ form_data.business_name }}" placeholder="Enter your business name">
   </div>
 
   <!-- Phone Number -->
   <div class="col-12 mb-3">
     <label class="form-label">Phone Number</label>
-    {{ profile_form.phone_number(class="form-control", id="us-phone", value=phone_number, placeholder="(555) 555-5555") }}
+    <input type="text" class="form-control" id="us-phone" name="phone_number" value="{{ form_data.phone_number }}" placeholder="(555) 555-5555">
     <div class="form-text">Format: (555) 555-5555</div>
   </div>
 
   <!-- Business Address -->
   <div class="col-12 mb-3">
     <label class="form-label">Business Address</label>
-    {{ profile_form.address(class="form-control", id="address-autocomplete", value=address, placeholder="Business address", autocomplete="off") }}
+    <input type="text" class="form-control" id="address-autocomplete" name="address" value="{{ form_data.address }}" placeholder="Business address" autocomplete="off">
   </div>
 
 <!-- Address with Map in Profile Form -->
@@ -273,32 +273,28 @@
   <div class="col-12 mb-3">
     <label class="form-label">Website</label>
     <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
-           value="{{ biz.website_url or '' }}" placeholder="https://your-website.com">
+           value="{{ form_data.website_url }}" placeholder="https://your-website.com">
   </div>
 
   <!-- Services Offered Collapse -->
   <div class="col-12 mt-3">
    <a class="pointer fw-semibold text-primary" data-bs-toggle="collapse" href="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
-      Products or Services Offered</br>(click to add services)
+      Products or Services Offered (10 max)</br>(click to add product types and services)
     </a>
     <div class="collapse mt-2" id="servicesCollapse">
       <div id="services-list">
         {% set services = [
-          biz.service_1 or '',
-          biz.service_2 or '',
-          biz.service_3 or '',
-          biz.service_4 or '',
-          biz.service_5 or '',
-          biz.service_6 or '',
-          biz.service_7 or '',
-          biz.service_8 or '',
-          biz.service_9 or '',
-          biz.service_10 or ''
+          form_data.service_1,
+          form_data.service_2,
+          form_data.service_3,
+          form_data.service_4,
+          form_data.service_5,
+          form_data.service_6,
+          form_data.service_7,
+          form_data.service_8,
+          form_data.service_9,
+          form_data.service_10
         ] %}
-        {% for s in range(0, 10) %}
-          {% if services[s] or s < 2 %}
-            <div class="input-group mb-2 service-field" data-index="{{ s }}">
-              <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
               <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
             </div>
           {% endif %}
@@ -310,26 +306,27 @@
   </div>
   <div class="col-12 mb-3">
     <label class="form-label">About Us</label>
-    <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ biz.about_us or '' }}</textarea>
+    <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ form_data.about_us }}</textarea>
     <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
   </div>
   <div class="col-12 mb-3">
     <label class="form-label">Category</label>
     <select class="form-select" name="category" id="business_category" required>
       <option value="">Select category...</option>
-      <option value="Handyman-Contractor" {% if biz.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
-      <option value="Auto Parts & Service" {% if biz.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
-      <option value="Home and Garden" {% if biz.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
-      <option value="Retail Outlet" {% if biz.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
-      <option value="Professional Services" {% if biz.category == 'Professional Services' %}selected{% endif %}>Professional Services</option>
-      <option value="Restaurant" {% if biz.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
-      <option value="Real Estate" {% if biz.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+      <option value="Handyman-Contractor" {% if form_data.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
+      <option value="Auto Parts & Service" {% if form_data.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
+      <option value="Home and Garden" {% if form_data.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
+      <option value="Retail Outlet" {% if form_data.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
+      <option value="Professional Services" {% if form_data.category == 'Professional Services' %}selected{% endif %}>Professional Services</option>
+      <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
+      <option value="Real Estate" {% if form_data.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+      <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
     </select>
   </div>
   <!-- Keywords -->
   <div class="col-12 mt-3">
     <label class="form-label">Keywords (for search, separated by commas)</label>
-    <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ biz.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
+    <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ form_data.search_keywords }}" placeholder="e.g. roofing,solar,energy">
     <div class="form-text">Up to 20 keywords (comma-separated).</div>
   </div>
 
