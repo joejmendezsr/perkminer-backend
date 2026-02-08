@@ -674,19 +674,19 @@ def resend_login_2fa():
 
 @app.route("/resend_biz_2fa", methods=["POST"])
 def resend_biz_2fa():
-    user_id = session.get('pending_2fa_user_id')
-    if user_id:
-        user = User.query.get(user_id)
-        if user:
+    biz_id = session.get('pending_2fa_biz_id')
+    if biz_id:
+        biz = Business.query.get(biz_id)
+        if biz:
             code = str(random.randint(100000, 999999))
             session['pending_2fa_code'] = code
             send_email(
-                user.email,
-                "Your PerkMiner Login Code",
-                f"<p>Your PerkMiner login code is: <b>{code}</b></p>"
+                biz.business_email,
+                "Your PerkMiner Business Login Code",
+                f"<p>Your PerkMiner business login code is: <b>{code}</b></p>"
             )
             flash("New code sent.")
-    return redirect(url_for("two_factor"))
+    return redirect(url_for("two_factor_biz"))
 
 @app.route("/resend_admin_2fa", methods=["POST"])
 def resend_admin_2fa():
