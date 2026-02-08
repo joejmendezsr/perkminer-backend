@@ -952,21 +952,21 @@ def active_session(interaction_id):
         else:
             return redirect(url_for('user_biz_interactions'))
 
-    # --- POST logic to create a message ---
     if request.method == "POST":
         text = request.form.get("message_text", "").strip()
         uploaded_file = request.files.get("message_file")
         file_url = None
         file_name = None
 
-    if uploaded_file and uploaded_file.filename:
-        filename = secure_filename(uploaded_file.filename)
-        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        uploaded_file.save(upload_path)
-        file_url = url_for('uploaded_file', filename=filename)
-        file_name = uploaded_file.filename
+        if uploaded_file and uploaded_file.filename:
+            filename = secure_filename(uploaded_file.filename)
+            upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(upload_path)
+            file_url = url_for('uploaded_file', filename=filename)
+            file_name = uploaded_file.filename
 
-        if text:
+        # Only save if text or file is present
+        if text or file_url:
             if is_user:
                 sender_type = "user"
                 sender_id = current_user.id
@@ -980,13 +980,12 @@ def active_session(interaction_id):
                 interaction_id=interaction.id,
                 sender_type=sender_type,
                 sender_id=sender_id,
-                text=text
+                text=text,
                 file_url=file_url,
                 file_name=file_name
             )
             db.session.add(msg)
             db.session.commit()
-            # after sending a message, redirect or render as you like
             return redirect(url_for('active_session', interaction_id=interaction_id))
 
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
