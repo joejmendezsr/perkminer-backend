@@ -161,6 +161,7 @@ class Business(db.Model):
     service_10 = db.Column(db.String(100))
     search_keywords = db.Column(db.String(500))
     draft_business_name = db.Column(db.String(100))
+    draft_listing_type = db.Column(db.String(50))
     draft_category = db.Column(db.String(50), default="Other")
     draft_profile_photo = db.Column(db.String(200))
     draft_phone_number = db.Column(db.String(30))
@@ -1361,10 +1362,26 @@ def start_review(listing_id):
 @role_required("approve_reject_listings")
 def approve_listing(listing_id):
     biz = Business.query.get_or_404(listing_id)
-    if biz.status in ["pending", "in_review"]:
+    if biz.status in ["pending", "in_review", "approved"]:
+        # Promote all draft fields to live fields if they exist
+        promote_fields = [
+            "business_name", "listing_type", "category", "phone_number", "address", "latitude", "longitude",
+            "website_url", "about_us", "hours_of_operation", "search_keywords",
+            "service_1", "service_2", "service_3", "service_4", "service_5",
+            "service_6", "service_7", "service_8", "service_9", "service_10",
+            "profile_photo"
+        ]
+        changed = False
+        for field in promote_fields:
+            draft_value = getattr(biz, f"draft_{field}", None)
+            if draft_value not in [None, ""]:
+                setattr(biz, field, draft_value)
+                # Clear the draft field
+                setattr(biz, f"draft_{field}", None)
+                changed = True
         biz.status = "approved"
         db.session.commit()
-        flash(f"Listing {biz.business_name} approved!")
+        flash(f"Listing {biz.business_name} approved!" + (" Draft changes promoted." if changed else ""))
     return redirect(url_for("approve_reject_dashboard"))
 
 @app.route("/admin/listing/<int:listing_id>/reject", methods=["POST"])
