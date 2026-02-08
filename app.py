@@ -22,6 +22,7 @@ from flask_wtf import FlaskForm
 from wtforms import SelectField, TextAreaField, DecimalField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, Length
 from flask_mail import Message as MailMessage
+from datetime import datetime
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -188,6 +189,15 @@ class Business(db.Model):
 
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
+
+class Quote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False, unique=True)
+    amount = db.Column(db.Float, nullable=False)
+    details = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    interaction = db.relationship('Interaction', backref=db.backref('quote', uselist=False))
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1001,6 +1011,46 @@ def session_messages(interaction_id):
         return ""
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
     return render_template("partials/_messages.html", interaction=interaction, messages=messages, is_user=is_user, is_biz=is_biz)
+
+@app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
+@login_required
+def create_quote(interaction_id):
+    # Only business can do this
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_biz = session.get('business_id') == interaction.business_id
+    if not is_biz:
+        flash("Only the business can send a quote for this session.")
+        return redirect(url_for('active_session', interaction_id=interaction_id))
+
+    if request.method == "POST":
+        amount = request.form.get("amount")
+        details = request.form.get("details")
+        if not amount or not details:
+            flash("Amount and quote details are required.", "danger")
+        else:
+            quote = Quote(
+                interaction_id=interaction.id,
+                amount=amount,
+                details=details
+            )
+            db.session.add(quote)
+            db.session.commit()
+            flash("Quote sent to user!", "success")
+            return redirect(url_for('active_session', interaction_id=interaction_id))
+    # If quote already exists, show it
+    existing_quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    return render_template("quote.html", interaction=interaction, quote=existing_quote)
+
+@app.route("/session/<int:interaction_id>/quote/view")
+@login_required
+def view_quote(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_user = interaction.user_id == getattr(current_user, 'id', None)
+    if not is_user:
+        flash("Only the user may view the quote.")
+        return redirect(url_for('active_session', interaction_id=interaction_id))
+    quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    return render_template("quote.html", interaction=interaction, quote=quote)
 
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():

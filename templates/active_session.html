@@ -61,6 +61,19 @@
             {% endif %}
         </div>
 
+        {# Business “Send Quote” button, only for business #}
+        {% if is_biz %}
+          <a href="{{ url_for('create_quote', interaction_id=interaction.id) }}" class="btn btn-warning mb-2 w-100">Send Quote</a>
+        {% endif %}
+
+        {# User “View Quote” button, only if quote exists #}
+        {% if is_user and interaction.quote %}
+          <div class="alert alert-info text-center">
+            <a href="{{ url_for('view_quote', interaction_id=interaction.id) }}" class="btn btn-warning">
+              View Quote &#128176;</a>
+          </div>
+        {% endif %}
+
         <div id="messages-box">
           {% for msg in messages %}
             <div class="row {% if msg.sender_type == 'user' and is_user or msg.sender_type == 'business' and is_biz %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
