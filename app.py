@@ -1372,13 +1372,26 @@ def approve_listing(listing_id):
             "profile_photo"
         ]
         changed = False
+        # Print draft and live before promoting
+        print("Before promotion:")
+        print("DRAFT listing_type:", getattr(biz, "draft_listing_type", "MISSING"))
+        print("LIVE listing_type:", getattr(biz, "listing_type", "MISSING"))
+
         for field in promote_fields:
-            draft_value = getattr(biz, f"draft_{field}", None)
+            draft_attr = f"draft_{field}"
+            draft_value = getattr(biz, draft_attr, None)
+            print(f"Promoting field: {field}, draft value: {draft_value}")
             if draft_value not in [None, ""]:
                 setattr(biz, field, draft_value)
-                # Clear the draft field
-                setattr(biz, f"draft_{field}", None)
+                setattr(biz, draft_attr, None)
+                print(f"--> Promoted {field} and cleared {draft_attr}")
                 changed = True
+
+        # Print draft and live after promoting
+        print("After promotion:")
+        print("DRAFT listing_type:", getattr(biz, "draft_listing_type", "MISSING"))
+        print("LIVE listing_type:", getattr(biz, "listing_type", "MISSING"))
+
         biz.status = "approved"
         db.session.commit()
         flash(f"Listing {biz.business_name} approved!" + (" Draft changes promoted." if changed else ""))
