@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Active Session</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container py-5">
+    <div class="card p-4">
+
+        {% if is_user %}
+            <h4 class="mb-3">Active Session with {{ interaction.business.business_name }}</h4>
+        {% elif is_biz %}
+            <h4 class="mb-3">Active Session with {{ interaction.user.name or interaction.user.email }}</h4>
+        {% endif %}
+
+        <div class="alert alert-info mb-3">Text messaging coming soon!</div>
+        <div class="mb-2">
+            <button class="btn btn-success me-2">Finalize Transaction</button>
+            <button class="btn btn-danger">End Session</button>
+        </div>
+        {% if is_user %}
+            <a href="{{ url_for('user_biz_interactions') }}" class="btn btn-secondary mt-3">Back</a>
+        {% elif is_biz %}
+            <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-secondary mt-3">Back</a>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

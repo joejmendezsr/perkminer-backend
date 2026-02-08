@@ -200,6 +200,37 @@ class UserRoles(db.Model):
     user = db.relationship('User', backref=db.backref('user_roles', cascade='all, delete-orphan'))
     role = db.relationship('Role', backref=db.backref('user_roles', cascade='all, delete-orphan'))
 
+from datetime import datetime
+
+class Interaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
+    service_type = db.Column(db.String(100), nullable=False)
+    details = db.Column(db.Text, nullable=False)
+    budget_low = db.Column(db.Float)
+    budget_high = db.Column(db.Float)
+    status = db.Column(db.String(32), default="active")  # active, closed, ended, etc.
+    referral_code = db.Column(db.String(32))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # relationships for easier querying (optional)
+    user = db.relationship('User', backref='interactions', lazy=True)
+    business = db.relationship('Business', backref='interactions', lazy=True)
+
+from datetime import datetime
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
+    sender_type = db.Column(db.String(16), nullable=False)  # "user" or "business"
+    sender_id = db.Column(db.Integer, nullable=False)        # User or business id, based on sender_type
+    text = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    interaction = db.relationship('Interaction', backref='messages', lazy=True)
+
 class EditUserForm(FlaskForm):
     name = StringField('Name', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -828,12 +859,23 @@ def dashboard():
             for u4 in l4s:
                 l5s = User.query.filter_by(sponsor_id=u4.id).all()
                 level5.extend(l5s)
-    return render_template("dashboard.html", form=form, profile_form=profile_form, invite_form=invite_form,
+
+    # Query for active sessions for this user
+    active_sessions = Interaction.query.filter_by(user_id=current_user.id, status='active').all()
+    has_active_sessions = len(active_sessions) > 0
+
+    return render_template("dashboard.html",
+         form=form,
+         profile_form=profile_form,
+         invite_form=invite_form,
          email=current_user.email,
-         referral_code=current_user.referral_code, sponsor=sponsor if sponsor else None,
-         rewards_table=rewards_table, level2=level2, level3=level3, level4=level4, level5=level5,
+         referral_code=current_user.referral_code,
+         sponsor=sponsor if sponsor else None,
+         rewards_table=rewards_table,
+         level2=level2, level3=level3, level4=level4, level5=level5,
          user_name=current_user.name,
-         profile_img_url=current_user.profile_photo
+         profile_img_url=current_user.profile_photo,
+         has_active_sessions=has_active_sessions  # <--- pass this for template logic
     )
 
 @app.route("/logout")
@@ -841,6 +883,72 @@ def dashboard():
 def logout():
     logout_user()
     return redirect(url_for("home"))
+
+@app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
+@login_required
+def service_request(biz_id):
+    biz = Business.query.get_or_404(biz_id)
+    form = ServiceRequestForm()
+
+    if form.validate_on_submit():
+        # 1. Create the Interaction record
+        interaction = Interaction(
+            user_id=current_user.id,
+            business_id=biz.id,
+            service_type=form.service_type.data,
+            details=form.details.data,
+            budget_low=form.budget_low.data,
+            budget_high=form.budget_high.data,
+            status="active",
+            referral_code=getattr(current_user, "referral_code", None)
+        )
+        db.session.add(interaction)
+        db.session.commit()
+
+        # 2. Send email to business
+        interaction_link = url_for('biz_user_interactions', _external=True)
+        subject = "Your business has been selected"
+        body = f"""
+        <p>You have been selected for a service request.</p>
+        <ul>
+          <li><strong>Service Type:</strong> {form.service_type.data}</li>
+          <li><strong>Details:</strong> {form.details.data}</li>
+          <li><strong>Budget:</strong> ${form.budget_low.data} - ${form.budget_high.data}</li>
+          <li><strong>User Referral Code:</strong> {getattr(current_user, 'referral_code', '')}</li>
+        </ul>
+        <p>
+          To view and manage the request, please 
+          <a href="{interaction_link}">visit your business interaction dashboard</a>.
+        </p>
+        """
+        send_email(biz.business_email, subject, body)
+
+        # 3. Redirect user to their dashboard of active sessions
+        return redirect(url_for('user_biz_interactions'))
+
+    return render_template("service_request.html", form=form, biz=biz)
+
+@app.route("/user/interactions")
+@login_required
+def user_biz_interactions():
+    # Query all active interactions for this user
+    interactions = Interaction.query.filter_by(user_id=current_user.id).order_by(Interaction.created_at.desc()).all()
+    return render_template("user_biz_interactions.html", interactions=interactions)
+
+@app.route("/session/<int:interaction_id>")
+@login_required
+def active_session(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_user = interaction.user_id == getattr(current_user, 'id', None)
+    is_biz = session.get('business_id') == interaction.business_id
+    if not (is_user or is_biz):
+        flash("Access denied.")
+        # Redirect safely to user or business dashboard based on context
+        if session.get('business_id'):
+            return redirect(url_for('biz_user_interactions'))
+        else:
+            return redirect(url_for('user_biz_interactions'))
+    return render_template("active_session.html", interaction=interaction, is_user=is_user, is_biz=is_biz)
 
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
@@ -1050,6 +1158,45 @@ def business_invite():
     send_email(invitee_email, subject, html_body)
     flash('Business invitation sent!')
     return redirect(url_for('business_dashboard'))
+
+@app.route("/business/interactions")
+@login_required
+def biz_user_interactions():
+    # Make sure only a logged-in business can view this
+    biz_id = session.get('business_id')
+    if not biz_id:
+        flash("You must be logged in as a business.")
+        return redirect(url_for('business_login'))
+    interactions = Interaction.query.filter_by(business_id=biz_id).order_by(Interaction.created_at.desc()).all()
+    return render_template("biz_user_interactions.html", interactions=interactions)
+
+@app.route("/business/interactions/<int:interaction_id>/details")
+@login_required
+def biz_interaction_details(interaction_id):
+    biz_id = session.get('business_id')
+    if not biz_id:
+        flash("You must be logged in as a business.")
+        return redirect(url_for('business_login'))
+    interaction = Interaction.query.get_or_404(interaction_id)
+    # Security: make sure this belongs to the logged-in business!
+    if interaction.business_id != biz_id:
+        flash("Access denied.")
+        return redirect(url_for('biz_user_interactions'))
+    return render_template("biz_request_details.html", interaction=interaction)
+
+@app.route("/business/session/<int:interaction_id>")
+@login_required
+def biz_active_session(interaction_id):
+    biz_id = session.get('business_id')
+    if not biz_id:
+        flash("You must be logged in as a business.")
+        return redirect(url_for('business_login'))
+    interaction = Interaction.query.get_or_404(interaction_id)
+    if interaction.business_id != biz_id:
+        flash("Access denied.")
+        return redirect(url_for('biz_user_interactions'))
+    # For now, just render a placeholder for the messaging room:
+    return render_template("biz_active_session.html", interaction=interaction)
 
 @app.route("/business/dashboard", methods=["GET", "POST"])
 def business_dashboard():
@@ -1522,17 +1669,6 @@ from flask_login import login_required
 def view_listing(biz_id):
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
-
-@app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
-@login_required
-def service_request(biz_id):
-    biz = Business.query.get_or_404(biz_id)
-    form = ServiceRequestForm()
-    if form.validate_on_submit():
-        # You will save or process the request here
-        flash("Service request submitted! (AI cost suggestion coming soon.)")
-        return redirect(url_for('view_listing', biz_id=biz.id))
-    return render_template("service_request.html", form=form, biz=biz)
 
 @app.route("/seed_admins_once")
 def seed_admins_once():
