@@ -75,8 +75,6 @@
                   </span>
                   <span class="msg-time">{{ msg.timestamp.strftime('%Y-%m-%d %I:%M%p') }}</span>
                   <div>{{ msg.text | e }}</div>
-
-                  {# Image thumbnail if file is image #}
                   {% if msg.file_url and msg.file_name and msg.file_name.lower().endswith(('.png','.jpg','.jpeg','.gif','.webp')) %}
                     <a href="{{ msg.file_url }}" target="_blank">
                       <img src="{{ msg.file_url }}" alt="{{ msg.file_name }}" class="chat-img-thumb">
@@ -99,7 +97,7 @@
         <form method="post" enctype="multipart/form-data" autocomplete="off" id="chat-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="input-group flex-wrap">
-            <input type="text" name="message_text" id="message_text" class="form-control mb-2 mb-md-0" placeholder="Type a message... ✏️" maxlength="500" style="min-width:140px" autocomplete="off" autofocus>
+            <input type="text" name="message_text" id="message_text" class="form-control mb-2 mb-md-0" placeholder="Type a message..." maxlength="500" style="min-width:140px" autocomplete="off" autofocus>
             <input type="file" name="message_file" class="form-control mb-2 mb-md-0" style="max-width:170px" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt">
             <button class="btn btn-primary" type="submit">Send</button>
           </div>
@@ -111,9 +109,9 @@
             <button class="btn btn-danger flex-grow-1">End Session</button>
         </div>
         {% if is_user %}
-            <a href="{{ url_for('user_biz_interactions') }}" class="btn btn-secondary mt-3">Back</a>
+            <a href="{{ url_for('user_biz_interactions') }}" class="btn btn-secondary mt-3 w-100">Back</a>
         {% elif is_biz %}
-            <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-secondary mt-3">Back</a>
+            <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-secondary mt-3 w-100">Back</a>
         {% endif %}
     </div>
 </div>
