@@ -134,6 +134,7 @@ class User(db.Model, UserMixin):
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(100), unique=True, nullable=False)
+    listing_type = db.Column(db.String(50))
     category = db.Column(db.String(50), nullable=False, default="Other")
     business_email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
