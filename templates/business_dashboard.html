@@ -315,6 +315,16 @@
     <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
   </div>
   <div class="col-12 mb-3">
+    <label class="form-label">Listing Type <span class="text-danger">*</span></label>
+    <select class="form-select" name="listing_type" required>
+      <option value="">Select listing type...</option>
+      <option value="Seller" {% if form_data.listing_type == 'Seller' %}selected{% endif %}>Seller</option>
+      <option value="Service Provider" {% if form_data.listing_type == 'Service Provider' %}selected{% endif %}>Service Provider</option>
+      <option value="Lead Generation" {% if form_data.listing_type == 'Lead Generation' %}selected{% endif %}>Lead Generation</option>
+      <option value="Seller and Service Provider" {% if form_data.listing_type == 'Seller and Service Provider' %}selected{% endif %}>Seller and Service Provider</option>
+    </select>
+  </div>
+  <div class="col-12 mb-3">
     <label class="form-label">Category</label>
     <select class="form-select" name="category" id="business_category" required>
       <option value="">Select category...</option>
