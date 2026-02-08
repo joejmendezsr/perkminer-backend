@@ -618,6 +618,9 @@ def login():
         password = form.password.data
         user = User.query.filter_by(email=email).first()
         if user and bcrypt.check_password_hash(user.password, password):
+            if user.is_suspended:
+                flash("Account suspended, contact support.")
+                return redirect(url_for("login"))
             if not user.email_confirmed:
                 message = "Please confirm your email first (check your inbox)."
                 session['pending_email'] = email
@@ -957,6 +960,9 @@ def business_login():
         password = form.password.data
         biz = Business.query.filter_by(business_email=business_email).first()
         if biz and bcrypt.check_password_hash(biz.password, password):
+            if biz.is_suspended:
+                flash("Business account suspended, contact support.")
+                return redirect(url_for("business_login"))
             if not biz.email_confirmed:
                 message = "Please confirm your business email first (check your inbox)."
                 session['pending_business_email'] = business_email
