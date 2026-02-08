@@ -2,33 +2,40 @@
 <html>
 <head>
     <title>My Requests & Sessions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <style>
       #interaction-list {
         max-height: 400px;
         overflow-y: auto;
       }
+      @media (max-width: 600px) {
+        .list-group-item, .btn, .btn-primary { font-size: 1em; padding: 1.07em 0.6em; }
+        #interaction-list { max-height: 68vw; }
+      }
     </style>
 </head>
 <body>
 <div class="container py-4">
-  <h3 class="mb-3">My Active Sessions</h3>
+  <h3 class="mb-3 text-center text-md-start">My Active Sessions</h3>
   <input type="text" id="searchInput" class="form-control mb-3" placeholder="Filter by business name...">
   <div id="interaction-list">
   {% if interactions %}
     <ul class="list-group">
       {% for i in interactions %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
+        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
           <div>
             <strong>{{ i.business.business_name }}</strong><br>
             <small class="text-muted">{{ i.business.category }} | {{ i.business.address }}</small>
           </div>
-          <a href="{{ url_for('active_session', interaction_id=i.id) }}" class="btn btn-primary btn-sm">Select</a>
+          <div class="py-1">
+            <a href="{{ url_for('active_session', interaction_id=i.id) }}" class="btn btn-primary btn-sm mb-1">Select</a>
+          </div>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <div class="alert alert-info">No active sessions yet.</div>
+    <div class="alert alert-info text-center mt-4">No active sessions yet.</div>
   {% endif %}
   </div>
 </div>

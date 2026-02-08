@@ -22,11 +22,18 @@
     }
     .main-info div { margin-bottom: 8px; }
     .btn-action {
-        min-width: 190px;
+        min-width: 160px;
         font-weight: 500;
-        margin: 8px 12px 8px 0;
+        margin: 8px 8px 8px 0;
+        white-space: normal;
     }
-    .service-list { margin:0; padding-left:20px; }
+    .service-list { margin:0; padding-left:18px; }
+    @media (max-width: 600px) {
+      .card { padding: 1rem !important;}
+      .profile-pic { width: 74px; height: 74px;}
+      .btn, .btn-action { width: 100% !important; margin: 8px 0 0 0; }
+      .main-info { font-size: 1.06em;}
+    }
     </style>
 </head>
 <body>
@@ -37,7 +44,7 @@
                 <img src="{{ biz.profile_photo }}" alt="Logo" class="profile-pic">
             {% else %}
                 <div class="profile-pic d-flex align-items-center justify-content-center bg-light border">
-                    <i class="bi bi-buildings" style="font-size:2.4em; color:var(--pm-primary);"></i>
+                    <i class="bi bi-buildings" style="font-size:2.3em; color:var(--pm-primary);"></i>
                 </div>
             {% endif %}
             <h2 class="fw-bold mb-1 mt-2">{{ biz.business_name }}</h2>
@@ -108,8 +115,8 @@
             <div class="text-muted">Map unavailable</div>
           {% endif %}
         </div>
-        <div class="mb-3 text-center">
-            <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action me-1">
+        <div class="mb-3 text-center d-flex flex-wrap gap-2">
+            <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action">
                 &larr; Back to results
             </a>
             <a href="#" class="btn btn-success btn-action"
