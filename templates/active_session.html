@@ -3,6 +3,33 @@
 <head>
     <title>Active Session</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+      #messages-box {
+        max-height: 340px;
+        overflow-y: auto;
+        background: #f9f9fa;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 15px;
+        border: 1px solid #e5e5ea;
+      }
+      .msg-time { font-size: .85em; color: #aaa; margin-left: 8px;}
+      .msg-bubble-user {
+        background: #e2eafc;
+        border-radius: 12px 12px 2px 12px;
+        padding: 9px 15px;
+        margin-left: 60px;
+        max-width: 70%;
+      }
+      .msg-bubble-biz {
+        background: #eafbe2;
+        border-radius: 12px 12px 12px 2px;
+        padding: 9px 15px;
+        margin-right: 60px;
+        max-width: 70%;
+      }
+      .text-right { text-align: right; }
+    </style>
 </head>
 <body>
 <div class="container py-5">
@@ -14,8 +41,34 @@
             <h4 class="mb-3">Active Session with {{ interaction.user.name or interaction.user.email }}</h4>
         {% endif %}
 
-        <div class="alert alert-info mb-3">Text messaging coming soon!</div>
-        <div class="mb-2">
+        <div id="messages-box">
+          {% for msg in messages %}
+            <div class="mb-3 {% if msg.sender_type == 'user' and is_user or msg.sender_type == 'business' and is_biz %}text-right{% endif %}">
+              <div class="{% if msg.sender_type == 'user' %}msg-bubble-user{% else %}msg-bubble-biz{% endif %}">
+                <span class="fw-bold small {% if msg.sender_type == 'user' %}text-primary{% else %}text-success{% endif %}">
+                  {% if msg.sender_type == "user" %}
+                    {{ interaction.user.name or interaction.user.email }} (User)
+                  {% else %}
+                    {{ interaction.business.business_name }} (Business)
+                  {% endif %}
+                </span>
+                <span class="msg-time">{{ msg.timestamp.strftime('%Y-%m-%d %I:%M%p') }}</span>
+                <div>{{ msg.text | e }}</div>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-center text-muted fst-italic">No messages yet. Start the conversation!</div>
+          {% endfor %}
+        </div>
+
+        <form method="post" autocomplete="off" id="chat-form">
+          <div class="input-group">
+            <input type="text" name="message_text" id="message_text" class="form-control" placeholder="Type a message..." maxlength="500" required autofocus>
+            <button class="btn btn-primary" type="submit">Send</button>
+          </div>
+        </form>
+
+        <div class="mt-4 mb-2">
             <button class="btn btn-success me-2">Finalize Transaction</button>
             <button class="btn btn-danger">End Session</button>
         </div>
@@ -26,5 +79,33 @@
         {% endif %}
     </div>
 </div>
+<script>
+  // Auto-scroll to bottom on page load and after refresh
+  function scrollToBottom() {
+      var box = document.getElementById('messages-box');
+      if (box) { box.scrollTop = box.scrollHeight; }
+  }
+  scrollToBottom();
+
+  // ENTER to send, SHIFT+ENTER for newline
+  document.getElementById('chat-form').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      this.submit();
+    }
+  });
+
+  // AJAX polling for new messages every 4 seconds
+  function reloadMessages() {
+      fetch("{{ url_for('session_messages', interaction_id=interaction.id) }}")
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('messages-box').innerHTML = html;
+            scrollToBottom();
+        });
+  }
+
+  setInterval(reloadMessages, 4000);
+</script>
 </body>
 </html>
