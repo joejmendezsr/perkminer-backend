@@ -44,7 +44,7 @@
       {% if messages %}
         <div class="alert alert-info mt-3">
           {% for m in messages %}
-            {{ m }}
+            {{ m|safe }}
           {% endfor %}
         </div>
       {% endif %}
