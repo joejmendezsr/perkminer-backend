@@ -229,7 +229,8 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, nullable=False)        # User or business id, based on sender_type
     text = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
+    file_url = db.Column(db.String(255))  # stores the filename or URL
+    file_name = db.Column(db.String(120))  # original name for display
     interaction = db.relationship('Interaction', backref='messages', lazy=True)
 
 class EditUserForm(FlaskForm):
@@ -954,6 +955,17 @@ def active_session(interaction_id):
     # --- POST logic to create a message ---
     if request.method == "POST":
         text = request.form.get("message_text", "").strip()
+        uploaded_file = request.files.get("message_file")
+        file_url = None
+        file_name = None
+
+    if uploaded_file and uploaded_file.filename:
+        filename = secure_filename(uploaded_file.filename)
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        uploaded_file.save(upload_path)
+        file_url = url_for('uploaded_file', filename=filename)
+        file_name = uploaded_file.filename
+
         if text:
             if is_user:
                 sender_type = "user"
@@ -969,6 +981,8 @@ def active_session(interaction_id):
                 sender_type=sender_type,
                 sender_id=sender_id,
                 text=text
+                file_url=file_url,
+                file_name=file_name
             )
             db.session.add(msg)
             db.session.commit()
