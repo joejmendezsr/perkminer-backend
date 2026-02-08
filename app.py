@@ -1057,7 +1057,7 @@ def business_dashboard():
         return redirect(url_for("business_login"))
 
     editable_fields = [
-        "business_name", "category", "phone_number", "address", "latitude", "longitude",
+        "business_name", "listing_type", "category", "phone_number", "address", "latitude", "longitude",
         "website_url", "about_us", "hours_of_operation", "search_keywords",
         "service_1", "service_2", "service_3", "service_4", "service_5",
         "service_6", "service_7", "service_8", "service_9", "service_10"
@@ -1069,6 +1069,10 @@ def business_dashboard():
     # POST: Handle profile save
     if request.method == "POST":
         updated = False
+        # Validate required listing_type field
+        if not request.form.get("listing_type"):
+            flash("Listing Type is required.")
+            return redirect(url_for('business_dashboard'))
 
         if biz.status == "approved":
             # Save only to draft fields!
@@ -1077,11 +1081,11 @@ def business_dashboard():
                 if val is not None:
                     setattr(biz, f"draft_{field}", val)
                     updated = True
-            # Also process image upload as a draft (optional, up to you)
+            # Also process image upload as a draft (optional)
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
                 upload_result = cloudinary.uploader.upload(file)
-                biz.draft_profile_photo = upload_result.get('secure_url')  # Use a separate draft_profile_photo!
+                biz.draft_profile_photo = upload_result.get('secure_url')
                 updated = True
         else:
             # Save directly to live fields
@@ -1118,8 +1122,8 @@ def business_dashboard():
     else:
         profile_img_url = biz.profile_photo if biz.profile_photo else None
 
-    latitude = form_data["latitude"]
-    longitude = form_data["longitude"]
+    latitude = form_data.get("latitude", "")
+    longitude = form_data.get("longitude", "")
 
     # --- Rewards and referral tree logic (leave unchanged) ---
     if request.method == "GET":
@@ -1183,7 +1187,7 @@ def business_dashboard():
         profile_form=profile_form,
         invite_form=invite_form,
         biz=biz,
-        form_data=form_data,  # <-- Use this in your template for all field values
+        form_data=form_data,
         sponsor=sponsor,
         referral_code=biz.referral_code,
         rewards_table=rewards_table,
@@ -1447,6 +1451,7 @@ def admin_edit_business(business_id):
     if form.validate_on_submit():
         biz.business_name = form.business_name.data
         biz.business_email = form.business_email.data
+        biz.listing_type = form.listing_type.data
         biz.category = form.category.data
         biz.phone_number = form.phone_number.data
         biz.address = form.address.data
