@@ -938,7 +938,7 @@ def user_biz_interactions():
     interactions = Interaction.query.filter_by(user_id=current_user.id).order_by(Interaction.created_at.desc()).all()
     return render_template("user_biz_interactions.html", interactions=interactions)
 
-@app.route("/session/<int:interaction_id>")
+@app.route("/session/<int:interaction_id>", methods=["GET", "POST"])
 @login_required
 def active_session(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
