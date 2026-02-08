@@ -5,120 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<style>
-:root {
-  --pm-primary: #2a5859;
-  --pm-accent: #ffd66b;
-  --pm-bg: #fff;
-  --pm-text: #222;
-  --pm-hover: #e6f6f5;
-  --pm-highlight: #f7ffe7;
-  --pm-focus: #fadd92;
-}
-body {
-  background: var(--pm-bg);
-  color: var(--pm-text);
-}
-body > nav {
-  margin-bottom: 2rem !important;
-}
-.navbar {
-  box-shadow: 0 2px 8px #f0f2f3;
-}
-.card {
-  border: none;
-  opacity: 0;
-  transform: translateY(30px);
-  animation: fadeinCard 0.7s ease forwards;
-  cursor: pointer;
-}
-@keyframes fadeinCard {
-  to { opacity: 1; transform: none; }
-}
-.card .card-title { color: var(--pm-primary);}
-.card:focus-within, .card:active {
-  box-shadow: 0 4px 16px #b4dad9;
-  outline: 2px solid var(--pm-focus);
-}
-.card:hover {
-  background: var(--pm-hover);
-  box-shadow: 0 4px 16px #b4dad9;
-  transform: scale(1.045);
-  z-index: 1;
-  transition: background 0.18s, box-shadow 0.18s, transform 0.16s;
-}
-
-.category-icon, .biz-photo {
-  font-size: 2.3em;
-  margin-bottom: 8px;
-  color: var(--pm-primary);
-  display: block;
-  border-radius: 50%;
-  background: var(--pm-highlight);
-  width: 72px;
-  height: 72px;
-  line-height: 72px;
-  text-align: center;
-  object-fit: cover;
-  outline: 1px solid #e4eee9;
-}
-.biz-photo {
-  background: #fff;
-  border: 2px solid #daeae6;
-}
-.btn-primary, .btn-success {
-  background: var(--pm-primary);
-  border: none;
-  color: #fff !important;
-}
-.btn-primary:hover, .btn-success:hover, .btn-outline-primary:focus {
-  background: var(--pm-accent);
-  color: var(--pm-text) !important;
-}
-.btn-outline-primary {
-  border-color: var(--pm-primary);
-  color: var(--pm-primary);
-}
-.btn-outline-primary:hover {
-  background: var(--pm-primary);
-  color: #fff;
-}
-a:focus, button:focus, input:focus {
-  outline: 2px solid var(--pm-focus);
-  outline-offset: 2px;
-}
-footer {
-  background: #f8fafb;
-  color: #999;
-  padding: 1.5rem 0;
-  margin-top: 3rem;
-  text-align: center;
-  font-size: 1em;
-  border-top: 1px solid #e1e7ea;
-}
-.breadcrumb {
-  background: none;
-  padding-left: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-[aria-busy="true"] {
-  opacity: 0.4;
-  filter: blur(1px);
-  pointer-events: none;
-}
-@media (max-width: 600px) {
-  .card {
-    min-width: 90vw !important;
-    margin: 0 auto 12px auto;
-  }
-  .biz-photo, .category-icon {
-    width: 58px;
-    height: 58px;
-    line-height: 58px;
-    font-size: 1.6em;
-  }
-}
-</style>
+    <style>
+      :root {
+        --pm-primary: #2a5859;
+        --pm-accent: #ffd66b;
+        --pm-bg: #fff;
+        --pm-text: #222;
+        --pm-hover: #e6f6f5;
+        --pm-highlight: #f7ffe7;
+        --pm-focus: #fadd92;
+      }
+      body { background: var(--pm-bg); color: var(--pm-text); }
+      .navbar { box-shadow: 0 2px 8px #f0f2f3; }
+      .card {
+        border: none;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeinCard 0.7s ease forwards;
+        cursor: pointer;
+        min-width: 190px;
+      }
+      @keyframes fadeinCard {
+        to { opacity: 1; transform: none; }
+      }
+      .card .card-title { color: var(--pm-primary);}
+      .card:focus-within, .card:active {
+        box-shadow: 0 4px 16px #b4dad9;
+        outline: 2px solid var(--pm-focus);
+      }
+      .card:hover {
+        background: var(--pm-hover);
+        box-shadow: 0 4px 16px #b4dad9;
+        transform: scale(1.045);
+        z-index: 1;
+        transition: background 0.18s, box-shadow 0.18s, transform 0.16s;
+      }
+      .category-icon, .biz-photo {
+        font-size: 2.3em;
+        margin-bottom: 8px;
+        color: var(--pm-primary);
+        display: block;
+        border-radius: 50%;
+        background: var(--pm-highlight);
+        width: 72px;
+        height: 72px;
+        line-height: 72px;
+        text-align: center;
+        object-fit: cover;
+        outline: 1px solid #e4eee9;
+      }
+      .biz-photo {
+        background: #fff;
+        border: 2px solid #daeae6;
+      }
+      .btn-primary, .btn-success { background: var(--pm-primary); border: none; color: #fff !important; }
+      .btn-primary:hover, .btn-success:hover, .btn-outline-primary:focus { background: var(--pm-accent); color: var(--pm-text) !important; }
+      .btn-outline-primary { border-color: var(--pm-primary); color: var(--pm-primary);}
+      .btn-outline-primary:hover { background: var(--pm-primary); color: #fff;}
+      footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea; }
+      .breadcrumb { background: none; padding-left: 0.5rem; margin-bottom: 1.5rem;}
+      [aria-busy="true"] { opacity: 0.4; filter: blur(1px); pointer-events: none; }
+      @media (max-width: 900px) { .row-cols-lg-3 > * { flex: 0 0 100%; max-width: 100%; } }
+      @media (max-width: 600px) {
+        .card { min-width: 96vw !important; margin: 0 auto 12px auto; }
+        .biz-photo, .category-icon { width: 58px; height: 58px; line-height: 58px; font-size: 1.5em;}
+        .btn, .btn-outline-primary { width: 100%; margin-bottom:8px;}
+        .breadcrumb { font-size: 1em; }
+        h2 { font-size: 1.18em; }
+      }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -127,7 +82,6 @@ footer {
     </div>
 </nav>
 <main class="container">
-
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
@@ -144,7 +98,6 @@ footer {
       </div>
     {% endif %}
 
-    <!-- Accessibility-friendly Live Message for Count -->
     <div id="result-count-announcement" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
     {% set categories = [
@@ -183,14 +136,12 @@ footer {
                   {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
                   {{ services|select('string')|reject('equalto','')|join(', ') if services|select('string')|reject('equalto','')|list else 'N/A' }}
                 </div>
-                <!-- You can add feedback rating stars here in the future -->
               </div>
             </div>
           </div>
         {% endfor %}
       </div>
       <script>
-        // Announce count for screen readers
         setTimeout(function() {
           var cnt = {{ results|length }};
           document.getElementById('result-count-announcement').textContent =
@@ -229,7 +180,6 @@ footer {
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // (Micro-interaction) Optionally: Add a loading effect on search submit
   var form = document.querySelector('form[action="{{ url_for("search") }}"]');
   if (form) {
     form.addEventListener('submit', function() {

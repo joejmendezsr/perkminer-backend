@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8">
   <title>Welcome to PerkMiner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: Arial, sans-serif; background: #f7f7fb; text-align: center; margin:0; }
-    .header {
-      width: 100%; background: #fff; padding: 30px 0 16px 0; box-shadow: 0 2px 8px #0001;
-    }
+    .header { width: 100%; background: #fff; padding: 30px 0 16px 0; box-shadow: 0 2px 8px #0001; }
     .header img { max-width: 260px; height: auto; }
     .videos-row {
       display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; padding: 36px 0 8px 0;
@@ -28,11 +27,18 @@
       border: none; border-radius: 8px; margin: 38px auto 0 auto;
       cursor: pointer; font-weight: bold;
       text-decoration: none; display: inline-block;
+      transition: background .15s;
     }
     .join-btn:hover { background: #4f46e5; }
     @media (max-width: 900px) {
-      .videos-row { flex-direction: column; align-items: center; }
-      .video-card { margin-bottom: 28px; }
+      .videos-row { flex-direction: column; align-items: center; padding-top:26px;}
+      .video-card { margin-bottom: 28px; min-width: 80vw; }
+    }
+    @media (max-width: 600px) {
+      .header img { max-width: 170px; }
+      .join-btn { width: 100%; font-size:1.05em; padding: 13px 0 13px 0; }
+      .video-title { font-size: 1.08em; }
+      .video-card { padding: 17px 7px 24px 7px; }
     }
   </style>
 </head>
@@ -71,7 +77,7 @@
     </div>
   </div>
   <!-- JOIN BUTTON BELOW BOTH VIDEOS -->
-  <div>
+  <div class="px-2">
     <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
   </div>
   <script>
