@@ -47,7 +47,7 @@
                     {% with messages = get_flashed_messages() %}
                       {% if messages %}
                         <div class="alert alert-warning mt-3 text-center">
-                          {% for msg in messages %}{{ msg }}<br>{% endfor %}
+                          {% for msg in messages %}{{ msg|safe }}<br>{% endfor %}
                         </div>
                       {% endif %}
                     {% endwith %}

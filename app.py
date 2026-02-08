@@ -979,7 +979,6 @@ def business_login():
                 )
                 flash("A login code has been sent to your email.")
                 return redirect(url_for("two_factor_biz"))
-                # --- END 2FA ---
         else:
             message = "Login failed. Check business email and password."
     return render_template("business_login.html", message=message, form=form)
