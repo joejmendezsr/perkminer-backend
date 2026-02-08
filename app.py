@@ -946,12 +946,37 @@ def active_session(interaction_id):
     is_biz = session.get('business_id') == interaction.business_id
     if not (is_user or is_biz):
         flash("Access denied.")
-        # Redirect safely to user or business dashboard based on context
         if session.get('business_id'):
             return redirect(url_for('biz_user_interactions'))
         else:
             return redirect(url_for('user_biz_interactions'))
-    return render_template("active_session.html", interaction=interaction, is_user=is_user, is_biz=is_biz)
+
+    # --- POST logic to create a message ---
+    if request.method == "POST":
+        text = request.form.get("message_text", "").strip()
+        if text:
+            if is_user:
+                sender_type = "user"
+                sender_id = current_user.id
+            elif is_biz:
+                sender_type = "business"
+                sender_id = session['business_id']
+            else:
+                flash("Invalid sender.")
+                return redirect(url_for('active_session', interaction_id=interaction_id))
+            msg = Message(
+                interaction_id=interaction.id,
+                sender_type=sender_type,
+                sender_id=sender_id,
+                text=text
+            )
+            db.session.add(msg)
+            db.session.commit()
+            # after sending a message, redirect or render as you like
+            return redirect(url_for('active_session', interaction_id=interaction_id))
+
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    return render_template("active_session.html", interaction=interaction, is_user=is_user, is_biz=is_biz, messages=messages)
 
 @app.route("/session/<int:interaction_id>/messages")
 @login_required
