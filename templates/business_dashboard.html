@@ -175,57 +175,62 @@
 
     <!-- Invite Others Button -->
     <div class="card p-4 mb-4">
-    <div class="mb-3 d-flex gap-2">
-      <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
-        <i class="bi bi-person-plus me-1"></i>Invite others to join
-      </button>
-      <button class="btn btn-secondary" type="button" id="previewListingBtn">
-        Preview Listing
-      </button>
-      <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-        data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
-        View/Edit Profile
-      </button>
-    </div>
-    {% if biz.status %}
-      <div class="alert alert-info p-2 mb-3" style="font-size:1.09em; text-align:center;">
-        Status: <strong>
-          {% if biz.status == "not_submitted" %}
-            Not Submitted
-          {% elif biz.status == "pending" %}
-            Pending Review
-          {% elif biz.status == "in_review" %}
-            In Review
-          {% elif biz.status == "rejected" %}
-            Rejected
-          {% elif biz.status == "approved" %}
-            Approved
-          {% else %}
-            {{ biz.status }}
-          {% endif %}
-        </strong>
+      <div class="mb-3 d-flex gap-2">
+        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+          <i class="bi bi-person-plus me-1"></i>Invite others to join
+        </button>
+        <button class="btn btn-secondary" type="button" id="previewListingBtn">
+          Preview Listing
+        </button>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+          data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
+          View/Edit Profile
+        </button>
+        {% if has_active_biz_sessions %}
+          <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-outline-primary">
+            <i class="bi bi-chat-dots me-1"></i>My Active Sessions
+          </a>
+        {% endif %}
       </div>
-    {% endif %}
-    <!-- Invite Modal -->
-    <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="modal-header">
-            <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
-            {{ invite_form.invitee_email(class="form-control", id="invitee-email", placeholder="Enter email to invite", required=True) }}
-          </div>
-          <div class="modal-footer">
-            {{ invite_form.submit(class="btn btn-primary") }}
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          </div>
-        </form>
+      {% if biz.status %}
+        <div class="alert alert-info p-2 mb-3" style="font-size:1.09em; text-align:center;">
+          Status: <strong>
+            {% if biz.status == "not_submitted" %}
+              Not Submitted
+            {% elif biz.status == "pending" %}
+              Pending Review
+            {% elif biz.status == "in_review" %}
+              In Review
+            {% elif biz.status == "rejected" %}
+              Rejected
+            {% elif biz.status == "approved" %}
+              Approved
+            {% else %}
+              {{ biz.status }}
+            {% endif %}
+          </strong>
+        </div>
+      {% endif %}
+      <!-- Invite Modal -->
+      <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form class="modal-content" method="post" action="{{ url_for('business_invite') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+              <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <label for="invitee-email" class="form-label">Recipient's Email Address:</label>
+              {{ invite_form.invitee_email(class="form-control", id="invitee-email", placeholder="Enter email to invite", required=True) }}
+            </div>
+            <div class="modal-footer">
+              {{ invite_form.submit(class="btn btn-primary") }}
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
 
     <!-- Profile Edit Section -->
     <div class="collapse mb-4" id="profileCollapse">

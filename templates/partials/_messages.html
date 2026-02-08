@@ -1,0 +1,17 @@
+{% for msg in messages %}
+  <div class="mb-3 {% if msg.sender_type == 'user' and is_user or msg.sender_type == 'business' and is_biz %}text-right{% endif %}">
+    <div class="{% if msg.sender_type == 'user' %}msg-bubble-user{% else %}msg-bubble-biz{% endif %}">
+      <span class="fw-bold small {% if msg.sender_type == 'user' %}text-primary{% else %}text-success{% endif %}">
+        {% if msg.sender_type == "user" %}
+          {{ interaction.user.name or interaction.user.email }} (User)
+        {% else %}
+          {{ interaction.business.business_name }} (Business)
+        {% endif %}
+      </span>
+      <span class="msg-time">{{ msg.timestamp.strftime('%Y-%m-%d %I:%M%p') }}</span>
+      <div>{{ msg.text | e }}</div>
+    </div>
+  </div>
+{% else %}
+  <div class="text-center text-muted fst-italic">No messages yet. Start the conversation!</div>
+{% endfor %}

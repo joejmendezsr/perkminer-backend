@@ -953,6 +953,17 @@ def active_session(interaction_id):
             return redirect(url_for('user_biz_interactions'))
     return render_template("active_session.html", interaction=interaction, is_user=is_user, is_biz=is_biz)
 
+@app.route("/session/<int:interaction_id>/messages")
+@login_required
+def session_messages(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_user = interaction.user_id == getattr(current_user, 'id', None)
+    is_biz = session.get('business_id') == interaction.business_id
+    if not (is_user or is_biz):
+        return ""
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    return render_template("partials/_messages.html", interaction=interaction, messages=messages, is_user=is_user, is_biz=is_biz)
+
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():
     form = BusinessRegisterForm()
@@ -1226,26 +1237,22 @@ def business_dashboard():
     # POST: Handle profile save
     if request.method == "POST":
         updated = False
-        # Validate required listing_type field
         if not request.form.get("listing_type"):
             flash("Listing Type is required.")
             return redirect(url_for('business_dashboard'))
 
         if biz.status == "approved":
-            # Save only to draft fields!
             for field in editable_fields:
                 val = request.form.get(field)
                 if val is not None:
                     setattr(biz, f"draft_{field}", val)
                     updated = True
-            # Also process image upload as a draft (optional)
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
                 upload_result = cloudinary.uploader.upload(file)
                 biz.draft_profile_photo = upload_result.get('secure_url')
                 updated = True
         else:
-            # Save directly to live fields
             for field in editable_fields:
                 val = request.form.get(field)
                 if val is not None:
@@ -1266,7 +1273,6 @@ def business_dashboard():
     form_data = {}
     for field in editable_fields:
         draft_field = f"draft_{field}"
-        # Show draft value if status is approved and draft is non-empty, otherwise show live
         val = getattr(biz, draft_field, None) if biz.status == "approved" else None
         if val not in [None, ""]:
             form_data[field] = val
@@ -1337,7 +1343,10 @@ def business_dashboard():
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
 
-    # --- Render template, pass form_data for fields and add draft state awareness ---
+    # Add active session indicator for dashboard button
+    active_biz_sessions = Interaction.query.filter_by(business_id=biz.id, status='active').all()
+    has_active_biz_sessions = len(active_biz_sessions) > 0
+
     return render_template(
         "business_dashboard.html",
         form=form,
@@ -1353,7 +1362,8 @@ def business_dashboard():
         phone_number=form_data.get("phone_number",""),
         address=form_data.get("address",""),
         latitude=latitude,
-        longitude=longitude
+        longitude=longitude,
+        has_active_biz_sessions=has_active_biz_sessions  # pass to template
     )
 
 @app.route("/business/logout")
