@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scan User QR</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <div class="container py-4">
+    <h4 class="mb-3">Scan User's QR Code</h4>
+    <div id="reader" style="width:320px; margin:0 auto;"></div>
+  </div>
+  <script>
+    function onScanSuccess(decodedText, decodedResult) {
+        // Optional: validate format
+        fetch('{{ url_for("finalize_transaction", interaction_id=interaction_id) }}', {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ qr_data: decodedText })
+        }).then(res => res.json())
+          .then(data => window.location.href=data.next_url);
+    }
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
