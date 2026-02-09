@@ -68,6 +68,13 @@ def role_required(role_name):
         return decorated_function
     return decorator
 
+def get_interaction_for_business_and_user(business_id, user_id):
+    return Interaction.query.filter_by(
+        business_id=business_id,
+        user_id=user_id,
+        status="active"
+    ).first()
+
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
@@ -944,20 +951,19 @@ def user_qr_code():
 
 @app.route("/payment/<ref>")
 def payment_qr_redirect(ref):
-    # Lookup the user by their referral code
     user = User.query.filter_by(referral_code=ref).first()
     if not user:
         return "Invalid QR code.", 404
-    # Check if the current session is business or show a message
     if 'business_id' in session:
-        # Optionally, redirect to the finalize transaction form passing the user/session info
-        # (Here you might look up or create the appropriate interaction/session)
-        interaction = get_interaction_for_business_and_user(business_id=session['business_id'], user_id=user.id)
+        interaction = get_interaction_for_business_and_user(
+            business_id=session['business_id'],
+            user_id=user.id
+        )
         if interaction:
             return redirect(url_for('finalize_transaction', interaction_id=interaction.id))
         else:
             return "No active session found for this customer.", 404
-    # If a normal user scans their own QR, they could see a thank you or receipt page
+    # This part runs if the QR was scanned by anyone who is NOT a logged-in business.
     return render_template("qr_user_landing.html", user=user)
 
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
