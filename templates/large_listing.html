@@ -35,6 +35,12 @@
       .main-info { font-size: 1.06em;}
     }
     </style>
+    <script>
+      function showQR() {
+        document.getElementById('qr-row').style.display = 'block';
+        document.getElementById('show-qr-btn').style.display = 'none';
+      }
+    </script>
 </head>
 <body>
 <div class="container py-4" style="max-width:700px;">
@@ -119,10 +125,13 @@
             <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action">
                 &larr; Back to results
             </a>
-            <!-- New Complete a Purchase button pointing to QR code -->
-            <a href="{{ url_for('user_qr_code') }}" class="btn btn-success btn-action">
+            <!-- Show My QR logic: toggle QR on click -->
+            <button id="show-qr-btn" class="btn btn-success btn-action" onclick="showQR();return false;">
                 Complete a Purchase (Show My QR)
-            </a>
+            </button>
+            <div id="qr-row" style="display:none;">
+                <img src="{{ url_for('user_qr_code') }}" alt="Your QR Code" style="max-width:160px; margin-top:14px;">
+            </div>
             <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action">
                 Request for Service
             </a>

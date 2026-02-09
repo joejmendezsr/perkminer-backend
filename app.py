@@ -74,7 +74,7 @@ import cloudinary.uploader
 import random # put this at the top of your file if not already imported
 import qrcode
 from io import BytesIO
-from flask import send_file
+from flask import send_file, url_for
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -934,12 +934,31 @@ def logout():
 @app.route("/user/qr")
 @login_required
 def user_qr_code():
-    code = f"perkminer_user:{current_user.referral_code}"
-    img = qrcode.make(code)
+    # The QR code will encode this full payment URL
+    code_url = url_for('payment_qr_redirect', ref=current_user.referral_code, _external=True)
+    img = qrcode.make(code_url)
     buf = BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
     return send_file(buf, mimetype="image/png")
+
+@app.route("/payment/<ref>")
+def payment_qr_redirect(ref):
+    # Lookup the user by their referral code
+    user = User.query.filter_by(referral_code=ref).first()
+    if not user:
+        return "Invalid QR code.", 404
+    # Check if the current session is business or show a message
+    if 'business_id' in session:
+        # Optionally, redirect to the finalize transaction form passing the user/session info
+        # (Here you might look up or create the appropriate interaction/session)
+        interaction = get_interaction_for_business_and_user(business_id=session['business_id'], user_id=user.id)
+        if interaction:
+            return redirect(url_for('finalize_transaction', interaction_id=interaction.id))
+        else:
+            return "No active session found for this customer.", 404
+    # If a normal user scans their own QR, they could see a thank you or receipt page
+    return render_template("qr_user_landing.html", user=user)
 
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @login_required
