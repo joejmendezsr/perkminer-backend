@@ -72,7 +72,9 @@ import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
 import random # put this at the top of your file if not already imported
-
+import qrcode
+from io import BytesIO
+from flask import send_file
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -199,6 +201,36 @@ class Quote(db.Model):
 
     interaction = db.relationship('Interaction', backref=db.backref('quote', uselist=False))
 
+class UserTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date_time = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Float, nullable=False)
+    user_referral_id = db.Column(db.String(32), nullable=False)
+    cash_back = db.Column(db.Float, nullable=False)
+    tier2_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier2_commission = db.Column(db.Float, nullable=False)
+    tier3_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier3_commission = db.Column(db.Float, nullable=False)
+    tier4_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier4_commission = db.Column(db.Float, nullable=False)
+    tier5_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier5_commission = db.Column(db.Float, nullable=False)
+
+class BusinessTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date_time = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Float, nullable=False)
+    business_referral_id = db.Column(db.String(32), nullable=False)
+    cash_back = db.Column(db.Float, nullable=False)
+    tier2_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier2_commission = db.Column(db.Float, nullable=False)
+    tier3_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier3_commission = db.Column(db.Float, nullable=False)
+    tier4_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier4_commission = db.Column(db.Float, nullable=False)
+    tier5_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier5_commission = db.Column(db.Float, nullable=False)
+
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
@@ -225,6 +257,7 @@ class Interaction(db.Model):
     referral_code = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    awaiting_finalization = db.Column(db.Boolean, default=False)
 
     # relationships for easier querying (optional)
     user = db.relationship('User', backref='interactions', lazy=True)
@@ -898,6 +931,45 @@ def logout():
     logout_user()
     return redirect(url_for("home"))
 
+@app.route("/user/qr")
+@login_required
+def user_qr_code():
+    code = f"perkminer_user:{current_user.referral_code}"
+    img = qrcode.make(code)
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png")
+
+@app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
+@login_required
+def finalize_transaction(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    # Only allow business
+    if session.get('business_id') != interaction.business_id:
+        abort(403)
+    if request.method == "POST":
+        data = request.json or request.form
+        amount = float(data.get("amount", 0))
+        user_referral_id = interaction.user.referral_code
+        business_referral_id = interaction.business.referral_code
+
+        # Calculate and save transaction (simplified)
+        cash_back = round(amount * 0.02, 2)
+        # ...calculate tier commissions...
+
+        trans = UserTransaction(
+            amount=amount,
+            user_referral_id=user_referral_id,
+            cash_back=cash_back,
+            # ... set tier fields ...
+        )
+        db.session.add(trans)
+        db.session.commit()
+        # redirect as needed or show summary
+
+    return render_template("finalize_transaction.html", interaction=interaction)
+
 @app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
 @login_required
 def service_request(biz_id):
@@ -963,6 +1035,12 @@ def active_session(interaction_id):
             return redirect(url_for('user_biz_interactions'))
 
     if request.method == "POST":
+        if is_user and request.form.get("accept_and_pay") == "1":
+            interaction.awaiting_finalization = True
+            db.session.commit()
+            flash("Please show your QR code to the business to complete the payment.", "success")
+            return redirect(url_for('active_session', interaction_id=interaction.id))
+
         text = request.form.get("message_text", "").strip()
         uploaded_file = request.files.get("message_file")
         file_url = None
@@ -975,7 +1053,6 @@ def active_session(interaction_id):
             file_url = url_for('uploaded_file', filename=filename)
             file_name = uploaded_file.filename
 
-        # Only save if text or file is present
         if text or file_url:
             if is_user:
                 sender_type = "user"
@@ -1051,6 +1128,12 @@ def view_quote(interaction_id):
         return redirect(url_for('active_session', interaction_id=interaction_id))
     quote = Quote.query.filter_by(interaction_id=interaction.id).first()
     return render_template("quote.html", interaction=interaction, quote=quote)
+
+@app.route("/business/scan-qr/<int:interaction_id>")
+@login_required
+def scan_qr(interaction_id):
+    # business protection, etc
+    return render_template("scan_qr.html", interaction_id=interaction_id)
 
 @app.route("/business/register", methods=["GET", "POST"])
 def business_register():

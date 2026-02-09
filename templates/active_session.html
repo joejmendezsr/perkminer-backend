@@ -61,16 +61,40 @@
             {% endif %}
         </div>
 
-        {# Business “Send Quote” button, only for business #}
+        <!-- USER Accept & Pay Button + QR display -->
+        {% if is_user and not interaction.awaiting_finalization %}
+          <div class="mb-3 text-center">
+            <form method="post" action="{{ url_for('active_session', interaction_id=interaction.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="accept_and_pay" value="1">
+              <button type="submit" class="btn btn-success w-100">Accept & Pay (Show My QR Code)</button>
+            </form>
+          </div>
+        {% elif is_user and interaction.awaiting_finalization %}
+          <div class="mb-3 text-center">
+            <p class="mb-2 text-success fw-bold">Show this QR code to the business to complete payment:</p>
+            <img src="{{ url_for('user_qr_code') }}" alt="Your QR Code" style="max-width:160px; margin-top:10px;">
+          </div>
+        {% endif %}
+
+        <!-- BUSINESS QR Reader Button (shows ONLY after user has clicked Accept & Pay) -->
+        {% if is_biz and interaction.awaiting_finalization %}
+          <div class="mb-3 text-center">
+            <a href="{{ url_for('scan_qr', interaction_id=interaction.id) }}" class="btn btn-warning w-100">Scan QR to Finalize Payment</a>
+          </div>
+        {% endif %}
+
+        <!-- Business “Send Quote” button, only for business -->
         {% if is_biz %}
           <a href="{{ url_for('create_quote', interaction_id=interaction.id) }}" class="btn btn-warning mb-2 w-100">Send Quote</a>
         {% endif %}
 
-        {# User “View Quote” button, only if quote exists #}
+        <!-- User "View Quote" button, only if quote exists -->
         {% if is_user and interaction.quote %}
           <div class="alert alert-info text-center">
             <a href="{{ url_for('view_quote', interaction_id=interaction.id) }}" class="btn btn-warning">
-              View Quote &#128176;</a>
+              View Quote &#128176;
+            </a>
           </div>
         {% endif %}
 

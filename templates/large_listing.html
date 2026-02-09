@@ -119,9 +119,9 @@
             <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action">
                 &larr; Back to results
             </a>
-            <a href="#" class="btn btn-success btn-action"
-                onclick="alert('Payment portal coming soon!'); return false;">
-                Complete a Purchase
+            <!-- New Complete a Purchase button pointing to QR code -->
+            <a href="{{ url_for('user_qr_code') }}" class="btn btn-success btn-action">
+                Complete a Purchase (Show My QR)
             </a>
             <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action">
                 Request for Service
