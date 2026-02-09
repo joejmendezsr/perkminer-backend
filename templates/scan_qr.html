@@ -9,19 +9,16 @@
   <div class="container py-4">
     <h4 class="mb-3">Scan User's QR Code</h4>
     <div id="reader" style="width:320px; margin:0 auto;"></div>
+    <div id="scan-message" class="alert alert-info mt-3" style="display:none"></div>
   </div>
   <script>
     function onScanSuccess(decodedText, decodedResult) {
-        // Optional: validate format
-        fetch('{{ url_for("finalize_transaction", interaction_id=interaction_id) }}', {
-            method: 'POST',
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ qr_data: decodedText })
-        }).then(res => res.json())
-          .then(data => window.location.href=data.next_url);
+      // Strip tracking, parameters, etc for extra safety if you want
+      // For your use case:
+      // Decoded text is expected to be "https://www.perkminer.com/payment/REFxxxxx"
+      window.location.href = decodedText;
     }
-    let html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 });
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
