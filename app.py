@@ -1405,7 +1405,7 @@ def biz_interaction_details(interaction_id):
         return redirect(url_for('biz_user_interactions'))
     return render_template("biz_request_details.html", interaction=interaction)
 
-@app.route("/business/session/<int:interaction_id>")
+@app.route("/business/session/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
 def biz_active_session(interaction_id):
     biz_id = session.get('business_id')
@@ -1416,8 +1416,45 @@ def biz_active_session(interaction_id):
     if interaction.business_id != biz_id:
         flash("Access denied.")
         return redirect(url_for('biz_user_interactions'))
-    # For now, just render a placeholder for the messaging room:
-    return render_template("biz_active_session.html", interaction=interaction)
+
+    # Detect this as a business view
+    is_user = False
+    is_biz = True
+
+    # Support POST (sending messages) if you want chat from business side too
+    if request.method == "POST":
+        text = request.form.get("message_text", "").strip()
+        uploaded_file = request.files.get("message_file")
+        file_url = None
+        file_name = None
+        if uploaded_file and uploaded_file.filename:
+            filename = secure_filename(uploaded_file.filename)
+            upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(upload_path)
+            file_url = url_for('uploaded_file', filename=filename)
+            file_name = uploaded_file.filename
+        if text or file_url:
+            msg = Message(
+                interaction_id=interaction.id,
+                sender_type="business",
+                sender_id=biz_id,
+                text=text,
+                file_url=file_url,
+                file_name=file_name
+            )
+            db.session.add(msg)
+            db.session.commit()
+            return redirect(url_for('biz_active_session', interaction_id=interaction.id))
+
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    # Render the same template you use for users
+    return render_template(
+        "active_session.html",
+        interaction=interaction,
+        is_user=is_user,
+        is_biz=is_biz,
+        messages=messages
+    )
 
 @app.route("/business/dashboard", methods=["GET", "POST"])
 def business_dashboard():
