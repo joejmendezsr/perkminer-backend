@@ -981,9 +981,11 @@ def payment_qr_redirect(ref):
 @business_login_required
 def finalize_transaction(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
-    # Only allow business
     if session.get('business_id') != interaction.business_id:
         abort(403)
+
+    now = datetime.now()  # Always pass now to template
+
     if request.method == "POST":
         data = request.json or request.form
         amount = float(data.get("amount", 0))
@@ -1002,9 +1004,10 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(trans)
         db.session.commit()
-        # redirect as needed or show summary
-
-    return render_template("finalize_transaction.html", interaction=interaction)
+        # Optionally, render summary or redirect as needed
+        # return render_template("some_receipt.html", ...)
+    
+    return render_template("finalize_transaction.html", interaction=interaction, now=now)
 
 @app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
 @login_required
