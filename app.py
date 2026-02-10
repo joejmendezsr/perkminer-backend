@@ -960,6 +960,27 @@ def user_qr_code():
     buf.seek(0)
     return send_file(buf, mimetype="image/png")
 
+@app.route("/session/<int:interaction_id>/user-receipt-check")
+@login_required
+def check_user_receipt(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    # Only the session owner (user) can check
+    if interaction.user_id != current_user.id:
+        return {"has_receipt": False}
+    # Check if at least one UserTransaction exists for this interaction/amount (adjust as needed)
+    user_txn = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code, amount=interaction.amount).order_by(UserTransaction.date_time.desc()).first()
+    return {"has_receipt": user_txn is not None}
+
+@app.route("/session/<int:interaction_id>/user-receipt")
+@login_required
+def show_user_receipt(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    if interaction.user_id != current_user.id:
+        abort(403)
+    # Get most recent UserTransaction for this user/amount
+    transaction = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code, amount=interaction.amount).order_by(UserTransaction.date_time.desc()).first()
+    return render_template("user_transaction_receipt.html", transaction=transaction, interaction=interaction)
+
 @app.route("/payment/<ref>")
 def payment_qr_redirect(ref):
     user = User.query.filter_by(referral_code=ref).first()
