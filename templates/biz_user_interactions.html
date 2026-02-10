@@ -34,7 +34,7 @@
           </div>
           <div class="py-1">
             <a href="{{ url_for('biz_interaction_details', interaction_id=i.id) }}" class="btn btn-info btn-sm me-2 mb-1">Details</a>
-            <a href="{{ url_for('active_session', interaction_id=i.id) }}" class="btn btn-primary btn-sm mb-1">Select</a>
+            <a href="{{ url_for('biz_active_session', interaction_id=i.id) }}" class="btn btn-primary btn-sm mb-1">Select</a>
           </div>
         </li>
       {% endfor %}
