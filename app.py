@@ -977,6 +977,8 @@ def payment_qr_redirect(ref):
     # This part runs if the QR was scanned by anyone who is NOT a logged-in business.
     return render_template("qr_user_landing.html", user=user)
 
+from datetime import datetime
+
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
 def finalize_transaction(interaction_id):
@@ -988,16 +990,40 @@ def finalize_transaction(interaction_id):
     summary = None
 
     if request.method == "POST":
-        data = request.form  # Using standard HTML form
+        data = request.form
         amount = float(data.get("amount", 0))
 
-        # User / Business cashback calculations
+        # Calculate user and business cash back
         user_cash_back = round(amount * 0.02, 2)
         business_cash_back = round(amount * 0.01, 2)
 
-        # (You can keep your full commission tree logic here if you want)
-        # Save transactions if needed
-        # db.session.add(user_trans); db.session.add(business_trans); db.session.commit()
+        # --- User Transaction Save (minimal, just cash back for now) ---
+        user_trans = UserTransaction(
+            amount=amount,
+            user_referral_id=interaction.user.referral_code or "REFjoejmendez",
+            cash_back=user_cash_back,
+            tier2_user_referral_id="REFjoejmendez", tier2_commission=0,
+            tier3_user_referral_id="REFjoejmendez", tier3_commission=0,
+            tier4_user_referral_id="REFjoejmendez", tier4_commission=0,
+            tier5_user_referral_id="REFjoejmendez", tier5_commission=0
+            # Add sponsor tree as needed for your app!
+        )
+        db.session.add(user_trans)
+
+        # --- Business Transaction Save (minimal, just cash back for now) ---
+        business_trans = BusinessTransaction(
+            amount=amount,
+            business_referral_id=interaction.business.referral_code or "BIZPerkMiner",
+            cash_back=business_cash_back,
+            tier2_business_referral_id="BIZPerkMiner", tier2_commission=0,
+            tier3_business_referral_id="BIZPerkMiner", tier3_commission=0,
+            tier4_business_referral_id="BIZPerkMiner", tier4_commission=0,
+            tier5_business_referral_id="BIZPerkMiner", tier5_commission=0
+            # Add sponsor tree as needed for your app!
+        )
+        db.session.add(business_trans)
+
+        db.session.commit()
 
         summary = {
             "amount": f"{amount:.2f}",
