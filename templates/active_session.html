@@ -60,8 +60,6 @@
                 <h5>Active Session with {{ interaction.user.name or interaction.user.email }}</h5>
             {% endif %}
         </div>
-
-        <!-- USER Accept & Pay Button + QR display -->
         {% if is_user and not interaction.awaiting_finalization %}
           <div class="mb-3 text-center">
             <form method="post" action="{{ url_for('active_session', interaction_id=interaction.id) }}">
@@ -74,22 +72,22 @@
           <div class="mb-3 text-center">
             <p class="mb-2 text-success fw-bold">Show this QR code to the business to complete payment:</p>
             <img src="{{ url_for('user_qr_code') }}" alt="Your QR Code" style="max-width:160px; margin-top:10px;">
+            <div id="user-receipt-wait" class="alert alert-info mt-3 mb-0">
+                Waiting for business to finalize payment...<br><span class="spinner-border spinner-border-sm text-warning"></span>
+            </div>
           </div>
         {% endif %}
 
-        <!-- BUSINESS QR Reader Button (shows ONLY after user has clicked Accept & Pay) -->
         {% if is_biz and interaction.awaiting_finalization %}
           <div class="mb-3 text-center">
             <a href="{{ url_for('scan_qr', interaction_id=interaction.id) }}" class="btn btn-warning w-100">Scan QR to Finalize Payment</a>
           </div>
         {% endif %}
 
-        <!-- Business “Send Quote” button, only for business -->
         {% if is_biz %}
           <a href="{{ url_for('create_quote', interaction_id=interaction.id) }}" class="btn btn-warning mb-2 w-100">Send Quote</a>
         {% endif %}
 
-        <!-- User "View Quote" button, only if quote exists -->
         {% if is_user and interaction.quote %}
           <div class="alert alert-info text-center">
             <a href="{{ url_for('view_quote', interaction_id=interaction.id) }}" class="btn btn-warning">
@@ -142,8 +140,9 @@
         </form>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
-            <button class="btn btn-success flex-grow-1">Finalize Transaction</button>
-            <button class="btn btn-danger flex-grow-1">End Session</button>
+            <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}" style="display:inline;">
+                <button class="btn btn-danger flex-grow-1" type="submit">End Session</button>
+            </form>
         </div>
         {% if is_user %}
             <a href="{{ url_for('user_biz_interactions') }}" class="btn btn-secondary mt-3 w-100">Back</a>
@@ -175,6 +174,22 @@
         });
   }
   setInterval(reloadMessages, 4000);
+
+  // When user is waiting on finalize, poll for a receipt
+  {% if is_user and interaction.awaiting_finalization %}
+  function checkForReceipt() {
+    fetch("{{ url_for('check_user_receipt', interaction_id=interaction.id) }}")
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.has_receipt) {
+          window.location.href = "{{ url_for('show_user_receipt', interaction_id=interaction.id) }}";
+        } else {
+          setTimeout(checkForReceipt, 4000);
+        }
+      });
+  }
+  checkForReceipt();
+  {% endif %}
 </script>
 </body>
 </html>

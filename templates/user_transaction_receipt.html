@@ -20,7 +20,7 @@
     <h4 class="mb-4 text-center">Transaction Receipt</h4>
     <div class="receipt-summary">
       <div><b>Date/Time:</b> {{ transaction.date_time.strftime('%Y-%m-%d %I:%M %p') }}</div>
-      <div><b>Business:</b> {{ business_name }}</div>
+      <div><b>Business:</b> {{ interaction.business.business_name }}</div>
       <div><b>Total Paid:</b> ${{ transaction.amount }}</div>
       <div class="text-success fw-bold mt-2">
         <b>Your Cashback (2%):</b> ${{ transaction.cash_back }}
@@ -29,6 +29,9 @@
     <div class="alert alert-success text-center">
       Thank you for your purchase! Your cashback has been credited.
     </div>
+    <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
+      <button type="submit" class="btn btn-danger w-100 mb-2">End Session</button>
+    </form>
     <a href="{{ url_for('dashboard') }}" class="btn btn-primary w-100">Back to Dashboard</a>
   </div>
 </div>
