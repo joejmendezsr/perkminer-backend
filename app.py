@@ -981,6 +981,23 @@ def show_user_receipt(interaction_id):
     transaction = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code, amount=interaction.amount).order_by(UserTransaction.date_time.desc()).first()
     return render_template("user_transaction_receipt.html", transaction=transaction, interaction=interaction)
 
+@app.route("/session/<int:interaction_id>/end", methods=["POST"])
+def end_session(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    # Allow both business and user to end session
+    is_user = current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id
+    is_biz = session.get('business_id') == interaction.business_id
+    if not (is_user or is_biz):
+        abort(403)
+    interaction.status = "ended"
+    db.session.commit()
+    flash("Session ended.", "success")
+    # Redirect to appropriate dashboard
+    if is_biz:
+        return redirect(url_for('biz_user_interactions'))
+    else:
+        return redirect(url_for('user_biz_interactions'))
+
 @app.route("/payment/<ref>")
 def payment_qr_redirect(ref):
     user = User.query.filter_by(referral_code=ref).first()
