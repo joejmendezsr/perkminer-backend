@@ -977,6 +977,8 @@ def payment_qr_redirect(ref):
     # This part runs if the QR was scanned by anyone who is NOT a logged-in business.
     return render_template("qr_user_landing.html", user=user)
 
+from datetime import datetime
+
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
 def finalize_transaction(interaction_id):
@@ -984,17 +986,20 @@ def finalize_transaction(interaction_id):
     if session.get('business_id') != interaction.business_id:
         abort(403)
 
-    now = datetime.now()  # Always pass now to template
+    now = datetime.now()
 
     if request.method == "POST":
-        data = request.json or request.form
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form
         amount = float(data.get("amount", 0))
         user_referral_id = interaction.user.referral_code
         business_referral_id = interaction.business.referral_code
 
         # Calculate and save transaction (simplified)
         cash_back = round(amount * 0.02, 2)
-        # ...calculate tier commissions...
+        # ...calculate tier commissions, etc...
 
         trans = UserTransaction(
             amount=amount,
@@ -1004,9 +1009,8 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(trans)
         db.session.commit()
-        # Optionally, render summary or redirect as needed
-        # return render_template("some_receipt.html", ...)
-    
+        # Optionally add redirect or receipt display here
+
     return render_template("finalize_transaction.html", interaction=interaction, now=now)
 
 @app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
