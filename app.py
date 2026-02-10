@@ -1115,11 +1115,15 @@ def active_session(interaction_id):
     return render_template("active_session.html", interaction=interaction, is_user=is_user, is_biz=is_biz, messages=messages)
 
 @app.route("/session/<int:interaction_id>/messages")
-@login_required
 def session_messages(interaction_id):
+    # Check for EITHER user or business session
     interaction = Interaction.query.get_or_404(interaction_id)
-    is_user = interaction.user_id == getattr(current_user, 'id', None)
-    is_biz = session.get('business_id') == interaction.business_id
+    is_user = False
+    is_biz = False
+    if 'business_id' in session and session['business_id'] == interaction.business_id:
+        is_biz = True
+    elif current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id:
+        is_user = True
     if not (is_user or is_biz):
         return ""
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
