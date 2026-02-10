@@ -985,8 +985,7 @@ def finalize_transaction(interaction_id):
         abort(403)
 
     now = datetime.now()
-    business_summary = None
-    user_summary = None
+    summary = None
 
     if request.method == "POST":
         if request.is_json:
@@ -995,7 +994,7 @@ def finalize_transaction(interaction_id):
             data = request.form
         amount = float(data.get("amount", 0))
 
-        # -- USER REWARDS TREE --
+        # --- USER COMMISSIONS TREE ---
         user_referral_id = interaction.user.referral_code or "REFjoejmendez"
         u2 = User.query.filter_by(id=interaction.user.sponsor_id).first()
         tier2_user_referral_id = u2.referral_code if u2 else "REFjoejmendez"
@@ -1013,11 +1012,11 @@ def finalize_transaction(interaction_id):
         tier5_user_referral_id = u5.referral_code if u5 else "REFjoejmendez"
         tier5_commission = round(amount * 0.02, 2) if u5 else 0.0
 
-        user_cash_back = round(amount * 0.02, 2)
+        # Save user transaction
         user_trans = UserTransaction(
             amount=amount,
             user_referral_id=user_referral_id,
-            cash_back=user_cash_back,
+            cash_back=round(amount * 0.02, 2),
             tier2_user_referral_id=tier2_user_referral_id,
             tier2_commission=tier2_commission,
             tier3_user_referral_id=tier3_user_referral_id,
@@ -1031,7 +1030,7 @@ def finalize_transaction(interaction_id):
 
         user_summary = dict(
             amount=f"{amount:.2f}",
-            cash_back=f"{user_cash_back:.2f}",
+            cash_back=f"{round(amount * 0.02, 2):.2f}",
             tier2_commission=f"{tier2_commission:.2f}",
             tier3_commission=f"{tier3_commission:.2f}",
             tier4_commission=f"{tier4_commission:.2f}",
@@ -1042,9 +1041,8 @@ def finalize_transaction(interaction_id):
             tier5_user_referral_id=tier5_user_referral_id,
         )
 
-        # -- BUSINESS REWARDS TREE --
+        # --- BUSINESS COMMISSIONS TREE ---
         business_referral_id = interaction.business.referral_code or "BIZPerkMiner"
-
         b2 = Business.query.filter_by(id=interaction.business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
         tier2_commission = round(amount * 0.002, 2) if b2 else 0.0
@@ -1087,16 +1085,32 @@ def finalize_transaction(interaction_id):
             ad_fee=f"{ad_fee:.2f}",
             net_gross=f"{net_gross:.2f}",
             marketing_roi=marketing_roi,
-            cash_back=f"{business_cash_back:.2f}"
+            cash_back=f"{business_cash_back:.2f}",
+            tier2_commission=f"{tier2_commission:.2f}",
+            tier3_commission=f"{tier3_commission:.2f}",
+            tier4_commission=f"{tier4_commission:.2f}",
+            tier5_commission=f"{tier5_commission:.2f}",
+            tier2_business_referral_id=tier2_business_referral_id,
+            tier3_business_referral_id=tier3_business_referral_id,
+            tier4_business_referral_id=tier4_business_referral_id,
+            tier5_business_referral_id=tier5_business_referral_id
         )
+
+        summary = {
+            'business_summary': business_summary,
+            'user_summary': user_summary
+        }
+
         flash("Transaction finalized and all rewards/commissions assigned!", "success")
+
+    else:
+        summary = None
 
     return render_template(
         "combined_transaction_receipt.html",
         interaction=interaction,
         now=now,
-        business_summary=business_summary,
-        user_summary=user_summary
+        summary=summary
     )
 
 @app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
