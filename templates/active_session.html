@@ -141,7 +141,8 @@
 
         <div class="mt-3 d-flex flex-wrap gap-2">
             <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}" style="display:inline;">
-                <button class="btn btn-danger flex-grow-1" type="submit">End Session</button>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger flex-grow-1" type="submit">End Session</button>
             </form>
         </div>
         {% if is_user %}
