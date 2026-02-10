@@ -23,6 +23,8 @@ from wtforms import SelectField, TextAreaField, DecimalField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, Length
 from flask_mail import Message as MailMessage
 from datetime import datetime
+from functools import wraps
+from flask import session, flash, redirect, url_for, request
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -74,6 +76,15 @@ def get_interaction_for_business_and_user(business_id, user_id):
         user_id=user_id,
         status="active"
     ).first()
+
+def business_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('business_id'):
+            flash('Please log in as a business to access this page.', 'warning')
+            return redirect(url_for('business_login', next=request.path))
+        return f(*args, **kwargs)
+    return decorated_function
 
 import os, re, random, string, time, logging
 import cloudinary
@@ -967,7 +978,7 @@ def payment_qr_redirect(ref):
     return render_template("qr_user_landing.html", user=user)
 
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
-@login_required
+@business_login_required
 def finalize_transaction(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
     # Only allow business
@@ -1144,7 +1155,7 @@ def create_quote(interaction_id):
     return render_template("quote.html", interaction=interaction, quote=existing_quote)
 
 @app.route("/session/<int:interaction_id>/quote/view")
-@login_required
+@business_login_required
 def view_quote(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
     is_user = interaction.user_id == getattr(current_user, 'id', None)
@@ -1155,7 +1166,7 @@ def view_quote(interaction_id):
     return render_template("quote.html", interaction=interaction, quote=quote)
 
 @app.route("/business/scan-qr/<int:interaction_id>")
-@login_required
+@business_login_required
 def scan_qr(interaction_id):
     # business protection, etc
     return render_template("scan_qr.html", interaction_id=interaction_id)
@@ -1370,7 +1381,7 @@ def business_invite():
     return redirect(url_for('business_dashboard'))
 
 @app.route("/business/interactions")
-@login_required
+@business_login_required
 def biz_user_interactions():
     # Make sure only a logged-in business can view this
     biz_id = session.get('business_id')
@@ -1381,7 +1392,7 @@ def biz_user_interactions():
     return render_template("biz_user_interactions.html", interactions=interactions)
 
 @app.route("/business/interactions/<int:interaction_id>/details")
-@login_required
+@business_login_required
 def biz_interaction_details(interaction_id):
     biz_id = session.get('business_id')
     if not biz_id:
@@ -1395,7 +1406,7 @@ def biz_interaction_details(interaction_id):
     return render_template("biz_request_details.html", interaction=interaction)
 
 @app.route("/business/session/<int:interaction_id>")
-@login_required
+@business_login_required
 def biz_active_session(interaction_id):
     biz_id = session.get('business_id')
     if not biz_id:
