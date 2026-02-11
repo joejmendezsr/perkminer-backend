@@ -30,6 +30,7 @@
       Thank you for your purchase! Your cashback has been credited.
     </div>
     <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-danger w-100 mb-2">End Session</button>
     </form>
     <a href="{{ url_for('dashboard') }}" class="btn btn-primary w-100">Back to Dashboard</a>
