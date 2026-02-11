@@ -17,7 +17,10 @@
 </head>
 <body>
 <div class="container py-4">
-  <h3 class="mb-3 text-center text-md-start">My Active Sessions</h3>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">My Active Sessions</h3>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">Return to Dashboard</a>
+  </div>
   <input type="text" id="searchInput" class="form-control mb-3" placeholder="Filter by business name...">
   <div id="interaction-list">
   {% if interactions %}

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Transaction Receipts - PerkMiner</title>
+    <title>Business Transaction Receipt - PerkMiner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <style>
@@ -16,44 +16,31 @@
 </head>
 <body>
 <div class="container py-4">
-
-  {% if business_summary %}
     <div class="card receipt-card shadow-sm p-4 mb-4">
       <h4 class="text-center mb-4">Business Transaction Receipt</h4>
       <div class="receipt-summary">
-        <div><b>Date/Time:</b> {{ now.strftime('%Y-%m-%d %I:%M %p') }}</div>
-        <div><b>Gross Sale:</b> ${{ business_summary.amount }}</div>
-        <div><b>Advertising Fee (10%):</b> ${{ business_summary.ad_fee }}</div>
-        <div><b>Net Gross:</b> ${{ business_summary.net_gross }}</div>
-        <div><b>Marketing ROI:</b> {{ business_summary.marketing_roi }}%</div>
-        <div class="mt-2"><b>Cash Back (1%):</b> ${{ business_summary.cash_back }}</div>
-      </div>
-    </div>
-  {% endif %}
-
-  {% if user_summary %}
-    <div class="card receipt-card shadow-sm p-4 mb-2">
-      <h4 class="text-center mb-4">User Receipt</h4>
-      <div class="receipt-summary">
-        <div><b>Date/Time:</b> {{ now.strftime('%Y-%m-%d %I:%M %p') }}</div>
-        <div><b>Total Purchase:</b> ${{ user_summary.amount }}</div>
-        <div class="text-success fw-bold"><b>Your Cashback (2%):</b> ${{ user_summary.cash_back }}</div>
+        <div><b>Date/Time:</b> {{ transaction.date_time.strftime('%Y-%m-%d %I:%M %p') }}</div>
+        <div><b>Gross Sale:</b> ${{ transaction.amount }}</div>
+        <div class="text-info"><b>1% Business Cashback (Cap $25):</b> ${{ transaction.cash_back }}
+          {% if transaction.cash_back|float >= 24.99 %}
+            <span class="badge bg-warning text-dark ms-1">Max Reached</span>
+          {% endif %}
+        </div>
+        <div><b>Tier 2 (0.25% cap $6.25):</b> ${{ transaction.tier2_commission }}{% if transaction.tier2_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+        <div><b>Tier 3 (0.25% cap $6.25):</b> ${{ transaction.tier3_commission }}{% if transaction.tier3_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+        <div><b>Tier 4 (0.25% cap $6.25):</b> ${{ transaction.tier4_commission }}{% if transaction.tier4_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+        <div><b>Tier 5 (1% cap $25):</b> ${{ transaction.tier5_commission }}{% if transaction.tier5_commission|float >= 24.99 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
         <hr>
-        <div><b>Tier 2:</b> {{ user_summary.tier2_user_referral_id }} &mdash; ${{ user_summary.tier2_commission }}</div>
-        <div><b>Tier 3:</b> {{ user_summary.tier3_user_referral_id }} &mdash; ${{ user_summary.tier3_commission }}</div>
-        <div><b>Tier 4:</b> {{ user_summary.tier4_user_referral_id }} &mdash; ${{ user_summary.tier4_commission }}</div>
-        <div><b>Tier 5:</b> {{ user_summary.tier5_user_referral_id }} &mdash; ${{ user_summary.tier5_commission }}</div>
+        <div><b>Advertising Fee (10%):</b> ${{ ad_fee or "" }}</div>
+        <div><b>Net Gross:</b> ${{ net_gross or "" }}</div>
+        <div><b>Marketing ROI:</b> {{ marketing_roi or "" }}%</div>
       </div>
-      <div class="alert alert-info text-center mt-3">
-        Thank you for your purchase! Your cashback has been credited.
-      </div>
+      <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger w-100 mb-2">End Session</button>
+      </form>
+      <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-primary w-100">Back to Dashboard</a>
     </div>
-  {% endif %}
-
-  <div class="text-center mt-2">
-    <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-primary">Back to Dashboard</a>
-  </div>
-
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

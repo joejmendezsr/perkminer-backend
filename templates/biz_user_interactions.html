@@ -13,14 +13,17 @@
         #interaction-list { max-height: 72vw; }
         .list-group-item, .btn, .btn-info, .btn-primary, .btn-danger { font-size: 1.03em; padding: 0.95em 0.7em; }
       }
-      .btn-info, .btn-primary, .btn-danger { min-width: 85px; }
+      .btn-info, .btn-primary, .btn-danger, .btn-outline-primary { min-width: 85px; }
       .list-group-item { flex-wrap: wrap; }
       .d-flex > div { min-width: 140px; }
     </style>
 </head>
 <body>
 <div class="container py-4">
-  <h3 class="mb-3 text-center text-md-start">User Service Requests</h3>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">User Service Requests</h3>
+    <a href="{{ url_for('business_dashboard') }}" class="btn btn-outline-primary">Return to Dashboard</a>
+  </div>
   <input type="text" id="searchInput" class="form-control mb-3" placeholder="Filter by user name...">
   <div id="interaction-list">
   {% if interactions %}
