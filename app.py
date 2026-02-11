@@ -987,6 +987,23 @@ def show_user_receipt(interaction_id):
     ).order_by(UserTransaction.date_time.desc()).first()
     return render_template("user_transaction_receipt.html", transaction=transaction, interaction=interaction)
 
+@app.route("/session/<int:interaction_id>/user-quote")
+@login_required
+def user_quote_view(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_user = interaction.user_id == current_user.id
+    is_biz = False
+    if not is_user:
+        abort(403)
+    quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    return render_template(
+        "quote.html",
+        interaction=interaction,
+        quote=quote,
+        is_user=is_user,
+        is_biz=is_biz
+    )
+
 @app.route("/session/<int:interaction_id>/end", methods=["POST"])
 def end_session(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
@@ -1269,12 +1286,12 @@ def session_messages(interaction_id):
 @app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
 @business_login_required
 def create_quote(interaction_id):
-    # Only business can do this
     interaction = Interaction.query.get_or_404(interaction_id)
     is_biz = session.get('business_id') == interaction.business_id
+    is_user = False  # Never a user on business send view
     if not is_biz:
         flash("Only the business can send a quote for this session.")
-        return redirect(url_for('active_session', interaction_id=interaction_id))
+        return redirect(url_for('biz_active_session', interaction_id=interaction_id))
 
     if request.method == "POST":
         amount = request.form.get("amount")
@@ -1290,10 +1307,16 @@ def create_quote(interaction_id):
             db.session.add(quote)
             db.session.commit()
             flash("Quote sent to user!", "success")
-            return redirect(url_for('active_session', interaction_id=interaction_id))
-    # If quote already exists, show it
+            return redirect(url_for('biz_active_session', interaction_id=interaction_id))
+
     existing_quote = Quote.query.filter_by(interaction_id=interaction.id).first()
-    return render_template("quote.html", interaction=interaction, quote=existing_quote)
+    return render_template(
+        "quote.html",
+        interaction=interaction,
+        quote=existing_quote,
+        is_biz=is_biz,
+        is_user=is_user
+    )
 
 @app.route("/session/<int:interaction_id>/quote/view")
 @business_login_required
