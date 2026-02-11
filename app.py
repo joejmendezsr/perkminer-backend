@@ -1250,7 +1250,7 @@ def service_request(biz_id):
 @login_required
 def user_biz_interactions():
     # Query all active interactions for this user
-    interactions = Interaction.query.filter_by(user_id=current_user.id).order_by(Interaction.created_at.desc()).all()
+    interactions = Interaction.query.filter_by(user_id=current_user.id, status='active').order_by(Interaction.created_at.desc()).all()
     return render_template("user_biz_interactions.html", interactions=interactions)
 
 @app.route("/session/<int:interaction_id>", methods=["GET", "POST"])
@@ -1559,7 +1559,7 @@ def biz_user_interactions():
     if not biz_id:
         flash("You must be logged in as a business.")
         return redirect(url_for('business_login'))
-    interactions = Interaction.query.filter_by(business_id=biz_id).order_by(Interaction.created_at.desc()).all()
+    interactions = Interaction.query.filter_by(business_id=biz_id, status='active').order_by(Interaction.created_at.desc()).all()
     return render_template("biz_user_interactions.html", interactions=interactions)
 
 @app.route("/business/interactions/<int:interaction_id>/details")
