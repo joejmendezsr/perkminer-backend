@@ -125,17 +125,17 @@
         let desc = "";
         let cap = null;
         if (tier === "1") {
-            reward = amount * 0.01; desc = "As the customer, from a purchase you make";
+            reward = amount * 0.01; desc = "As the business, from a paid invoice you generate";
         } else if (["2","3","4"].includes(tier)) {
             reward = amount * 0.002;
             cap = 6.25;
             if (reward > cap) reward = cap;
-            desc = `If your Tier ${tier} referral makes a purchase`;
+            desc = `If your Tier ${tier} referral generates a paid invoice`;
         } else if (tier === "5") {
             reward = amount * 0.01;
             cap = 50;
             if (reward > cap) reward = cap;
-            desc = "If your Tier 5 referral makes a purchase";
+            desc = "If your Tier 5 generates a paid invoice";
         }
         let out = '';
         if (amount > 0) {
@@ -371,18 +371,18 @@
 
   <!-- Reward calculators and Network tree -->
   <div class="card p-4 mb-4">
-    <h4>Estimate Your Rewards From One Single Purchase</h4>
+    <h4>Estimate Your Rewards From One Single Paid Invoice</h4>
     <div class="row g-3 mb-3">
       <div class="col-12 col-md-auto">
         <input id="reward_amount" type="number" class="form-control" placeholder="Amount (e.g. 500)" max="2500" required>
       </div>
       <div class="col-12 col-md-auto">
         <select id="reward_tier" class="form-select" required>
-            <option value="1" selected>Tier 1 (your purchases)</option>
-            <option value="2">Tier 2 (direct referral purchases)</option>
-            <option value="3">Tier 3 (Tier 2 referral purchases)</option>
-            <option value="4">Tier 4 (Tier 3 referral purchases)</option>
-            <option value="5">Tier 5 (Tier 4 referral purchases)</option>
+            <option value="1" selected>Tier 1 (your paid invoices)</option>
+            <option value="2">Tier 2 (direct referral paid invoices)</option>
+            <option value="3">Tier 3 (Tier 2 referral paid invoices)</option>
+            <option value="4">Tier 4 (Tier 3 referral paid invoices)</option>
+            <option value="5">Tier 5 (Tier 4 referral paid invoices)</option>
         </select>
       </div>
       <div class="col-12 col-md-auto">
@@ -395,26 +395,26 @@
   </div>
 
   <div class="card p-4 mb-4">
-    <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
+    <h4>Referral Network Cashback Calculator (one paid invoice generated from every business in your network during the month)</h4>
     <div class="mb-2">
       <label>If you and everyone in your network refers 
         <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="3" style="width:80px;" />
-        people and you each make one purchase during the month in the amount of $ 
+        people and you generate one paid invoice during the month in the amount of $ 
         <input id="network_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
-        , this is how much you would earn in Cashback Rewards for the month:
+        , this is how much your business would earn in Cashback Rewards for the month:
       </label>
       <small class="text-muted d-block">*Maximum purchase amount allowed is $2,500</small>
     </div>
     <button class="btn btn-info mb-2" type="button" onclick="calculateNetworkEarnings()">Calculate</button>
     <div id="network_results" style="display:none;">
       <ul class="mb-1">
-        <li>Tier One: (Your purchases) = <span id="network_t1"></span></li>
-        <li>Tier Two: (Purchases from your direct referrals) = <span id="network_t2"></span></li>
-        <li>Tier Three: (Purchases from 2nd Tier referrals) = <span id="network_t3"></span></li>
-        <li>Tier Four: (Purchases from 3rd Tier referrals) = <span id="network_t4"></span></li>
-        <li>Tier Five: (Purchases from 4th Tier referrals) = <span id="network_t5"></span></li>
+        <li>Tier One: (Your paid invoices) = <span id="network_t1"></span></li>
+        <li>Tier Two: (Paid invoices from your direct referrals) = <span id="network_t2"></span></li>
+        <li>Tier Three: (Paid invoices from 2nd Tier referrals) = <span id="network_t3"></span></li>
+        <li>Tier Four: (Paid invoices from 3rd Tier referrals) = <span id="network_t4"></span></li>
+        <li>Tier Five: (Paid invoices from 4th Tier referrals) = <span id="network_t5"></span></li>
       </ul>
-      <strong>Your total cashback earnings for the month would be $<span id="network_total"></span></strong>
+      <strong>Cash back earnings for your business for the month would be $<span id="network_total"></span></strong>
     </div>
   </div>
   <div class="card p-4 mb-4">
