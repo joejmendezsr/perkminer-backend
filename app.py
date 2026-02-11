@@ -987,6 +987,7 @@ def show_user_receipt(interaction_id):
     ).order_by(UserTransaction.date_time.desc()).first()
     return render_template("user_transaction_receipt.html", transaction=transaction, interaction=interaction)
 
+# USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
 @login_required
 def user_quote_view(interaction_id):
@@ -996,6 +997,46 @@ def user_quote_view(interaction_id):
     if not is_user:
         abort(403)
     quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    return render_template(
+        "quote.html",
+        interaction=interaction,
+        quote=quote,
+        is_user=is_user,
+        is_biz=is_biz
+    )
+
+# BUSINESS — View/Edit Quote (business context)
+@app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
+@business_login_required
+def create_quote(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_biz = session.get('business_id') == interaction.business_id
+    is_user = False
+    if not is_biz:
+        flash("Only the business can send or edit a quote for this session.")
+        return redirect(url_for('biz_active_session', interaction_id=interaction_id))
+
+    quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    if request.method == "POST":
+        amount = request.form.get("amount")
+        details = request.form.get("details")
+        if not amount or not details:
+            flash("Amount and quote details are required.", "danger")
+        else:
+            if quote:
+                quote.amount = amount
+                quote.details = details
+            else:
+                quote = Quote(
+                    interaction_id=interaction.id,
+                    amount=amount,
+                    details=details
+                )
+                db.session.add(quote)
+            db.session.commit()
+            flash("Quote sent to user!" if not quote else "Quote was updated!", "success")
+            return redirect(url_for('biz_active_session', interaction_id=interaction_id))
+
     return render_template(
         "quote.html",
         interaction=interaction,
