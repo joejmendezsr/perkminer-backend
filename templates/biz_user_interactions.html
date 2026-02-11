@@ -11,10 +11,9 @@
       }
       @media (max-width: 600px) {
         #interaction-list { max-height: 72vw; }
-        .list-group-item, .btn, .btn-info, .btn-primary { font-size: 1.03em; padding: 0.95em 0.7em; }
-        .me-2 { margin-right: 0.5rem !important; }
+        .list-group-item, .btn, .btn-info, .btn-primary, .btn-danger { font-size: 1.03em; padding: 0.95em 0.7em; }
       }
-      .btn-info, .btn-primary { min-width: 85px; }
+      .btn-info, .btn-primary, .btn-danger { min-width: 85px; }
       .list-group-item { flex-wrap: wrap; }
       .d-flex > div { min-width: 140px; }
     </style>
@@ -32,9 +31,13 @@
             <strong>{{ i.user.name or i.user.email }}</strong><br>
             <small class="text-muted">{{ i.service_type }}</small>
           </div>
-          <div class="py-1">
-            <a href="{{ url_for('biz_interaction_details', interaction_id=i.id) }}" class="btn btn-info btn-sm me-2 mb-1">Details</a>
+          <div class="py-1 d-flex flex-column gap-1 align-items-end">
+            <a href="{{ url_for('biz_interaction_details', interaction_id=i.id) }}" class="btn btn-info btn-sm mb-1">Details</a>
             <a href="{{ url_for('biz_active_session', interaction_id=i.id) }}" class="btn btn-primary btn-sm mb-1">Select</a>
+            <form method="post" action="{{ url_for('end_session', interaction_id=i.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-sm mb-1">End Session</button>
+            </form>
           </div>
         </li>
       {% endfor %}
