@@ -221,6 +221,7 @@ class Quote(db.Model):
 
 class UserTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
     amount = db.Column(db.Float, nullable=False)
     user_referral_id = db.Column(db.String(32), nullable=False)
@@ -236,6 +237,7 @@ class UserTransaction(db.Model):
 
 class BusinessTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
     amount = db.Column(db.Float, nullable=False)
     business_referral_id = db.Column(db.String(32), nullable=False)
@@ -964,11 +966,16 @@ def user_qr_code():
 @login_required
 def check_user_receipt(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
-    # Only the session owner (user) can check
     if interaction.user_id != current_user.id:
         return {"has_receipt": False}
-    # Check if at least one UserTransaction exists for this interaction/amount (adjust as needed)
-    user_txn = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code, amount=interaction.amount).order_by(UserTransaction.date_time.desc()).first()
+
+    # Try to find a transaction for this amount and this user, within the last few minutes
+    user_txn = UserTransaction.query.filter_by(
+        user_referral_id=current_user.referral_code,
+        amount=interaction.amount
+    ).order_by(UserTransaction.date_time.desc()).first()
+
+    # Optionally: add a time window/tolerance, or require this transaction occurred after session.finalized_at if you add that field
     return {"has_receipt": user_txn is not None}
 
 @app.route("/session/<int:interaction_id>/user-receipt")
@@ -1029,7 +1036,7 @@ def finalize_transaction(interaction_id):
         data = request.form
         amount = float(data.get("amount", 0))
 
-        # --- USER COMMISSIONS TREE (Always calculate, use fallback if needed) ---
+        # USER commission logic
         user_referral_id = interaction.user.referral_code or "REFjoejmendez"
         u2 = User.query.filter_by(id=interaction.user.sponsor_id).first()
         tier2_user_referral_id = u2.referral_code if u2 else "REFjoejmendez"
@@ -1049,6 +1056,7 @@ def finalize_transaction(interaction_id):
 
         user_cash_back = round(amount * 0.02, 2)
         user_trans = UserTransaction(
+            interaction_id=interaction.id,  # <-- set interaction_id!
             amount=amount,
             user_referral_id=user_referral_id,
             cash_back=user_cash_back,
@@ -1063,7 +1071,7 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(user_trans)
 
-        # --- BUSINESS COMMISSIONS TREE (Always calculate, use fallback if needed) ---
+        # BUSINESS commission logic
         business_referral_id = interaction.business.referral_code or "BIZPerkMiner"
         b2 = Business.query.filter_by(id=interaction.business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
@@ -1087,6 +1095,7 @@ def finalize_transaction(interaction_id):
         marketing_roi = int(((amount - ad_fee) / ad_fee) * 100) if ad_fee > 0 else 0
 
         business_trans = BusinessTransaction(
+            interaction_id=interaction.id,  # <-- set interaction_id!
             amount=amount,
             business_referral_id=business_referral_id,
             cash_back=business_cash_back,
@@ -1114,6 +1123,9 @@ def finalize_transaction(interaction_id):
             "tier3_user_commission": f"{tier3_commission:.2f}",
             "tier4_user_commission": f"{tier4_commission:.2f}",
             "tier5_user_commission": f"{tier5_commission:.2f}",
+            "ad_fee": f"{ad_fee:.2f}",
+            "net_gross": f"{net_gross:.2f}",
+            "marketing_roi": marketing_roi,
             "tier2_business_referral_id": tier2_business_referral_id,
             "tier3_business_referral_id": tier3_business_referral_id,
             "tier4_business_referral_id": tier4_business_referral_id,
