@@ -1324,41 +1324,6 @@ def session_messages(interaction_id):
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
     return render_template("partials/_messages.html", interaction=interaction, messages=messages, is_user=is_user, is_biz=is_biz)
 
-@app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
-@business_login_required
-def create_quote(interaction_id):
-    interaction = Interaction.query.get_or_404(interaction_id)
-    is_biz = session.get('business_id') == interaction.business_id
-    is_user = False  # Never a user on business send view
-    if not is_biz:
-        flash("Only the business can send a quote for this session.")
-        return redirect(url_for('biz_active_session', interaction_id=interaction_id))
-
-    if request.method == "POST":
-        amount = request.form.get("amount")
-        details = request.form.get("details")
-        if not amount or not details:
-            flash("Amount and quote details are required.", "danger")
-        else:
-            quote = Quote(
-                interaction_id=interaction.id,
-                amount=amount,
-                details=details
-            )
-            db.session.add(quote)
-            db.session.commit()
-            flash("Quote sent to user!", "success")
-            return redirect(url_for('biz_active_session', interaction_id=interaction_id))
-
-    existing_quote = Quote.query.filter_by(interaction_id=interaction.id).first()
-    return render_template(
-        "quote.html",
-        interaction=interaction,
-        quote=existing_quote,
-        is_biz=is_biz,
-        is_user=is_user
-    )
-
 @app.route("/session/<int:interaction_id>/quote/view")
 @business_login_required
 def view_quote(interaction_id):
