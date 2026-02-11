@@ -1053,10 +1053,11 @@ def end_session(interaction_id):
     is_biz = session.get('business_id') == interaction.business_id
     if not (is_user or is_biz):
         abort(403)
+    # End the session and hide from both dashboards
     interaction.status = "ended"
     db.session.commit()
     flash("Session ended.", "success")
-    # Redirect to appropriate dashboard
+    # Redirect to their respective dashboard
     if is_biz:
         return redirect(url_for('biz_user_interactions'))
     else:
