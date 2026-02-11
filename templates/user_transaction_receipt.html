@@ -23,8 +23,16 @@
       <div><b>Business:</b> {{ interaction.business.business_name }}</div>
       <div><b>Total Paid:</b> ${{ transaction.amount }}</div>
       <div class="text-success fw-bold mt-2">
-        <b>Your Cashback (2%):</b> ${{ transaction.cash_back }}
+        <b>Your Cashback (2% cap $50):</b> ${{ transaction.cash_back }}
+        {% if transaction.cash_back|float >= 49.99 %}
+          <span class="badge bg-warning text-dark ms-1">Max Reached</span>
+        {% endif %}
       </div>
+      <hr>
+      <div><b>Tier 2 (0.25% cap $6.25):</b> ${{ transaction.tier2_commission }}{% if transaction.tier2_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+      <div><b>Tier 3 (0.25% cap $6.25):</b> ${{ transaction.tier3_commission }}{% if transaction.tier3_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+      <div><b>Tier 4 (0.25% cap $6.25):</b> ${{ transaction.tier4_commission }}{% if transaction.tier4_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+      <div><b>Tier 5 (2% cap $50):</b> ${{ transaction.tier5_commission }}{% if transaction.tier5_commission|float >= 49.99 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
     </div>
     <div class="alert alert-success text-center">
       Thank you for your purchase! Your cashback has been credited.
