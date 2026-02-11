@@ -990,7 +990,7 @@ def show_user_receipt(interaction_id):
 @app.route("/session/<int:interaction_id>/end", methods=["POST"])
 def end_session(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
-    # Allow both business and user to end session
+    # Allow both business and user to end the session
     is_user = current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id
     is_biz = session.get('business_id') == interaction.business_id
     if not (is_user or is_biz):
