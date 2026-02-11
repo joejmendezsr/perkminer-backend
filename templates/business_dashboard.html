@@ -103,9 +103,9 @@
         if (amount > 2500) amount = 2500;
         document.getElementById('network_amount').value = amount;
         let t1 = 0.01 * amount;
-        let t2 = 0.00125 * amount * numPeople;
-        let t3 = 0.00125 * amount * Math.pow(numPeople, 2);
-        let t4 = 0.00125 * amount * Math.pow(numPeople, 3);
+        let t2 = 0.002 * amount * numPeople;
+        let t3 = 0.002 * amount * Math.pow(numPeople, 2);
+        let t4 = 0.002 * amount * Math.pow(numPeople, 3);
         let t5 = 0.01 * amount * Math.pow(numPeople, 4);
         let total = t1 + t2 + t3 + t4 + t5;
         document.getElementById('network_t1').innerText = t1.toFixed(2);
@@ -127,7 +127,7 @@
         if (tier === "1") {
             reward = amount * 0.01; desc = "As the customer, from a purchase you make";
         } else if (["2","3","4"].includes(tier)) {
-            reward = amount * 0.00125;
+            reward = amount * 0.002;
             cap = 6.25;
             if (reward > cap) reward = cap;
             desc = `If your Tier ${tier} referral makes a purchase`;
