@@ -140,7 +140,7 @@
         let out = '';
         if (amount > 0) {
           out += `<h5 class='mt-4 mb-2'>${desc} of $${amount.toFixed(2)}:</h5>`;
-          out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
+          out += `<div class='alert alert-success'>You earn <strong>$${reward.toFixed(2)}</strong> as cashback or commission${cap?` (capped at $${cap.toFixed(2)}).`:"."}</div>`;
         }
         document.getElementById('rewards_output').innerHTML = out;
       }
@@ -305,7 +305,7 @@
       <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="3" style="width:80px;" />
       people and you each make one purchase during the month in the amount of $ 
       <input id="network_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="100" style="width:110px;" />
-      , this is how much you would earn in Cashback Rewards for the month:
+      , this is how much you would earn in Cashback and Commission for the month:
     </label>
     <small class="text-muted d-block">*Maximum purchase amount allowed is $2,500</small>
   </div>
