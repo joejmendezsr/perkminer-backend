@@ -968,14 +968,11 @@ def check_user_receipt(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
     if interaction.user_id != current_user.id:
         return {"has_receipt": False}
-
-    # Try to find a transaction for this amount and this user, within the last few minutes
+    # Check for receipt with both correct user and interaction:
     user_txn = UserTransaction.query.filter_by(
-        user_referral_id=current_user.referral_code,
-        amount=interaction.amount
+        interaction_id=interaction.id,
+        user_referral_id=current_user.referral_code
     ).order_by(UserTransaction.date_time.desc()).first()
-
-    # Optionally: add a time window/tolerance, or require this transaction occurred after session.finalized_at if you add that field
     return {"has_receipt": user_txn is not None}
 
 @app.route("/session/<int:interaction_id>/user-receipt")
@@ -984,8 +981,10 @@ def show_user_receipt(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
     if interaction.user_id != current_user.id:
         abort(403)
-    # Get most recent UserTransaction for this user/amount
-    transaction = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code, amount=interaction.amount).order_by(UserTransaction.date_time.desc()).first()
+    transaction = UserTransaction.query.filter_by(
+        interaction_id=interaction.id,
+        user_referral_id=current_user.referral_code
+    ).order_by(UserTransaction.date_time.desc()).first()
     return render_template("user_transaction_receipt.html", transaction=transaction, interaction=interaction)
 
 @app.route("/session/<int:interaction_id>/end", methods=["POST"])
