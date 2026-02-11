@@ -92,7 +92,7 @@
 
         {% if is_user and interaction.quote %}
           <div class="alert alert-info text-center">
-            <a href="{{ url_for('view_quote', interaction_id=interaction.id) }}" class="btn btn-warning">
+            <a href="{{ url_for('user_quote_view', interaction_id=interaction.id) }}" class="btn btn-warning">
               View Quote &#128176;
             </a>
           </div>
@@ -114,7 +114,7 @@
                   <div>{{ msg.text | e }}</div>
                   {% if msg.file_url and msg.file_name and msg.file_name.lower().endswith(('.png','.jpg','.jpeg','.gif','.webp')) %}
                     <a href="{{ msg.file_url }}" target="_blank">
-                      <img src="{{ msg.file_url }}" alt="{{ msg.file_name }}" class="chat_img-thumb">
+                      <img src="{{ msg.file_url }}" alt="{{ msg.file_name }}" class="chat-img-thumb">
                     </a>
                   {% elif msg.file_url %}
                     <div class="mt-1">
@@ -178,7 +178,7 @@
   }
   setInterval(reloadMessages, 4000);
 
-  // When user is waiting on finalize, poll for a receipt
+  // When user is waiting on finalize, poll for a receipt and redirect on new transaction
   {% if is_user and interaction.awaiting_finalization %}
   function checkForReceipt() {
     fetch("{{ url_for('check_user_receipt', interaction_id=interaction.id) }}")

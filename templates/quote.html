@@ -1,31 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Send Quote - PerkMiner</title>
+    <title>{% if is_user %}View Quote{% else %}Send Quote{% endif %} - PerkMiner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+      .card { max-width: 500px; margin: 0 auto; }
+      @media (max-width: 600px) {
+        .btn { width: 100% !important; margin-bottom: 10px; }
+        .card { padding: 1.1rem !important;}
+      }
+    </style>
 </head>
 <body>
 <div class="container py-4">
-  <div class="card p-4 shadow-sm mx-auto" style="max-width:500px;">
-    <h4 class="mb-3">Send Quote to {{ interaction.user.name or interaction.user.email }}</h4>
-    {% if quote %}
-      <div class="alert alert-info">A quote has already been sent for this session.</div>
-      <div><b>Amount:</b> ${{ quote.amount }}</div>
-      <div><b>Details:</b> {{ quote.details }}</div>
+  <div class="card shadow-sm p-4">
+    {% if is_user %}
+      <h4 class="mb-3 text-center">Quote from {{ interaction.business.business_name }}</h4>
     {% else %}
-      <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="mb-3">
-          <label class="form-label">Amount</label>
-          <input type="number" name="amount" step="0.01" min="0" required class="form-control" placeholder="Enter quote amount">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Quote Details</label>
-          <textarea name="details" class="form-control" rows="4" required placeholder="Enter quote details"></textarea>
-        </div>
-        <button type="submit" class="btn btn-success w-100">Send Quote</button>
-      </form>
+      <h4 class="mb-3 text-center">Send Quote to {{ interaction.user.name or interaction.user.email }}</h4>
+    {% endif %}
+
+    {% if quote %}
+      <div class="alert alert-info text-center">A quote has already been sent for this session.</div>
+      <div class="mb-2"><b>Amount:</b> ${{ quote.amount }}</div>
+      <div><b>Details:</b> {{ quote.details }}</div>
+      <div class="text-muted mt-3">Sent on: {{ quote.created_at.strftime('%Y-%m-%d %I:%M %p') }}</div>
+      {% if is_user %}
+        <a href="{{ url_for('active_session', interaction_id=interaction.id) }}" class="btn btn-secondary mt-3 w-100">Back to Session</a>
+      {% elif is_biz %}
+        <a href="{{ url_for('biz_active_session', interaction_id=interaction.id) }}" class="btn btn-secondary mt-3 w-100">Back to Session</a>
+      {% endif %}
+    {% else %}
+      {% if is_biz %}
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input type="number" name="amount" step="0.01" min="0" required class="form-control" placeholder="Enter quote amount">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Quote Details</label>
+            <textarea name="details" class="form-control" rows="4" required placeholder="Enter quote details"></textarea>
+          </div>
+          <button type="submit" class="btn btn-success w-100">Send Quote</button>
+        </form>
+        <a href="{{ url_for('biz_active_session', interaction_id=interaction.id) }}" class="btn btn-secondary mt-3 w-100">Back to Session</a>
+      {% endif %}
     {% endif %}
   </div>
 </div>
