@@ -1082,6 +1082,26 @@ def payment_qr_redirect(ref):
 
 from datetime import datetime
 
+@app.route("/business/fund-account", methods=["GET", "POST"])
+@business_login_required
+def fund_account():
+    biz_id = session.get('business_id')
+    if not biz_id:
+        return redirect(url_for('business_login'))
+    biz = Business.query.get_or_404(biz_id)
+    account_balance = biz.account_balance or 0.0
+
+    # Temporary demo funding logic
+    if request.method == "POST":
+        amount = float(request.form.get("amount", 0))
+        if amount > 0:
+            biz.account_balance += amount
+            db.session.commit()
+            flash(f"Account funded: ${amount:.2f} added.", "success")
+            return redirect(url_for('business_dashboard'))
+
+    return render_template("fund_account.html", account_balance=account_balance)
+
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
 def finalize_transaction(interaction_id):
