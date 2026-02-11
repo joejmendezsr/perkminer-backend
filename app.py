@@ -1267,7 +1267,7 @@ def session_messages(interaction_id):
     return render_template("partials/_messages.html", interaction=interaction, messages=messages, is_user=is_user, is_biz=is_biz)
 
 @app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
-@login_required
+@business_login_required
 def create_quote(interaction_id):
     # Only business can do this
     interaction = Interaction.query.get_or_404(interaction_id)
