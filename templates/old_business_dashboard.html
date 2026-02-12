@@ -214,7 +214,8 @@
                 <a class="btn btn-success btn-sm w-100"
                    href="{{ url_for('scan_qr', interaction_id=ia.id) }}">
                    Scan Payment QR for {{ ia.user.name or ia.user.email }}
-                </a>
+                </a></br>
+                <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
               </div>
             {% endfor %}
           </div>
@@ -391,20 +392,12 @@
   <div class="card p-4 mb-4">
     <h4>Your Referral Code</h4>
     <div class="mb-0"><b>{{ referral_code }}</b></div>
-
+  </div>
   {% if sponsor %}
     <div class="card p-4 mb-4">
       <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor.business_name }}</span></small></div>
     </div>
   {% endif %}
-
-
-  </div>
-    <div class="card p-4 mb-4">
-    <div>
-      <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
-    </div>
-
 
   <!-- Reward calculators and Network tree -->
   <div class="card p-4 mb-4">
