@@ -19,21 +19,22 @@
     <div class="card receipt-card shadow-sm p-4 mb-4">
       <h4 class="text-center mb-4">Business Transaction Receipt</h4>
       <div class="receipt-summary">
-        <div><b>Date/Time:</b> {{ transaction.date_time.strftime('%Y-%m-%d %I:%M %p') }}</div>
-        <div><b>Gross Sale:</b> ${{ transaction.amount }}</div>
-        <div class="text-info"><b>1% Business Cashback (Cap $25):</b> ${{ transaction.cash_back }}
-          {% if transaction.cash_back|float >= 24.99 %}
+        <div><b>Date/Time:</b> {{ now.strftime('%Y-%m-%d %I:%M %p') if now else transaction.date_time.strftime('%Y-%m-%d %I:%M %p') }}</div>
+        <div><b>Gross Sale:</b> ${{ summary.amount }}</div>
+        <div><b>Advertising Fee (10%):</b> ${{ summary.ad_fee }}</div>
+        <div><b>Net Gross:</b> ${{ summary.net_gross }}</div>
+        <div><b>Marketing ROI:</b> {{ summary.marketing_roi }}%</div>
+        <div><b>Marketing ROI Ratio:</b> {{ summary.marketing_ratio }}:1 Marketing ROI Ratio</div>
+        <div class="text-info"><b>Business Cashback (1% cap $25):</b> ${{ summary.business_cash_back }}
+          {% if summary.business_cash_back|float >= 24.99 %}
             <span class="badge bg-warning text-dark ms-1">Max Reached</span>
           {% endif %}
         </div>
-        <div><b>Tier 2 (0.25% cap $6.25):</b> ${{ transaction.tier2_commission }}{% if transaction.tier2_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
-        <div><b>Tier 3 (0.25% cap $6.25):</b> ${{ transaction.tier3_commission }}{% if transaction.tier3_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
-        <div><b>Tier 4 (0.25% cap $6.25):</b> ${{ transaction.tier4_commission }}{% if transaction.tier4_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
-        <div><b>Tier 5 (1% cap $25):</b> ${{ transaction.tier5_commission }}{% if transaction.tier5_commission|float >= 24.99 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
         <hr>
-        <div><b>Advertising Fee (10%):</b> ${{ ad_fee or "" }}</div>
-        <div><b>Net Gross:</b> ${{ net_gross or "" }}</div>
-        <div><b>Marketing ROI:</b> {{ marketing_roi or "" }}%</div>
+        <div><b>Tier 2 (0.125% cap $6.25):</b> ${{ summary.tier2_business_commission }}{% if summary.tier2_business_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+        <div><b>Tier 3 (0.125% cap $6.25):</b> ${{ summary.tier3_business_commission }}{% if summary.tier3_business_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+        <div><b>Tier 4 (0.125% cap $6.25):</b> ${{ summary.tier4_business_commission }}{% if summary.tier4_business_commission|float >= 6.24 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
+        <div><b>Tier 5 (1% cap $25):</b> ${{ summary.tier5_business_commission }}{% if summary.tier5_business_commission|float >= 24.99 %} <span class="badge bg-warning text-dark ms-1">Max</span>{% endif %}</div>
       </div>
       <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
