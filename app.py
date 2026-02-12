@@ -1148,6 +1148,8 @@ def fund_account():
 
     return render_template("fund_account.html", account_balance=account_balance)
 
+from datetime import datetime
+
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
 def finalize_transaction(interaction_id):
@@ -1155,6 +1157,7 @@ def finalize_transaction(interaction_id):
     if session.get('business_id') != interaction.business_id:
         abort(403)
 
+    business = interaction.business  # Make sure to update account_balance below
     now = datetime.now()
     summary = None
 
@@ -1203,21 +1206,21 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(user_trans)
 
-        # --- BUSINESS: 2-4 = 0.25% ($6.25 cap), 5 = 1% ($25 cap), 1 = 1% ($25 cap) ---
-        business_referral_id = interaction.business.referral_code or "BIZPerkMiner"
-        b2 = Business.query.filter_by(id=interaction.business.sponsor_id).first()
+        # --- BUSINESS: 2-4 = 0.125% ($6.25 cap), 5 = 1% ($25 cap), 1 = 1% ($25 cap) ---
+        business_referral_id = business.referral_code or "BIZPerkMiner"
+        b2 = Business.query.filter_by(id=business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
-        tier2_commission_raw = amount * 0.0025
+        tier2_commission_raw = amount * 0.00125
         tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
 
         b3 = Business.query.filter_by(id=b2.sponsor_id).first() if b2 and b2.sponsor_id else None
         tier3_business_referral_id = b3.referral_code if b3 else "BIZPerkMiner"
-        tier3_commission_raw = amount * 0.0025
+        tier3_commission_raw = amount * 0.00125
         tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
 
         b4 = Business.query.filter_by(id=b3.sponsor_id).first() if b3 and b3.sponsor_id else None
         tier4_business_referral_id = b4.referral_code if b4 else "BIZPerkMiner"
-        tier4_commission_raw = amount * 0.0025
+        tier4_commission_raw = amount * 0.00125
         tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
 
         b5 = Business.query.filter_by(id=b4.sponsor_id).first() if b4 and b4.sponsor_id else None
@@ -1230,7 +1233,12 @@ def finalize_transaction(interaction_id):
 
         ad_fee = round(amount * 0.10, 2)
         net_gross = round(amount - ad_fee, 2)
-        marketing_roi = int(((amount - ad_fee) / ad_fee) * 100) if ad_fee > 0 else 0
+        marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
+        marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
+
+        # Deduct advertising fee from business account_balance
+        business.account_balance = (business.account_balance or 0.0) - ad_fee
+        db.session.commit()
 
         business_trans = BusinessTransaction(
             interaction_id=interaction.id,
@@ -1253,6 +1261,10 @@ def finalize_transaction(interaction_id):
             "amount": f"{amount:.2f}",
             "user_cash_back": f"{user_cash_back:.2f}",
             "business_cash_back": f"{business_cash_back:.2f}",
+            "ad_fee": f"{ad_fee:.2f}",
+            "net_gross": f"{net_gross:.2f}",
+            "marketing_roi": marketing_roi,
+            "marketing_ratio": marketing_ratio,
             "tier2_user_referral_id": tier2_user_referral_id,
             "tier3_user_referral_id": tier3_user_referral_id,
             "tier4_user_referral_id": tier4_user_referral_id,
@@ -1261,9 +1273,6 @@ def finalize_transaction(interaction_id):
             "tier3_user_commission": f"{tier3_commission:.2f}",
             "tier4_user_commission": f"{tier4_commission:.2f}",
             "tier5_user_commission": f"{tier5_commission:.2f}",
-            "ad_fee": f"{ad_fee:.2f}",
-            "net_gross": f"{net_gross:.2f}",
-            "marketing_roi": marketing_roi,
             "tier2_business_referral_id": tier2_business_referral_id,
             "tier3_business_referral_id": tier3_business_referral_id,
             "tier4_business_referral_id": tier4_business_referral_id,
