@@ -86,6 +86,9 @@ def business_login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+import csv
+from io import StringIO
+from flask import Response
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
@@ -1437,8 +1440,41 @@ def view_quote(interaction_id):
 def business_receipts():
     biz_id = session.get('business_id')
     business = Business.query.get_or_404(biz_id)
-    transactions = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code).order_by(BusinessTransaction.date_time.desc()).all()
+    transactions = BusinessTransaction.query.filter_by(
+        business_referral_id=business.referral_code
+    ).order_by(BusinessTransaction.date_time.desc()).all()
     return render_template("business_receipts.html", transactions=transactions, business=business)
+
+@app.route("/business/receipts/export/csv")
+@business_login_required
+def export_business_receipts_csv():
+    biz_id = session.get('business_id')
+    business = Business.query.get_or_404(biz_id)
+    transactions = BusinessTransaction.query.filter_by(
+        business_referral_id=business.referral_code
+    ).order_by(BusinessTransaction.date_time.desc()).all()
+
+    si = StringIO()
+    writer = csv.writer(si)
+    # Write header
+    writer.writerow(['Date/Time','Amount','Ad Fee (10%)','Net Gross','Marketing ROI %','Marketing ROI Ratio'])
+    for txn in transactions:
+        ad_fee = txn.amount * 0.10
+        net_gross = txn.amount - ad_fee
+        roi = int((net_gross/ad_fee)*100) if ad_fee else 0
+        ratio = round((net_gross+ad_fee)/ad_fee, 2) if ad_fee else 0
+        writer.writerow([
+            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            f"{txn.amount:.2f}",
+            f"{ad_fee:.2f}",
+            f"{net_gross:.2f}",
+            roi,
+            f"{ratio}:1",
+        ])
+
+    output = si.getvalue()
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition":f"attachment;filename=business_receipts.csv"})
 
 @app.route("/business/scan-qr/<int:interaction_id>")
 @business_login_required

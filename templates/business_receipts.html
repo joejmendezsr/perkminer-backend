@@ -4,48 +4,107 @@
     <title>Business Receipts - PerkMiner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      @media (max-width: 600px) {
+        .card, .table { font-size: 0.98em; }
+        .btn { width: 100%; margin-bottom: 10px; }
+      }
+      .print-btn { float: right; }
+    </style>
 </head>
 <body>
 <div class="container py-4">
-  <h3 class="mb-3 text-center">Business Receipts</h3>
-  {% if transactions %}
-    <div class="table-responsive">
-      <table class="table table-bordered">
-        <thead class="table-light">
-          <tr>
-            <th>Date/Time</th>
-            <th>Amount</th>
-            <th>Ad Fee (10%)</th>
-            <th>Net Gross</th>
-            <th>Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for txn in transactions %}
-          <tr>
-            <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
-            <td>${{ "{:,.2f}".format(txn.amount) }}</td>
-            {# You may need to add columns for ad_fee etc. depending on your summary logic #}
-            <td>
-              {% set ad_fee = "{:,.2f}".format(txn.amount * 0.10) %}
-              ${{ ad_fee }}
-            </td>
-            <td>
-              {% set net_gross = "{:,.2f}".format(txn.amount - (txn.amount * 0.10)) %}
-              ${{ net_gross }}
-            </td>
-            <td>
-              <a href="{{ url_for('finalize_transaction', interaction_id=txn.interaction_id) }}" class="btn btn-info btn-sm">View</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+    <h3 class="mb-2">Business Receipts</h3>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('export_business_receipts_csv') }}" class="btn btn-outline-success">
+        <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-secondary">
+        <i class="bi bi-printer"></i> Print / Save as PDF
+      </button>
     </div>
-  {% else %}
-    <div class="alert alert-info text-center">No receipts yet.</div>
-  {% endif %}
+  </div>
+  <!-- Filter Controls -->
+  <form class="row gy-2 gx-2 mb-3" id="filter-form" onsubmit="return false;">
+    <div class="col-sm-3">
+      <input type="date" id="min-date" class="form-control" placeholder="Start Date">
+    </div>
+    <div class="col-sm-3">
+      <input type="date" id="max-date" class="form-control" placeholder="End Date">
+    </div>
+    <div class="col-sm-2">
+      <input type="number" step="0.01" id="amount" class="form-control" placeholder="Min Amount">
+    </div>
+    <div class="col-sm-4">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search receipts...">
+    </div>
+  </form>
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle" id="receipts-table">
+      <thead class="table-light">
+        <tr>
+          <th>Date/Time</th>
+          <th>Amount</th>
+          <th>Ad Fee (10%)</th>
+          <th>Net Gross</th>
+          <th>Marketing ROI</th>
+          <th>Marketing ROI Ratio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>${{ "{:,.2f}".format(txn.amount) }}</td>
+          <td>
+            {% set ad_fee = txn.amount * 0.10 %}
+            ${{ "{:,.2f}".format(ad_fee) }}
+          </td>
+          <td>
+            {% set net_gross = txn.amount - ad_fee %}
+            ${{ "{:,.2f}".format(net_gross) }}
+          </td>
+          <td>
+            {% set roi = (net_gross/ad_fee)*100 if ad_fee else 0 %}
+            {{ roi | round(0) }}%
+          </td>
+          <td>
+            {% set ratio = (net_gross+ad_fee)/ad_fee if ad_fee else 0 %}
+            {{ ratio|round(2) }}:1
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   <a href="{{ url_for('business_dashboard') }}" class="btn btn-primary mt-3 w-100">Back to Dashboard</a>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('filter-form').addEventListener('input', function() {
+    const minDate = document.getElementById('min-date').value;
+    const maxDate = document.getElementById('max-date').value;
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+
+    document.querySelectorAll('#receipts-table tbody tr').forEach(function(row) {
+        const cells = row.querySelectorAll('td');
+        const rowDate = cells[0].textContent;
+        const rowAmount = parseFloat(cells[1].textContent.replace(/[^0-9.-]+/g,"")) || 0;
+        const rowText = row.textContent.toLowerCase();
+
+        let show = true;
+
+        if (minDate && new Date(rowDate) < new Date(minDate)) show = false;
+        if (maxDate && new Date(rowDate) > new Date(maxDate + ' 23:59:59')) show = false;
+        if (amount && rowAmount < amount) show = false;
+        if (filter && rowText.indexOf(filter) === -1) show = false;
+
+        row.style.display = show ? "" : "none";
+    });
+});
+</script>
 </body>
 </html>
