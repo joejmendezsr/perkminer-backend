@@ -278,7 +278,7 @@ class Interaction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     awaiting_finalization = db.Column(db.Boolean, default=False)
-
+    awaiting_payment = db.Column(db.Boolean, default=False)
     # relationships for easier querying (optional)
     user = db.relationship('User', backref='interactions', lazy=True)
     business = db.relationship('Business', backref='interactions', lazy=True)
