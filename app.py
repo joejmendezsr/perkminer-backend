@@ -991,6 +991,13 @@ def show_user_receipt(interaction_id):
     ).order_by(UserTransaction.date_time.desc()).first()
     return render_template("user_transaction_receipt.html", transaction=transaction, interaction=interaction)
 
+@app.route("/user/receipts")
+@login_required
+def user_receipts():
+    transactions = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code).order_by(UserTransaction.date_time.desc()).all()
+    # Optionally join/query interaction/business for each transaction
+    return render_template("user_receipts.html", transactions=transactions)
+
 # USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
 @login_required
@@ -1424,6 +1431,14 @@ def view_quote(interaction_id):
         return redirect(url_for('active_session', interaction_id=interaction_id))
     quote = Quote.query.filter_by(interaction_id=interaction.id).first()
     return render_template("quote.html", interaction=interaction, quote=quote)
+
+@app.route("/business/receipts")
+@business_login_required
+def business_receipts():
+    biz_id = session.get('business_id')
+    business = Business.query.get_or_404(biz_id)
+    transactions = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code).order_by(BusinessTransaction.date_time.desc()).all()
+    return render_template("business_receipts.html", transactions=transactions, business=business)
 
 @app.route("/business/scan-qr/<int:interaction_id>")
 @business_login_required
