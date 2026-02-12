@@ -193,11 +193,6 @@
 
 <div class="card p-4 mb-4">
   <div class="mb-3">
-    <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
-      <i class="bi bi-person-plus me-1"></i>Invite others to join
-    </button>
-  </div>
-  <div class="mb-3">
     <button class="btn btn-primary w-100" type="button"
       data-bs-toggle="collapse"
       data-bs-target="#profileCollapse"
@@ -210,8 +205,7 @@
     <div>
       <a href="{{ url_for('user_biz_interactions') }}" class="btn btn-outline-primary w-100">
         <i class="bi bi-chat-dots me-1"></i>My Active Sessions
-      </a></br>
-      <a href="{{ url_for('user_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
+      </a>
     </div>
   {% endif %}
 </div>
@@ -261,19 +255,39 @@
   </div>
 </div>
 
-<div class="card p-4 mb-4">
-  <h4>Your Referral Code</h4>
-  <div class="mb-0"><b>{{ referral_code }}</b></div>
-</div>
-<div class="card p-4 mb-4">
+
+
+
+
+  <!-- Referral Code Section -->
+  <div class="card p-4 mb-4">
+    <h4>Your Referral Code</h4>
+    <div class="mb-0"><b>{{ referral_code }}</b></div>
+
+  {% if sponsor %}
+
     <div>
-      <small class="text-muted">
-        {% if sponsor %}
-          Sponsored by: {{ sponsor.name or sponsor.email }}
-        {% endif %}
-      </small>
+      <small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor.name or sponsor.email }}</span></small></div>
     </div>
-</div>
+  {% endif %}
+
+    <div>
+    <button class="btn btn-success w-100" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+      <i class="bi bi-person-plus me-1"></i>Invite others to join
+    </button>
+    </div>
+
+  </div>
+
+    <div class="card p-4 mb-4">
+    <h4>Your Activity</h4>
+    <div>
+      <a href="{{ url_for('user_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
+    </div>
+  </div>
+
+
+
 
 <div class="card p-4 mb-4">
   <h4>Estimate Your Rewards From One Single Purchase</h4>

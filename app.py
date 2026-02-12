@@ -1001,6 +1001,29 @@ def user_receipts():
     # Optionally join/query interaction/business for each transaction
     return render_template("user_receipts.html", transactions=transactions)
 
+@app.route("/user/receipts/export/csv")
+@login_required
+def export_user_receipts_csv():
+    transactions = UserTransaction.query.filter_by(
+        user_referral_id=current_user.referral_code
+    ).order_by(UserTransaction.date_time.desc()).all()
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Date/Time','Business','Amount','Cashback (2%)'])
+    for txn in transactions:
+        business_name = txn.interaction.business.business_name if txn.interaction and txn.interaction.business else "N/A"
+        writer.writerow([
+            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            business_name,
+            f"{txn.amount:.2f}",
+            f"{txn.cash_back:.2f}"
+        ])
+
+    output = si.getvalue()
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition":"attachment;filename=user_receipts.csv"})
+
 # USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
 @login_required
