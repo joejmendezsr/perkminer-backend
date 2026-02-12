@@ -214,7 +214,8 @@
                 <a class="btn btn-success btn-sm w-100"
                    href="{{ url_for('scan_qr', interaction_id=ia.id) }}">
                    Scan Payment QR for {{ ia.user.name or ia.user.email }}
-                </a>
+                </a></br>
+                <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
               </div>
             {% endfor %}
           </div>
