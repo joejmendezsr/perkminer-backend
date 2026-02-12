@@ -10,7 +10,7 @@
     <div class="card shadow-sm p-4" style="max-width:460px; margin:30px auto;">
         <h4 class="mb-3 text-center">Fund Your Account</h4>
         <div class="alert alert-info text-center">
-            Current account balance: <b>${{ account_balance }}</b>
+            Current account balance: <b>${{ "{:,.2f}".format(account_balance or 0.0) }}</b>
         </div>
         <form method="post" class="mt-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
