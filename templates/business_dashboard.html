@@ -176,11 +176,6 @@
     <!-- Invite Others Button -->
     <div class="card p-4 mb-4">
       <div class="mb-3 d-flex gap-2 flex-wrap">
-        <div>
-        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
-          <i class="bi bi-person-plus me-1"></i>Invite others to join
-        </button>
-        </div>
         <button class="btn btn-secondary" type="button" id="previewListingBtn">
           Preview Listing
         </button>
@@ -396,12 +391,19 @@
 
   {% if sponsor %}
 
-      <div><small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor.business_name }}</span></small></div>
+    <div>
+      <small class="text-muted">Sponsored by: <span class="text-success">{{ sponsor.business_name }}</span></small></div>
     </div>
   {% endif %}
 
+    <div>
+      <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#inviteModal">
+        <i class="bi bi-person-plus me-1"></i>Invite others to join
+      </button>
+    </div>
 
   </div>
+
     <div class="card p-4 mb-4">
     <h4>Your Business Activity</h4>
     <div>
