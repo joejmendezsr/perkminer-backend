@@ -573,6 +573,10 @@ class ResetPasswordForm(FlaskForm):
 def admin_roles_landing():
     return render_template("admin_roles_landing.html")
 
+@app.template_filter('usd')
+def usd(value):
+    return "${:,.2f}".format(value or 0.0)
+
 @app.route("/")
 def home():
     approved_listings = Business.query.filter_by(status="approved").all()
@@ -1004,6 +1008,37 @@ def user_quote_view(interaction_id):
         is_user=is_user,
         is_biz=is_biz
     )
+
+@app.route("/user/start-purchase/<int:biz_id>")
+@login_required
+def start_purchase(biz_id):
+    # Find or create an 'Interaction' or 'PurchaseIntent'
+    interaction = Interaction.query.filter_by(user_id=current_user.id, business_id=biz_id, status='active').first()
+    # If none, create it (optionally: with default fields)
+    if not interaction:
+        interaction = Interaction(
+            user_id=current_user.id,
+            business_id=biz_id,
+            status='active',
+            awaiting_payment=True
+        )
+        db.session.add(interaction)
+        db.session.commit()
+    else:
+        interaction.awaiting_payment = True
+        db.session.commit()
+    # Redirect to the QR display page
+    return redirect(url_for('show_purchase_qr', interaction_id=interaction.id))
+
+@app.route("/user/show-qr/<int:interaction_id>")
+@login_required
+def show_purchase_qr(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    if interaction.user_id != current_user.id:
+        abort(403)
+    # The QR code should encode a payment URL including interaction_id
+    qr_url = url_for('payment_qr_redirect', ref=interaction.user.referral_code, _external=True)
+    return render_template("show_qr.html", interaction=interaction, qr_url=qr_url)
 
 # BUSINESS — View/Edit Quote (business context)
 @app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
@@ -1796,12 +1831,16 @@ def business_dashboard():
     active_biz_sessions = Interaction.query.filter_by(business_id=biz.id, status='active').all()
     has_active_biz_sessions = len(active_biz_sessions) > 0
 
+    # Add this line to fetch payment alerts/awaiting payments
+    payment_alerts = Interaction.query.filter_by(business_id=biz.id, awaiting_payment=True).all()
+
     return render_template(
         "business_dashboard.html",
         form=form,
         profile_form=profile_form,
         invite_form=invite_form,
         biz=biz,
+        payment_alerts=payment_alerts,  # <-- This line passes to template
         form_data=form_data,
         sponsor=sponsor,
         referral_code=biz.referral_code,
