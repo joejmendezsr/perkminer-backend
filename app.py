@@ -1843,7 +1843,11 @@ def business_dashboard():
     has_active_biz_sessions = len(active_biz_sessions) > 0
 
     # Add this line to fetch payment alerts/awaiting payments
-    payment_alerts = Interaction.query.filter_by(business_id=biz.id, awaiting_payment=True).all()
+    payment_alerts = Interaction.query.filter_by(
+        business_id=biz.id,
+        awaiting_payment=True,
+        status='active'
+    ).all()
 
     return render_template(
         "business_dashboard.html",
