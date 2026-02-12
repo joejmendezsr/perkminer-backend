@@ -125,15 +125,11 @@
             <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action">
                 &larr; Back to results
             </a>
-            <!-- Show My QR logic: toggle QR on click -->
-            <button id="show-qr-btn" class="btn btn-success btn-action" onclick="showQR();return false;">
-                Complete a Purchase (Show My QR)
-            </button>
-            <div id="qr-row" style="display:none;">
-                <img src="{{ url_for('user_qr_code') }}" alt="Your QR Code" style="max-width:160px; margin-top:14px;">
-            </div>
+            <a href="{{ url_for('start_purchase', biz_id=biz.id) }}" class="btn btn-success btn-action">
+              Finalize Transaction (Show My QR)
+            </a>
             <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action">
-                Request for Service
+              Request for Service
             </a>
         </div>
     </div>
