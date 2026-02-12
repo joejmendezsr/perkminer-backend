@@ -1012,22 +1012,28 @@ def user_quote_view(interaction_id):
 @app.route("/user/start-purchase/<int:biz_id>")
 @login_required
 def start_purchase(biz_id):
-    # Find or create an 'Interaction' or 'PurchaseIntent'
-    interaction = Interaction.query.filter_by(user_id=current_user.id, business_id=biz_id, status='active').first()
-    # If none, create it (optionally: with default fields)
+    interaction = Interaction.query.filter_by(
+        user_id=current_user.id,
+        business_id=biz_id,
+        status='active'
+    ).first()
     if not interaction:
         interaction = Interaction(
             user_id=current_user.id,
             business_id=biz_id,
             status='active',
-            awaiting_payment=True
+            awaiting_payment=True,
+            service_type='Purchase',              # Non-null default
+            details='Direct QR purchase',         # Non-null default
+            budget_low=0,
+            budget_high=0,
+            referral_code=current_user.referral_code
         )
         db.session.add(interaction)
         db.session.commit()
     else:
         interaction.awaiting_payment = True
         db.session.commit()
-    # Redirect to the QR display page
     return redirect(url_for('show_purchase_qr', interaction_id=interaction.id))
 
 @app.route("/user/show-qr/<int:interaction_id>")
