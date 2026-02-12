@@ -1042,9 +1042,14 @@ def show_purchase_qr(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
     if interaction.user_id != current_user.id:
         abort(403)
-    # The QR code should encode a payment URL including interaction_id
-    qr_url = url_for('payment_qr_redirect', ref=interaction.user.referral_code, _external=True)
-    return render_template("show_qr.html", interaction=interaction, qr_url=qr_url)
+    is_finalize_payment = getattr(interaction, "awaiting_payment", False)
+    is_request_for_service = (not is_finalize_payment and getattr(interaction, "service_type", None) == "Service Request")
+    return render_template(
+        "show_qr.html",
+        interaction=interaction,
+        is_finalize_payment=is_finalize_payment,
+        is_request_for_service=is_request_for_service
+    )
 
 # BUSINESS — View/Edit Quote (business context)
 @app.route("/session/<int:interaction_id>/quote", methods=["GET", "POST"])
