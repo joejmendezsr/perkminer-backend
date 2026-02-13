@@ -42,11 +42,11 @@
     </div>
   </form>
   <div class="summary-card">
-    <b>Tier 1 (Self, 2%):</b> ${{ summary.tier1_earnings }}<br>
-    <b>Tier 2 (0.25%):</b> ${{ summary.tier2_earnings }}<br>
-    <b>Tier 3 (0.25%):</b> ${{ summary.tier3_earnings }}<br>
-    <b>Tier 4 (0.25%):</b> ${{ summary.tier4_earnings }}<br>
-    <b>Tier 5 (2%):</b> ${{ summary.tier5_earnings }}<br>
+    <b>Tier 1 (2% Cash Back):</b> ${{ summary.tier1_earnings }}<br>
+    <b>Tier 2 (Commission):</b> ${{ summary.tier2_earnings }}<br>
+    <b>Tier 3 (Commission):</b> ${{ summary.tier3_earnings }}<br>
+    <b>Tier 4 (Commission):</b> ${{ summary.tier4_earnings }}<br>
+    <b>Tier 5 (Commission):</b> ${{ summary.tier5_earnings }}<br>
     <hr>
     <b>Grand Total Earned:</b> ${{ summary.total }}
   </div>
@@ -55,12 +55,12 @@
       <thead class="table-light">
         <tr>
           <th>Date/Time</th>
-          <th>Tier 1<br>(2%)</th>
-          <th>Tier 2<br>(0.25%)</th>
-          <th>Tier 3<br>(0.25%)</th>
-          <th>Tier 4<br>(0.25%)</th>
-          <th>Tier 5<br>(2%)</th>
-          <th>From User</th>
+          <th>Tier 1<br>(Cash Back)</th>
+          <th>Tier 2<br>(Commission)</th>
+          <th>Tier 3<br>(Commission)</th>
+          <th>Tier 4<br>(Commission)</th>
+          <th>Tier 5<br>(Commission)</th>
+          <th>From Member</th>
         </tr>
       </thead>
       <tbody>
@@ -69,41 +69,31 @@
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>
             {% if txn.user_referral_id == current_user.referral_code %}
-                ${{ "{:,.2f}".format(txn.cash_back) }}
+              ${{ "{:,.2f}".format(txn.cash_back) }}
             {% endif %}
           </td>
           <td>
             {% if txn.tier2_user_referral_id == current_user.referral_code %}
-                ${{ "{:,.2f}".format(txn.tier2_commission) }}
+              ${{ "{:,.2f}".format(txn.tier2_commission) }}
             {% endif %}
           </td>
           <td>
             {% if txn.tier3_user_referral_id == current_user.referral_code %}
-                ${{ "{:,.2f}".format(txn.tier3_commission) }}
+              ${{ "{:,.2f}".format(txn.tier3_commission) }}
             {% endif %}
           </td>
           <td>
             {% if txn.tier4_user_referral_id == current_user.referral_code %}
-                ${{ "{:,.2f}".format(txn.tier4_commission) }}
+              ${{ "{:,.2f}".format(txn.tier4_commission) }}
             {% endif %}
           </td>
           <td>
             {% if txn.tier5_user_referral_id == current_user.referral_code %}
-                ${{ "{:,.2f}".format(txn.tier5_commission) }}
+              ${{ "{:,.2f}".format(txn.tier5_commission) }}
             {% endif %}
           </td>
           <td>
-            {% if txn.user_referral_id == current_user.referral_code %}
-                Self
-            {% elif txn.tier2_user_referral_id == current_user.referral_code %}
-                {{ txn.user_referral_id }}
-            {% elif txn.tier3_user_referral_id == current_user.referral_code %}
-                {{ txn.tier2_user_referral_id }}
-            {% elif txn.tier4_user_referral_id == current_user.referral_code %}
-                {{ txn.tier3_user_referral_id }}
-            {% elif txn.tier5_user_referral_id == current_user.referral_code %}
-                {{ txn.tier4_user_referral_id }}
-            {% endif %}
+            {{ txn.user_referral_id }}
           </td>
         </tr>
         {% endfor %}

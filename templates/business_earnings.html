@@ -48,11 +48,11 @@
     <b>Marketing ROI:</b> {{ summary.marketing_roi }}%<br>
     <b>Marketing ROI Ratio:</b> {{ summary.marketing_ratio }}:1<br>
     <hr>
-    <b>Tier 1 (Self, 1%):</b> ${{ summary.tier1_earnings }}<br>
-    <b>Tier 2 (0.125%):</b> ${{ summary.tier2_earnings }}<br>
-    <b>Tier 3 (0.125%):</b> ${{ summary.tier3_earnings }}<br>
-    <b>Tier 4 (0.125%):</b> ${{ summary.tier4_earnings }}<br>
-    <b>Tier 5 (1%):</b> ${{ summary.tier5_earnings }}<br>
+    <b>Tier 1 (1% Cash Back):</b> ${{ summary.tier1_earnings }}<br>
+    <b>Tier 2 (B2B Earnings):</b> ${{ summary.tier2_earnings }}<br>
+    <b>Tier 3 (B2B Earnings):</b> ${{ summary.tier3_earnings }}<br>
+    <b>Tier 4 (B2B Earnings):</b> ${{ summary.tier4_earnings }}<br>
+    <b>Tier 5 (B2B Earnings):</b> ${{ summary.tier5_earnings }}<br>
     <hr>
     <b>Total Cash Back (All Tiers):</b> ${{ summary.total_cash_back }}
   </div>
@@ -61,22 +61,46 @@
       <thead class="table-light">
         <tr>
           <th>Date/Time</th>
-          <th>Tier 1 (1%)</th>
-          <th>Tier 2 (0.125%)</th>
-          <th>Tier 3 (0.125%)</th>
-          <th>Tier 4 (0.125%)</th>
-          <th>Tier 5 (1%)</th>
+          <th>Tier 1 (1% Cash Back)</th>
+          <th>Tier 2 (B2B Earnings)</th>
+          <th>Tier 3 (B2B Earnings)</th>
+          <th>Tier 4 (B2B Earnings)</th>
+          <th>Tier 5 (B2B Earnings)</th>
+          <th>From Business</th>
         </tr>
       </thead>
       <tbody>
         {% for txn in transactions %}
         <tr>
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
-          <td>{% if txn.business_referral_id == business.referral_code %}${{ "{:,.2f}".format(txn.cash_back) }}{% endif %}</td>
-          <td>{% if txn.tier2_business_referral_id == business.referral_code %}${{ "{:,.2f}".format(txn.tier2_commission) }}{% endif %}</td>
-          <td>{% if txn.tier3_business_referral_id == business.referral_code %}${{ "{:,.2f}".format(txn.tier3_commission) }}{% endif %}</td>
-          <td>{% if txn.tier4_business_referral_id == business.referral_code %}${{ "{:,.2f}".format(txn.tier4_commission) }}{% endif %}</td>
-          <td>{% if txn.tier5_business_referral_id == business.referral_code %}${{ "{:,.2f}".format(txn.tier5_commission) }}{% endif %}</td>
+          <td>
+            {% if txn.business_referral_id == business.referral_code %}
+                ${{ "{:,.2f}".format(txn.cash_back) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier2_business_referral_id == business.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier2_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier3_business_referral_id == business.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier3_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier4_business_referral_id == business.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier4_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier5_business_referral_id == business.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier5_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {{ txn.business_referral_id }}
+          </td>
         </tr>
         {% endfor %}
       </tbody>

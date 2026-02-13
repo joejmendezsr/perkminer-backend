@@ -1106,18 +1106,10 @@ def export_user_earnings_csv():
             f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == ref_code else "",
             f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == ref_code else "",
             f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == ref_code else "",
-            (
-                "Self" if txn.user_referral_id == ref_code else
-                txn.user_referral_id if txn.tier2_user_referral_id == ref_code else
-                txn.tier2_user_referral_id if txn.tier3_user_referral_id == ref_code else
-                txn.tier3_user_referral_id if txn.tier4_user_referral_id == ref_code else
-                txn.tier4_user_referral_id if txn.tier5_user_referral_id == ref_code else
-                ""
-            )
+            txn.user_referral_id,
         ])
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":"attachment;filename=user_earnings.csv"})
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=user_earnings.csv"})
 
 # USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
@@ -1682,11 +1674,10 @@ def export_business_earnings_csv():
         qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
-    import csv
-    from io import StringIO
+
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'])
+    writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)','From Business'])
     for txn in transactions:
         writer.writerow([
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
@@ -1694,11 +1685,11 @@ def export_business_earnings_csv():
             f"{txn.tier2_commission:.2f}" if txn.tier2_business_referral_id == ref_code else "",
             f"{txn.tier3_commission:.2f}" if txn.tier3_business_referral_id == ref_code else "",
             f"{txn.tier4_commission:.2f}" if txn.tier4_business_referral_id == ref_code else "",
-            f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else ""
+            f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else "",
+            txn.business_referral_id,
         ])
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":"attachment;filename=business_earnings.csv"})
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=business_earnings.csv"})
 
 @app.route("/business/scan-qr/<int:interaction_id>")
 @business_login_required
