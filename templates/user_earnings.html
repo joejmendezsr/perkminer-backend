@@ -15,7 +15,7 @@
   <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
     <h3 class="mb-2">My Earnings</h3>
     <div class="d-flex gap-2">
-      <a href="{{ url_for('export_user_earnings_csv') }}?period={{ request.args.get('period','all') }}&year={{ request.args.get('year','') }}&month={{ request.args.get('month','') }}" class="btn btn-outline-success">
+      <a href="{{ url_for('export_user_earnings_csv') }}?period={{ period }}&year={{ year }}&month={{ month }}" class="btn btn-outline-success">
         <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
       </a>
       <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -67,11 +67,31 @@
         {% for txn in transactions %}
         <tr>
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
-          <td>${{ "{:,.2f}".format(txn.cash_back) }}</td>
-          <td>{% if txn.tier2_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier2_commission) }}{% endif %}</td>
-          <td>{% if txn.tier3_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier3_commission) }}{% endif %}</td>
-          <td>{% if txn.tier4_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier4_commission) }}{% endif %}</td>
-          <td>{% if txn.tier5_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier5_commission) }}{% endif %}</td>
+          <td>
+            {% if txn.user_referral_id == current_user.referral_code %}
+                ${{ "{:,.2f}".format(txn.cash_back) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier2_user_referral_id == current_user.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier2_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier3_user_referral_id == current_user.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier3_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier4_user_referral_id == current_user.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier4_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.tier5_user_referral_id == current_user.referral_code %}
+                ${{ "{:,.2f}".format(txn.tier5_commission) }}
+            {% endif %}
+          </td>
           <td>
             {% if txn.user_referral_id == current_user.referral_code %}
                 Self
@@ -106,12 +126,8 @@ document.getElementById('filter-form').addEventListener('input', function() {
         const rowText = row.textContent.toLowerCase();
 
         let show = true;
-        if (period === "year" && year) {
-            show = rowDate.startsWith(year);
-        }
-        if (period === "month" && year && month) {
-            show = rowDate.startsWith(year + '-' + month.padStart(2, '0'));
-        }
+        if (period === "year" && year) show = rowDate.startsWith(year);
+        if (period === "month" && year && month) show = rowDate.startsWith(year + '-' + month.padStart(2, '0'));
         if (filter && rowText.indexOf(filter) === -1) show = false;
 
         row.style.display = show ? "" : "none";

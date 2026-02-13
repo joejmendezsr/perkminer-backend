@@ -1042,12 +1042,10 @@ def user_earnings():
         else:
             end = datetime(year, month + 1, 1)
         qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
-
     transactions = qry.order_by(UserTransaction.date_time.desc()).all()
 
     ref_code = current_user.referral_code
 
-    # Correct commission summing: sum ALL transactions where user's code appears in any tier field
     tier1_earnings = sum(t.cash_back for t in transactions if t.user_referral_id == ref_code)
     tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_user_referral_id == ref_code)
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == ref_code)
@@ -1073,7 +1071,7 @@ def user_earnings():
         today=date.today(),
         period=period,
         year=year,
-        month=month,
+        month=month
     )
 
 @app.route("/user/earnings/export/csv")
@@ -1097,27 +1095,23 @@ def export_user_earnings_csv():
     transactions = qry.order_by(UserTransaction.date_time.desc()).all()
     ref_code = current_user.referral_code
 
-    import csv
-    from io import StringIO
-    from flask import Response
-
     si = StringIO()
     writer = csv.writer(si)
     writer.writerow(['Date/Time', 'Tier 1 (2%)', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'From User'])
-    for t in transactions:
+    for txn in transactions:
         writer.writerow([
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{t.cash_back:.2f}" if t.user_referral_id == ref_code else "",
-            f"{t.tier2_commission:.2f}" if t.tier2_user_referral_id == ref_code else "",
-            f"{t.tier3_commission:.2f}" if t.tier3_user_referral_id == ref_code else "",
-            f"{t.tier4_commission:.2f}" if t.tier4_user_referral_id == ref_code else "",
-            f"{t.tier5_commission:.2f}" if t.tier5_user_referral_id == ref_code else "",
+            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            f"{txn.cash_back:.2f}" if txn.user_referral_id == ref_code else "",
+            f"{txn.tier2_commission:.2f}" if txn.tier2_user_referral_id == ref_code else "",
+            f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == ref_code else "",
+            f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == ref_code else "",
+            f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == ref_code else "",
             (
-                "Self" if t.user_referral_id == ref_code else
-                t.user_referral_id if t.tier2_user_referral_id == ref_code else
-                t.tier2_user_referral_id if t.tier3_user_referral_id == ref_code else
-                t.tier3_user_referral_id if t.tier4_user_referral_id == ref_code else
-                t.tier4_user_referral_id if t.tier5_user_referral_id == ref_code else
+                "Self" if txn.user_referral_id == ref_code else
+                txn.user_referral_id if txn.tier2_user_referral_id == ref_code else
+                txn.tier2_user_referral_id if txn.tier3_user_referral_id == ref_code else
+                txn.tier3_user_referral_id if txn.tier4_user_referral_id == ref_code else
+                txn.tier4_user_referral_id if txn.tier5_user_referral_id == ref_code else
                 ""
             )
         ])
@@ -1688,34 +1682,19 @@ def export_business_earnings_csv():
         qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
-
     import csv
     from io import StringIO
-    from flask import Response
-
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow([
-        'Date/Time','Gross Sale','Ad Fee (10%)','Net Gross','ROI %','ROI Ratio',
-        'Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'
-    ])
+    writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'])
     for txn in transactions:
-        ad_fee = txn.amount * 0.10
-        net_gross = txn.amount - ad_fee
-        roi = int((net_gross/ad_fee)*100) if ad_fee else 0
-        ratio = round((net_gross+ad_fee)/ad_fee, 2) if ad_fee else 0
         writer.writerow([
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{txn.amount:.2f}",
-            f"{ad_fee:.2f}",
-            f"{net_gross:.2f}",
-            f"{roi}",
-            f"{ratio}:1",
             f"{txn.cash_back:.2f}" if txn.business_referral_id == ref_code else "",
             f"{txn.tier2_commission:.2f}" if txn.tier2_business_referral_id == ref_code else "",
             f"{txn.tier3_commission:.2f}" if txn.tier3_business_referral_id == ref_code else "",
             f"{txn.tier4_commission:.2f}" if txn.tier4_business_referral_id == ref_code else "",
-            f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else "",
+            f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else ""
         ])
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
