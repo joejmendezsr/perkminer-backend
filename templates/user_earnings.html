@@ -29,18 +29,18 @@
         value="{{ '%04d-%02d' % (year, month) if year and month else today.strftime('%Y-%m') }}">
     </div>
     <div class="col-sm-4">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search receipts...">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search earnings...">
     </div>
     <div class="col-sm-2">
       <button class="btn btn-primary w-100" type="submit">Search</button>
     </div>
   </form>
   <div class="summary-card">
-    <b>Tier 1 (Self, 2%):</b> ${{ summary.tier1_earnings }}<br>
-    <b>Tier 2 (0.25%):</b> ${{ summary.tier2_earnings }}<br>
-    <b>Tier 3 (0.25%):</b> ${{ summary.tier3_earnings }}<br>
-    <b>Tier 4 (0.25%):</b> ${{ summary.tier4_earnings }}<br>
-    <b>Tier 5 (2%):</b> ${{ summary.tier5_earnings }}<br>
+    <b>Tier 1 (Cash Back):</b> ${{ summary.tier1_earnings }}<br>
+    <b>Tier 2 (Commission):</b> ${{ summary.tier2_earnings }}<br>
+    <b>Tier 3 (Commission):</b> ${{ summary.tier3_earnings }}<br>
+    <b>Tier 4 (Commission):</b> ${{ summary.tier4_earnings }}<br>
+    <b>Tier 5 (Commission):</b> ${{ summary.tier5_earnings }}<br>
     <hr>
     <b>Grand Total Earned:</b> ${{ summary.total }}
   </div>
@@ -49,11 +49,11 @@
       <thead class="table-light">
         <tr>
           <th>Date/Time</th>
-          <th>Tier 1<br>(2%)</th>
-          <th>Tier 2<br>(0.25%)</th>
-          <th>Tier 3<br>(0.25%)</th>
-          <th>Tier 4<br>(0.25%)</th>
-          <th>Tier 5<br>(2%)</th>
+          <th>Tier 1<br>(Cash Back)</th>
+          <th>Tier 2<br>(Commission)</th>
+          <th>Tier 3<br>(Commission)</th>
+          <th>Tier 4<br>(Commission)</th>
+          <th>Tier 5<br>(Commission)</th>
           <th>From User</th>
         </tr>
       </thead>
