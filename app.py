@@ -1330,21 +1330,21 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(user_trans)
 
-        # --- BUSINESS: 2-4 = 0.125% ($6.25 cap), 5 = 1% ($25 cap), 1 = 1% ($25 cap) ---
+        # --- BUSINESS: 2-4 = 0.25% ($6.25 cap), 5 = 1% ($25 cap), 1 = 1% ($25 cap) ---
         business_referral_id = business.referral_code or "BIZPerkMiner"
         b2 = Business.query.filter_by(id=business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
-        tier2_commission_raw = amount * 0.00125
+        tier2_commission_raw = amount * 0.0025
         tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
 
         b3 = Business.query.filter_by(id=b2.sponsor_id).first() if b2 and b2.sponsor_id else None
         tier3_business_referral_id = b3.referral_code if b3 else "BIZPerkMiner"
-        tier3_commission_raw = amount * 0.00125
+        tier3_commission_raw = amount * 0.0025
         tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
 
         b4 = Business.query.filter_by(id=b3.sponsor_id).first() if b3 and b3.sponsor_id else None
         tier4_business_referral_id = b4.referral_code if b4 else "BIZPerkMiner"
-        tier4_commission_raw = amount * 0.00125
+        tier4_commission_raw = amount * 0.0025
         tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
 
         b5 = Business.query.filter_by(id=b4.sponsor_id).first() if b4 and b4.sponsor_id else None
@@ -1684,7 +1684,7 @@ def export_business_earnings_csv():
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)','From Business'])
+    writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.25%)','Tier 3 (0.25%)','Tier 4 (0.25%)','Tier 5 (1%)','From Business'])
     for txn in transactions:
         writer.writerow([
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
@@ -2254,14 +2254,12 @@ def admin_dashboard():
     )
 
 @app.route("/finance-dashboard", methods=["GET"])
-@role_required("finance")  # or whatever your admin/finance decorator is
+@role_required("finance")  # or your finance admin decorator
 def finance_dashboard():
-    # Get filter: "all", "year", or "month"
     period = request.args.get("period", "all")
     year = int(request.args.get("year", 0)) if request.args.get("year") else 0
     month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
-    # Filter transactions by period
     bqry = BusinessTransaction.query
     uqry = UserTransaction.query
     if period == "year" and year:
@@ -2279,38 +2277,54 @@ def finance_dashboard():
     btxns = bqry.all()
     utxns = uqry.all()
 
-    # Summary calculations
     total_ad_revenue = sum(t.amount * 0.10 for t in btxns)
     total_transactions = len(btxns)
     total_paid_members = sum(
         t.cash_back +
         t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in utxns
     )
-    total_paid_businesses = sum(
-        t.cash_back +
-        t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in btxns
-    )
+
+    # Correct logic for business payouts and capital reserves
+    total_paid_businesses = 0.0
+    capital_reserves = 0.0
+    for t in btxns:
+        if t.business_referral_id != "BIZPerkMiner":
+            total_paid_businesses += t.cash_back
+        else:
+            capital_reserves += t.cash_back
+        if t.tier2_business_referral_id != "BIZPerkMiner":
+            total_paid_businesses += t.tier2_commission
+        else:
+            capital_reserves += t.tier2_commission
+        if t.tier3_business_referral_id != "BIZPerkMiner":
+            total_paid_businesses += t.tier3_commission
+        else:
+            capital_reserves += t.tier3_commission
+        if t.tier4_business_referral_id != "BIZPerkMiner":
+            total_paid_businesses += t.tier4_commission
+        else:
+            capital_reserves += t.tier4_commission
+        if t.tier5_business_referral_id != "BIZPerkMiner":
+            total_paid_businesses += t.tier5_commission
+        else:
+            capital_reserves += t.tier5_commission
+
     net_gross = total_ad_revenue * 0.25
-    # Capital Reserves: Total Tier 2-4 commissions paid to BIZPerkMiner
-    capital_reserves = sum(
-        (t.tier2_commission if t.tier2_business_referral_id == 'BIZPerkMiner' else 0) +
-        (t.tier3_commission if t.tier3_business_referral_id == 'BIZPerkMiner' else 0) +
-        (t.tier4_commission if t.tier4_business_referral_id == 'BIZPerkMiner' else 0)
-        for t in btxns
-    )
-    # Net Gross Allocations
+
+    # Allocations
     operating_capital = net_gross * 0.50
     charitable_contribution = net_gross * 0.12
     silent_partners = net_gross * 0.25
     legal_services = net_gross * 0.10
     miscellaneous = net_gross * 0.03
-    # Operating Capital Breakdown
+
+    # Operating Capital breakdown
     real_estate_utilities = operating_capital * 0.30
     employees = operating_capital * 0.40
     webapp_fees = operating_capital * 0.15
     misc_services = operating_capital * 0.15
 
-    # Silent Partners breakdown
+    # Silent Partners breakdown (with per-partner cap)
     tito = min(silent_partners * 0.4525, 5000000)
     pedro = min(silent_partners * 0.1725, 1000000)
     paul_tara = min(silent_partners * 0.0875, 500000)
@@ -2366,7 +2380,7 @@ def finance_dashboard():
         raul=f"{raul:,.2f}",
         period=period,
         year=year,
-        month=month,
+        month=month
     )
 
     return render_template(
