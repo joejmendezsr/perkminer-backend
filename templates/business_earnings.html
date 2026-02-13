@@ -25,6 +25,7 @@
   </div>
   <form class="row gy-2 gx-2 mb-3" id="filter-form" method="get">
     <div class="col-sm-3">
+      <h4>Select Month-Year</h4>
       <input type="month" name="year_month" id="year_month" class="form-control"
         value="{% if year and month %}{{ '%04d-%02d' % (year, month) }}{% else %}{{ today.strftime('%Y-%m') }}{% endif %}">
     </div>
