@@ -15,7 +15,7 @@
   <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
     <h3 class="mb-2">Business Earnings</h3>
     <div class="d-flex gap-2">
-      <a href="{{ url_for('export_business_earnings_csv') }}?period={{ period }}&year={{ year }}&month={{ month }}" class="btn btn-outline-success">
+      <a href="{{ url_for('export_business_earnings_csv') }}?period={{ summary.period }}&year={{ summary.year }}&month={{ summary.month }}" class="btn btn-outline-success">
         <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
       </a>
       <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -26,33 +26,33 @@
   <form class="row gy-2 gx-2 mb-3" id="filter-form" method="get">
     <div class="col-12 col-sm-3">
       <select class="form-select" name="period" onchange="this.form.submit()">
-        <option value="all" {% if not period or period == 'all' %}selected{% endif %}>All Time</option>
-        <option value="year" {% if period == 'year' %}selected{% endif %}>Full Year</option>
-        <option value="month" {% if period == 'month' %}selected{% endif %}>Month</option>
+        <option value="all" {% if not summary.period or summary.period == 'all' %}selected{% endif %}>All Time</option>
+        <option value="year" {% if summary.period == 'year' %}selected{% endif %}>Full Year</option>
+        <option value="month" {% if summary.period == 'month' %}selected{% endif %}>Month</option>
       </select>
     </div>
     <div class="col-12 col-sm-3">
-      <input type="number" name="year" id="year" class="form-control" placeholder="Year (YYYY)" value="{{ year or '' }}">
+      <input type="number" name="year" id="year" class="form-control" placeholder="Year (YYYY)" value="{{ summary.year or '' }}">
     </div>
     <div class="col-12 col-sm-3">
-      <input type="number" min="1" max="12" name="month" id="month" class="form-control" placeholder="Month (1-12)" value="{{ month or '' }}">
+      <input type="number" min="1" max="12" name="month" id="month" class="form-control" placeholder="Month (1-12)" value="{{ summary.month or '' }}">
     </div>
     <div class="col-12 col-sm-3">
       <input type="text" id="searchInput" class="form-control" placeholder="Search receipts...">
     </div>
   </form>
   <div class="summary-card">
-    <b>Gross Earnings:</b> ${{ summary.gross_earnings }}<br>
+    <b>Gross Earnings (Tier 1/Self):</b> ${{ summary.gross_earnings }}<br>
     <b>Advertising Fee (10%):</b> ${{ summary.ad_fee }}<br>
     <b>Net Gross Earnings:</b> ${{ summary.net_gross }}<br>
     <b>Marketing ROI:</b> {{ summary.marketing_roi }}%<br>
     <b>Marketing ROI Ratio:</b> {{ summary.marketing_ratio }}:1<br>
     <hr>
-    <b>Tier 1 (1% Cash Back):</b> ${{ summary.tier1_earnings }}<br>
-    <b>Tier 2 (B2B Earnings):</b> ${{ summary.tier2_earnings }}<br>
-    <b>Tier 3 (B2B Earnings):</b> ${{ summary.tier3_earnings }}<br>
-    <b>Tier 4 (B2B Earnings):</b> ${{ summary.tier4_earnings }}<br>
-    <b>Tier 5 (B2B Earnings):</b> ${{ summary.tier5_earnings }}<br>
+    <b>Tier 1 (Self, 1% Cash Back):</b> ${{ summary.tier1_earnings }}<br>
+    <b>Tier 2 (B2B Commission):</b> ${{ summary.tier2_earnings }}<br>
+    <b>Tier 3 (B2B Commission):</b> ${{ summary.tier3_earnings }}<br>
+    <b>Tier 4 (B2B Commission):</b> ${{ summary.tier4_earnings }}<br>
+    <b>Tier 5 (B2B Commission):</b> ${{ summary.tier5_earnings }}<br>
     <hr>
     <b>Total Cash Back (All Tiers):</b> ${{ summary.total_cash_back }}
   </div>
@@ -62,10 +62,10 @@
         <tr>
           <th>Date/Time</th>
           <th>Tier 1 (1% Cash Back)</th>
-          <th>Tier 2 (B2B Earnings)</th>
-          <th>Tier 3 (B2B Earnings)</th>
-          <th>Tier 4 (B2B Earnings)</th>
-          <th>Tier 5 (B2B Earnings)</th>
+          <th>Tier 2 (B2B Commission)</th>
+          <th>Tier 3 (B2B Commission)</th>
+          <th>Tier 4 (B2B Commission)</th>
+          <th>Tier 5 (B2B Commission)</th>
           <th>From Business</th>
         </tr>
       </thead>
