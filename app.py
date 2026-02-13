@@ -1080,43 +1080,39 @@ def user_earnings():
 @app.route("/user/earnings/export/csv")
 @login_required
 def export_user_earnings_csv():
-    ym = request.args.get("year_month")
-    if ym:
-        year, month = map(int, ym.split('-'))
-    else:
-        year = month = 0
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0))
+    month = int(request.args.get("month", 0))
     qry = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code)
-    if month and year:
+    if period == "year" and year:
+        qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+    elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
             end = datetime(year + 1, 1, 1)
         else:
             end = datetime(year, month + 1, 1)
         qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
-    elif year:
-        start = datetime(year, 1, 1)
-        end = datetime(year + 1, 1, 1)
-        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
     transactions = qry.order_by(UserTransaction.date_time.desc()).all()
 
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time','Tier 1 (2%)','Tier 2 (0.25%)','Tier 3 (0.25%)','Tier 4 (0.25%)','Tier 5 (2%)','Source'])
-    for t in transactions:
-        # Source = self for tier1, otherwise the referral code user earned from
+    writer.writerow(['Date/Time', 'Tier 1 (2%)', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'From User'])
+    for txn in transactions:
         writer.writerow([
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{t.cash_back:.2f}",
-            f"{t.tier2_commission:.2f}" if t.tier2_user_referral_id == current_user.referral_code else "",
-            f"{t.tier3_commission:.2f}" if t.tier3_user_referral_id == current_user.referral_code else "",
-            f"{t.tier4_commission:.2f}" if t.tier4_user_referral_id == current_user.referral_code else "",
-            f"{t.tier5_commission:.2f}" if t.tier5_user_referral_id == current_user.referral_code else "",
-            # Source logic, optional:
-            "Self" if t.user_referral_id == current_user.referral_code else
-            t.tier2_user_referral_id if t.tier2_user_referral_id == current_user.referral_code else
-            t.tier3_user_referral_id if t.tier3_user_referral_id == current_user.referral_code else
-            t.tier4_user_referral_id if t.tier4_user_referral_id == current_user.referral_code else
-            t.tier5_user_referral_id if t.tier5_user_referral_id == current_user.referral_code else "N/A",
+            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            f"{txn.cash_back:.2f}",
+            f"{txn.tier2_commission:.2f}" if txn.tier2_user_referral_id == current_user.referral_code else "",
+            f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == current_user.referral_code else "",
+            f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == current_user.referral_code else "",
+            f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == current_user.referral_code else "",
+            "Self" if txn.user_referral_id == current_user.referral_code
+            else (
+                txn.user_referral_id if txn.tier2_user_referral_id == current_user.referral_code else
+                txn.tier2_user_referral_id if txn.tier3_user_referral_id == current_user.referral_code else
+                txn.tier3_user_referral_id if txn.tier4_user_referral_id == current_user.referral_code else
+                txn.tier4_user_referral_id if txn.tier5_user_referral_id == current_user.referral_code else ""
+            )
         ])
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
@@ -1673,35 +1669,24 @@ def business_earnings():
 def export_business_earnings_csv():
     biz_id = session.get('business_id')
     business = Business.query.get_or_404(biz_id)
-
-    # Parse filter params
-    ym = request.args.get("year_month")
-    if ym:
-        year, month = map(int, ym.split('-'))
-    else:
-        year = month = 0
-
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0))
+    month = int(request.args.get("month", 0))
     qry = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code)
-    if month and year:
+    if period == "year" and year:
+        qry = qry.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year + 1, 1, 1))
+    elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
-            end = datetime(year+1, 1, 1)
+            end = datetime(year + 1, 1, 1)
         else:
-            end = datetime(year, month+1, 1)
+            end = datetime(year, month + 1, 1)
         qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-    elif year:
-        start = datetime(year, 1, 1)
-        end = datetime(year+1, 1, 1)
-        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
 
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow([
-        'Date/Time','Gross Sale','Ad Fee (10%)','Net Gross','ROI %','ROI Ratio',
-        'Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'
-    ])
+    writer.writerow(['Date/Time','Gross Sale','Ad Fee (10%)','Net Gross','ROI %','ROI Ratio','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'])
     for txn in transactions:
         ad_fee = txn.amount * 0.10
         net_gross = txn.amount - ad_fee
@@ -1714,7 +1699,7 @@ def export_business_earnings_csv():
             f"{net_gross:.2f}",
             f"{roi}",
             f"{ratio}:1",
-            f"{txn.cash_back:.2f}",       # Tier 1 (direct cashback)
+            f"{txn.cash_back:.2f}",
             f"{txn.tier2_commission:.2f}",
             f"{txn.tier3_commission:.2f}",
             f"{txn.tier4_commission:.2f}",

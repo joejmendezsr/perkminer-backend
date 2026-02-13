@@ -15,7 +15,7 @@
   <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
     <h3 class="mb-2">My Earnings</h3>
     <div class="d-flex gap-2">
-      <a href="{{ url_for('export_user_earnings_csv') }}?year_month={{ request.args.get('year_month','') }}" class="btn btn-outline-success">
+      <a href="{{ url_for('export_user_earnings_csv') }}?period={{ request.args.get('period','all') }}&year={{ request.args.get('year','') }}&month={{ request.args.get('month','') }}" class="btn btn-outline-success">
         <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
       </a>
       <button onclick="window.print()" class="btn btn-outline-secondary">
@@ -24,23 +24,29 @@
     </div>
   </div>
   <form class="row gy-2 gx-2 mb-3" id="filter-form" method="get">
-    <div class="col-sm-3">
-      <input type="month" name="year_month" id="year_month" class="form-control"
-        value="{{ '%04d-%02d' % (year, month) if year and month else today.strftime('%Y-%m') }}">
+    <div class="col-12 col-sm-3">
+      <select class="form-select" name="period" onchange="this.form.submit()">
+        <option value="all" {% if not period or period == 'all' %}selected{% endif %}>All Time</option>
+        <option value="year" {% if period == 'year' %}selected{% endif %}>Full Year</option>
+        <option value="month" {% if period == 'month' %}selected{% endif %}>Month</option>
+      </select>
     </div>
-    <div class="col-sm-4">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search earnings...">
+    <div class="col-12 col-sm-3">
+      <input type="number" name="year" id="year" class="form-control" placeholder="Year (YYYY)" value="{{ year or '' }}">
     </div>
-    <div class="col-sm-2">
-      <button class="btn btn-primary w-100" type="submit">Search</button>
+    <div class="col-12 col-sm-3">
+      <input type="number" min="1" max="12" name="month" id="month" class="form-control" placeholder="Month (1-12)" value="{{ month or '' }}">
+    </div>
+    <div class="col-12 col-sm-3">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search receipts...">
     </div>
   </form>
   <div class="summary-card">
-    <b>Tier 1 (Cash Back):</b> ${{ summary.tier1_earnings }}<br>
-    <b>Tier 2 (Commission):</b> ${{ summary.tier2_earnings }}<br>
-    <b>Tier 3 (Commission):</b> ${{ summary.tier3_earnings }}<br>
-    <b>Tier 4 (Commission):</b> ${{ summary.tier4_earnings }}<br>
-    <b>Tier 5 (Commission):</b> ${{ summary.tier5_earnings }}<br>
+    <b>Tier 1 (Self, 2%):</b> ${{ summary.tier1_earnings }}<br>
+    <b>Tier 2 (0.25%):</b> ${{ summary.tier2_earnings }}<br>
+    <b>Tier 3 (0.25%):</b> ${{ summary.tier3_earnings }}<br>
+    <b>Tier 4 (0.25%):</b> ${{ summary.tier4_earnings }}<br>
+    <b>Tier 5 (2%):</b> ${{ summary.tier5_earnings }}<br>
     <hr>
     <b>Grand Total Earned:</b> ${{ summary.total }}
   </div>
@@ -49,11 +55,11 @@
       <thead class="table-light">
         <tr>
           <th>Date/Time</th>
-          <th>Tier 1<br>(Cash Back)</th>
-          <th>Tier 2<br>(Commission)</th>
-          <th>Tier 3<br>(Commission)</th>
-          <th>Tier 4<br>(Commission)</th>
-          <th>Tier 5<br>(Commission)</th>
+          <th>Tier 1<br>(2%)</th>
+          <th>Tier 2<br>(0.25%)</th>
+          <th>Tier 3<br>(0.25%)</th>
+          <th>Tier 4<br>(0.25%)</th>
+          <th>Tier 5<br>(2%)</th>
           <th>From User</th>
         </tr>
       </thead>
@@ -89,7 +95,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.getElementById('filter-form').addEventListener('input', function() {
-    const minDateObj = document.getElementById('year_month').value;
+    const period = document.querySelector('select[name="period"]').value;
+    const year = document.getElementById('year').value;
+    const month = document.getElementById('month').value;
     const filter = document.getElementById('searchInput').value.toLowerCase();
 
     document.querySelectorAll('#receipts-table tbody tr').forEach(function(row) {
@@ -98,14 +106,11 @@ document.getElementById('filter-form').addEventListener('input', function() {
         const rowText = row.textContent.toLowerCase();
 
         let show = true;
-        // filter by month
-        if (minDateObj) {
-            const year = minDateObj.split('-')[0];
-            const month = minDateObj.split('-')[1];
-            const firstOfMonth = new Date(`${year}-${month}-01`);
-            const lastOfMonth = new Date(firstOfMonth.getFullYear(), firstOfMonth.getMonth() + 1, 0);
-            const rowTime = new Date(rowDate);
-            if (rowTime < firstOfMonth || rowTime > lastOfMonth) show = false;
+        if (period === "year" && year) {
+            show = rowDate.startsWith(year);
+        }
+        if (period === "month" && year && month) {
+            show = rowDate.startsWith(year + '-' + month.padStart(2, '0'));
         }
         if (filter && rowText.indexOf(filter) === -1) show = false;
 
