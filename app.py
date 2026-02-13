@@ -1028,62 +1028,11 @@ def export_user_receipts_csv():
 @app.route("/user/earnings", methods=["GET"])
 @login_required
 def user_earnings():
-    try:
-        # Accept "year_month" as YYYY-MM from the form input for user's filter
-        ym = request.args.get("year_month")
-        if ym:
-            year, month = map(int, ym.split('-'))
-        else:
-            year = month = 0
-    except Exception:
-        year = month = 0
-
-    qry = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code)
-    if month and year:
-        start = datetime(year, month, 1)
-        if month == 12:
-            end = datetime(year + 1, 1, 1)
-        else:
-            end = datetime(year, month + 1, 1)
-        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
-    elif year:
-        start = datetime(year, 1, 1)
-        end = datetime(year + 1, 1, 1)
-        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
-    transactions = qry.order_by(UserTransaction.date_time.desc()).all()
-
-    # Tier breakdown (only earned by this user)
-    tier1_earnings = sum(t.cash_back for t in transactions)
-    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_user_referral_id == current_user.referral_code)
-    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == current_user.referral_code)
-    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_user_referral_id == current_user.referral_code)
-    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_user_referral_id == current_user.referral_code)
-
-    summary = dict(
-        tier1_earnings=f"{tier1_earnings:,.2f}",
-        tier2_earnings=f"{tier2_earnings:,.2f}",
-        tier3_earnings=f"{tier3_earnings:,.2f}",
-        tier4_earnings=f"{tier4_earnings:,.2f}",
-        tier5_earnings=f"{tier5_earnings:,.2f}",
-        total=f"{tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings:,.2f}",
-    )
-
-    return render_template(
-        "user_earnings.html",
-        transactions=transactions,
-        summary=summary,
-        today=date.today(),
-        month=month,
-        year=year
-    )
-
-@app.route("/user/earnings/export/csv")
-@login_required
-def export_user_earnings_csv():
     period = request.args.get("period", "all")
-    year = int(request.args.get("year", 0))
-    month = int(request.args.get("month", 0))
-    qry = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code)
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    qry = UserTransaction.query
     if period == "year" and year:
         qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
     elif period == "month" and year and month:
@@ -1093,25 +1042,83 @@ def export_user_earnings_csv():
         else:
             end = datetime(year, month + 1, 1)
         qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+
     transactions = qry.order_by(UserTransaction.date_time.desc()).all()
+
+    ref_code = current_user.referral_code
+
+    # Correct commission summing: sum ALL transactions where user's code appears in any tier field
+    tier1_earnings = sum(t.cash_back for t in transactions if t.user_referral_id == ref_code)
+    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_user_referral_id == ref_code)
+    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == ref_code)
+    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_user_referral_id == ref_code)
+    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_user_referral_id == ref_code)
+
+    summary = dict(
+        tier1_earnings=f"{tier1_earnings:,.2f}",
+        tier2_earnings=f"{tier2_earnings:,.2f}",
+        tier3_earnings=f"{tier3_earnings:,.2f}",
+        tier4_earnings=f"{tier4_earnings:,.2f}",
+        tier5_earnings=f"{tier5_earnings:,.2f}",
+        total=f"{tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings:,.2f}",
+        period=period,
+        year=year,
+        month=month
+    )
+
+    return render_template(
+        "user_earnings.html",
+        transactions=transactions,
+        summary=summary,
+        today=date.today(),
+        period=period,
+        year=year,
+        month=month,
+    )
+
+@app.route("/user/earnings/export/csv")
+@login_required
+def export_user_earnings_csv():
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    qry = UserTransaction.query
+    if period == "year" and year:
+        qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year + 1, 1, 1)
+        else:
+            end = datetime(year, month + 1, 1)
+        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+
+    transactions = qry.order_by(UserTransaction.date_time.desc()).all()
+    ref_code = current_user.referral_code
+
+    import csv
+    from io import StringIO
+    from flask import Response
 
     si = StringIO()
     writer = csv.writer(si)
     writer.writerow(['Date/Time', 'Tier 1 (2%)', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'From User'])
-    for txn in transactions:
+    for t in transactions:
         writer.writerow([
-            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{txn.cash_back:.2f}",
-            f"{txn.tier2_commission:.2f}" if txn.tier2_user_referral_id == current_user.referral_code else "",
-            f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == current_user.referral_code else "",
-            f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == current_user.referral_code else "",
-            f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == current_user.referral_code else "",
-            "Self" if txn.user_referral_id == current_user.referral_code
-            else (
-                txn.user_referral_id if txn.tier2_user_referral_id == current_user.referral_code else
-                txn.tier2_user_referral_id if txn.tier3_user_referral_id == current_user.referral_code else
-                txn.tier3_user_referral_id if txn.tier4_user_referral_id == current_user.referral_code else
-                txn.tier4_user_referral_id if txn.tier5_user_referral_id == current_user.referral_code else ""
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            f"{t.cash_back:.2f}" if t.user_referral_id == ref_code else "",
+            f"{t.tier2_commission:.2f}" if t.tier2_user_referral_id == ref_code else "",
+            f"{t.tier3_commission:.2f}" if t.tier3_user_referral_id == ref_code else "",
+            f"{t.tier4_commission:.2f}" if t.tier4_user_referral_id == ref_code else "",
+            f"{t.tier5_commission:.2f}" if t.tier5_user_referral_id == ref_code else "",
+            (
+                "Self" if t.user_referral_id == ref_code else
+                t.user_referral_id if t.tier2_user_referral_id == ref_code else
+                t.tier2_user_referral_id if t.tier3_user_referral_id == ref_code else
+                t.tier3_user_referral_id if t.tier4_user_referral_id == ref_code else
+                t.tier4_user_referral_id if t.tier5_user_referral_id == ref_code else
+                ""
             )
         ])
     output = si.getvalue()
@@ -1598,81 +1605,13 @@ def export_business_receipts_csv():
 def business_earnings():
     biz_id = session.get('business_id')
     business = Business.query.get_or_404(biz_id)
-    # Parse filter params
-    try:
-      month = int(request.args.get('month') or 0)
-      year = int(request.args.get('year') or 0)
-    except ValueError:
-      month = year = 0
+    ref_code = business.referral_code
 
-    qry = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code)
-
-    # Date filtering
-    if month and year:
-        start = datetime(year, month, 1)
-        if month == 12:
-            end = datetime(year+1, 1, 1)
-        else:
-            end = datetime(year, month+1, 1)
-        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-    elif year:
-        start = datetime(year, 1, 1)
-        end = datetime(year+1, 1, 1)
-        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-
-    transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
-
-    # Earnings/commission calculations:
-    # Tier 1: business_referral_id
-    # Tier 2: tier2_business_referral_id == req biz.referral_code
-    # Tier 3,4,5: similar
-
-    # Tier 1 (self-generated invoices/cash back)
-    tier1_earnings = sum(txn.cash_back for txn in transactions if txn.business_referral_id == business.referral_code)
-    # Tiers 2-5 (as earned, sum for this biz as recipient)
-    tier2_earnings = sum(txn.tier2_commission for txn in transactions if txn.tier2_business_referral_id == business.referral_code)
-    tier3_earnings = sum(txn.tier3_commission for txn in transactions if txn.tier3_business_referral_id == business.referral_code)
-    tier4_earnings = sum(txn.tier4_commission for txn in transactions if txn.tier4_business_referral_id == business.referral_code)
-    tier5_earnings = sum(txn.tier5_commission for txn in transactions if txn.tier5_business_referral_id == business.referral_code)
-
-    gross_earnings = sum(txn.amount for txn in transactions)
-    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
-    ad_fee = gross_earnings * 0.10
-    net_gross = gross_earnings - ad_fee
-    marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
-    marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
-
-    summary = dict(
-        gross_earnings = f"{gross_earnings:,.2f}",
-        ad_fee = f"{ad_fee:,.2f}",
-        net_gross = f"{net_gross:,.2f}",
-        marketing_roi = marketing_roi,
-        marketing_ratio = marketing_ratio,
-        tier1_earnings = f"{tier1_earnings:,.2f}",
-        tier2_earnings = f"{tier2_earnings:,.2f}",
-        tier3_earnings = f"{tier3_earnings:,.2f}",
-        tier4_earnings = f"{tier4_earnings:,.2f}",
-        tier5_earnings = f"{tier5_earnings:,.2f}",
-        total_cash_back = f"{total_cash_back:,.2f}",
-    )
-
-    return render_template("business_earnings.html",
-        transactions=transactions,
-        summary=summary,
-        business=business,
-        month=month, year=year,
-        today = date.today()
-    )
-
-@app.route("/business/earnings/export/csv")
-@business_login_required
-def export_business_earnings_csv():
-    biz_id = session.get('business_id')
-    business = Business.query.get_or_404(biz_id)
     period = request.args.get("period", "all")
-    year = int(request.args.get("year", 0))
-    month = int(request.args.get("month", 0))
-    qry = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code)
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    qry = BusinessTransaction.query
     if period == "year" and year:
         qry = qry.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year + 1, 1, 1))
     elif period == "month" and year and month:
@@ -1682,11 +1621,84 @@ def export_business_earnings_csv():
         else:
             end = datetime(year, month + 1, 1)
         qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
+
+    tier1_earnings = sum(t.cash_back for t in transactions if t.business_referral_id == ref_code)
+    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_business_referral_id == ref_code)
+    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
+    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
+    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
+
+    gross_earnings = sum(txn.amount for txn in transactions)
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+    ad_fee = gross_earnings * 0.10
+    net_gross = gross_earnings - ad_fee
+    marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
+    marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
+
+    summary = dict(
+        gross_earnings=f"{gross_earnings:,.2f}",
+        ad_fee=f"{ad_fee:,.2f}",
+        net_gross=f"{net_gross:,.2f}",
+        marketing_roi=marketing_roi,
+        marketing_ratio=marketing_ratio,
+        tier1_earnings=f"{tier1_earnings:,.2f}",
+        tier2_earnings=f"{tier2_earnings:,.2f}",
+        tier3_earnings=f"{tier3_earnings:,.2f}",
+        tier4_earnings=f"{tier4_earnings:,.2f}",
+        tier5_earnings=f"{tier5_earnings:,.2f}",
+        total_cash_back=f"{total_cash_back:,.2f}",
+        period=period,
+        year=year,
+        month=month
+    )
+
+    return render_template(
+        "business_earnings.html",
+        transactions=transactions,
+        summary=summary,
+        business=business,
+        today=date.today(),
+        period=period,
+        year=year,
+        month=month
+    )
+
+@app.route("/business/earnings/export/csv")
+@business_login_required
+def export_business_earnings_csv():
+    biz_id = session.get('business_id')
+    business = Business.query.get_or_404(biz_id)
+    ref_code = business.referral_code
+
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    qry = BusinessTransaction.query
+    if period == "year" and year:
+        qry = qry.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year + 1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year + 1, 1, 1)
+        else:
+            end = datetime(year, month + 1, 1)
+        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+
+    transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
+
+    import csv
+    from io import StringIO
+    from flask import Response
 
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time','Gross Sale','Ad Fee (10%)','Net Gross','ROI %','ROI Ratio','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'])
+    writer.writerow([
+        'Date/Time','Gross Sale','Ad Fee (10%)','Net Gross','ROI %','ROI Ratio',
+        'Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)'
+    ])
     for txn in transactions:
         ad_fee = txn.amount * 0.10
         net_gross = txn.amount - ad_fee
@@ -1699,11 +1711,11 @@ def export_business_earnings_csv():
             f"{net_gross:.2f}",
             f"{roi}",
             f"{ratio}:1",
-            f"{txn.cash_back:.2f}",
-            f"{txn.tier2_commission:.2f}",
-            f"{txn.tier3_commission:.2f}",
-            f"{txn.tier4_commission:.2f}",
-            f"{txn.tier5_commission:.2f}",
+            f"{txn.cash_back:.2f}" if txn.business_referral_id == ref_code else "",
+            f"{txn.tier2_commission:.2f}" if txn.tier2_business_referral_id == ref_code else "",
+            f"{txn.tier3_commission:.2f}" if txn.tier3_business_referral_id == ref_code else "",
+            f"{txn.tier4_commission:.2f}" if txn.tier4_business_referral_id == ref_code else "",
+            f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else "",
         ])
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
