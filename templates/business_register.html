@@ -31,12 +31,14 @@
                                 <div class="text-danger small">{{ form.business_email.errors[0] }}</div>
                             {% endif %}
                         </div>
-                        <div class="mb-3 position-relative">
+                        <div class="mb-3">
                             {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control", placeholder="Password", required=True, id="password-field") }}
-                            <button type="button" class="btn btn-outline-secondary btn-sm position-absolute top-50 end-0 translate-middle-y me-2" id="toggle-password" tabindex="-1">
-                                <span id="toggle-password-icon">&#128065;</span>
-                            </button>
+                            <div class="input-group">
+                                {{ form.password(class="form-control", placeholder="Password", required=True, id="password-field") }}
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-password" tabindex="-1">
+                                    <span id="toggle-password-icon">&#128065;</span>
+                                </button>
+                            </div>
                             <small class="form-text text-muted">Minimum 8 characters</small>
                             {% if form.password.errors %}
                                 <div class="text-danger small">{{ form.password.errors[0] }}</div>
