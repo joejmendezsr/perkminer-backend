@@ -279,9 +279,9 @@
     <h4>Your Activity</h4>
     <div>
       <a href="{{ url_for('user_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
-    </div>
-      <a href="{{ url_for('export_business_earnings_csv') }}?year_month={{ request.args.get('year_month','') }}" class="btn btn-outline-success">
-        <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
+ 
+      <a href="{{ url_for('user_earnings') }}" class="btn btn-outline-success mb-2">
+        <i class="bi bi-graph-up"></i> View My Earnings
       </a>
   </div>
 
