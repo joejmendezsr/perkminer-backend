@@ -2588,6 +2588,21 @@ def view_listing(biz_id):
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
 
+@app.route("/finance/combined-detailed-report")
+@role_required("finance")
+def combined_detailed_report():
+    return render_template("combined_detailed_report.html")
+
+@app.route("/finance/combined-cashback-paid")
+@role_required("finance")
+def combined_cashback_paid():
+    return render_template("combined_cashback_paid.html")
+
+@app.route("/finance/commissions-paid")
+@role_required("finance")
+def commissions_paid():
+    return render_template("commissions_paid.html")
+
 @app.route("/seed_admins_once")
 def seed_admins_once():
     from app import db, User, Role, bcrypt
