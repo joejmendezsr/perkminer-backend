@@ -1038,7 +1038,7 @@ def user_earnings():
     elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
-            end = datetime(year + 1, 1, 1)
+            end = datetime(year, 12, 31, 23, 59, 59)
         else:
             end = datetime(year, month + 1, 1)
         qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
@@ -1051,6 +1051,7 @@ def user_earnings():
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == ref_code)
     tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_user_referral_id == ref_code)
     tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_user_referral_id == ref_code)
+    commissions_total = tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
 
     summary = dict(
         tier1_earnings=f"{tier1_earnings:,.2f}",
@@ -1058,7 +1059,8 @@ def user_earnings():
         tier3_earnings=f"{tier3_earnings:,.2f}",
         tier4_earnings=f"{tier4_earnings:,.2f}",
         tier5_earnings=f"{tier5_earnings:,.2f}",
-        total=f"{tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings:,.2f}",
+        commissions_total=f"{commissions_total:,.2f}",
+        total=f"{tier1_earnings + commissions_total:,.2f}",
         period=period,
         year=year,
         month=month
@@ -1106,10 +1108,11 @@ def export_user_earnings_csv():
             f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == ref_code else "",
             f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == ref_code else "",
             f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == ref_code else "",
-            txn.user_referral_id,
+            txn.user_referral_id  # You can show the referring user for context
         ])
     output = si.getvalue()
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=user_earnings.csv"})
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition":"attachment;filename=user_earnings.csv"})
 
 # USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
@@ -1610,18 +1613,22 @@ def business_earnings():
 
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
 
-    tier1_earnings = sum(t.cash_back for t in transactions if t.business_referral_id == ref_code)
-    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_business_referral_id == ref_code)
-    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
-    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
-    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
-
-    gross_earnings = sum(txn.amount for txn in transactions)
-    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+    # Only Tier 1 transactions (for stats overview at top)
+    tier1_txns = [txn for txn in transactions if txn.business_referral_id == ref_code]
+    gross_earnings = sum(txn.amount for txn in tier1_txns)
     ad_fee = gross_earnings * 0.10
     net_gross = gross_earnings - ad_fee
     marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
     marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
+
+    # Tier earnings (as before)
+    tier1_earnings = sum(txn.cash_back for txn in transactions if txn.business_referral_id == ref_code)
+    tier2_earnings = sum(txn.tier2_commission for txn in transactions if txn.tier2_business_referral_id == ref_code)
+    tier3_earnings = sum(txn.tier3_commission for txn in transactions if txn.tier3_business_referral_id == ref_code)
+    tier4_earnings = sum(txn.tier4_commission for txn in transactions if txn.tier4_business_referral_id == ref_code)
+    tier5_earnings = sum(txn.tier5_commission for txn in transactions if txn.tier5_business_referral_id == ref_code)
+
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
 
     summary = dict(
         gross_earnings=f"{gross_earnings:,.2f}",
@@ -1674,7 +1681,6 @@ def export_business_earnings_csv():
         qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
-
     si = StringIO()
     writer = csv.writer(si)
     writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)','From Business'])
@@ -1686,10 +1692,11 @@ def export_business_earnings_csv():
             f"{txn.tier3_commission:.2f}" if txn.tier3_business_referral_id == ref_code else "",
             f"{txn.tier4_commission:.2f}" if txn.tier4_business_referral_id == ref_code else "",
             f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else "",
-            txn.business_referral_id,
+            txn.business_referral_id
         ])
     output = si.getvalue()
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=business_earnings.csv"})
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition":"attachment;filename=business_earnings.csv"})
 
 @app.route("/business/scan-qr/<int:interaction_id>")
 @business_login_required
