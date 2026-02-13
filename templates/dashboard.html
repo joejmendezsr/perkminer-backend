@@ -280,6 +280,9 @@
     <div>
       <a href="{{ url_for('user_receipts') }}" class="btn btn-outline-secondary">View Receipts</a>
     </div>
+      <a href="{{ url_for('export_business_earnings_csv') }}?year_month={{ request.args.get('year_month','') }}" class="btn btn-outline-success">
+        <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
+      </a>
   </div>
 
 

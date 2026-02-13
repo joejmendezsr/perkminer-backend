@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Earnings - PerkMiner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+      @media (max-width: 600px) { .table, .btn { font-size: .98em;} }
+      .summary-card { background:#f7fafb; border-radius:13px; box-shadow:0 1px 6px #e1e9ed; padding:18px 12px 9px 12px; margin:16px 0 28px 0;}
+    </style>
+</head>
+<body>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+    <h3 class="mb-2">My Earnings</h3>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('export_user_earnings_csv') }}?year_month={{ request.args.get('year_month','') }}" class="btn btn-outline-success">
+        <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-secondary">
+        <i class="bi bi-printer"></i> Print / Save as PDF
+      </button>
+    </div>
+  </div>
+  <form class="row gy-2 gx-2 mb-3" id="filter-form" method="get">
+    <div class="col-sm-3">
+      <input type="month" name="year_month" id="year_month" class="form-control"
+        value="{{ '%04d-%02d' % (year, month) if year and month else today.strftime('%Y-%m') }}">
+    </div>
+    <div class="col-sm-4">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search receipts...">
+    </div>
+    <div class="col-sm-2">
+      <button class="btn btn-primary w-100" type="submit">Search</button>
+    </div>
+  </form>
+  <div class="summary-card">
+    <b>Tier 1 (Self, 2%):</b> ${{ summary.tier1_earnings }}<br>
+    <b>Tier 2 (0.25%):</b> ${{ summary.tier2_earnings }}<br>
+    <b>Tier 3 (0.25%):</b> ${{ summary.tier3_earnings }}<br>
+    <b>Tier 4 (0.25%):</b> ${{ summary.tier4_earnings }}<br>
+    <b>Tier 5 (2%):</b> ${{ summary.tier5_earnings }}<br>
+    <hr>
+    <b>Grand Total Earned:</b> ${{ summary.total }}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle" id="receipts-table">
+      <thead class="table-light">
+        <tr>
+          <th>Date/Time</th>
+          <th>Tier 1<br>(2%)</th>
+          <th>Tier 2<br>(0.25%)</th>
+          <th>Tier 3<br>(0.25%)</th>
+          <th>Tier 4<br>(0.25%)</th>
+          <th>Tier 5<br>(2%)</th>
+          <th>From User</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>${{ "{:,.2f}".format(txn.cash_back) }}</td>
+          <td>{% if txn.tier2_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier2_commission) }}{% endif %}</td>
+          <td>{% if txn.tier3_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier3_commission) }}{% endif %}</td>
+          <td>{% if txn.tier4_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier4_commission) }}{% endif %}</td>
+          <td>{% if txn.tier5_user_referral_id == current_user.referral_code %}${{ "{:,.2f}".format(txn.tier5_commission) }}{% endif %}</td>
+          <td>
+            {% if txn.user_referral_id == current_user.referral_code %}
+                Self
+            {% elif txn.tier2_user_referral_id == current_user.referral_code %}
+                {{ txn.user_referral_id }}
+            {% elif txn.tier3_user_referral_id == current_user.referral_code %}
+                {{ txn.tier2_user_referral_id }}
+            {% elif txn.tier4_user_referral_id == current_user.referral_code %}
+                {{ txn.tier3_user_referral_id }}
+            {% elif txn.tier5_user_referral_id == current_user.referral_code %}
+                {{ txn.tier4_user_referral_id }}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-3 w-100">Back to Dashboard</a>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('filter-form').addEventListener('input', function() {
+    const minDateObj = document.getElementById('year_month').value;
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+
+    document.querySelectorAll('#receipts-table tbody tr').forEach(function(row) {
+        const cells = row.querySelectorAll('td');
+        const rowDate = cells[0].textContent;
+        const rowText = row.textContent.toLowerCase();
+
+        let show = true;
+        // filter by month
+        if (minDateObj) {
+            const year = minDateObj.split('-')[0];
+            const month = minDateObj.split('-')[1];
+            const firstOfMonth = new Date(`${year}-${month}-01`);
+            const lastOfMonth = new Date(firstOfMonth.getFullYear(), firstOfMonth.getMonth() + 1, 0);
+            const rowTime = new Date(rowDate);
+            if (rowTime < firstOfMonth || rowTime > lastOfMonth) show = false;
+        }
+        if (filter && rowText.indexOf(filter) === -1) show = false;
+
+        row.style.display = show ? "" : "none";
+    });
+});
+</script>
+</body>
+</html>
