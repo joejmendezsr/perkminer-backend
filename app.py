@@ -24,6 +24,7 @@ from wtforms.validators import DataRequired, NumberRange, Length
 from flask_mail import Message as MailMessage
 from datetime import datetime
 from datetime import date, datetime
+from datetime import datetime, date
 from functools import wraps
 from flask import session, flash, redirect, url_for, request
 
@@ -2252,10 +2253,129 @@ def admin_dashboard():
         business_forms=business_forms
     )
 
-@app.route("/finance-dashboard")
-@role_required("finance")
+@app.route("/finance-dashboard", methods=["GET"])
+@role_required("finance")  # or whatever your admin/finance decorator is
 def finance_dashboard():
-    return render_template("finance_dashboard.html")
+    # Get filter: "all", "year", or "month"
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    # Filter transactions by period
+    bqry = BusinessTransaction.query
+    uqry = UserTransaction.query
+    if period == "year" and year:
+        bqry = bqry.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
+        uqry = uqry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year+1, 1, 1)
+        else:
+            end = datetime(year, month+1, 1)
+        bqry = bqry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+        uqry = uqry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+
+    btxns = bqry.all()
+    utxns = uqry.all()
+
+    # Summary calculations
+    total_ad_revenue = sum(t.amount * 0.10 for t in btxns)
+    total_transactions = len(btxns)
+    total_paid_members = sum(
+        t.cash_back +
+        t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in utxns
+    )
+    total_paid_businesses = sum(
+        t.cash_back +
+        t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in btxns
+    )
+    net_gross = total_ad_revenue * 0.25
+    # Capital Reserves: Total Tier 2-4 commissions paid to BIZPerkMiner
+    capital_reserves = sum(
+        (t.tier2_commission if t.tier2_business_referral_id == 'BIZPerkMiner' else 0) +
+        (t.tier3_commission if t.tier3_business_referral_id == 'BIZPerkMiner' else 0) +
+        (t.tier4_commission if t.tier4_business_referral_id == 'BIZPerkMiner' else 0)
+        for t in btxns
+    )
+    # Net Gross Allocations
+    operating_capital = net_gross * 0.50
+    charitable_contribution = net_gross * 0.12
+    silent_partners = net_gross * 0.25
+    legal_services = net_gross * 0.10
+    miscellaneous = net_gross * 0.03
+    # Operating Capital Breakdown
+    real_estate_utilities = operating_capital * 0.30
+    employees = operating_capital * 0.40
+    webapp_fees = operating_capital * 0.15
+    misc_services = operating_capital * 0.15
+
+    # Silent Partners breakdown
+    tito = min(silent_partners * 0.4525, 5000000)
+    pedro = min(silent_partners * 0.1725, 1000000)
+    paul_tara = min(silent_partners * 0.0875, 500000)
+    james = min(silent_partners * 0.045, 250000)
+    angel = min(silent_partners * 0.0275, 150000)
+    josh = min(silent_partners * 0.0275, 150000)
+    diego = min(silent_partners * 0.0175, 100000)
+    esther = min(silent_partners * 0.0175, 100000)
+    reyna = min(silent_partners * 0.0175, 100000)
+    ramico = min(silent_partners * 0.0175, 100000)
+    michael = min(silent_partners * 0.0175, 100000)
+    manuela = min(silent_partners * 0.0175, 100000)
+    alex = min(silent_partners * 0.0175, 100000)
+    victor_r = min(silent_partners * 0.0175, 100000)
+    john_paul = min(silent_partners * 0.0175, 100000)
+    ana_pepe = min(silent_partners * 0.01, 50000)
+    karen = min(silent_partners * 0.01, 50000)
+    raul = min(silent_partners * 0.01, 50000)
+
+    summary = dict(
+        total_ad_revenue=f"{total_ad_revenue:,.2f}",
+        total_transactions=total_transactions,
+        total_paid_members=f"{total_paid_members:,.2f}",
+        total_paid_businesses=f"{total_paid_businesses:,.2f}",
+        net_gross=f"{net_gross:,.2f}",
+        capital_reserves=f"{capital_reserves:,.2f}",
+        operating_capital=f"{operating_capital:,.2f}",
+        charitable_contribution=f"{charitable_contribution:,.2f}",
+        silent_partners=f"{silent_partners:,.2f}",
+        legal_services=f"{legal_services:,.2f}",
+        miscellaneous=f"{miscellaneous:,.2f}",
+        real_estate_utilities=f"{real_estate_utilities:,.2f}",
+        employees=f"{employees:,.2f}",
+        webapp_fees=f"{webapp_fees:,.2f}",
+        misc_services=f"{misc_services:,.2f}",
+        tito=f"{tito:,.2f}",
+        pedro=f"{pedro:,.2f}",
+        paul_tara=f"{paul_tara:,.2f}",
+        james=f"{james:,.2f}",
+        angel=f"{angel:,.2f}",
+        josh=f"{josh:,.2f}",
+        diego=f"{diego:,.2f}",
+        esther=f"{esther:,.2f}",
+        reyna=f"{reyna:,.2f}",
+        ramico=f"{ramico:,.2f}",
+        michael=f"{michael:,.2f}",
+        manuela=f"{manuela:,.2f}",
+        alex=f"{alex:,.2f}",
+        victor_r=f"{victor_r:,.2f}",
+        john_paul=f"{john_paul:,.2f}",
+        ana_pepe=f"{ana_pepe:,.2f}",
+        karen=f"{karen:,.2f}",
+        raul=f"{raul:,.2f}",
+        period=period,
+        year=year,
+        month=month,
+    )
+
+    return render_template(
+        "finance_dashboard.html",
+        summary=summary,
+        period=period,
+        year=year,
+        month=month
+    )
 
 @app.route("/approve-reject-dashboard")
 @role_required("approve_reject_listings")

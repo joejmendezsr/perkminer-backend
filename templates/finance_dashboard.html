@@ -5,24 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <style>
-      @media (max-width: 600px) {
-        .btn, .btn-secondary { width: 100% !important; margin-bottom: 10px; }
-        .card { padding: 1.1rem !important; }
-      }
-      .card { max-width: 570px; margin: 0 auto; }
+      .summary-card {background:#f7fafb; border-radius:13px; box-shadow:0 1px 6px #e1e9ed; padding:18px 12px 9px 12px; margin:16px 0 28px 0;}
+      .summary-card b {min-width:170px; display:inline-block;}
+      .btn-nav { min-width: 165px;}
+      @media (max-width:600px) { .btn, .btn-nav { width:100% !important; margin-bottom:10px; } .summary-card { font-size:1em;} }
     </style>
 </head>
 <body>
 <div class="container py-4">
-    <div class="card p-4 shadow-sm mx-auto" style="max-width:600px;">
+    <div class="card shadow p-4" style="max-width:860px; margin:0 auto;">
         <h2 class="mb-4 text-center">Finance Dashboard</h2>
-        <div class="alert alert-info text-center">
-            Here, admins with the <b>Finance</b> role can manage financial features, reports, and tools.
+        <div class="d-flex flex-wrap gap-2 mb-4 justify-content-center">
+          <a href="{{ url_for('combined_detailed_report') }}" class="btn btn-primary btn-nav">Combined Detailed Report</a>
+          <a href="{{ url_for('combined_cashback_paid') }}" class="btn btn-success btn-nav">Combined Cash Back Paid</a>
+          <a href="{{ url_for('commissions_paid') }}" class="btn btn-warning btn-nav">Commissions Paid</a>
         </div>
-        <!-- Add finance-specific tools here -->
-        <div class="text-center mt-4">
-            <a href="{{ url_for('admin_roles_landing') }}" class="btn btn-secondary w-100">Back to Admin Area</a>
+        <form class="row gb-2 gx-2 mb-3" id="filter-form" method="get">
+          <div class="col-12 col-sm-3 mb-2">
+            <select class="form-select" name="period" onchange="this.form.submit()">
+              <option value="all" {% if not period or period == 'all' %}selected{% endif %}>All Time</option>
+              <option value="year" {% if period == 'year' %}selected{% endif %}>Full Year</option>
+              <option value="month" {% if period == 'month' %}selected{% endif %}>Monthly</option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-3 mb-2">
+            <input type="number" name="year" id="year" class="form-control" placeholder="Year (YYYY)" value="{{ year or '' }}">
+          </div>
+          <div class="col-12 col-sm-3 mb-2">
+            <input type="number" min="1" max="12" name="month" id="month" class="form-control" placeholder="Month (1-12)" value="{{ month or '' }}">
+          </div>
+        </form>
+        <div class="summary-card">
+          <b>Total Advertising Revenue:</b> ${{ summary.total_ad_revenue }}<br>
+          <b>Total Number of Transactions:</b> {{ summary.total_transactions }}<br>
+          <b>Total Paid to Members (Tiers 1-5):</b> ${{ summary.total_paid_members }}<br>
+          <b>Total Paid to Businesses (Tiers 1-5):</b> ${{ summary.total_paid_businesses }}<br>
+          <b>Net Gross (25% of Ad Revenue):</b> ${{ summary.net_gross }}<br>
+          <b>Capital Reserves:</b> ${{ summary.capital_reserves }}<br>
         </div>
+        <div class="summary-card">
+          <b>Net Gross Allocation</b><br>
+          Operating Capital (50%): ${{ summary.operating_capital }}<br>
+          Charitable Contribution (12%): ${{ summary.charitable_contribution }}<br>
+          Silent Partners (25%): ${{ summary.silent_partners }}<br>
+          Legal Services (10%): ${{ summary.legal_services }}<br>
+          Miscellaneous (3%): ${{ summary.miscellaneous }}<br>
+        </div>
+        <div class="summary-card">
+          <b>Operating Capital Breakdown</b><br>
+          Real Estate & Utilities (30%): ${{ summary.real_estate_utilities }}<br>
+          Employees (40%): ${{ summary.employees }}<br>
+          Website/App Fees (15%): ${{ summary.webapp_fees }}<br>
+          Misc Services (15%): ${{ summary.misc_services }}<br>
+        </div>
+        <div class="summary-card">
+          <b>Silent Partners Payouts</b><br>
+          Tito (45.25%, $5M max): ${{ summary.tito }}<br>
+          Pedro (17.25%, $1M max): ${{ summary.pedro }}<br>
+          Paul and Tara (8.75%, $500K max): ${{ summary.paul_tara }}<br>
+          James (4.5%, $250K max): ${{ summary.james }}<br>
+          Angel (2.75%, $150K max): ${{ summary.angel }}<br>
+          Josh (2.75%, $150K max): ${{ summary.josh }}<br>
+          Diego (1.75%, $100K max): ${{ summary.diego }}<br>
+          Esther (1.75%, $100K max): ${{ summary.esther }}<br>
+          Reyna (1.75%, $100K max): ${{ summary.reyna }}<br>
+          Ramico (1.75%, $100K max): ${{ summary.ramico }}<br>
+          Michael (1.75%, $100K max): ${{ summary.michael }}<br>
+          Manuela (1.75%, $100K max): ${{ summary.manuela }}<br>
+          Alex (1.75%, $100K max): ${{ summary.alex }}<br>
+          Victor R. (1.75%, $100K max): ${{ summary.victor_r }}<br>
+          John Paul (1.75%, $100K max): ${{ summary.john_paul }}<br>
+          Ana and Pepe (1%, $50K max): ${{ summary.ana_pepe }}<br>
+          Karen (1%, $50K max): ${{ summary.karen }}<br>
+          Raul (1%, $50K max): ${{ summary.raul }}<br>
+        </div>
+        <a href="{{ url_for('admin_roles_landing') }}" class="btn btn-secondary mt-3 w-100">Back to Admin Area</a>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
