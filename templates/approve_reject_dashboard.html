@@ -70,6 +70,7 @@
                   </form>
                 </td>
               </tr>
+              {% if biz.status == "in_review" %}
               <tr>
                 <td colspan="6" class="bg-light">
                   <!-- Small Listing Preview -->
@@ -115,7 +116,7 @@
                             <li>{{ s }}</li>
                           {%- endfor %}
                           {% if not (biz.service_1 or biz.service_2 or biz.service_3 or biz.service_4 or biz.service_5 or biz.service_6 or biz.service_7 or biz.service_8 or biz.service_9 or biz.service_10) %}
-                            <li>N/A</li>
+                             <li>N/A</li>
                           {% endif %}
                         </ul>
                       </div>
@@ -123,6 +124,7 @@
                   </div>
                 </td>
               </tr>
+              {% endif %}
             {% endfor %}
           </tbody>
         </table>
