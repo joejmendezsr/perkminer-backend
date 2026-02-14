@@ -89,15 +89,15 @@ def business_login_required(f):
     return decorated_function
 
 import csv
-from io import StringIO
-from flask import Response
+from io import StringIO, BytesIO
+from flask import Response, send_file, url_for
 import os, re, random, string, time, logging
 import cloudinary
 import cloudinary.uploader
-import random # put this at the top of your file if not already imported
+import random
 import qrcode
-from io import BytesIO
-from flask import send_file, url_for
+import uuid  # <-- only needs to be here once! Put with other imports
+
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -226,6 +226,7 @@ class Quote(db.Model):
 
 class UserTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    transaction_id = db.Column(db.String(48), nullable=False, index=True)
     interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
     amount = db.Column(db.Float, nullable=False)
@@ -242,6 +243,7 @@ class UserTransaction(db.Model):
 
 class BusinessTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    transaction_id = db.Column(db.String(48), nullable=False, index=True)
     interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
     amount = db.Column(db.Float, nullable=False)
@@ -1100,16 +1102,17 @@ def export_user_earnings_csv():
 
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time', 'Tier 1 (2%)', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'From User'])
+    writer.writerow(['Transaction ID', 'Date/Time', 'Tier 1 (2%)', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'From User'])
     for txn in transactions:
         writer.writerow([
+            txn.transaction_id,
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
             f"{txn.cash_back:.2f}" if txn.user_referral_id == ref_code else "",
             f"{txn.tier2_commission:.2f}" if txn.tier2_user_referral_id == ref_code else "",
             f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == ref_code else "",
             f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == ref_code else "",
             f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == ref_code else "",
-            txn.user_referral_id  # You can show the referring user for context
+            txn.user_referral_id
         ])
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
@@ -1286,6 +1289,7 @@ def finalize_transaction(interaction_id):
     summary = None
 
     if request.method == "POST":
+        transaction_id = str(uuid.uuid4())
         data = request.form
         amount = float(data.get("amount", 0))
 
@@ -1315,6 +1319,7 @@ def finalize_transaction(interaction_id):
         user_cash_back = round(min(user_cash_back_raw, 50), 2)  # Tier 1 cap $50
 
         user_trans = UserTransaction(
+            transaction_id=transaction_id,
             interaction_id=interaction.id,
             amount=amount,
             user_referral_id=user_referral_id,
@@ -1365,6 +1370,7 @@ def finalize_transaction(interaction_id):
         db.session.commit()
 
         business_trans = BusinessTransaction(
+            transaction_id=transaction_id,
             interaction_id=interaction.id,
             amount=amount,
             business_referral_id=business_referral_id,
@@ -1389,6 +1395,7 @@ def finalize_transaction(interaction_id):
             "net_gross": f"{net_gross:.2f}",
             "marketing_roi": marketing_roi,
             "marketing_ratio": marketing_ratio,
+            "transaction_id": transaction_id,  # You can show this on receipts/exports if desired
             "tier2_user_referral_id": tier2_user_referral_id,
             "tier3_user_referral_id": tier3_user_referral_id,
             "tier4_user_referral_id": tier4_user_referral_id,
@@ -1682,11 +1689,13 @@ def export_business_earnings_csv():
         qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
     transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
+
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time','Tier 1 (1%)','Tier 2 (0.25%)','Tier 3 (0.25%)','Tier 4 (0.25%)','Tier 5 (1%)','From Business'])
+    writer.writerow(['Transaction ID','Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)','From Business'])
     for txn in transactions:
         writer.writerow([
+            txn.transaction_id,
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
             f"{txn.cash_back:.2f}" if txn.business_referral_id == ref_code else "",
             f"{txn.tier2_commission:.2f}" if txn.tier2_business_referral_id == ref_code else "",
