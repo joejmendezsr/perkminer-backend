@@ -1,106 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Combined Detailed Report - Finance Admin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <style>
-      @media (max-width: 600px) { .table, .btn { font-size: .98em;} }
-      .summary-card { background:#f7fafb; border-radius:13px;
-        box-shadow:0 1px 6px #e1e9ed; padding:18px 12px 9px 12px; margin:16px 0 28px 0;}
-    </style>
+  <title>Combined Detailed Report - Finance Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net/js/dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-dt/css/jquery.dataTables.min.css">
 </head>
 <body>
 <div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-    <h3 class="mb-2">Combined Detailed Report</h3>
-    <a href="{{ url_for('finance_dashboard') }}" class="btn btn-outline-primary mb-2">Return to Finance Dashboard</a>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Combined Detailed Report</h3>
+    <a href="{{ url_for('finance_dashboard') }}" class="btn btn-outline-primary">Return to Finance Dashboard</a>
   </div>
-  <form class="row gy-2 gx-2 mb-3" method="get">
+  <form class="row gy-2 gx-2 mb-4" method="get">
     <div class="col-12 col-sm-2">
-      <label class="form-label">Period:</label>
+      <input type="text" name="interaction_id" class="form-control" placeholder="Interaction ID" value="{{ interaction_id or '' }}">
+    </div>
+    <div class="col-12 col-sm-2">
+      <input type="text" name="referral_id" class="form-control" placeholder="User Referral ID" value="{{ search_referral_id or '' }}">
+    </div>
+    <div class="col-12 col-sm-2">
+      <input type="text" name="business_referral_id" class="form-control" placeholder="Business Referral ID" value="{{ search_business_ref_id or '' }}">
+    </div>
+    <div class="col-12 col-sm-2">
+      <input type="text" name="user_email" class="form-control" placeholder="User Email" value="{{ search_user_email or '' }}">
+    </div>
+    <div class="col-12 col-sm-2">
+      <input type="text" name="business_email" class="form-control" placeholder="Business Email" value="{{ search_business_email or '' }}">
+    </div>
+    <div class="col-12 col-sm-2">
       <select class="form-select" name="period">
-        <option value="all" {% if not period or period == 'all' %}selected{% endif %}>All</option>
-        <option value="year" {% if period == 'year' %}selected{% endif %}>Annual</option>
-        <option value="month" {% if period == 'month' %}selected{% endif %}>Monthly</option>
+        <option value="all" {% if period == 'all' %}selected{% endif %}>All</option>
+        <option value="year" {% if period == 'year' %}selected{% endif %}>Year</option>
+        <option value="month" {% if period == 'month' %}selected{% endif %}>Month</option>
+      </select>
+    </div>
+    <div class="col-6 col-sm-2">
+      <select class="form-select" name="month">
+        <option value="">Any Month</option>
+        {% for val, name in months %}
+          <option value="{{ val }}" {% if month == val %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-sm-2">
+      <select class="form-select" name="year">
+        <option value="">Any Year</option>
+        {% for y in years %}
+          <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
       </select>
     </div>
     <div class="col-12 col-sm-2">
-      <label class="form-label">Year:</label>
-      <input type="number" name="year" class="form-control" placeholder="YYYY" value="{{ year or '' }}">
-    </div>
-    <div class="col-12 col-sm-2">
-      <label class="form-label">Month:</label>
-      <input type="number" min="1" max="12" name="month" class="form-control" placeholder="1-12" value="{{ month or '' }}">
-    </div>
-    <div class="col-12 col-sm-3">
-      <label class="form-label">Referral ID:</label>
-      <input type="text" name="referral_id" class="form-control mb-1" placeholder="Referral ID" value="{{search_referral_id or '' }}">
-    </div>
-    <div class="col-12 col-sm-3">
-      <label class="form-label">Email address:</label>
-      <input type="text" name="email" class="form-control" placeholder="Email address" value="{{search_email or '' }}">
-    </div>
-    <div class="col-12 mt-1">
-      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
+      <button type="submit" class="btn btn-primary w-100 mt-2 mt-sm-0"><i class="bi bi-search"></i> Search</button>
     </div>
   </form>
-
-  <div class="summary-card">
-    <b>Grand Total (All Transactions):</b> ${{ "{:,.2f}".format(grand_total) }}<br>
-    <b>User Transactions Total:</b> ${{ "{:,.2f}".format(user_total) }}<br>
-    <b>Business Transactions Total:</b> ${{ "{:,.2f}".format(business_total) }}
+  <div class="mb-4">
+    <b>Grand Total All Transactions:</b> ${{ "{:,.2f}".format(utrans|sum(attribute='amount') + btrans|sum(attribute='amount')) }}<br>
+    <b>User Transactions Total:</b> ${{ "{:,.2f}".format(utrans|sum(attribute='amount')) }}<br>
+    <b>Business Transactions Total:</b> ${{ "{:,.2f}".format(btrans|sum(attribute='amount')) }}
   </div>
   <div class="table-responsive">
-    <table class="table table-bordered align-middle" id="details-table">
-      <thead class="table-light">
+    <table class="table table-bordered" id="detailed-table">
+      <thead>
         <tr>
           <th>Date/Time</th>
-          <th>Referral ID</th>
-          <th>Email (User/Business)</th>
-          <th>Tier 1 User Cashback</th>
-          <th>Tier 2 User Comm.</th>
-          <th>Tier 3 User Comm.</th>
-          <th>Tier 4 User Comm.</th>
-          <th>Tier 5 User Comm.</th>
+          <th>Interaction ID</th>
+          <th>User Referral ID</th>
+          <th>User Name</th>
+          <th>User Email</th>
+          <th>Tier 1 Cashback</th>
+          <th>Tier 2 Commission</th>
+          <th>Tier 3 Commission</th>
+          <th>Tier 4 Commission</th>
+          <th>Tier 5 Commission</th>
+          <th>Business Referral ID</th>
+          <th>Business Name</th>
+          <th>Business Email</th>
           <th>Tier 1 Biz Cashback</th>
           <th>Tier 2 Biz Cashback</th>
           <th>Tier 3 Biz Cashback</th>
           <th>Tier 4 Biz Cashback</th>
           <th>Tier 5 Biz Cashback</th>
+          <th>Transaction ID</th>
         </tr>
       </thead>
       <tbody>
         {% for t in utrans %}
         <tr>
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>{{ t.interaction_id }}</td>
           <td>{{ t.user_referral_id }}</td>
+          <td>{{ user_lookup[t.user_referral_id].name if t.user_referral_id in user_lookup else "" }}</td>
           <td>{{ user_lookup[t.user_referral_id].email if t.user_referral_id in user_lookup else "" }}</td>
           <td>${{ "{:,.2f}".format(t.cash_back) }}</td>
           <td>${{ "{:,.2f}".format(t.tier2_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
-          <td></td><td></td><td></td><td></td><td></td> <!-- biz columns blank -->
+          <td></td><td></td><td></td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
         {% for t in btrans %}
         <tr>
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>{{ t.interaction_id }}</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           <td>{{ t.business_referral_id }}</td>
+          <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else "" }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else "" }}</td>
-          <td></td><td></td><td></td><td></td><td></td>
           <td>${{ "{:,.2f}".format(t.cash_back) }}</td>
           <td>${{ "{:,.2f}".format(t.tier2_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
+          <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('#detailed-table').DataTable({
+    paging: false,
+    ordering: true,
+    info: false
+  });
+});
+</script>
 </body>
 </html>
