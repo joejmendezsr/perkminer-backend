@@ -4,10 +4,6 @@
   <title>Combined Detailed Report - Finance Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/datatables.net/js/dataTables.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-dt/css/jquery.dataTables.min.css">
 </head>
 <body>
 <div class="container py-4">
@@ -15,30 +11,24 @@
     <h3>Combined Detailed Report</h3>
     <a href="{{ url_for('finance_dashboard') }}" class="btn btn-outline-primary">Return to Finance Dashboard</a>
   </div>
-  <form class="row gy-2 gx-2 mb-4" method="get">
-    <div class="col-12 col-sm-2">
-      <input type="text" name="interaction_id" class="form-control" placeholder="Interaction ID" value="{{ interaction_id or '' }}">
+  <form class="row gy-2 gx-2 mb-3" method="get">
+    <div class="col-12 col-md-2">
+      <input type="text" name="transaction_id" class="form-control" placeholder="Transaction ID" value="{{ txn_id or '' }}">
     </div>
-    <div class="col-12 col-sm-2">
-      <input type="text" name="referral_id" class="form-control" placeholder="User Referral ID" value="{{ search_referral_id or '' }}">
+    <div class="col-12 col-md-2">
+      <input type="text" name="user_email" class="form-control" placeholder="User Email" value="{{ user_email or '' }}">
     </div>
-    <div class="col-12 col-sm-2">
-      <input type="text" name="business_referral_id" class="form-control" placeholder="Business Referral ID" value="{{ search_business_ref_id or '' }}">
+    <div class="col-12 col-md-2">
+      <input type="text" name="business_email" class="form-control" placeholder="Business Email" value="{{ business_email or '' }}">
     </div>
-    <div class="col-12 col-sm-2">
-      <input type="text" name="user_email" class="form-control" placeholder="User Email" value="{{ search_user_email or '' }}">
-    </div>
-    <div class="col-12 col-sm-2">
-      <input type="text" name="business_email" class="form-control" placeholder="Business Email" value="{{ search_business_email or '' }}">
-    </div>
-    <div class="col-12 col-sm-2">
+    <div class="col-12 col-md-2">
       <select class="form-select" name="period">
         <option value="all" {% if period == 'all' %}selected{% endif %}>All</option>
         <option value="year" {% if period == 'year' %}selected{% endif %}>Year</option>
         <option value="month" {% if period == 'month' %}selected{% endif %}>Month</option>
       </select>
     </div>
-    <div class="col-6 col-sm-2">
+    <div class="col-6 col-md-2">
       <select class="form-select" name="month">
         <option value="">Any Month</option>
         {% for val, name in months %}
@@ -46,7 +36,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-6 col-sm-2">
+    <div class="col-6 col-md-2">
       <select class="form-select" name="year">
         <option value="">Any Year</option>
         {% for y in years %}
@@ -54,17 +44,20 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-12 col-sm-2">
-      <button type="submit" class="btn btn-primary w-100 mt-2 mt-sm-0"><i class="bi bi-search"></i> Search</button>
+    <div class="col-12 mt-1">
+      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
     </div>
   </form>
   <div class="mb-4">
-    <b>Grand Total All Transactions:</b> ${{ "{:,.2f}".format(utrans|sum(attribute='amount') + btrans|sum(attribute='amount')) }}<br>
-    <b>User Transactions Total:</b> ${{ "{:,.2f}".format(utrans|sum(attribute='amount')) }}<br>
-    <b>Business Transactions Total:</b> ${{ "{:,.2f}".format(btrans|sum(attribute='amount')) }}
+    <b>Grand Total (Business Transactions):</b> ${{ "{:,.2f}".format(grand_total) }}<br>
+    <b>Total Advertising Fee:</b> ${{ "{:,.2f}".format(total_ad_fee) }}<br>
+    <b>Total Paid to Users: Cashback (Tier 1):</b> ${{ "{:,.2f}".format(total_user_cash_back) }}<br>
+    <b>Total Paid to Users: Commissions (Tiers 2-5):</b> ${{ "{:,.2f}".format(total_user_commission) }}<br>
+    <b>Total Paid to Businesses (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_biz_cash_back) }}<br>
+    <b>Grand Total Paid Out:</b> ${{ "{:,.2f}".format(total_paid_all) }}
   </div>
   <div class="table-responsive">
-    <table class="table table-bordered" id="detailed-table">
+    <table class="table table-bordered align-middle" id="details-table">
       <thead>
         <tr>
           <th>Date/Time</th>
@@ -112,8 +105,8 @@
           <td>{{ t.interaction_id }}</td>
           <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           <td>{{ t.business_referral_id }}</td>
-          <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else "" }}</td>
-          <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else "" }}</td>
+          <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
+          <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
           <td>${{ "{:,.2f}".format(t.cash_back) }}</td>
           <td>${{ "{:,.2f}".format(t.tier2_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
@@ -126,14 +119,6 @@
     </table>
   </div>
 </div>
-<script>
-$(document).ready(function() {
-  $('#detailed-table').DataTable({
-    paging: false,
-    ordering: true,
-    info: false
-  });
-});
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
