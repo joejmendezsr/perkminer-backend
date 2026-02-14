@@ -2620,7 +2620,6 @@ def commissions_paid():
     month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
     qry = UserTransaction.query
-
     if period == "year" and year:
         qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
     elif period == "month" and year and month:
@@ -2628,71 +2627,36 @@ def commissions_paid():
         if month == 12:
             end = datetime(year + 1, 1, 1)
         else:
-            end = datetime(year, month + 1, 1)
+            end = datetime(year, month+1, 1)
         qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
 
     transactions = qry.all()
-
-    # Group and sum commissions for each user
     from collections import defaultdict
 
-    users_data = defaultdict(lambda: {
-        "referral_id": "",
-        "name": "",
-        "email": "",
-        "tier2": 0.0,
-        "tier3": 0.0,
-        "tier4": 0.0,
-        "tier5": 0.0,
-        "grand_total": 0.0
-    })
-
+    users_data = defaultdict(lambda: {"referral_id": "", "name": "", "email": "",
+                                      "tier2": 0.0, "tier3": 0.0, "tier4": 0.0, "tier5": 0.0, "grand_total": 0.0})
     all_users = {u.referral_code: u for u in User.query.all()}
 
+    # Loop through every transaction and add to every user's total (per tier) if that user earned a commission in any tier
     for t in transactions:
-        # Tier 2
-        if t.tier2_user_referral_id and t.tier2_commission > 0:
-            u = all_users.get(t.tier2_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier2"] += t.tier2_commission
-                x["grand_total"] += t.tier2_commission
-        # Tier 3
-        if t.tier3_user_referral_id and t.tier3_commission > 0:
-            u = all_users.get(t.tier3_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier3"] += t.tier3_commission
-                x["grand_total"] += t.tier3_commission
-        # Tier 4
-        if t.tier4_user_referral_id and t.tier4_commission > 0:
-            u = all_users.get(t.tier4_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier4"] += t.tier4_commission
-                x["grand_total"] += t.tier4_commission
-        # Tier 5
-        if t.tier5_user_referral_id and t.tier5_commission > 0:
-            u = all_users.get(t.tier5_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier5"] += t.tier5_commission
-                x["grand_total"] += t.tier5_commission
+        for tier, field, comm_field in [
+            ("tier2", t.tier2_user_referral_id, t.tier2_commission),
+            ("tier3", t.tier3_user_referral_id, t.tier3_commission),
+            ("tier4", t.tier4_user_referral_id, t.tier4_commission),
+            ("tier5", t.tier5_user_referral_id, t.tier5_commission),
+        ]:
+            if field and comm_field > 0 and field in all_users:
+                u = all_users[field]
+                udata = users_data[u.referral_code]
+                udata["referral_id"] = u.referral_code
+                udata["name"] = u.name or ""
+                udata["email"] = u.email or ""
+                udata[tier] += comm_field
+                udata["grand_total"] += comm_field
 
-    # Output users as a sorted list by grand total, descending
-    users = sorted(users_data.values(), key=lambda x: x["grand_total"], reverse=True)
+    # Only display users with nonzero grand total:
+    users = [u for u in users_data.values() if u["grand_total"] > 0]
+    users.sort(key=lambda x: x["grand_total"], reverse=True)
 
     return render_template(
         "commissions_paid.html",
