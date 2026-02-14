@@ -2309,7 +2309,7 @@ def finance_dashboard():
         else:
             capital_reserves += t.tier5_commission
 
-    net_gross = total_ad_revenue * 0.25
+    net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves)
 
     # Allocations
     operating_capital = net_gross * 0.50
@@ -2349,7 +2349,7 @@ def finance_dashboard():
         total_transactions=total_transactions,
         total_paid_members=f"{total_paid_members:,.2f}",
         total_paid_businesses=f"{total_paid_businesses:,.2f}",
-        net_gross=f"{net_gross:,.2f}",
+        net_gross=f"{net_gross:,.2f}",  # <-- updated accurate calculation
         capital_reserves=f"{capital_reserves:,.2f}",
         operating_capital=f"{operating_capital:,.2f}",
         charitable_contribution=f"{charitable_contribution:,.2f}",
