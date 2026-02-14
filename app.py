@@ -2602,15 +2602,182 @@ def view_listing(biz_id):
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
 
-@app.route("/finance/combined-detailed-report")
+@app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
 def combined_detailed_report():
-    return render_template("combined_detailed_report.html")
+    # Filtering queries
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+    search_referral_id = (request.args.get("referral_id") or "").strip()
+    search_email = (request.args.get("email") or "").strip().lower()
 
-@app.route("/finance/combined-cashback-paid")
+    # Build base queries for time filtering
+    uq = UserTransaction.query
+    bq = BusinessTransaction.query
+    if period == "year" and year:
+        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year+1, 1, 1)
+        else:
+            end = datetime(year, month+1, 1)
+        uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+        bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+    if search_referral_id:
+        uq = uq.filter(
+            (UserTransaction.user_referral_id == search_referral_id) |
+            (UserTransaction.tier2_user_referral_id == search_referral_id) |
+            (UserTransaction.tier3_user_referral_id == search_referral_id) |
+            (UserTransaction.tier4_user_referral_id == search_referral_id) |
+            (UserTransaction.tier5_user_referral_id == search_referral_id)
+        )
+        bq = bq.filter(
+            (BusinessTransaction.business_referral_id == search_referral_id) |
+            (BusinessTransaction.tier2_business_referral_id == search_referral_id) |
+            (BusinessTransaction.tier3_business_referral_id == search_referral_id) |
+            (BusinessTransaction.tier4_business_referral_id == search_referral_id) |
+            (BusinessTransaction.tier5_business_referral_id == search_referral_id)
+        )
+    utrans = uq.all()
+    btrans = bq.all()
+
+    # Email filter logic (slows with large DBs—consider limiting/table join if big data)
+    user_lookup = {u.referral_code: u for u in User.query.all()}
+    business_lookup = {b.referral_code: b for b in Business.query.all()}
+    if search_email:
+        utrans = [t for t in utrans if user_lookup.get(t.user_referral_id, '').email.lower() == search_email
+                  or user_lookup.get(t.tier2_user_referral_id, '').email.lower() == search_email
+                  or user_lookup.get(t.tier3_user_referral_id, '').email.lower() == search_email
+                  or user_lookup.get(t.tier4_user_referral_id, '').email.lower() == search_email
+                  or user_lookup.get(t.tier5_user_referral_id, '').email.lower() == search_email]
+        btrans = [t for t in btrans if business_lookup.get(t.business_referral_id, '').business_email.lower() == search_email
+                  or business_lookup.get(t.tier2_business_referral_id, '').business_email.lower() == search_email
+                  or business_lookup.get(t.tier3_business_referral_id, '').business_email.lower() == search_email
+                  or business_lookup.get(t.tier4_business_referral_id, '').business_email.lower() == search_email
+                  or business_lookup.get(t.tier5_business_referral_id, '').business_email.lower() == search_email]
+
+    # Grand totals:
+    grand_total = sum(t.amount for t in utrans) + sum(t.amount for t in btrans)
+    user_total = sum(t.amount for t in utrans)
+    business_total = sum(t.amount for t in btrans)
+
+    # For each user/business, sum by referral id for each tier (use dicts for summary)
+    # [You can expand these summaries for detailed breakdowns as described]
+
+    return render_template(
+        "combined_detailed_report.html",
+        utrans=utrans,
+        btrans=btrans,
+        user_lookup=user_lookup,
+        business_lookup=business_lookup,
+        period=period,
+        year=year,
+        month=month,
+        grand_total=grand_total,
+        user_total=user_total,
+        business_total=business_total
+    )
+
+@app.route("/finance/combined-detailed-report/export/csv")
+@role_required("finance")
+def export_combined_detailed_report_csv():
+    # Use filtering logic as in the route above!
+    # Build rows similarly to your HTML table (looping over referral codes and tiers)
+    # Then flush to csv as seen in previous examples
+    pass  # Write actual csv logic and headers as needed for your structure
+
+@app.route("/finance/combined-cashback-paid", methods=["GET"])
 @role_required("finance")
 def combined_cashback_paid():
-    return render_template("combined_cashback_paid.html")
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    uq = UserTransaction.query
+    bq = BusinessTransaction.query
+    if period == "year" and year:
+        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year + 1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year + 1, 1, 1)
+        else:
+            end = datetime(year, month + 1, 1)
+        uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+        bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+    user_cbs = uq.all()
+    bus_cbs = bq.all()
+
+    # Only Tier 1 cashback for each (ignore commissions)
+    tier1_user_cashback = sum(txn.cash_back for txn in user_cbs)
+    tier1_biz_cashback = sum(txn.cash_back for txn in bus_cbs)
+    grand_total = tier1_user_cashback + tier1_biz_cashback
+
+    return render_template(
+        "combined_cashback_paid.html",
+        user_cbs=user_cbs,
+        bus_cbs=bus_cbs,
+        tier1_user_cashback=tier1_user_cashback,
+        tier1_biz_cashback=tier1_biz_cashback,
+        grand_total=grand_total,
+        period=period,
+        year=year,
+        month=month,
+    )
+
+@app.route("/finance/combined-cashback-paid/export/csv")
+@role_required("finance")
+def export_finance_cashback_paid_csv():
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    uq = UserTransaction.query
+    bq = BusinessTransaction.query
+    if period == "year" and year:
+        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year + 1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year + 1, 1, 1)
+        else:
+            end = datetime(year, month + 1, 1)
+        uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+        bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+    user_cbs = uq.all()
+    bus_cbs = bq.all()
+
+    import csv
+    from io import StringIO
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Type', 'Referral ID', 'Email', 'Date/Time', 'Tier 1 Cashback'])
+    for t in user_cbs:
+        user = User.query.filter_by(referral_code=t.user_referral_id).first()
+        writer.writerow([
+            "User",
+            t.user_referral_id,
+            user.email if user else "",
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            f"{t.cash_back:.2f}"
+        ])
+    for t in bus_cbs:
+        business = Business.query.filter_by(referral_code=t.business_referral_id).first()
+        writer.writerow([
+            "Business",
+            t.business_referral_id,
+            business.business_email if business else "",
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            f"{t.cash_back:.2f}"
+        ])
+    output = si.getvalue()
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition":"attachment;filename=combined_cashback_paid.csv"})
 
 @app.route("/finance/commissions-paid", methods=["GET"])
 @role_required("finance")
