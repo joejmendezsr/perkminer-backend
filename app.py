@@ -390,6 +390,15 @@ def build_invite_email(inviter_name, join_url, video_url):
                     </td>
                 </tr>
 
+        <!-- Join Button -->
+    <tr>
+        <td align="center" style="padding: 0 40px 50px;">
+            <a href="{join_url}" class="button" target="_blank" style="font-size:20px; padding:18px 48px;">
+            Join PerkMiner Now
+            </a>
+        </td>
+    </tr>
+
         <!-- Hero Banner with Logo -->
                 <tr>
                     <td style="position:relative;">
