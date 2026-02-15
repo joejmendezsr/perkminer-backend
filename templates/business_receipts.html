@@ -46,17 +46,20 @@
       <thead class="table-light">
         <tr>
           <th>Date/Time</th>
+          <th>Interaction ID</th>
           <th>Amount</th>
           <th>Ad Fee (10%)</th>
           <th>Net Gross</th>
           <th>Marketing ROI</th>
           <th>Marketing ROI Ratio</th>
+          <th>Receipt</th>
         </tr>
       </thead>
       <tbody>
         {% for txn in transactions %}
         <tr>
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>{{ txn.interaction_id }}</td>
           <td>${{ "{:,.2f}".format(txn.amount) }}</td>
           <td>
             {% set ad_fee = txn.amount * 0.10 %}
