@@ -46,6 +46,7 @@
       <thead class="table-light">
         <tr>
           <th>Date/Time</th>
+          <th>Interaction ID</th>
           <th>Business</th>
           <th>Amount</th>
           <th>Cashback (2%)</th>
@@ -56,6 +57,7 @@
         {% for txn in transactions %}
         <tr>
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>{{ txn.interaction_id }}</td>
           <td>
             {% set interaction = txn.interaction %}
             {{ interaction.business.business_name if interaction else 'N/A' }}
