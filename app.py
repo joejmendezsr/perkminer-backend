@@ -2434,7 +2434,7 @@ def finance_dashboard():
     charitable_contribution = total_ad_revenue * 0.105
 
     # Allocations
-    operating_capital = (net_gross * 0.60) - 
+    operating_capital = net_gross * 0.60 
     silent_partners = net_gross * 0.30
     legal_services = net_gross * 0.07
     miscellaneous = net_gross * 0.03
