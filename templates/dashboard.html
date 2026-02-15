@@ -231,6 +231,26 @@
     </form>
   </div>
 </div>
+<div class="modal fade" id="inviteBusinessModal" tabindex="-1" aria-labelledby="inviteBusinessModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('invite') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="modal-header">
+        <h5 class="modal-title" id="inviteBusinessModalLabel">Invite a Business to Join PerkMiner</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label for="invitee-business-email" class="form-label">Business Email Address:</label>
+        {{ invite_form.invitee_email(class="form-control", id="invitee-business-email", placeholder="Enter business email", required=True) }}
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-warning">Send Business Invite</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Profile Edit Section -->
 <div class="collapse mb-4" id="profileCollapse">
   <div class="card p-4">
@@ -273,8 +293,12 @@
         <i class="bi bi-person-plus me-1"></i>Invite others to join
       </button>
     </div>
+    <div>
+      <button class="btn btn-warning w-100 mt-2" type="button" data-bs-toggle="modal" data-bs-target="#inviteBusinessModal">
+        <i class="bi bi-building-add me-1"></i>Invite a Business to Join
+      </button>
+    </div>
   </div>
-
     <div class="card p-4 mb-4">
     <h4>Your Activity</h4>
       <div>
