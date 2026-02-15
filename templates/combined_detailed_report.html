@@ -10,10 +10,13 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Combined Detailed Report</h3>
     <a href="{{ url_for('finance_dashboard') }}" class="btn btn-outline-primary">Return to Finance Dashboard</a>
+    <a href="{{ url_for('export_combined_detailed_report_csv', interaction_id=interaction_id, user_email=user_email, business_email=business_email, period=period, year=year, month=month) }}" class="btn btn-outline-success mb-2">
+      <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
+    </a>
   </div>
   <form class="row gy-2 gx-2 mb-3" method="get">
     <div class="col-12 col-md-2">
-      <input type="text" name="transaction_id" class="form-control" placeholder="Transaction ID" value="{{ txn_id or '' }}">
+      <input type="text" name="interaction_id" class="form-control" placeholder="Interaction ID" value="{{ interaction_id or '' }}">
     </div>
     <div class="col-12 col-md-2">
       <input type="text" name="user_email" class="form-control" placeholder="User Email" value="{{ user_email or '' }}">

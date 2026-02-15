@@ -2674,61 +2674,55 @@ def view_listing(biz_id):
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
 
+from datetime import datetime
+
 @app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
 def combined_detailed_report():
-    txn_id = request.args.get("transaction_id", "").strip()
+    interaction_id = request.args.get("interaction_id", "").strip()
     user_email = (request.args.get("user_email", "") or "").strip().lower()
     business_email = (request.args.get("business_email", "") or "").strip().lower()
     period = request.args.get("period", "all")
-    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
-    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+    year = request.args.get("year", "")
+    month = request.args.get("month", "")
 
     uq = UserTransaction.query
     bq = BusinessTransaction.query
 
     # Date/month/year filter logic
     if period == "year" and year:
-        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
-        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
+        uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year)+1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year)+1, 1, 1))
     elif period == "month" and year and month:
-        start = datetime(year, month, 1)
-        if month == 12:
-            end = datetime(year+1, 1, 1)
+        start = datetime(int(year), int(month), 1)
+        if int(month) == 12:
+            end = datetime(int(year)+1, 1, 1)
         else:
-            end = datetime(year, month+1, 1)
+            end = datetime(int(year), int(month)+1, 1)
         uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
         bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
-    if txn_id:
-        uq = uq.filter(UserTransaction.transaction_id == txn_id)
-        bq = bq.filter(BusinessTransaction.transaction_id == txn_id)
+    # Interaction ID filtering (primary)
+    if interaction_id:
+        uq = uq.filter(UserTransaction.interaction_id == interaction_id)
+        bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
 
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
 
-    # Only apply user email filter to user transactions, business email filter to business transactions
+    # User email filter: only user transactions
     if user_email:
-        filtered_utrans = []
-        for t in uq:
-            user = user_lookup.get(t.user_referral_id)
-            if user and user.email.lower() == user_email:
-                filtered_utrans.append(t)
-        utrans = filtered_utrans
-        btrans = []  # No business transactions visible for user email search
+        utrans = [t for t in uq.all() if t.user_referral_id in user_lookup and user_lookup[t.user_referral_id].email.lower() == user_email]
+        btrans = []
+    # Business email filter: only business transactions
     elif business_email:
-        filtered_btrans = []
-        for t in bq:
-            biz = business_lookup.get(t.business_referral_id)
-            if biz and biz.business_email.lower() == business_email:
-                filtered_btrans.append(t)
-        btrans = filtered_btrans
-        utrans = []  # No user transactions visible for business email search
+        btrans = [t for t in bq.all() if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email]
+        utrans = []
     else:
         utrans = uq.all()
         btrans = bq.all()
 
-    # Summaries
+    # Grand/summaries (from business table only)
     grand_total = sum(t.amount for t in btrans)
     total_ad_fee = sum(t.amount * 0.10 for t in btrans)
     total_user_cash_back = sum(t.cash_back for t in utrans)
@@ -2755,7 +2749,7 @@ def combined_detailed_report():
         period=period,
         year=year,
         month=month,
-        txn_id=txn_id,
+        interaction_id=interaction_id,
         user_email=user_email,
         business_email=business_email,
         months=[(f"{i}", datetime(2026, i, 1).strftime('%B')) for i in range(1, 13)],
@@ -2765,32 +2759,31 @@ def combined_detailed_report():
 @app.route("/finance/combined-detailed-report/export/csv")
 @role_required("finance")
 def export_combined_detailed_report_csv():
-    txn_id = request.args.get("transaction_id", "").strip()
+    interaction_id = request.args.get("interaction_id", "").strip()
     user_email = (request.args.get("user_email", "") or "").strip().lower()
     business_email = (request.args.get("business_email", "") or "").strip().lower()
     period = request.args.get("period", "all")
-    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
-    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+    year = request.args.get("year", "") or 0
+    month = request.args.get("month", "") or 0
 
     uq = UserTransaction.query
     bq = BusinessTransaction.query
 
-    # Date filtering
     if period == "year" and year:
-        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
-        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
+        uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year)+1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year)+1, 1, 1))
     elif period == "month" and year and month:
-        start = datetime(year, int(month), 1)
+        start = datetime(int(year), int(month), 1)
         if int(month) == 12:
-            end = datetime(year+1, 1, 1)
+            end = datetime(int(year)+1, 1, 1)
         else:
-            end = datetime(year, int(month)+1, 1)
+            end = datetime(int(year), int(month)+1, 1)
         uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
         bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
-    if txn_id:
-        uq = uq.filter(UserTransaction.transaction_id == txn_id)
-        bq = bq.filter(BusinessTransaction.transaction_id == txn_id)
+    if interaction_id:
+        uq = uq.filter(UserTransaction.interaction_id == interaction_id)
+        bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
 
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
@@ -2805,8 +2798,6 @@ def export_combined_detailed_report_csv():
         utrans = uq.all()
         btrans = bq.all()
 
-    import csv
-    from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
     writer.writerow([
@@ -2816,7 +2807,6 @@ def export_combined_detailed_report_csv():
         "Tier 1 Biz Cashback", "Tier 2 Biz Cashback", "Tier 3 Biz Cashback", "Tier 4 Biz Cashback", "Tier 5 Biz Cashback",
         "Transaction ID"
     ])
-    # User transactions
     for t in utrans:
         writer.writerow([
             t.date_time.strftime('%Y-%m-%d %I:%M %p'),
@@ -2839,7 +2829,6 @@ def export_combined_detailed_report_csv():
             "",
             t.transaction_id
         ])
-    # Business transactions
     for t in btrans:
         writer.writerow([
             t.date_time.strftime('%Y-%m-%d %I:%M %p'),
