@@ -216,6 +216,17 @@ class Business(db.Model):
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
 
+class Invite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    inviter_id = db.Column(db.Integer, nullable=True)
+    inviter_type = db.Column(db.String(16), nullable=False)      # 'user' or 'business'
+    invitee_email = db.Column(db.String(200), nullable=False)
+    invitee_type = db.Column(db.String(16), nullable=False)      # 'user' or 'business'
+    referral_code = db.Column(db.String(32), nullable=False)
+    status = db.Column(db.String(16), nullable=False, default='pending')
+    accepted_id = db.Column(db.Integer, nullable=True)
+    accepted_at = db.Column(db.DateTime)
+
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False, unique=True)
@@ -872,12 +883,26 @@ def invite():
         return redirect(url_for('dashboard'))
     invitee_email = invite_form.invitee_email.data.strip()
     inviter_name = current_user.name if current_user.name else current_user.email
-    subject = f"{inviter_name} has invited you to join PerkMiner."
-    reg_url = url_for('register', ref=current_user.referral_code, _external=True)
+
+    # Create invite record
+    new_invite = Invite(
+        inviter_id=current_user.id,
+        inviter_type='user',
+        invitee_email=invitee_email,
+        invitee_type='business',
+        referral_code=current_user.referral_code,
+        status='pending'
+    )
+    db.session.add(new_invite)
+    db.session.commit()
+
+    # Update: use business_register url for business invites!
+    reg_url = url_for('business_register', ref=current_user.referral_code, _external=True)
     video_url = url_for('intro', ref=current_user.referral_code, _external=True)
     html_body = build_invite_email(inviter_name, reg_url, video_url)
-    send_email(invitee_email, subject, html_body)
-    flash('Invitation sent!')
+    send_email(invitee_email, f"{inviter_name} has invited you to join PerkMiner.", html_body)
+
+    flash('Business invitation sent!')
     return redirect(url_for('dashboard'))
 
 @app.route("/dashboard", methods=["GET", "POST"])
