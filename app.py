@@ -1032,15 +1032,28 @@ def export_user_receipts_csv():
 @app.route("/user/earnings", methods=["GET"])
 @login_required
 def user_earnings():
-    # ...period/year/month search logic remains...
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
     ref_code = current_user.referral_code
 
-    all_txns = UserTransaction.query  # Start by building and filtering like before...
-    # (apply period/month filters as you already do)
+    all_txns = UserTransaction.query
+
+    # Date filter
+    if period == "year" and year:
+        all_txns = all_txns.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year+1, 1, 1)
+        else:
+            end = datetime(year, month+1, 1)
+        all_txns = all_txns.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+
     transactions = all_txns.order_by(UserTransaction.date_time.desc()).all()
 
-    # FILTER for only records where the logged-in user actually earned something
+    # Only show rows where this user received Tier 1 or 2-5 commissions
     filtered = []
     for t in transactions:
         earned = False
@@ -1056,19 +1069,36 @@ def user_earnings():
             earned = True
         if earned:
             filtered.append(t)
-
     transactions = filtered
 
-    # ...Summary logic as before...
+    tier1_earnings = sum(t.cash_back for t in transactions if t.user_referral_id == ref_code)
+    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_user_referral_id == ref_code)
+    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == ref_code)
+    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_user_referral_id == ref_code)
+    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_user_referral_id == ref_code)
+    commissions_total = tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+
     summary = dict(
-        # ...
+        tier1_earnings=f"{tier1_earnings:,.2f}",
+        tier2_earnings=f"{tier2_earnings:,.2f}",
+        tier3_earnings=f"{tier3_earnings:,.2f}",
+        tier4_earnings=f"{tier4_earnings:,.2f}",
+        tier5_earnings=f"{tier5_earnings:,.2f}",
+        commissions_total=f"{commissions_total:,.2f}",
+        total=f"{tier1_earnings + commissions_total:,.2f}",
+        period=period,
+        year=year,
+        month=month
     )
 
     return render_template(
         "user_earnings.html",
         transactions=transactions,
         summary=summary,
-        # ...
+        today=date.today(),
+        period=period,
+        year=year,
+        month=month
     )
 
 @app.route("/user/earnings/export/csv")
@@ -1592,12 +1622,29 @@ def export_business_receipts_csv():
 @app.route("/business/earnings", methods=["GET"])
 @business_login_required
 def business_earnings():
-    # ...period/month filter as before...
+    biz_id = session.get('business_id')
+    business = Business.query.get_or_404(biz_id)
     ref_code = business.referral_code
 
-    all_txns = BusinessTransaction.query  # Filter for period/month as before
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+
+    all_txns = BusinessTransaction.query  # Start with all
+
+    # Date/month/year filter logic
+    if period == "year" and year:
+        all_txns = all_txns.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year+1, 1, 1)
+        else:
+            end = datetime(year, month+1, 1)
+        all_txns = all_txns.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
     transactions = all_txns.order_by(BusinessTransaction.date_time.desc()).all()
 
+    # Only show transactions where this business EARNED cashback/commission
     filtered = []
     for t in transactions:
         earned = False
@@ -1615,16 +1662,47 @@ def business_earnings():
             filtered.append(t)
     transactions = filtered
 
-    # ...Summary logic as before...
+    # Stats/summary: Only from Tier 1 (self-generated invoices/earnings)
+    tier1_txns = [txn for txn in transactions if txn.business_referral_id == ref_code]
+    gross_earnings = sum(txn.amount for txn in tier1_txns)
+    ad_fee = gross_earnings * 0.10
+    net_gross = gross_earnings - ad_fee
+    marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
+    marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
+
+    tier1_earnings = sum(t.cash_back for t in transactions if t.business_referral_id == ref_code)
+    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_business_referral_id == ref_code)
+    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
+    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
+    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+
     summary = dict(
-        # ...
+        gross_earnings=f"{gross_earnings:,.2f}",
+        ad_fee=f"{ad_fee:,.2f}",
+        net_gross=f"{net_gross:,.2f}",
+        marketing_roi=marketing_roi,
+        marketing_ratio=marketing_ratio,
+        tier1_earnings=f"{tier1_earnings:,.2f}",
+        tier2_earnings=f"{tier2_earnings:,.2f}",
+        tier3_earnings=f"{tier3_earnings:,.2f}",
+        tier4_earnings=f"{tier4_earnings:,.2f}",
+        tier5_earnings=f"{tier5_earnings:,.2f}",
+        total_cash_back=f"{total_cash_back:,.2f}",
+        period=period,
+        year=year,
+        month=month
     )
 
     return render_template(
         "business_earnings.html",
         transactions=transactions,
         summary=summary,
-        # ...
+        business=business,
+        today=date.today(),
+        period=period,
+        year=year,
+        month=month
     )
 
 @app.route("/finance/business-detailed-report/export/csv")
