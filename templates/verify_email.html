@@ -28,11 +28,12 @@
         <div class="card shadow-sm p-4">
             <h2 class="mb-4 text-center">Check your email for a verification link or code</h2>
             <form method="post" class="mb-3">
-                {{ form.hidden_tag() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input name="code" class="form-control mb-2" placeholder="Enter verification code">
                 <button type="submit" class="btn btn-primary w-100">Verify</button>
             </form>
             <form method="post" action="{{ url_for('resend_verification') }}" class="mb-2 text-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button id="resend-btn" class="btn btn-link" type="submit" {% if not can_resend %}disabled{% endif %}>Resend Code</button>
                 {% if not can_resend %}
                     <span id="wait-msg" style="color:gray;">You can resend in {{ wait_seconds }}s</span>

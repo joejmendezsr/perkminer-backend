@@ -18,7 +18,7 @@
         <h2 class="mb-4 text-center">Two-Factor Authentication</h2>
         <p class="text-center">Enter the 6-digit code sent to your email.</p>
         <form method="post">
-            {{ form.hidden_tag() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 {{ form.code(class="form-control text-center", maxlength="6", autocomplete="one-time-code") }}
             </div>
