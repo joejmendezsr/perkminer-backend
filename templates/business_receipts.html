@@ -16,7 +16,7 @@
 <body>
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
-    <h3 class="mb-2">Business Receipts</h3>
+    <h3 class="mb-2">Business Invoices</h3>
     <div class="d-flex gap-2">
       <a href="{{ url_for('export_business_receipts_csv') }}" class="btn btn-outline-success">
         <i class="bi bi-cloud-arrow-down"></i> Export CSV/Excel
@@ -75,9 +75,9 @@
           </td>
           <td>
             {% set ratio = (net_gross+ad_fee)/ad_fee if ad_fee else 0 %}
-            {{ ratio|round(2) }}:1
+            {{ ratio|round(1) }}:1
           </td>
-          <td>{{ txn.cash_back }}</td>
+          <td>${{ "{:,.2f}".format(txn.cash_back }}</td>
         </tr>
         {% endfor %}
       </tbody>
