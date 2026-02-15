@@ -77,7 +77,7 @@
             {% set ratio = (net_gross+ad_fee)/ad_fee if ad_fee else 0 %}
             {{ ratio|round(1) }}:1
           </td>
-          <td>${{ "{:,.2f}".format(txn.cash_back }}</td>
+          <td>${{ "{:,.2f}".format(txn.cash_back) }}</td>
         </tr>
         {% endfor %}
       </tbody>
