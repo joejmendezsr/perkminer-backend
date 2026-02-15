@@ -2428,10 +2428,11 @@ def finance_dashboard():
         else:
             capital_reserves += t.tier5_commission
 
-    net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves + charitable_contribution)
-
     # Charitable Contributions
     charitable_contribution = total_ad_revenue * 0.105
+
+    # Net Gross
+    net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves + charitable_contribution)
 
     # Allocations
     operating_capital = net_gross * 0.60 
