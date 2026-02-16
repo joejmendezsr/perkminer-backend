@@ -1349,39 +1349,55 @@ def finalize_transaction(interaction_id):
     if session.get('business_id') != interaction.business_id:
         abort(403)
 
-    business = interaction.business  # Make sure to update account_balance below
+    business = interaction.business
     now = datetime.now()
     summary = None
+
+    def find_top_business_with_user_sponsor(biz):
+        # climb to the topmost business in the upline chain
+        while biz and biz.sponsor_id:
+            parent = Business.query.get(biz.sponsor_id)
+            if parent:
+                biz = parent
+            else:
+                break
+        return biz
 
     if request.method == "POST":
         transaction_id = str(uuid.uuid4())
         data = request.form
         amount = float(data.get("amount", 0))
 
-        # --- USER: 2-4 = 0.25% ($6.25 cap), 5 = 2% ($50 cap), 1 = 2% ($50 cap) ---
+        # --- USER PAYOUT CHAIN (Root User commissions for all business levels) ---
         user_referral_id = interaction.user.referral_code or "REFjoejmendez"
-        u2 = User.query.filter_by(id=interaction.user.sponsor_id).first()
-        tier2_user_referral_id = u2.referral_code if u2 else "REFjoejmendez"
-        tier2_commission_raw = amount * 0.0025
-        tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
-
-        u3 = User.query.filter_by(id=u2.sponsor_id).first() if u2 and u2.sponsor_id else None
-        tier3_user_referral_id = u3.referral_code if u3 else "REFjoejmendez"
-        tier3_commission_raw = amount * 0.0025
-        tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
-
-        u4 = User.query.filter_by(id=u3.sponsor_id).first() if u3 and u3.sponsor_id else None
-        tier4_user_referral_id = u4.referral_code if u4 else "REFjoejmendez"
-        tier4_commission_raw = amount * 0.0025
-        tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
-
-        u5 = User.query.filter_by(id=u4.sponsor_id).first() if u4 and u4.sponsor_id else None
-        tier5_user_referral_id = u5.referral_code if u5 else "REFjoejmendez"
-        tier5_commission_raw = amount * 0.02
-        tier5_commission = round(min(tier5_commission_raw, 50), 2)
-
         user_cash_back_raw = amount * 0.02
         user_cash_back = round(min(user_cash_back_raw, 50), 2)  # Tier 1 cap $50
+
+        # Find the "Root User" (user sponsor of topmost business in the chain)
+        top_biz = find_top_business_with_user_sponsor(business)
+        root_user = User.query.get(top_biz.user_sponsor_id) if top_biz and top_biz.user_sponsor_id else None
+
+        # All user commission tiers go to the root user if one exists
+        if root_user:
+            tier2_user_referral_id = root_user.referral_code
+            tier3_user_referral_id = root_user.referral_code
+            tier4_user_referral_id = root_user.referral_code
+            tier5_user_referral_id = root_user.referral_code
+        else:
+            tier2_user_referral_id = None
+            tier3_user_referral_id = None
+            tier4_user_referral_id = None
+            tier5_user_referral_id = None
+
+        # User commissions (same for each tier, only root user gets them)
+        tier2_commission_raw = amount * 0.0025
+        tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
+        tier3_commission_raw = amount * 0.0025
+        tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
+        tier4_commission_raw = amount * 0.0025
+        tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
+        tier5_commission_raw = amount * 0.01  # Use 1% for user tier 5 if needed, else update to your rules
+        tier5_commission = round(min(tier5_commission_raw, 25), 2)
 
         user_trans = UserTransaction(
             transaction_id=transaction_id,
@@ -1391,37 +1407,37 @@ def finalize_transaction(interaction_id):
             user_referral_id=user_referral_id,
             cash_back=user_cash_back,
             tier2_user_referral_id=tier2_user_referral_id,
-            tier2_commission=tier2_commission,
+            tier2_commission=tier2_commission if tier2_user_referral_id else 0,
             tier3_user_referral_id=tier3_user_referral_id,
-            tier3_commission=tier3_commission,
+            tier3_commission=tier3_commission if tier3_user_referral_id else 0,
             tier4_user_referral_id=tier4_user_referral_id,
-            tier4_commission=tier4_commission,
+            tier4_commission=tier4_commission if tier4_user_referral_id else 0,
             tier5_user_referral_id=tier5_user_referral_id,
-            tier5_commission=tier5_commission
+            tier5_commission=tier5_commission if tier5_user_referral_id else 0
         )
         db.session.add(user_trans)
 
-        # --- BUSINESS: 2-4 = 0.25% ($6.25 cap), 5 = 1% ($25 cap), 1 = 1% ($25 cap) ---
+        # --- BUSINESS PAYOUT CHAIN ---
         business_referral_id = business.referral_code or "BIZPerkMiner"
         b2 = Business.query.filter_by(id=business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
         tier2_commission_raw = amount * 0.0025
-        tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
+        tier2_commission_biz = round(min(tier2_commission_raw, 6.25), 2)
 
         b3 = Business.query.filter_by(id=b2.sponsor_id).first() if b2 and b2.sponsor_id else None
         tier3_business_referral_id = b3.referral_code if b3 else "BIZPerkMiner"
         tier3_commission_raw = amount * 0.0025
-        tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
+        tier3_commission_biz = round(min(tier3_commission_raw, 6.25), 2)
 
         b4 = Business.query.filter_by(id=b3.sponsor_id).first() if b3 and b3.sponsor_id else None
         tier4_business_referral_id = b4.referral_code if b4 else "BIZPerkMiner"
         tier4_commission_raw = amount * 0.0025
-        tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
+        tier4_commission_biz = round(min(tier4_commission_raw, 6.25), 2)
 
         b5 = Business.query.filter_by(id=b4.sponsor_id).first() if b4 and b4.sponsor_id else None
         tier5_business_referral_id = b5.referral_code if b5 else "BIZPerkMiner"
         tier5_commission_raw = amount * 0.01
-        tier5_commission = round(min(tier5_commission_raw, 25), 2)
+        tier5_commission_biz = round(min(tier5_commission_raw, 25), 2)
 
         business_cash_back_raw = amount * 0.01
         business_cash_back = round(min(business_cash_back_raw, 25), 2)  # Tier 1 cap $25
@@ -1431,7 +1447,7 @@ def finalize_transaction(interaction_id):
         marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
         marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
 
-        # Deduct advertising fee from business account_balance
+        # Deduct the advertising fee from business account_balance
         business.account_balance = (business.account_balance or 0.0) - ad_fee
         db.session.commit()
 
@@ -1442,13 +1458,13 @@ def finalize_transaction(interaction_id):
             business_referral_id=business_referral_id,
             cash_back=business_cash_back,
             tier2_business_referral_id=tier2_business_referral_id,
-            tier2_commission=tier2_commission,
+            tier2_commission=tier2_commission_biz,
             tier3_business_referral_id=tier3_business_referral_id,
-            tier3_commission=tier3_commission,
+            tier3_commission=tier3_commission_biz,
             tier4_business_referral_id=tier4_business_referral_id,
-            tier4_commission=tier4_commission,
+            tier4_commission=tier4_commission_biz,
             tier5_business_referral_id=tier5_business_referral_id,
-            tier5_commission=tier5_commission
+            tier5_commission=tier5_commission_biz
         )
         db.session.add(business_trans)
         db.session.commit()
@@ -1461,23 +1477,23 @@ def finalize_transaction(interaction_id):
             "net_gross": f"{net_gross:.2f}",
             "marketing_roi": marketing_roi,
             "marketing_ratio": marketing_ratio,
-            "transaction_id": transaction_id,  # You can show this on receipts/exports if desired
+            "transaction_id": transaction_id,
             "tier2_user_referral_id": tier2_user_referral_id,
             "tier3_user_referral_id": tier3_user_referral_id,
             "tier4_user_referral_id": tier4_user_referral_id,
             "tier5_user_referral_id": tier5_user_referral_id,
-            "tier2_user_commission": f"{tier2_commission:.2f}",
-            "tier3_user_commission": f"{tier3_commission:.2f}",
-            "tier4_user_commission": f"{tier4_commission:.2f}",
-            "tier5_user_commission": f"{tier5_commission:.2f}",
+            "tier2_user_commission": f"{tier2_commission:.2f}" if tier2_user_referral_id else "0.00",
+            "tier3_user_commission": f"{tier3_commission:.2f}" if tier3_user_referral_id else "0.00",
+            "tier4_user_commission": f"{tier4_commission:.2f}" if tier4_user_referral_id else "0.00",
+            "tier5_user_commission": f"{tier5_commission:.2f}" if tier5_user_referral_id else "0.00",
             "tier2_business_referral_id": tier2_business_referral_id,
             "tier3_business_referral_id": tier3_business_referral_id,
             "tier4_business_referral_id": tier4_business_referral_id,
             "tier5_business_referral_id": tier5_business_referral_id,
-            "tier2_business_commission": f"{tier2_commission:.2f}",
-            "tier3_business_commission": f"{tier3_commission:.2f}",
-            "tier4_business_commission": f"{tier4_commission:.2f}",
-            "tier5_business_commission": f"{tier5_commission:.2f}",
+            "tier2_business_commission": f"{tier2_commission_biz:.2f}",
+            "tier3_business_commission": f"{tier3_commission_biz:.2f}",
+            "tier4_business_commission": f"{tier4_commission_biz:.2f}",
+            "tier5_business_commission": f"{tier5_commission_biz:.2f}",
         }
         flash("Transaction finalized and all rewards/commissions assigned!", "success")
 
