@@ -149,11 +149,11 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60), nullable=False)
     referral_code = db.Column(db.String(32), unique=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    business_referral_id = db.Column(db.String(32))
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
     name = db.Column(db.String(100))
     profile_photo = db.Column(db.String(200))
-    business_referral_id = db.Column(db.String(32))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
 
@@ -254,6 +254,7 @@ class UserTransaction(db.Model):
     tier4_commission = db.Column(db.Float, nullable=False)
     tier5_user_referral_id = db.Column(db.String(32), nullable=False)
     tier5_commission = db.Column(db.Float, nullable=False)
+    business_referral_id = db.Column(db.String(32))
 
 class BusinessTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
