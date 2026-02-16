@@ -1876,12 +1876,17 @@ def business_register():
             return redirect(url_for("business_register"))
         sponsor_id = None
         if referral_code:
+            # Search for sponsor in BOTH Business and User tables
             sponsor = Business.query.filter_by(referral_code=referral_code).first()
             if sponsor:
                 sponsor_id = sponsor.id
             else:
-                flash("Invalid referral code.")
-                return redirect(url_for("business_register"))
+                user_sponsor = User.query.filter_by(referral_code=referral_code).first()
+                if user_sponsor:
+                    sponsor_id = user_sponsor.id
+                else:
+                    flash("Invalid referral code.")
+                    return redirect(url_for("business_register"))
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         biz_ref_code = random_business_code(business_name)
         email_code = random_email_code()
