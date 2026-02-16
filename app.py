@@ -1090,11 +1090,13 @@ def user_earnings():
 
     transactions = all_txns.order_by(UserTransaction.date_time.desc()).all()
 
-    # Only show rows where this user received 2-5 commissions (from business network)
     filtered = []
     for t in transactions:
-        # Exclude cashback earned as a customer (i.e. as tier1)
         earned = False
+        # Show personal purchases (Tier 1, all purchases by this user)
+        if t.user_referral_id == ref_code and t.cash_back > 0:
+            earned = True
+        # User commissions from their user referral tree (users referring users)
         if t.tier2_user_referral_id == ref_code and t.tier2_commission > 0:
             earned = True
         if t.tier3_user_referral_id == ref_code and t.tier3_commission > 0:
@@ -1103,6 +1105,8 @@ def user_earnings():
             earned = True
         if t.tier5_user_referral_id == ref_code and t.tier5_commission > 0:
             earned = True
+        # User commissions from business downline (as you have now)
+        # This is already handled by the above filters if you record them as t.tierN_user_referral_id
         if earned:
             filtered.append(t)
     transactions = filtered
