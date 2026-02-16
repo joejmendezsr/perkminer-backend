@@ -168,6 +168,7 @@ class Business(db.Model):
     password = db.Column(db.String(60), nullable=False)
     referral_code = db.Column(db.String(32), unique=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('business.id'))
+    user_sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
     profile_photo = db.Column(db.String(200))
@@ -1875,15 +1876,15 @@ def business_register():
             flash("Business name already registered.")
             return redirect(url_for("business_register"))
         sponsor_id = None
+        user_sponsor_id = None
         if referral_code:
-            # Search for sponsor in BOTH Business and User tables
             sponsor = Business.query.filter_by(referral_code=referral_code).first()
             if sponsor:
                 sponsor_id = sponsor.id
             else:
                 user_sponsor = User.query.filter_by(referral_code=referral_code).first()
                 if user_sponsor:
-                    sponsor_id = user_sponsor.id
+                    user_sponsor_id = user_sponsor.id
                 else:
                     flash("Invalid referral code.")
                     return redirect(url_for("business_register"))
@@ -1896,6 +1897,7 @@ def business_register():
             password=hashed_pw,
             referral_code=biz_ref_code,
             sponsor_id=sponsor_id,
+            user_sponsor_id=user_sponsor_id,
             email_confirmed=False,
             email_code=email_code,
         )
