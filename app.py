@@ -153,6 +153,7 @@ class User(db.Model, UserMixin):
     email_code = db.Column(db.String(16))
     name = db.Column(db.String(100))
     profile_photo = db.Column(db.String(200))
+    business_referral_id = db.Column(db.String(32))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
 
@@ -1088,12 +1089,11 @@ def user_earnings():
 
     transactions = all_txns.order_by(UserTransaction.date_time.desc()).all()
 
-    # Only show rows where this user received Tier 1 or 2-5 commissions
+    # Only show rows where this user received 2-5 commissions (from business network)
     filtered = []
     for t in transactions:
+        # Exclude cashback earned as a customer (i.e. as tier1)
         earned = False
-        if t.user_referral_id == ref_code and t.cash_back > 0:
-            earned = True
         if t.tier2_user_referral_id == ref_code and t.tier2_commission > 0:
             earned = True
         if t.tier3_user_referral_id == ref_code and t.tier3_commission > 0:
@@ -1106,7 +1106,7 @@ def user_earnings():
             filtered.append(t)
     transactions = filtered
 
-    tier1_earnings = sum(t.cash_back for t in transactions if t.user_referral_id == ref_code)
+    # Compute total commissions
     tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_user_referral_id == ref_code)
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == ref_code)
     tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_user_referral_id == ref_code)
@@ -1114,22 +1114,25 @@ def user_earnings():
     commissions_total = tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
 
     summary = dict(
-        tier1_earnings=f"{tier1_earnings:,.2f}",
         tier2_earnings=f"{tier2_earnings:,.2f}",
         tier3_earnings=f"{tier3_earnings:,.2f}",
         tier4_earnings=f"{tier4_earnings:,.2f}",
         tier5_earnings=f"{tier5_earnings:,.2f}",
         commissions_total=f"{commissions_total:,.2f}",
-        total=f"{tier1_earnings + commissions_total:,.2f}",
+        total=f"{commissions_total:,.2f}",
         period=period,
         year=year,
         month=month
     )
 
+    # Optionally: build a business lookup for displaying business info in the template
+    business_lookup = {b.referral_code: b for b in Business.query.all()}
+
     return render_template(
         "user_earnings.html",
         transactions=transactions,
         summary=summary,
+        business_lookup=business_lookup,
         today=date.today(),
         period=period,
         year=year,
@@ -1379,6 +1382,7 @@ def finalize_transaction(interaction_id):
             transaction_id=transaction_id,
             interaction_id=interaction.id,
             amount=amount,
+            business_referral_id=business.referral_code,
             user_referral_id=user_referral_id,
             cash_back=user_cash_back,
             tier2_user_referral_id=tier2_user_referral_id,
