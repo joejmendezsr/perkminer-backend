@@ -56,6 +56,7 @@
     <thead class="table-light">
       <tr>
         <th>Date/Time</th>
+        <th>Tier 1<br>(2% Cash Back)</th>
         <th>Tier 2<br>(Commission)</th>
         <th>Tier 3<br>(Commission)</th>
         <th>Tier 4<br>(Commission)</th>
@@ -67,6 +68,11 @@
       {% for txn in transactions %}
       <tr>
         <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+        <td>
+          {% if txn.user_referral_id == current_user.referral_code and txn.cash_back > 0 %}
+              ${{ "{:,.2f}".format(txn.cash_back) }}
+          {% endif %}
+        </td>
         <td>
           {% if txn.tier2_user_referral_id == current_user.referral_code %}
               ${{ "{:,.2f}".format(txn.tier2_commission) }}
