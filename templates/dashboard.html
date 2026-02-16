@@ -216,6 +216,7 @@
   <div class="modal-dialog">
     <form class="modal-content" method="post" action="{{ url_for('invite') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="invitee_type" value="user">
       <div class="modal-header">
         <h5 class="modal-title" id="inviteModalLabel">Invite Others to Join PerkMiner</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -235,6 +236,7 @@
   <div class="modal-dialog">
     <form class="modal-content" method="post" action="{{ url_for('invite') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="invitee_type" value="business">
       <div class="modal-header">
         <h5 class="modal-title" id="inviteBusinessModalLabel">Invite a Business to Join PerkMiner</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

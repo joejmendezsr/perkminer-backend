@@ -884,28 +884,36 @@ def invite():
     if not invite_form.validate_on_submit():
         flash('Invalid form.')
         return redirect(url_for('dashboard'))
+
     invitee_email = invite_form.invitee_email.data.strip()
     inviter_name = current_user.name if current_user.name else current_user.email
+    invitee_type = request.form.get('invitee_type', 'user')  # New: type coming from form
 
-    # Create invite record
+    # Store the invite in the database (optional: add invitee_type)
     new_invite = Invite(
         inviter_id=current_user.id,
         inviter_type='user',
         invitee_email=invitee_email,
-        invitee_type='business',
+        invitee_type=invitee_type,
         referral_code=current_user.referral_code,
         status='pending'
     )
     db.session.add(new_invite)
     db.session.commit()
 
-    # Update: use business_register url for business invites!
-    reg_url = url_for('business_register', ref=current_user.referral_code, _external=True)
+    # Build the correct registration link
+    if invitee_type == 'business':
+        reg_url = url_for('business_register', ref=current_user.referral_code, _external=True)
+    else:
+        reg_url = url_for('register', ref=current_user.referral_code, _external=True)
     video_url = url_for('intro', ref=current_user.referral_code, _external=True)
     html_body = build_invite_email(inviter_name, reg_url, video_url)
     send_email(invitee_email, f"{inviter_name} has invited you to join PerkMiner.", html_body)
 
-    flash('Business invitation sent!')
+    flash(
+        'Business invitation sent!' if invitee_type == "business"
+        else 'User invitation sent!'
+    )
     return redirect(url_for('dashboard'))
 
 @app.route("/dashboard", methods=["GET", "POST"])
