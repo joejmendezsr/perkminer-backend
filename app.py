@@ -2946,8 +2946,6 @@ def view_listing(biz_id):
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
 
-from datetime import datetime
-
 @app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
 def combined_detailed_report():
@@ -2974,7 +2972,7 @@ def combined_detailed_report():
         uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
         bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
 
-    # Interaction ID filtering (primary)
+    # Interaction ID filtering
     if interaction_id:
         uq = uq.filter(UserTransaction.interaction_id == interaction_id)
         bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
@@ -2996,15 +2994,26 @@ def combined_detailed_report():
 
     # Grand/summaries (from business table only)
     grand_total = sum(t.amount for t in btrans)
-    total_ad_fee = sum(t.amount * 0.10 for t in btrans)
+    total_ad_fee = sum(t.amount * 0.10 if t.amount * 0.10 < 250 else 250 for t in btrans)  # Capped ad fee
     total_user_cash_back = sum(t.cash_back for t in utrans)
     total_user_commission = sum(
-        t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in utrans
+        (t.tier2_commission or 0) + (t.tier3_commission or 0) + (t.tier4_commission or 0) + (t.tier5_commission or 0)
+        for t in utrans
+    )
+    # User-Business commissions summary (new field!)
+    total_user_business_commission = sum(
+        (t.tier1_business_user_commission or 0) +
+        (t.tier2_business_user_commission or 0) +
+        (t.tier3_business_user_commission or 0) +
+        (t.tier4_business_user_commission or 0) +
+        (t.tier5_business_user_commission or 0)
+        for t in utrans
     )
     total_biz_cash_back = sum(
-        t.cash_back + t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in btrans
+        t.cash_back + (t.tier2_commission or 0) + (t.tier3_commission or 0) + (t.tier4_commission or 0) + (t.tier5_commission or 0)
+        for t in btrans
     )
-    total_paid_all = total_user_cash_back + total_user_commission + total_biz_cash_back
+    total_paid_all = total_user_cash_back + total_user_commission + total_user_business_commission + total_biz_cash_back
 
     return render_template(
         "combined_detailed_report.html",
@@ -3016,6 +3025,7 @@ def combined_detailed_report():
         total_ad_fee=total_ad_fee,
         total_user_cash_back=total_user_cash_back,
         total_user_commission=total_user_commission,
+        total_user_business_commission=total_user_business_commission,
         total_biz_cash_back=total_biz_cash_back,
         total_paid_all=total_paid_all,
         period=period,
