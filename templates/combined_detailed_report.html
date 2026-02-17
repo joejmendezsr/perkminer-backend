@@ -56,6 +56,7 @@
     <b>Total Advertising Fee:</b> ${{ "{:,.2f}".format(total_ad_fee) }}<br>
     <b>Total Paid to Users: Cashback (Tier 1):</b> ${{ "{:,.2f}".format(total_user_cash_back) }}<br>
     <b>Total Paid to Users: Commissions (Tiers 2-5):</b> ${{ "{:,.2f}".format(total_user_commission) }}<br>
+    <b>Total Paid to Users: User-Business Commission (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_user_business_commission) }}<br>
     <b>Total Paid to Businesses (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_biz_cash_back) }}<br>
     <b>Grand Total Paid Out:</b> ${{ "{:,.2f}".format(total_paid_all) }}
   </div>
@@ -73,6 +74,11 @@
           <th>Tier 3 Commission</th>
           <th>Tier 4 Commission</th>
           <th>Tier 5 Commission</th>
+          <th>Tier 1 User-Biz</th>
+          <th>Tier 2 User-Biz</th>
+          <th>Tier 3 User-Biz</th>
+          <th>Tier 4 User-Biz</th>
+          <th>Tier 5 User-Biz</th>
           <th>Business Referral ID</th>
           <th>Business Name</th>
           <th>Business Email</th>
@@ -97,6 +103,11 @@
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
+          <td>${{ "{:,.2f}".format(t.tier1_business_user_commission or 0) }}</td>
+          <td>${{ "{:,.2f}".format(t.tier2_business_user_commission or 0) }}</td>
+          <td>${{ "{:,.2f}".format(t.tier3_business_user_commission or 0) }}</td>
+          <td>${{ "{:,.2f}".format(t.tier4_business_user_commission or 0) }}</td>
+          <td>${{ "{:,.2f}".format(t.tier5_business_user_commission or 0) }}</td>
           <td></td><td></td><td></td>
           <td></td><td></td><td></td><td></td><td></td>
           <td>{{ t.transaction_id }}</td>
@@ -107,6 +118,7 @@
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ t.interaction_id }}</td>
           <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          <td></td><td></td><td></td><td></td><td></td>
           <td>{{ t.business_referral_id }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
