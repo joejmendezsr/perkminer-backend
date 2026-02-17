@@ -258,131 +258,130 @@
       </div>
     </div>
 
-    <!-- Profile Edit Section -->
-    <div class="collapse mb-4" id="profileCollapse">
-      <div class="card p-4">
-        <h4>Your Profile</h4>
-<form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <!-- Profile Photo -->
-  <div class="col-12 mb-3 text-center">
-    {% if profile_img_url %}
-      <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
-    {% else %}
-      <div class="placeholder-pic">No Image</div>
-    {% endif %}
-    <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
-  </div>
+<!-- Profile Edit Section -->
+<div class="collapse mb-4" id="profileCollapse">
+  <div class="card p-4">
+    <h4>Your Profile</h4>
+    <form method="post" enctype="multipart/form-data" class="row g-3 align-items-center" id="profile-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <!-- Profile Photo -->
+      <div class="col-12 mb-3 text-center">
+        {% if profile_img_url %}
+          <img src="{{ profile_img_url }}" alt="Profile Photo" class="rounded-circle profile-pic">
+        {% else %}
+          <div class="placeholder-pic">No Image</div>
+        {% endif %}
+        <input type="file" name="profile_photo" accept="image/*" class="form-control mt-2">
+      </div>
 
-  <!-- Business Name -->
-  <div class="col-12 mb-3">
-    <label class="form-label">Business Name</label>
-    <input type="text" class="form-control" name="business_name" value="{{ form_data.business_name }}" placeholder="Enter your business name">
-  </div>
+      <!-- Business Name -->
+      <div class="col-12 mb-3">
+        <label class="form-label">Business Name</label>
+        <input type="text" class="form-control" name="business_name" value="{{ form_data.business_name or '' }}" placeholder="Enter your business name">
+      </div>
 
-  <!-- Phone Number -->
-  <div class="col-12 mb-3">
-    <label class="form-label">Phone Number</label>
-    <input type="text" class="form-control" id="us-phone" name="phone_number" value="{{ form_data.phone_number }}" placeholder="(555) 555-5555">
-    <div class="form-text">Format: (555) 555-5555</div>
-  </div>
+      <!-- Phone Number -->
+      <div class="col-12 mb-3">
+        <label class="form-label">Phone Number</label>
+        <input type="text" class="form-control" id="us-phone" name="phone_number" value="{{ form_data.phone_number or '' }}" placeholder="(555) 555-5555">
+        <div class="form-text">Format: (555) 555-5555</div>
+      </div>
 
-  <!-- Business Address -->
-  <div class="col-12 mb-3">
-    <label class="form-label">Business Address</label>
-    <input type="text" class="form-control" id="address-autocomplete" name="address" value="{{ form_data.address }}" placeholder="Business address" autocomplete="off">
-  </div>
+      <!-- Business Address -->
+      <div class="col-12 mb-3">
+        <label class="form-label">Business Address</label>
+        <input type="text" class="form-control" id="address-autocomplete" name="address" value="{{ form_data.address or '' }}" placeholder="Business address" autocomplete="off">
+      </div>
 
-<!-- Address with Map in Profile Form -->
-<div class="col-12 mb-3">
-  <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
-  <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
-  <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
-  <div id="profile-map" style="width:100%; height:300px; border-radius:8px; margin-bottom:12px;"></div>
+      <!-- Address with Map in Profile Form -->
+      <div class="col-12 mb-3">
+        <input type="hidden" name="latitude" id="latitude" value="{{ latitude or '' }}">
+        <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
+        <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
+        <div id="profile-map" style="width:100%; height:300px; border-radius:8px; margin-bottom:12px;"></div>
+      </div>
+
+      <div class="col-12 mb-3">
+        <label class="form-label">Website</label>
+        <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
+               value="{{ form_data.website_url or '' }}" placeholder="https://your-website.com">
+      </div>
+
+      <!-- Services Offered Collapse -->
+      <div class="col-12 mt-3">
+        <button class="btn btn-outline-primary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
+          Products or Services Offered (10 max)
+          <br>(click to add product types and services)
+        </button>
+        <div class="collapse mt-2" id="servicesCollapse">
+          <div id="services-list">
+            {% set services = [
+              form_data.service_1 or '',
+              form_data.service_2 or '',
+              form_data.service_3 or '',
+              form_data.service_4 or '',
+              form_data.service_5 or '',
+              form_data.service_6 or '',
+              form_data.service_7 or '',
+              form_data.service_8 or '',
+              form_data.service_9 or '',
+              form_data.service_10 or ''
+            ] %}
+            {% for s in range(0, 10) %}
+              {% if services[s] or s < 2 %}
+                <div class="input-group mb-2 service-field" data-index="{{ s }}">
+                  <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
+                  <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <button class="btn btn-outline-primary" type="button" id="addServiceBtn">+ Add Service</button>
+          <small class="text-muted d-block mt-1">Max 10 services.</small>
+        </div>
+      </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">About Us</label>
+        <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ form_data.about_us or '' }}</textarea>
+        <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
+      </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">Listing Type <span class="text-danger">*</span></label>
+        <select class="form-select" name="listing_type" required>
+          <option value="">Select listing type...</option>
+          <option value="Seller" {% if form_data.listing_type == 'Seller' %}selected{% endif %}>Seller</option>
+          <option value="Service Provider" {% if form_data.listing_type == 'Service Provider' %}selected{% endif %}>Service Provider</option>
+          <option value="Lead Generation" {% if form_data.listing_type == 'Lead Generation' %}selected{% endif %}>Lead Generation</option>
+          <option value="Seller and Service Provider" {% if form_data.listing_type == 'Seller and Service Provider' %}selected{% endif %}>Seller and Service Provider</option>
+        </select>
+      </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">Category</label>
+        <select class="form-select" name="category" id="business_category" required>
+          <option value="">Select category...</option>
+          <option value="Handyman-Contractor" {% if form_data.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
+          <option value="Auto Parts & Service" {% if form_data.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
+          <option value="Home and Garden" {% if form_data.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
+          <option value="Retail Outlet" {% if form_data.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
+          <option value="Professional Services" {% if form_data.category == 'Professional Services' %}selected{% endif %}>Professional Services</option>
+          <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
+          <option value="Real Estate" {% if form_data.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+          <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      <!-- Keywords -->
+      <div class="col-12 mt-3">
+        <label class="form-label">Keywords (for search, separated by commas)</label>
+        <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ form_data.search_keywords or '' }}" placeholder="e.g. roofing,solar,energy">
+        <div class="form-text">Up to 20 keywords (comma-separated).</div>
+      </div>
+      <div class="col-12 mt-3 d-flex gap-2">
+        {{ profile_form.submit(class="btn btn-success") }}
+      </div>
+    </form>
+  </div>
 </div>
-
-  <div class="col-12 mb-3">
-    <label class="form-label">Website</label>
-    <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
-           value="{{ form_data.website_url }}" placeholder="https://your-website.com">
-  </div>
-
-  <!-- Services Offered Collapse -->
-  <div class="col-12 mt-3">
-   <button class="btn btn-outline-primary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#servicesCollapse" aria-expanded="false" aria-controls="servicesCollapse">
-     Products or Services Offered (10 max)
-     <br>(click to add product types and services)
-   </button>
-    <div class="collapse mt-2" id="servicesCollapse">
-      <div id="services-list">
-        {% set services = [
-          form_data.service_1,
-          form_data.service_2,
-          form_data.service_3,
-          form_data.service_4,
-          form_data.service_5,
-          form_data.service_6,
-          form_data.service_7,
-          form_data.service_8,
-          form_data.service_9,
-          form_data.service_10
-        ] %}
-        {% for s in range(0, 10) %}
-          {% if services[s] or s < 2 %}
-            <div class="input-group mb-2 service-field" data-index="{{ s }}">
-              <input type="text" class="form-control" name="service_{{ s+1 }}" maxlength="100" placeholder="Service #{{ s+1 }}" value="{{ services[s] }}">
-              <button class="btn btn-outline-danger service-remove" type="button" onclick="removeService(this)" {% if s < 2 %}disabled{% endif %}>&minus;</button>
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-      <button class="btn btn-outline-primary" type="button" id="addServiceBtn">+ Add Service</button>
-      <small class="text-muted d-block mt-1">Max 10 services.</small>
-    </div>
-  </div>
-  <div class="col-12 mb-3">
-    <label class="form-label">About Us</label>
-    <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ form_data.about_us }}</textarea>
-    <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
-  </div>
-  <div class="col-12 mb-3">
-    <label class="form-label">Listing Type <span class="text-danger">*</span></label>
-    <select class="form-select" name="listing_type" required>
-      <option value="">Select listing type...</option>
-      <option value="Seller" {% if form_data.listing_type == 'Seller' %}selected{% endif %}>Seller</option>
-      <option value="Service Provider" {% if form_data.listing_type == 'Service Provider' %}selected{% endif %}>Service Provider</option>
-      <option value="Lead Generation" {% if form_data.listing_type == 'Lead Generation' %}selected{% endif %}>Lead Generation</option>
-      <option value="Seller and Service Provider" {% if form_data.listing_type == 'Seller and Service Provider' %}selected{% endif %}>Seller and Service Provider</option>
-    </select>
-  </div>
-  <div class="col-12 mb-3">
-    <label class="form-label">Category</label>
-    <select class="form-select" name="category" id="business_category" required>
-      <option value="">Select category...</option>
-      <option value="Handyman-Contractor" {% if form_data.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
-      <option value="Auto Parts & Service" {% if form_data.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
-      <option value="Home and Garden" {% if form_data.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
-      <option value="Retail Outlet" {% if form_data.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
-      <option value="Professional Services" {% if form_data.category == 'Professional Services' %}selected{% endif %}>Professional Services</option>
-      <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
-      <option value="Real Estate" {% if form_data.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
-      <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
-    </select>
-  </div>
-  <!-- Keywords -->
-  <div class="col-12 mt-3">
-    <label class="form-label">Keywords (for search, separated by commas)</label>
-    <input type="text" class="form-control" id="search_keywords" name="search_keywords" maxlength="500" value="{{ form_data.search_keywords }}" placeholder="e.g. roofing,solar,energy">
-    <div class="form-text">Up to 20 keywords (comma-separated).</div>
-  </div>
-
-  <div class="col-12 mt-3 d-flex gap-2">
-    {{ profile_form.submit(class="btn btn-success") }}
-  </div>
-</form>
-      </div>
-    </div>
-  </div> <!-- end .card.mb-4.p-4 (dashboard main card) -->
+<!-- end .card.mb-4.p-4 (dashboard main card) -->
 
   <!-- Referral Code Section -->
   <div class="card p-4 mb-4">
@@ -407,7 +406,7 @@
     <div class="card p-4 mb-4">
     <h4>Your Business Activity</h4>
       <div>
-        <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary mb-2">View Receipts</a>
+        <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary mb-2">View Invoices</a>
         <a href="{{ url_for('business_earnings') }}" class="btn btn-outline-success mb-2">
           <i class="bi bi-graph-up"></i> View Earnings
         </a>
