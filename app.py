@@ -1624,7 +1624,7 @@ def finalize_transaction(interaction_id):
 
         business_cash_back_raw = amount * 0.01
         business_cash_back = round(min(business_cash_back_raw, 25), 2)
-        ad_fee = round(amount * 0.10, 2)
+        ad_fee = round(amount * 0.10, 2), 250.00)
         net_gross = round(amount - ad_fee, 2)
         marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
         marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
