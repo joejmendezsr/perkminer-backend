@@ -45,11 +45,22 @@
     <b>Grand Total Earned:</b> ${{ summary.total }}<br>
     <b>2% Cash Back (Self/Tier 1):</b> ${{ summary.tier1_earnings }}<br>
     <b>Total Commission (Tiers 2-5):</b> ${{ summary.commissions_total }}<br>
+    {% if has_invited_business %}
+      <b>Total User-Business Commission (Tiers 1-5):</b> ${{ summary.total_user_business_commission }}<br>
+    {% endif %}
     <hr>
     <b>Tier 2 (Commission):</b> ${{ summary.tier2_earnings }}<br>
     <b>Tier 3 (Commission):</b> ${{ summary.tier3_earnings }}<br>
     <b>Tier 4 (Commission):</b> ${{ summary.tier4_earnings }}<br>
     <b>Tier 5 (Commission):</b> ${{ summary.tier5_earnings }}<br>
+    {% if has_invited_business %}
+      <hr>
+      <b>Tier 1 User-Business Commission:</b> ${{ summary.tier1_user_business_earnings }}<br>
+      <b>Tier 2 User-Business Commission:</b> ${{ summary.tier2_user_business_earnings }}<br>
+      <b>Tier 3 User-Business Commission:</b> ${{ summary.tier3_user_business_earnings }}<br>
+      <b>Tier 4 User-Business Commission:</b> ${{ summary.tier4_user_business_earnings }}<br>
+      <b>Tier 5 User-Business Commission:</b> ${{ summary.tier5_user_business_earnings }}<br>
+    {% endif %}
   </div>
 <div class="table-responsive">
   <table class="table table-bordered align-middle" id="receipts-table">
@@ -61,6 +72,13 @@
         <th>Tier 3<br>(Commission)</th>
         <th>Tier 4<br>(Commission)</th>
         <th>Tier 5<br>(Commission)</th>
+        {% if has_invited_business %}
+          <th>Tier 1<br>User-Business Commission</th>
+          <th>Tier 2<br>User-Business Commission</th>
+          <th>Tier 3<br>User-Business Commission</th>
+          <th>Tier 4<br>User-Business Commission</th>
+          <th>Tier 5<br>User-Business Commission</th>
+        {% endif %}
         <th>From Business</th>
       </tr>
     </thead>
@@ -93,6 +111,33 @@
               ${{ "{:,.2f}".format(txn.tier5_commission) }}
           {% endif %}
         </td>
+        {% if has_invited_business %}
+        <td>
+          {% if txn.tier1_business_user_referral_id == current_user.referral_code and txn.tier1_business_user_commission > 0 %}
+              ${{ "{:,.2f}".format(txn.tier1_business_user_commission) }}
+          {% endif %}
+        </td>
+        <td>
+          {% if txn.tier2_business_user_referral_id == current_user.referral_code and txn.tier2_business_user_commission > 0 %}
+              ${{ "{:,.2f}".format(txn.tier2_business_user_commission) }}
+          {% endif %}
+        </td>
+        <td>
+          {% if txn.tier3_business_user_referral_id == current_user.referral_code and txn.tier3_business_user_commission > 0 %}
+              ${{ "{:,.2f}".format(txn.tier3_business_user_commission) }}
+          {% endif %}
+        </td>
+        <td>
+          {% if txn.tier4_business_user_referral_id == current_user.referral_code and txn.tier4_business_user_commission > 0 %}
+              ${{ "{:,.2f}".format(txn.tier4_business_user_commission) }}
+          {% endif %}
+        </td>
+        <td>
+          {% if txn.tier5_business_user_referral_id == current_user.referral_code and txn.tier5_business_user_commission > 0 %}
+              ${{ "{:,.2f}".format(txn.tier5_business_user_commission) }}
+          {% endif %}
+        </td>
+        {% endif %}
         <td>
           {% if business_lookup and txn.business_referral_id %}
             {{ business_lookup[txn.business_referral_id].business_name if txn.business_referral_id in business_lookup else txn.business_referral_id }}
