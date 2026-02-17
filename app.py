@@ -1493,8 +1493,6 @@ def fund_account():
 
     return render_template("fund_account.html", account_balance=account_balance)
 
-from datetime import datetime
-
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
 def finalize_transaction(interaction_id):
@@ -1520,7 +1518,7 @@ def finalize_transaction(interaction_id):
         data = request.form
         amount = float(data.get("amount", 0))
 
-        # User-to-user chain (unchanged from your working logic)
+        # User-to-user chain (leave as working)
         user_referral_id = interaction.user.referral_code or "REFjoejmendez"
         user_cash_back_raw = amount * 0.02
         user_cash_back = round(min(user_cash_back_raw, 50), 2)
@@ -1543,7 +1541,7 @@ def finalize_transaction(interaction_id):
         tier5_commission_raw = amount * 0.02
         tier5_commission = round(min(tier5_commission_raw, 50), 2)
 
-        # ---------- USER BUSINESS DOWNLINE LOGIC -------------
+        # ---------- USER BUSINESS DOWNLINE LOGIC (WITH CAPS) -------------
         top_biz = find_top_business_with_user_sponsor(business)
         root_user = User.query.get(top_biz.user_sponsor_id) if top_biz and top_biz.user_sponsor_id else None
 
@@ -1552,9 +1550,8 @@ def finalize_transaction(interaction_id):
         while b:
             business_chain.insert(0, b)
             b = Business.query.get(b.sponsor_id) if b.sponsor_id else None
-        downline_tier = len(business_chain)  # 1=root; 2=child, 3=grandchild, etc.
+        downline_tier = len(business_chain)
 
-        # Set all user-business commission fields, only for matching downline tier
         tier1_business_user_referral_id = None; tier1_business_user_commission = 0
         tier2_business_user_referral_id = None; tier2_business_user_commission = 0
         tier3_business_user_referral_id = None; tier3_business_user_commission = 0
@@ -1564,19 +1561,19 @@ def finalize_transaction(interaction_id):
         if root_user:
             if downline_tier == 1:
                 tier1_business_user_referral_id = root_user.referral_code
-                tier1_business_user_commission = round(amount * 0.01, 2)
+                tier1_business_user_commission = round(min(amount * 0.01, 25), 2)
             elif downline_tier == 2:
                 tier2_business_user_referral_id = root_user.referral_code
-                tier2_business_user_commission = round(amount * 0.0025, 2)
+                tier2_business_user_commission = round(min(amount * 0.0025, 6.25), 2)
             elif downline_tier == 3:
                 tier3_business_user_referral_id = root_user.referral_code
-                tier3_business_user_commission = round(amount * 0.0025, 2)
+                tier3_business_user_commission = round(min(amount * 0.0025, 6.25), 2)
             elif downline_tier == 4:
                 tier4_business_user_referral_id = root_user.referral_code
-                tier4_business_user_commission = round(amount * 0.0025, 2)
+                tier4_business_user_commission = round(min(amount * 0.0025, 6.25), 2)
             elif downline_tier == 5:
                 tier5_business_user_referral_id = root_user.referral_code
-                tier5_business_user_commission = round(amount * 0.01, 2)
+                tier5_business_user_commission = round(min(amount * 0.01, 25), 2)
 
         user_trans = UserTransaction(
             transaction_id=transaction_id,
@@ -1593,7 +1590,6 @@ def finalize_transaction(interaction_id):
             tier4_commission=tier4_commission,
             tier5_user_referral_id=tier5_user_referral_id,
             tier5_commission=tier5_commission,
-            # All user_business commission fields:
             tier1_business_user_referral_id=tier1_business_user_referral_id,
             tier1_business_user_commission=tier1_business_user_commission,
             tier2_business_user_referral_id=tier2_business_user_referral_id,
@@ -1607,7 +1603,7 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(user_trans)
 
-        # --- BUSINESS CHAIN PAYOUTS (unchanged from your working logic) ---
+        # --- BUSINESS CHAIN PAYOUTS (unchanged) ---
         business_referral_id = business.referral_code or "BIZPerkMiner"
         b2 = Business.query.filter_by(id=business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
