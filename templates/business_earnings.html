@@ -100,10 +100,8 @@
                 ${{ "{:,.2f}".format(txn.tier5_commission) }}
             {% endif %}
           </td>
-          {% set ad_fee_raw = txn.amount * 0.10 %}
-          {% set ad_fee = ad_fee_raw if ad_fee_raw < 250 else 250 %}
-          <td>${{ "{:,.2f}".format(ad_fee) }}</td>
-          {% set net_gross = txn.amount - ad_fee %}
+          <td>${{ "{:,.2f}".format(txn.ad_fee or 0) }}</td>
+          {% set net_gross = txn.amount - (txn.ad_fee or 0) %}
           <td>${{ "{:,.2f}".format(net_gross) }}</td>
           <td>
             {{ txn.business_referral_id }}

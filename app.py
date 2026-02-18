@@ -217,6 +217,7 @@ class Business(db.Model):
     draft_service_10 = db.Column(db.String(100))
     draft_search_keywords = db.Column(db.String(500))
     account_balance = db.Column(db.Float, nullable=False, default=0.0)
+    ad_fee = db.Column(db.Float)
 
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
@@ -285,6 +286,7 @@ class BusinessTransaction(db.Model):
     tier4_commission = db.Column(db.Float, nullable=False)
     tier5_business_referral_id = db.Column(db.String(32), nullable=False)
     tier5_commission = db.Column(db.Float, nullable=False)
+    ad_fee = db.Column(db.Float)
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1632,6 +1634,7 @@ def finalize_transaction(interaction_id):
             transaction_id=transaction_id,
             interaction_id=interaction.id,
             amount=amount,
+            ad_fee=ad_fee,
             business_referral_id=business_referral_id,
             cash_back=business_cash_back,
             tier2_business_referral_id=tier2_business_referral_id,
@@ -2990,7 +2993,7 @@ def combined_detailed_report():
 
     # Grand/summaries (from business table only)
     grand_total = sum(t.amount for t in btrans)
-    total_ad_fee = sum(t.amount * 0.10 if t.amount * 0.10 < 250 else 250 for t in btrans)  # Capped ad fee
+    total_ad_fee = sum(min(t.amount * 0.10, 250) for t in btrans)
     total_user_cash_back = sum(t.cash_back for t in utrans)
     total_user_commission = sum(
         (t.tier2_commission or 0) + (t.tier3_commission or 0) + (t.tier4_commission or 0) + (t.tier5_commission or 0)

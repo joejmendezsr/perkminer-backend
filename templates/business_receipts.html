@@ -48,7 +48,7 @@
           <th>Date/Time</th>
           <th>Interaction ID</th>
           <th>Sale Amount</th>
-          <th>Ad Fee (10%)</th>
+          <th>Ad Fee (10%, capped $250)</th>
           <th>Net Gross</th>
           <th>Marketing ROI</th>
           <th>Marketing ROI Ratio</th>
@@ -61,21 +61,19 @@
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ txn.interaction_id }}</td>
           <td>${{ "{:,.2f}".format(txn.amount) }}</td>
-          {% set ad_fee_raw = txn.amount * 0.10 %}
-          {% set ad_fee = ad_fee_raw if ad_fee_raw < 250 else 250 %}
           <td>
-            ${{ "{:,.2f}".format(ad_fee) }}
+            ${{ "{:,.2f}".format(txn.ad_fee or 0) }}
           </td>
           <td>
-            {% set net_gross = txn.amount - ad_fee %}
+            {% set net_gross = txn.amount - (txn.ad_fee or 0) %}
             ${{ "{:,.2f}".format(net_gross) }}
           </td>
           <td>
-            {% set roi = (net_gross/ad_fee)*100 if ad_fee else 0 %}
+            {% set roi = (net_gross / (txn.ad_fee or 1)) * 100 if txn.ad_fee else 0 %}
             {{ roi | round(0) }}%
           </td>
           <td>
-            {% set ratio = (net_gross+ad_fee)/ad_fee if ad_fee else 0 %}
+            {% set ratio = (net_gross + (txn.ad_fee or 0)) / (txn.ad_fee or 1) if txn.ad_fee else 0 %}
             {{ ratio|round(1) }}:1
           </td>
           <td>${{ "{:,.2f}".format(txn.cash_back) }}</td>
