@@ -61,8 +61,9 @@
           <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ txn.interaction_id }}</td>
           <td>${{ "{:,.2f}".format(txn.amount) }}</td>
+          {% set ad_fee_raw = txn.amount * 0.10 %}
+          {% set ad_fee = ad_fee_raw if ad_fee_raw < 250 else 250 %}
           <td>
-            {% set ad_fee = txn.amount * 0.10 %}
             ${{ "{:,.2f}".format(ad_fee) }}
           </td>
           <td>
