@@ -2859,7 +2859,7 @@ def finance_dashboard():
     btxns = bqry.all()
     utxns = uqry.all()
 
-    total_ad_revenue = sum(t.amount * 0.10 for t in btxns)
+    total_ad_revenue = sum(min(t.amount * 0.10, 250) for t in btxns)
     total_transactions = len(btxns)
 
     # Add in ALL user-business commissions in total_paid_members
