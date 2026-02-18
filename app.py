@@ -1066,28 +1066,50 @@ def user_receipts():
     # Optionally join/query interaction/business for each transaction
     return render_template("user_receipts.html", transactions=transactions)
 
-@app.route("/user/receipts/export/csv")
+@app.route("/export_user_receipts_csv")
 @login_required
 def export_user_receipts_csv():
-    transactions = UserTransaction.query.filter_by(
-        user_referral_id=current_user.referral_code
-    ).order_by(UserTransaction.date_time.desc()).all()
+    user = current_user
+    ref_code = user.referral_code
 
+    transactions = UserTransaction.query.filter_by(user_referral_id=ref_code).order_by(UserTransaction.date_time.desc()).all()
+
+    import csv
+    from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Date/Time','Business','Amount','Cashback (2%)'])
-    for txn in transactions:
-        business_name = txn.interaction.business.business_name if txn.interaction and txn.interaction.business else "N/A"
+
+    # Header
+    writer.writerow([f"Receipts for '{user.name or user.email}' from Perk Miner"])
+    writer.writerow([])
+
+    # Table headers
+    writer.writerow([
+        "Date/Time",
+        "Transaction ID",
+        "Amount",
+        "Tier 1 (2% Cash Back)",
+        "Tier 2 (Commission)",
+        "Tier 3 (Commission)",
+        "Tier 4 (Commission)",
+        "Tier 5 (Commission)"
+    ])
+    for t in transactions:
         writer.writerow([
-            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            business_name,
-            f"{txn.amount:.2f}",
-            f"{txn.cash_back:.2f}"
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            t.transaction_id,
+            f"{t.amount:,.2f}",
+            f"{t.cash_back:,.2f}" if t.user_referral_id == ref_code else "",
+            f"{t.tier2_commission:,.2f}" if t.tier2_user_referral_id == ref_code else "",
+            f"{t.tier3_commission:,.2f}" if t.tier3_user_referral_id == ref_code else "",
+            f"{t.tier4_commission:,.2f}" if t.tier4_user_referral_id == ref_code else "",
+            f"{t.tier5_commission:,.2f}" if t.tier5_user_referral_id == ref_code else "",
         ])
 
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":"attachment;filename=user_receipts.csv"})
+    return Response(output, mimetype="text/csv", headers={
+        "Content-Disposition": f"attachment;filename=user_receipts_{user.referral_code}.csv"
+    })
 
 @app.route("/user/earnings", methods=["GET"])
 @login_required
@@ -1218,44 +1240,160 @@ def user_earnings():
         month=month
     )
 
-@app.route("/user/earnings/export/csv")
+@app.route("/export_user_earnings_csv")
 @login_required
 def export_user_earnings_csv():
+    user = current_user
+    ref_code = user.referral_code
+
     period = request.args.get("period", "all")
     year = int(request.args.get("year", 0)) if request.args.get("year") else 0
     month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
-    qry = UserTransaction.query
+    all_txns = UserTransaction.query
+
     if period == "year" and year:
-        qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+        all_txns = all_txns.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
     elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
-            end = datetime(year + 1, 1, 1)
+            end = datetime(year+1, 1, 1)
         else:
-            end = datetime(year, month + 1, 1)
-        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+            end = datetime(year, month+1, 1)
+        all_txns = all_txns.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+    transactions = all_txns.order_by(UserTransaction.date_time.desc()).all()
 
-    transactions = qry.order_by(UserTransaction.date_time.desc()).all()
-    ref_code = current_user.referral_code
+    # Only include transactions where this user earned something
+    filtered = []
+    for t in transactions:
+        earned = False
+        # Any tier
+        if t.user_referral_id == ref_code and t.cash_back > 0:
+            earned = True
+        if t.tier2_user_referral_id == ref_code and t.tier2_commission > 0:
+            earned = True
+        if t.tier3_user_referral_id == ref_code and t.tier3_commission > 0:
+            earned = True
+        if t.tier4_user_referral_id == ref_code and t.tier4_commission > 0:
+            earned = True
+        if t.tier5_user_referral_id == ref_code and t.tier5_commission > 0:
+            earned = True
+        if t.tier1_business_user_referral_id == ref_code and t.tier1_business_user_commission > 0:
+            earned = True
+        if t.tier2_business_user_referral_id == ref_code and t.tier2_business_user_commission > 0:
+            earned = True
+        if t.tier3_business_user_referral_id == ref_code and t.tier3_business_user_commission > 0:
+            earned = True
+        if t.tier4_business_user_referral_id == ref_code and t.tier4_business_user_commission > 0:
+            earned = True
+        if t.tier5_business_user_referral_id == ref_code and t.tier5_business_user_commission > 0:
+            earned = True
+        if earned:
+            filtered.append(t)
+    transactions = filtered
 
+    # Summary (like on page)
+    tier1_earnings = sum(
+        t.cash_back for t in transactions
+        if t.user_referral_id == ref_code and t.cash_back > 0
+    )
+    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_user_referral_id == ref_code)
+    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_user_referral_id == ref_code)
+    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_user_referral_id == ref_code)
+    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_user_referral_id == ref_code)
+    commissions_total = tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+
+    # User-Business commissions
+    tier1_user_business_earnings = sum(
+        t.tier1_business_user_commission for t in transactions
+        if t.tier1_business_user_referral_id == ref_code and t.tier1_business_user_commission > 0
+    )
+    tier2_user_business_earnings = sum(
+        t.tier2_business_user_commission for t in transactions
+        if t.tier2_business_user_referral_id == ref_code and t.tier2_business_user_commission > 0
+    )
+    tier3_user_business_earnings = sum(
+        t.tier3_business_user_commission for t in transactions
+        if t.tier3_business_user_referral_id == ref_code and t.tier3_business_user_commission > 0
+    )
+    tier4_user_business_earnings = sum(
+        t.tier4_business_user_commission for t in transactions
+        if t.tier4_business_user_referral_id == ref_code and t.tier4_business_user_commission > 0
+    )
+    tier5_user_business_earnings = sum(
+        t.tier5_business_user_commission for t in transactions
+        if t.tier5_business_user_referral_id == ref_code and t.tier5_business_user_commission > 0
+    )
+    total_user_business_commission = (
+        tier1_user_business_earnings +
+        tier2_user_business_earnings +
+        tier3_user_business_earnings +
+        tier4_user_business_earnings +
+        tier5_user_business_earnings
+    )
+    total_all = tier1_earnings + commissions_total + total_user_business_commission
+
+    # Generate CSV
+    import csv
+    from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Transaction ID', 'Date/Time', 'Tier 1 (2%)', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'From User'])
-    for txn in transactions:
+
+    # Header
+    writer.writerow([f"Earnings for '{user.name or user.email}' from Perk Miner"])
+    writer.writerow([])
+    writer.writerow([f"Total Earned:", f"${total_all:,.2f}"])
+    writer.writerow([f"2% Cash Back (Self/Tier 1):", f"${tier1_earnings:,.2f}"])
+    writer.writerow([f"Total Commission (Tiers 2-5):", f"${commissions_total:,.2f}"])
+    writer.writerow([f"Total User-Business Commission (Tiers 1-5):", f"${total_user_business_commission:,.2f}"])
+    writer.writerow([])
+    writer.writerow([f"Tier 2 (Commission):", f"${tier2_earnings:,.2f}"])
+    writer.writerow([f"Tier 3 (Commission):", f"${tier3_earnings:,.2f}"])
+    writer.writerow([f"Tier 4 (Commission):", f"${tier4_earnings:,.2f}"])
+    writer.writerow([f"Tier 5 (Commission):", f"${tier5_earnings:,.2f}"])
+    writer.writerow([])
+    writer.writerow([f"Tier 1 User-Business Commission:", f"${tier1_user_business_earnings:,.2f}"])
+    writer.writerow([f"Tier 2 User-Business Commission:", f"${tier2_user_business_earnings:,.2f}"])
+    writer.writerow([f"Tier 3 User-Business Commission:", f"${tier3_user_business_earnings:,.2f}"])
+    writer.writerow([f"Tier 4 User-Business Commission:", f"${tier4_user_business_earnings:,.2f}"])
+    writer.writerow([f"Tier 5 User-Business Commission:", f"${tier5_user_business_earnings:,.2f}"])
+    writer.writerow([])
+
+    # Table headers (your details)
+    writer.writerow([
+        "Date/Time",
+        "Transaction ID",
+        "Tier 1 (2% Cash Back)",
+        "Tier 2 (Commission)",
+        "Tier 3 (Commission)",
+        "Tier 4 (Commission)",
+        "Tier 5 (Commission)",
+        "Tier 1 User-Business",
+        "Tier 2 User-Business",
+        "Tier 3 User-Business",
+        "Tier 4 User-Business",
+        "Tier 5 User-Business"
+    ])
+    for t in transactions:
         writer.writerow([
-            txn.transaction_id,
-            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{txn.cash_back:.2f}" if txn.user_referral_id == ref_code else "",
-            f"{txn.tier2_commission:.2f}" if txn.tier2_user_referral_id == ref_code else "",
-            f"{txn.tier3_commission:.2f}" if txn.tier3_user_referral_id == ref_code else "",
-            f"{txn.tier4_commission:.2f}" if txn.tier4_user_referral_id == ref_code else "",
-            f"{txn.tier5_commission:.2f}" if txn.tier5_user_referral_id == ref_code else "",
-            txn.user_referral_id
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            t.transaction_id,
+            f"{t.cash_back:,.2f}" if t.user_referral_id == ref_code else "",
+            f"{t.tier2_commission:,.2f}" if t.tier2_user_referral_id == ref_code else "",
+            f"{t.tier3_commission:,.2f}" if t.tier3_user_referral_id == ref_code else "",
+            f"{t.tier4_commission:,.2f}" if t.tier4_user_referral_id == ref_code else "",
+            f"{t.tier5_commission:,.2f}" if t.tier5_user_referral_id == ref_code else "",
+            f"{t.tier1_business_user_commission:,.2f}" if t.tier1_business_user_referral_id == ref_code else "",
+            f"{t.tier2_business_user_commission:,.2f}" if t.tier2_business_user_referral_id == ref_code else "",
+            f"{t.tier3_business_user_commission:,.2f}" if t.tier3_business_user_referral_id == ref_code else "",
+            f"{t.tier4_business_user_commission:,.2f}" if t.tier4_business_user_referral_id == ref_code else "",
+            f"{t.tier5_business_user_commission:,.2f}" if t.tier5_business_user_referral_id == ref_code else "",
         ])
+
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":"attachment;filename=user_earnings.csv"})
+    return Response(output, mimetype="text/csv", headers={
+        "Content-Disposition": f"attachment;filename=user_earnings_{user.referral_code}.csv"
+    })
 
 # USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
@@ -1812,36 +1950,60 @@ def business_receipts():
     ).order_by(BusinessTransaction.date_time.desc()).all()
     return render_template("business_receipts.html", transactions=transactions, business=business)
 
-@app.route("/business/receipts/export/csv")
+@app.route("/export_business_receipts_csv")
 @business_login_required
 def export_business_receipts_csv():
     biz_id = session.get('business_id')
     business = Business.query.get_or_404(biz_id)
-    transactions = BusinessTransaction.query.filter_by(
-        business_referral_id=business.referral_code
-    ).order_by(BusinessTransaction.date_time.desc()).all()
 
+    # Get transactions for this business (without filtering for commission)
+    transactions = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code).order_by(BusinessTransaction.date_time.desc()).all()
+
+    import csv
+    from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
-    # Write header
-    writer.writerow(['Date/Time','Amount','Ad Fee (10%)','Net Gross','Marketing ROI %','Marketing ROI Ratio'])
+
+    # Header for business and Perk Miner
+    writer.writerow([f"Invoices for '{business.business_name}' from Perk Miner"])
+    writer.writerow([])
+
+    # Table headers (should match what you show in business_receipts.html)
+    writer.writerow([
+        "Date/Time",
+        "Interaction ID",
+        "Sale Amount",
+        "Ad Fee (10%, capped $250)",
+        "Net Gross",
+        "Marketing ROI",
+        "Marketing ROI Ratio",
+        "Cash Back"
+    ])
+
+    # Write each transaction (match values as in your HTML)
     for txn in transactions:
-        ad_fee = txn.amount * 0.10
+        ad_fee = txn.ad_fee or 0
         net_gross = txn.amount - ad_fee
-        roi = int((net_gross/ad_fee)*100) if ad_fee else 0
-        ratio = round((net_gross+ad_fee)/ad_fee, 2) if ad_fee else 0
+        roi = (net_gross / ad_fee) * 100 if ad_fee else 0
+        ratio = (net_gross + ad_fee) / ad_fee if ad_fee else 0
+
         writer.writerow([
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{txn.amount:.2f}",
-            f"{ad_fee:.2f}",
-            f"{net_gross:.2f}",
-            roi,
-            f"{ratio}:1",
+            txn.interaction_id,
+            f"{txn.amount:,.2f}",
+            f"{ad_fee:,.2f}",
+            f"{net_gross:,.2f}",
+            f"{roi:.0f}%",
+            f"{ratio:.1f}:1",
+            f"{txn.cash_back:,.2f}"
         ])
 
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":f"attachment;filename=business_receipts.csv"})
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename=business_receipts_{business.referral_code}.csv"}
+    )
 
 @app.route("/business/earnings", methods=["GET"])
 @business_login_required
@@ -1991,47 +2153,125 @@ def export_business_combined_detail_report_csv():
     return Response(output, mimetype="text/csv",
                     headers={"Content-Disposition": "attachment;filename=business_combined_detail_report.csv"})
 
-@app.route("/business/earnings/export/csv")
+@app.route("/export_business_earnings_csv")
 @business_login_required
 def export_business_earnings_csv():
     biz_id = session.get('business_id')
     business = Business.query.get_or_404(biz_id)
     ref_code = business.referral_code
 
+    # Get/replicate filters from business_earnings
     period = request.args.get("period", "all")
     year = int(request.args.get("year", 0)) if request.args.get("year") else 0
     month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+    all_txns = BusinessTransaction.query
 
-    qry = BusinessTransaction.query
     if period == "year" and year:
-        qry = qry.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year + 1, 1, 1))
+        all_txns = all_txns.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
     elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
-            end = datetime(year + 1, 1, 1)
+            end = datetime(year+1, 1, 1)
         else:
-            end = datetime(year, month + 1, 1)
-        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+            end = datetime(year, month+1, 1)
+        all_txns = all_txns.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+    transactions = all_txns.order_by(BusinessTransaction.date_time.desc()).all()
 
-    transactions = qry.order_by(BusinessTransaction.date_time.desc()).all()
+    # Filter as in your page
+    filtered = []
+    for t in transactions:
+        earned = False
+        if t.business_referral_id == ref_code and t.cash_back > 0:
+            earned = True
+        if t.tier2_business_referral_id == ref_code and t.tier2_commission > 0:
+            earned = True
+        if t.tier3_business_referral_id == ref_code and t.tier3_commission > 0:
+            earned = True
+        if t.tier4_business_referral_id == ref_code and t.tier4_commission > 0:
+            earned = True
+        if t.tier5_business_referral_id == ref_code and t.tier5_commission > 0:
+            earned = True
+        if earned:
+            filtered.append(t)
+    transactions = filtered
 
+    # Prepare summary just like in your page (using only the filtered txns)
+    tier1_txns = [txn for txn in transactions if txn.business_referral_id == ref_code]
+    gross_earnings = sum(txn.amount for txn in tier1_txns)
+    ad_fee = sum(txn.ad_fee or 0 for txn in tier1_txns)
+    net_gross = sum(txn.amount - (txn.ad_fee or 0) for txn in tier1_txns)
+    marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
+    marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
+
+    tier1_earnings = sum(t.cash_back for t in transactions if t.business_referral_id == ref_code)
+    tier2_earnings = sum(t.tier2_commission for t in transactions if t.tier2_business_referral_id == ref_code)
+    tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
+    tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
+    tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+
+    # --- Prepare CSV ---
+    import csv
+    from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Transaction ID','Date/Time','Tier 1 (1%)','Tier 2 (0.125%)','Tier 3 (0.125%)','Tier 4 (0.125%)','Tier 5 (1%)','From Business'])
+
+    # Add header for business and Perk Miner
+    writer.writerow([f"Business summary for '{business.business_name}' from Perk Miner"])
+    writer.writerow([])
+    writer.writerow([f"Gross Sales (Tier1/Self):", f"${gross_earnings:,.2f}"])
+    writer.writerow([f"Advertising Fee (10%, cap $250):", f"${ad_fee:,.2f}"])
+    writer.writerow([f"Net Gross Sales:", f"${net_gross:,.2f}"])
+    writer.writerow([f"Marketing ROI:", f"{marketing_roi}%"])
+    writer.writerow([f"Marketing ROI Ratio:", f"{marketing_ratio}:1"])
+    writer.writerow([])
+    writer.writerow([f"Tier 1 (Self, 1% Cash Back):", f"${tier1_earnings:,.2f}"])
+    writer.writerow([f"Tier 2 (B2B Commission):", f"${tier2_earnings:,.2f}"])
+    writer.writerow([f"Tier 3 (B2B Commission):", f"${tier3_earnings:,.2f}"])
+    writer.writerow([f"Tier 4 (B2B Commission):", f"${tier4_earnings:,.2f}"])
+    writer.writerow([f"Tier 5 (B2B Commission):", f"${tier5_earnings:,.2f}"])
+    writer.writerow([])
+    writer.writerow([f"Total Cash Back (All Tiers):", f"${total_cash_back:,.2f}"])
+    writer.writerow([])
+
+    # Add detail table headers
+    writer.writerow([
+        "Date/Time",
+        "Interaction ID",
+        "Sale Amount",
+        "Ad Fee (capped)",
+        "Net Gross",
+        "Marketing ROI",
+        "Marketing ROI Ratio",
+        "Tier 1 (1% Cash Back)",
+        "Tier 2 (B2B Commission)",
+        "Tier 3 (B2B Commission)",
+        "Tier 4 (B2B Commission)",
+        "Tier 5 (B2B Commission)",
+    ])
+
+    # Add details as in the HTML
     for txn in transactions:
+        net_gross_row = txn.amount - (txn.ad_fee or 0)
+        roi_row = (net_gross_row / (txn.ad_fee or 1)) * 100 if txn.ad_fee else 0
+        ratio_row = (net_gross_row + (txn.ad_fee or 0)) / (txn.ad_fee or 1) if txn.ad_fee else 0
         writer.writerow([
-            txn.transaction_id,
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{txn.cash_back:.2f}" if txn.business_referral_id == ref_code else "",
-            f"{txn.tier2_commission:.2f}" if txn.tier2_business_referral_id == ref_code else "",
-            f"{txn.tier3_commission:.2f}" if txn.tier3_business_referral_id == ref_code else "",
-            f"{txn.tier4_commission:.2f}" if txn.tier4_business_referral_id == ref_code else "",
-            f"{txn.tier5_commission:.2f}" if txn.tier5_business_referral_id == ref_code else "",
-            txn.business_referral_id
+            txn.interaction_id,
+            f"{txn.amount:,.2f}",
+            f"{txn.ad_fee or 0:,.2f}",
+            f"{net_gross_row:,.2f}",
+            f"{roi_row:.0f}%",
+            f"{ratio_row:.1f}:1",
+            f"{txn.cash_back:,.2f}" if txn.business_referral_id == business.referral_code else "",
+            f"{txn.tier2_commission:,.2f}" if txn.tier2_business_referral_id == business.referral_code else "",
+            f"{txn.tier3_commission:,.2f}" if txn.tier3_business_referral_id == business.referral_code else "",
+            f"{txn.tier4_commission:,.2f}" if txn.tier4_business_referral_id == business.referral_code else "",
+            f"{txn.tier5_commission:,.2f}" if txn.tier5_business_referral_id == business.referral_code else "",
         ])
+
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":"attachment;filename=business_earnings.csv"})
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition": "attachment;filename=business_earnings.csv"})
 
 @app.route("/business/scan-qr/<int:interaction_id>")
 @business_login_required
@@ -3037,18 +3277,21 @@ def combined_detailed_report():
         years=[str(y) for y in range(2026, 2051)]
     )
 
-@app.route("/finance/combined-detailed-report/export/csv")
+@app.route('/finance/combined-detailed-report/export/csv')
 @role_required("finance")
 def export_combined_detailed_report_csv():
     interaction_id = request.args.get("interaction_id", "").strip()
     user_email = (request.args.get("user_email", "") or "").strip().lower()
     business_email = (request.args.get("business_email", "") or "").strip().lower()
     period = request.args.get("period", "all")
-    year = request.args.get("year", "") or 0
-    month = request.args.get("month", "") or 0
+    year = request.args.get("year", 0) or 0
+    month = request.args.get("month", 0) or 0
 
     uq = UserTransaction.query
     bq = BusinessTransaction.query
+
+    # Apply filters (same as your HTML page)
+    # ...[date/month/interact/user_email/business_email filtering as in your page]...
 
     if period == "year" and year:
         uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year)+1, 1, 1))
@@ -3061,14 +3304,12 @@ def export_combined_detailed_report_csv():
             end = datetime(int(year), int(month)+1, 1)
         uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
         bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-
     if interaction_id:
         uq = uq.filter(UserTransaction.interaction_id == interaction_id)
         bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
 
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
-
     if user_email:
         utrans = [t for t in uq.all() if t.user_referral_id in user_lookup and user_lookup[t.user_referral_id].email.lower() == user_email]
         btrans = []
@@ -3079,14 +3320,33 @@ def export_combined_detailed_report_csv():
         utrans = uq.all()
         btrans = bq.all()
 
+    import csv
+    from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
+
+    # Add super header
+    writer.writerow(["Perk Miner Detailed Report"])
+    writer.writerow([])
+
+    # User transactions header row
     writer.writerow([
-        "Date/Time", "Interaction ID", "User Referral ID", "User Name", "User Email",
-        "Tier 1 Cashback", "Tier 2 Commission", "Tier 3 Commission", "Tier 4 Commission", "Tier 5 Commission",
-        "Business Referral ID", "Business Name", "Business Email",
-        "Tier 1 Biz Cashback", "Tier 2 Biz Cashback", "Tier 3 Biz Cashback", "Tier 4 Biz Cashback", "Tier 5 Biz Cashback",
-        "Transaction ID"
+        "Date/Time",
+        "Interaction ID",
+        "User Referral ID",
+        "User Name",
+        "User Email",
+        "Tier 1 Cashback",
+        "Tier 2 Commission",
+        "Tier 3 Commission",
+        "Tier 4 Commission",
+        "Tier 5 Commission",
+        "Tier 1 User-Biz",
+        "Tier 2 User-Biz",
+        "Tier 3 User-Biz",
+        "Tier 4 User-Biz",
+        "Tier 5 User-Biz",
+        "Transaction ID",
     ])
     for t in utrans:
         writer.writerow([
@@ -3095,46 +3355,42 @@ def export_combined_detailed_report_csv():
             t.user_referral_id,
             user_lookup[t.user_referral_id].name if t.user_referral_id in user_lookup else "",
             user_lookup[t.user_referral_id].email if t.user_referral_id in user_lookup else "",
-            f"{t.cash_back:.2f}",
-            f"{t.tier2_commission:.2f}",
-            f"{t.tier3_commission:.2f}",
-            f"{t.tier4_commission:.2f}",
-            f"{t.tier5_commission:.2f}",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
+            f"{t.cash_back:,.2f}",
+            f"{t.tier2_commission:,.2f}",
+            f"{t.tier3_commission:,.2f}",
+            f"{t.tier4_commission:,.2f}",
+            f"{t.tier5_commission:,.2f}",
+            f"{t.tier1_business_user_commission:,.2f}" if hasattr(t, "tier1_business_user_commission") else "",
+            f"{t.tier2_business_user_commission:,.2f}" if hasattr(t, "tier2_business_user_commission") else "",
+            f"{t.tier3_business_user_commission:,.2f}" if hasattr(t, "tier3_business_user_commission") else "",
+            f"{t.tier4_business_user_commission:,.2f}" if hasattr(t, "tier4_business_user_commission") else "",
+            f"{t.tier5_business_user_commission:,.2f}" if hasattr(t, "tier5_business_user_commission") else "",
             t.transaction_id
         ])
+
+    writer.writerow([])
+    writer.writerow(["Business Transactions"])
+    writer.writerow([
+        "Date/Time", "Interaction ID", "Business Referral ID", "Business Name", "Business Email",
+        "Tier 1 Biz Cashback", "Tier 2 Biz Cashback", "Tier 3 Biz Cashback", "Tier 4 Biz Cashback", "Tier 5 Biz Cashback", "Transaction ID"
+    ])
     for t in btrans:
         writer.writerow([
             t.date_time.strftime('%Y-%m-%d %I:%M %p'),
             t.interaction_id,
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
             t.business_referral_id,
-            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else "",
-            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else "",
-            f"{t.cash_back:.2f}",
-            f"{t.tier2_commission:.2f}",
-            f"{t.tier3_commission:.2f}",
-            f"{t.tier4_commission:.2f}",
-            f"{t.tier5_commission:.2f}",
+            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
+            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
+            f"{t.cash_back:,.2f}",
+            f"{t.tier2_commission:,.2f}",
+            f"{t.tier3_commission:,.2f}",
+            f"{t.tier4_commission:,.2f}",
+            f"{t.tier5_commission:,.2f}",
             t.transaction_id
         ])
+
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition": "attachment;filename=combined_detailed_report.csv"})
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition": f"attachment;filename=perkminer_combined_detailed_report.csv"})
 
 @app.route("/finance/business-detailed-report", methods=["GET"])
 @role_required("finance")
@@ -3227,7 +3483,7 @@ def combined_cashback_paid():
         month=month,
     )
 
-@app.route("/finance/combined-cashback-paid/export/csv")
+@app.route('/finance/combined-cashback-paid/export/csv')
 @role_required("finance")
 def export_finance_cashback_paid_csv():
     period = request.args.get("period", "all")
@@ -3254,7 +3510,16 @@ def export_finance_cashback_paid_csv():
     from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['Type', 'Referral ID', 'Email', 'Date/Time', 'Tier 1 Cashback'])
+
+    writer.writerow(["Perk Miner Member Commissions and Business Cash Back To Be Paid"])
+    writer.writerow([])
+    writer.writerow([
+        "Type",
+        "Referral ID",
+        "Email",
+        "Date/Time",
+        "Tier 1 Cashback"
+    ])
     for t in user_cbs:
         user = User.query.filter_by(referral_code=t.user_referral_id).first()
         writer.writerow([
@@ -3262,7 +3527,7 @@ def export_finance_cashback_paid_csv():
             t.user_referral_id,
             user.email if user else "",
             t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{t.cash_back:.2f}"
+            f"{t.cash_back:,.2f}"
         ])
     for t in bus_cbs:
         business = Business.query.filter_by(referral_code=t.business_referral_id).first()
@@ -3271,11 +3536,15 @@ def export_finance_cashback_paid_csv():
             t.business_referral_id,
             business.business_email if business else "",
             t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            f"{t.cash_back:.2f}"
+            f"{t.cash_back:,.2f}"
         ])
+
     output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition":"attachment;filename=combined_cashback_paid.csv"})
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=perkminer_combined_cashback_paid.csv"}
+    )
 
 @app.route("/finance/commissions-paid", methods=["GET"])
 @role_required("finance")
