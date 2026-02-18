@@ -1658,7 +1658,13 @@ def finalize_transaction(interaction_id):
         data = request.form
         amount = float(data.get("amount", 0))
 
-        # User-to-user chain (leave as working)
+        # Calculate/cap ad fee now and block if business has insufficient funds
+        ad_fee = min(round(amount * 0.10, 2), 250.00)
+        if business.account_balance is None or business.account_balance < ad_fee:
+            flash("Insufficient funds to complete this transaction. Please fund your account.")
+            return redirect(url_for("fund_account"))
+
+        # --- All your regular (user commission, business commission, etc.) logic follows here...
         user_referral_id = interaction.user.referral_code or "REFjoejmendez"
         user_cash_back_raw = amount * 0.02
         user_cash_back = round(min(user_cash_back_raw, 50), 2)
@@ -1681,7 +1687,6 @@ def finalize_transaction(interaction_id):
         tier5_commission_raw = amount * 0.02
         tier5_commission = round(min(tier5_commission_raw, 50), 2)
 
-        # ---------- USER BUSINESS DOWNLINE LOGIC (WITH CAPS) -------------
         top_biz = find_top_business_with_user_sponsor(business)
         root_user = User.query.get(top_biz.user_sponsor_id) if top_biz and top_biz.user_sponsor_id else None
 
@@ -1743,7 +1748,7 @@ def finalize_transaction(interaction_id):
         )
         db.session.add(user_trans)
 
-        # --- BUSINESS CHAIN PAYOUTS (unchanged) ---
+        # --- BUSINESS CHAIN PAYOUTS ---
         business_referral_id = business.referral_code or "BIZPerkMiner"
         b2 = Business.query.filter_by(id=business.sponsor_id).first()
         tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
@@ -1760,11 +1765,8 @@ def finalize_transaction(interaction_id):
 
         business_cash_back_raw = amount * 0.01
         business_cash_back = round(min(business_cash_back_raw, 25), 2)
-        ad_fee = min(round(amount * 0.10, 2), 250.00)
-        net_gross = round(amount - ad_fee, 2)
-        marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
-        marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
 
+        # Deduct using capped ad fee, only if sufficient funds
         business.account_balance = (business.account_balance or 0.0) - ad_fee
         db.session.commit()
 
@@ -1792,9 +1794,9 @@ def finalize_transaction(interaction_id):
             "user_cash_back": f"{user_cash_back:.2f}",
             "business_cash_back": f"{business_cash_back:.2f}",
             "ad_fee": f"{ad_fee:.2f}",
-            "net_gross": f"{net_gross:.2f}",
-            "marketing_roi": marketing_roi,
-            "marketing_ratio": marketing_ratio,
+            "net_gross": f"{amount - ad_fee:,.2f}",
+            "marketing_roi": int(((amount - ad_fee) / ad_fee) * 100) if ad_fee else 0,
+            "marketing_ratio": round(((amount - ad_fee) + ad_fee) / ad_fee, 2) if ad_fee else 0,
             "transaction_id": transaction_id,
         }
         flash("Transaction finalized and all rewards/commissions assigned!", "success")
@@ -3110,7 +3112,16 @@ def listing_disclaimer():
     return redirect(url_for("business_dashboard"))
 
 @app.route("/send-for-review", methods=["POST"])
+@business_login_required
 def send_for_review():
+    biz_id = session.get('business_id')
+    biz = Business.query.get_or_404(biz_id)
+
+    # New check: redirect if account balance is less than $1
+    if biz.account_balance is None or biz.account_balance < 1:
+        flash("You must have an account balance of at least $1 to submit your listing. Please fund your account.")
+        return redirect(url_for("fund_account"))
+
     listing_id = request.form.get("listing_id")
     referral_code = request.form.get("referral_code")
     accept_terms = request.form.get("accept_terms")
@@ -3118,9 +3129,10 @@ def send_for_review():
         flash("You must accept the terms and conditions.")
         return redirect(url_for("listing_disclaimer"))
 
-    biz = Business.query.get(listing_id)
-    if biz:
-        biz.status = "pending"
+    # Likely logic for marking as pending
+    listing = Business.query.get(listing_id)
+    if listing:
+        listing.status = "pending"
         db.session.commit()
         flash("Listing submitted for admin review. You will be notified after a decision.")
     else:
