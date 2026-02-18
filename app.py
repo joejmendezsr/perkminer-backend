@@ -1854,7 +1854,7 @@ def business_earnings():
     year = int(request.args.get("year", 0)) if request.args.get("year") else 0
     month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
-    all_txns = BusinessTransaction.query  # Start with all
+    all_txns = BusinessTransaction.query
 
     # Date/month/year filter logic
     if period == "year" and year:
@@ -1886,11 +1886,11 @@ def business_earnings():
             filtered.append(t)
     transactions = filtered
 
-    # Stats/summary: Only from Tier 1 (self-generated invoices/earnings)
+    # Stats/summary using the stored, capped ad_fee for each transaction
     tier1_txns = [txn for txn in transactions if txn.business_referral_id == ref_code]
     gross_earnings = sum(txn.amount for txn in tier1_txns)
-    ad_fee = gross_earnings * 0.10
-    net_gross = gross_earnings - ad_fee
+    ad_fee = sum(txn.ad_fee or 0 for txn in tier1_txns)
+    net_gross = sum(txn.amount - (txn.ad_fee or 0) for txn in tier1_txns)
     marketing_roi = int((net_gross / ad_fee) * 100) if ad_fee else 0
     marketing_ratio = round((net_gross + ad_fee) / ad_fee, 2) if ad_fee else 0
 
