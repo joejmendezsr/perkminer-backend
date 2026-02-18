@@ -38,6 +38,12 @@
         {% endif %}
     </div>
 </div>
+
+<a href="{{ url_for('support_dashboard') }}" class="btn btn-outline-danger mt-3 w-100" id="business-unable-btn">
+    Business unable to finalize transaction
+</a>
+<!-- or just href="#" if you want it non-functional for now -->
+
 <script>
 {% if is_finalize_payment %}
 function checkForReceipt() {
