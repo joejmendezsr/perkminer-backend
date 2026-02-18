@@ -43,7 +43,7 @@
   </form>
   <div class="summary-card">
     <b>Gross Sales (Tier 1/Self):</b> ${{ summary.gross_earnings }}<br>
-    <b>Advertising Fee (10%):</b> ${{ summary.ad_fee }}<br>
+    <b>Advertising Fee (10%, cap $250):</b> ${{ summary.ad_fee }}<br>
     <b>Net Gross Sales:</b> ${{ summary.net_gross }}<br>
     <b>Marketing ROI:</b> {{ summary.marketing_roi }}%<br>
     <b>Marketing ROI Ratio:</b> {{ summary.marketing_ratio }}:1<br>
@@ -66,6 +66,8 @@
           <th>Tier 3 (B2B Commission)</th>
           <th>Tier 4 (B2B Commission)</th>
           <th>Tier 5 (B2B Commission)</th>
+          <th>Ad Fee (10%, cap $250)</th>
+          <th>Net Gross</th>
           <th>From Business</th>
         </tr>
       </thead>
@@ -98,6 +100,11 @@
                 ${{ "{:,.2f}".format(txn.tier5_commission) }}
             {% endif %}
           </td>
+          {% set ad_fee_raw = txn.amount * 0.10 %}
+          {% set ad_fee = ad_fee_raw if ad_fee_raw < 250 else 250 %}
+          <td>${{ "{:,.2f}".format(ad_fee) }}</td>
+          {% set net_gross = txn.amount - ad_fee %}
+          <td>${{ "{:,.2f}".format(net_gross) }}</td>
           <td>
             {{ txn.business_referral_id }}
           </td>
