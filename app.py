@@ -2861,9 +2861,20 @@ def finance_dashboard():
 
     total_ad_revenue = sum(t.amount * 0.10 for t in btxns)
     total_transactions = len(btxns)
+
+    # Add in ALL user-business commissions in total_paid_members
     total_paid_members = sum(
-        t.cash_back +
-        t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission for t in utxns
+        (t.cash_back or 0)
+        + (t.tier2_commission or 0)
+        + (t.tier3_commission or 0)
+        + (t.tier4_commission or 0)
+        + (t.tier5_commission or 0)
+        + (t.tier1_business_user_commission or 0)
+        + (t.tier2_business_user_commission or 0)
+        + (t.tier3_business_user_commission or 0)
+        + (t.tier4_business_user_commission or 0)
+        + (t.tier5_business_user_commission or 0)
+        for t in utxns
     )
 
     # Correct logic for business payouts and capital reserves
@@ -2934,7 +2945,7 @@ def finance_dashboard():
         total_transactions=total_transactions,
         total_paid_members=f"{total_paid_members:,.2f}",
         total_paid_businesses=f"{total_paid_businesses:,.2f}",
-        net_gross=f"{net_gross:,.2f}",  # <-- updated accurate calculation
+        net_gross=f"{net_gross:,.2f}",
         capital_reserves=f"{capital_reserves:,.2f}",
         operating_capital=f"{operating_capital:,.2f}",
         charitable_contribution=f"{charitable_contribution:,.2f}",
