@@ -149,18 +149,13 @@
 <body>
 <!-- Persistent navbar with home link -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-  <div class="container">
+    <div class="container">
       <a class="navbar-brand" href="/">PerkMiner</a>
       <div class="navbar-nav ms-auto">
-        <div class="d-flex justify-content-end mb-3">
-        </div>
-          <i class="bi bi-house-door"></i> Search for Businesses
-        </a>
         <span class="nav-link disabled">{{ email }}</span>
       </div>
-  </div>
-</nav>
-
+    </div>
+</nav>  
 <!-- ==== Admin Area Button (only for admin users) ==== -->
 {% if current_user.has_role('finance') 
    or current_user.has_role('approve_reject_listings')
@@ -175,7 +170,6 @@
 {% endif %}
 
 <div class="container">
-
 <div class="card mb-4 p-4">
   <div class="d-flex align-items-center flex-wrap mb-3">
     {% if profile_img_url %}
@@ -190,9 +184,13 @@
       <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
     </div>
   </div>
+<div class="d-flex justify-content-end mb-3">
+  <a href="{{ url_for('home') }}" class="btn btn-outline-primary">
+    <i class="bi bi-house-door"></i> Search for Businesses
+  </a>
 </div>
-
-<div class="card p-4 mb-4">
+    <!-- User Profile Section -->
+    <div class="card p-4 mb-4">
     <h4>Your Profile</h4>
   <div class="mb-3">
     <button class="btn btn-primary w-100" type="button"
