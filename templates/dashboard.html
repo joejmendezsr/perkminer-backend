@@ -152,7 +152,11 @@
   <div class="container">
       <a class="navbar-brand" href="/">PerkMiner</a>
       <div class="navbar-nav ms-auto">
-        <a class="nav-link" href="{{ url_for('home') }}">
+        <div class="d-flex justify-content-end mb-3">
+          <a href="{{ url_for('home') }}" class="btn btn-outline-primary">
+            <i class="bi bi-house-door"></i> Search for Businesses
+          </a>
+        </div>
           <i class="bi bi-house-door"></i> Back to Home
         </a>
         <span class="nav-link disabled">{{ email }}</span>
