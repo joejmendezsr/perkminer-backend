@@ -369,7 +369,7 @@
     </a>
     <div class="collapse mt-2" id="tier2">
       {% if level2 %}
-        <ul class="mb-2">{% for user in level2 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for user in level2 %}<li>{{ user.name if user.name else user.email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -381,7 +381,7 @@
     </a>
     <div class="collapse mt-2" id="tier3">
       {% if level3 %}
-        <ul class="mb-2">{% for user in level3 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for user in level3 %}<li>{{ user.name if user.name else user.email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -393,7 +393,7 @@
     </a>
     <div class="collapse mt-2" id="tier4">
       {% if level4 %}
-        <ul class="mb-2">{% for user in level4 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for user in level4 %}<li>{{ user.name if user.name else user.email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -405,7 +405,7 @@
     </a>
     <div class="collapse mt-2" id="tier5">
       {% if level5 %}
-        <ul class="mb-2">{% for user in level5 %}<li>{{ user.email }} ({{ user.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for user in level5 %}<li>{{ user.name if user.name else user.email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -422,7 +422,7 @@
     </a>
     <div class="collapse mt-2" id="biztier1">
       {% if biz_level1 %}
-        <ul class="mb-2">{% for biz in biz_level1 %}<li>{{ biz.business_email }} ({{ biz.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for biz in biz_level1 %}<li>{{ biz.business_name if biz.business_name else biz.business_email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -434,7 +434,7 @@
     </a>
     <div class="collapse mt-2" id="biztier2">
       {% if biz_level2 %}
-        <ul class="mb-2">{% for biz in biz_level2 %}<li>{{ biz.business_email }} ({{ biz.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for biz in biz_level2 %}<li>{{ biz.business_name if biz.business_name else biz.business_email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -446,7 +446,7 @@
     </a>
     <div class="collapse mt-2" id="biztier3">
       {% if biz_level3 %}
-        <ul class="mb-2">{% for biz in biz_level3 %}<li>{{ biz.business_email }} ({{ biz.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for biz in biz_level3 %}<li>{{ biz.business_name if biz.business_name else biz.business_email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -458,7 +458,7 @@
     </a>
     <div class="collapse mt-2" id="biztier4">
       {% if biz_level4 %}
-        <ul class="mb-2">{% for biz in biz_level4 %}<li>{{ biz.business_email }} ({{ biz.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for biz in biz_level4 %}<li>{{ biz.business_name if biz.business_name else biz.business_email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
@@ -470,7 +470,7 @@
     </a>
     <div class="collapse mt-2" id="biztier5">
       {% if biz_level5 %}
-        <ul class="mb-2">{% for biz in biz_level5 %}<li>{{ biz.business_email }} ({{ biz.referral_code }})</li>{% endfor %}</ul>
+        <ul class="mb-2">{% for biz in biz_level5 %}<li>{{ biz.business_name if biz.business_name else biz.business_email }}</li>{% endfor %}</ul>
       {% else %}
         <span>None</span>
       {% endif %}
