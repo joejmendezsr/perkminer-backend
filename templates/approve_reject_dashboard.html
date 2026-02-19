@@ -73,6 +73,17 @@
               {% if biz.status == "in_review" %}
               <tr>
                 <td colspan="6" class="bg-light">
+                  <!-- REQUIRED DOCUMENT BUTTON -->
+                  <div class="mb-3">
+                    <b>Business Registration Document:</b>
+                    {% if biz.business_registration_doc %}
+                      <a href="{{ url_for('uploaded_file', filename=biz.business_registration_doc) }}" target="_blank" class="btn btn-outline-info btn-sm ms-2">
+                        <i class="bi bi-file-earmark-text"></i> View Document
+                      </a>
+                    {% else %}
+                      <span class="text-danger ms-2">No registration document uploaded.</span>
+                    {% endif %}
+                  </div>
                   <!-- Small Listing Preview -->
                   <div class="mb-3 p-2 border rounded bg-white">
                     <strong>Small Preview</strong>

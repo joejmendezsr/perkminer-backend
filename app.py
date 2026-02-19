@@ -218,6 +218,7 @@ class Business(db.Model):
     draft_search_keywords = db.Column(db.String(500))
     account_balance = db.Column(db.Float, nullable=False, default=0.0)
     ad_fee = db.Column(db.Float)
+    business_registration_doc = db.Column(db.String(255))  # stores filename or URL (S3, cloud, or local)
 
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
@@ -888,7 +889,7 @@ def reset_password(token):
         flash("Account not found.")
     return render_template('reset_password.html', form=form)
 
-@app.route('/uploads/<filename>')
+@app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
@@ -3156,7 +3157,22 @@ def send_for_review():
         flash("You must accept the terms and conditions.")
         return redirect(url_for("listing_disclaimer"))
 
-    # Likely logic for marking as pending
+    # === Business Registration Document Upload ===
+    file = request.files.get("business_registration_doc")
+    if not file or file.filename == '':
+        flash("Business registration document is required.")
+        return redirect(url_for("listing_disclaimer"))
+
+    # Save file securely (you may want to use a unique name in production!)
+    filename = secure_filename(file.filename)
+    upload_folder = app.config.get("UPLOAD_FOLDER", "uploads")  # adjust as needed
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    filepath = os.path.join(upload_folder, filename)
+    file.save(filepath)
+    biz.business_registration_doc = filename
+
+    # Mark as pending and commit
     listing = Business.query.get(listing_id)
     if listing:
         listing.status = "pending"
