@@ -555,7 +555,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body" id="listing-preview-content">
-            {% if biz.status in ["not_submitted", "approved"] and (
+            {% if biz.status in ["not_submitted", "draft", "approved"] and (
               biz.draft_business_name or
               biz.draft_category or
               biz.draft_profile_photo or
@@ -577,9 +577,18 @@
               <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
               <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</button>
             </form>
+            {% if biz.account_balance == 0 and biz.status in ["not_submitted", "draft"] %}
+            <div class="text-danger fw-bold text-center mb-2" style="font-size:1.07em;">
+              You must add funds to your account prior to submitting for review.<br>
+              Your account balance is $0.
+            </div>
+            {% endif %}
             {% endif %}
             <!-- Your JS will fill in the rest of this div at runtime, below this form -->
           </div>
+        </div>
+      </div>
+    </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
           </div>
