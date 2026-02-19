@@ -999,22 +999,38 @@ def dashboard():
                 l5s = User.query.filter_by(sponsor_id=u4.id).all()
                 level5.extend(l5s)
 
+    # --- Business network tiers ---
+    user_id = current_user.id
+    biz_level1 = Business.query.filter_by(user_sponsor_id=user_id).all()
+
+    def biz_ids(bizlist): return [b.id for b in bizlist]
+
+    biz_level2 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level1))).all() if biz_level1 else []
+    biz_level3 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level2))).all() if biz_level2 else []
+    biz_level4 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level3))).all() if biz_level3 else []
+    biz_level5 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level4))).all() if biz_level4 else []
+
+    has_invited_business = len(biz_level1) > 0
+
     # Query for active sessions for this user
     active_sessions = Interaction.query.filter_by(user_id=current_user.id, status='active').all()
     has_active_sessions = len(active_sessions) > 0
 
-    return render_template("dashboard.html",
-         form=form,
-         profile_form=profile_form,
-         invite_form=invite_form,
-         email=current_user.email,
-         referral_code=current_user.referral_code,
-         sponsor=sponsor if sponsor else None,
-         rewards_table=rewards_table,
-         level2=level2, level3=level3, level4=level4, level5=level5,
-         user_name=current_user.name,
-         profile_img_url=current_user.profile_photo,
-         has_active_sessions=has_active_sessions  # <--- pass this for template logic
+    return render_template(
+        "dashboard.html",
+        form=form,
+        profile_form=profile_form,
+        invite_form=invite_form,
+        email=current_user.email,
+        referral_code=current_user.referral_code,
+        sponsor=sponsor if sponsor else None,
+        rewards_table=rewards_table,
+        level2=level2, level3=level3, level4=level4, level5=level5,
+        biz_level1=biz_level1, biz_level2=biz_level2, biz_level3=biz_level3, biz_level4=biz_level4, biz_level5=biz_level5,
+        has_invited_business=has_invited_business,
+        user_name=current_user.name,
+        profile_img_url=current_user.profile_photo,
+        has_active_sessions=has_active_sessions  # for template logic
     )
 
 @app.route("/logout")
