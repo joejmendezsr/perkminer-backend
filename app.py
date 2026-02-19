@@ -2611,6 +2611,12 @@ def business_dashboard():
     def get_service_field(n):
         return request.form.get(f"service_{n}", "")
 
+    def safe_float(val):
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return None
+
     # POST: Handle profile save
     if request.method == "POST":
         updated = False
@@ -2621,9 +2627,14 @@ def business_dashboard():
         if biz.status == "approved":
             for field in editable_fields:
                 val = request.form.get(field)
-                if val is not None:
-                    setattr(biz, f"draft_{field}", val)
+                # Fix for latitude/longitude fields:
+                if field in ["latitude", "longitude"]:
+                    setattr(biz, f"draft_{field}", safe_float(val))
                     updated = True
+                else:
+                    if val is not None:
+                        setattr(biz, f"draft_{field}", val)
+                        updated = True
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
                 upload_result = cloudinary.uploader.upload(file)
@@ -2632,9 +2643,13 @@ def business_dashboard():
         else:
             for field in editable_fields:
                 val = request.form.get(field)
-                if val is not None:
-                    setattr(biz, field, val)
+                if field in ["latitude", "longitude"]:
+                    setattr(biz, field, safe_float(val))
                     updated = True
+                else:
+                    if val is not None:
+                        setattr(biz, field, val)
+                        updated = True
             file = request.files.get('profile_photo')
             if file and allowed_file(file.filename):
                 upload_result = cloudinary.uploader.upload(file)
