@@ -575,7 +575,7 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="listing_id" value="{{ biz.id }}">
               <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
-              <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</br>$0 Account Balace Not Allowed</button>
+              <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</br>$0 Account Balance Not Allowed</button>
             </form>
             {% if (biz.account_balance is not none and biz.account_balance|float <= 0.0) and biz.status in ["not_submitted", "draft"] %}
               <div class="text-danger fw-bold text-center mb-2" style="font-size:1.07em;">
