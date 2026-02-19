@@ -39,7 +39,7 @@
             <strong>Disclaimer:</strong>
             Approval or rejection of your listing is at PerkMiner's sole discretion, and listings may become temporarily unavailable during re-approval reviews.
         </p>
-        <form method="post" action="{{ url_for('send_for_review') }}">
+        <form method="post" action="{{ url_for('send_for_review') }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="listing_id" value="{{ listing_id }}">
             <input type="hidden" name="referral_code" value="{{ referral_code }}">
