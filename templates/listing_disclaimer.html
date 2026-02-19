@@ -49,11 +49,13 @@
                     I accept the terms and conditions for submitting my listing.
                 </label>
             </div>
+            {% if not biz.business_registration_doc %}
             <div class="mb-3">
-              <label class="form-label">Business Registration Document <span class="text-danger">*</span></label>
-              <input type="file" class="form-control" name="business_registration_doc" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-              <div class="form-text">Upload proof your business is legal to operate in the U.S. (PDF, JPG, PNG, DOC)</div>
+                <label class="form-label">Business Registration Document <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" name="business_registration_doc" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                <div class="form-text">Upload proof your business is legal to operate in the U.S. (PDF, JPG, PNG, DOC)</div>
             </div>
+            {% endif %}
             <button type="submit" class="btn btn-primary w-100">Final Submit for Review</button>
             <a class="btn btn-secondary w-100 mt-2" href="{{ url_for('business_dashboard') }}">Cancel</a>
         </form>

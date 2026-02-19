@@ -3172,20 +3172,21 @@ def send_for_review():
         flash("You must accept the terms and conditions.")
         return redirect(url_for("listing_disclaimer"))
 
-    # === Business Registration Document Upload ===
-    file = request.files.get("business_registration_doc")
-    if not file or file.filename == '':
-        flash("Business registration document is required.")
-        return redirect(url_for("listing_disclaimer"))
+    # Only require/upload a doc if it hasn't been uploaded yet (first submission)
+    if not biz.business_registration_doc:
+        file = request.files.get("business_registration_doc")
+        if not file or file.filename == '':
+            flash("Business registration document is required.")
+            return redirect(url_for("listing_disclaimer"))
 
-    # Save file securely (you may want to use a unique name in production!)
-    filename = secure_filename(file.filename)
-    upload_folder = app.config.get("UPLOAD_FOLDER", "uploads")  # adjust as needed
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
-    filepath = os.path.join(upload_folder, filename)
-    file.save(filepath)
-    biz.business_registration_doc = filename
+        # Save the file securely
+        filename = secure_filename(file.filename)
+        upload_folder = app.config.get("UPLOAD_FOLDER", "uploads")
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+        filepath = os.path.join(upload_folder, filename)
+        file.save(filepath)
+        biz.business_registration_doc = filename
 
     # Mark as pending and commit
     listing = Business.query.get(listing_id)
