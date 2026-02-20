@@ -641,6 +641,7 @@ def search():
     lat = request.args.get("lat", type=float)
     lng = request.args.get("lng", type=float)
     distance = request.args.get("distance", "").strip()  # “5”, “10”, “25”, or “all”
+
     query = Business.query.filter_by(status="approved")
 
     if category:
@@ -648,18 +649,18 @@ def search():
     if q:
         query = query.filter(Business.search_keywords.ilike(f"%{q}%"))
 
-    # Only use distance if lat/lng provided AND distance isn’t “all”
-    if lat is not None and lng is not None:
-        # Haversine formula (earth radius=3959 miles), SQL compatible with Postgres
+    use_location = lat is not None and lng is not None
+
+    if use_location:
         haversine = (
             3959 * func.acos(
                 func.least(
                     1.0,
-                    func.cos(func.radians(lat))
-                    * func.cos(func.radians(Business.latitude))
-                    * func.cos(func.radians(Business.longitude) - func.radians(lng))
-                    + func.sin(func.radians(lat))
-                    * func.sin(func.radians(Business.latitude))
+                    func.cos(func.radians(lat)) *
+                    func.cos(func.radians(Business.latitude)) *
+                    func.cos(func.radians(Business.longitude) - func.radians(lng)) +
+                    func.sin(func.radians(lat)) *
+                    func.sin(func.radians(Business.latitude))
                 )
             )
         ).label('distance_mi')
@@ -667,26 +668,25 @@ def search():
         query = query.add_columns(haversine)
         query = query.filter(Business.latitude.isnot(None), Business.longitude.isnot(None))
 
-        # Filter by distance (miles) if requested and not “all”
+        # Filter by distance if set and not "all"
         if distance and distance != "all":
             try:
                 dist_num = float(distance)
-                query = query.having(haversine <= dist_num)  # Note: use .having for labeled column
+                query = query.filter(haversine <= dist_num)
             except ValueError:
-                pass  # Ignore bad input
-        # Sort nearest first
+                pass
+
+        # Always order by distance if calculating
         query = query.order_by(haversine)
         results = query.all()
         # results = [(Business, distance), ...]
-        # Map for template: add .distance_mi attribute to business for easier use
         listings = []
         for biz, d in results:
             biz.distance_mi = round(d, 2) if d is not None else None
             listings.append(biz)
     else:
-        # No lat/lng: just get results normally, no distance calc, may want to warn user
+        # No lat/lng: show normally (might show all, not filtered)
         listings = query.all()
-        # .distance_mi missing
 
     return render_template(
         "search_results.html",
