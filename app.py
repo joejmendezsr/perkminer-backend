@@ -3142,23 +3142,48 @@ def assign_roles():
             db.session.commit()
             flash("Roles updated!", "success")
 
-@app.route("/listing-disclaimer", methods=["POST", "GET"])
+@app.route("/listing-disclaimer", methods=["GET", "POST"])
+@business_login_required
 def listing_disclaimer():
-    if request.method == "POST":
+    biz_id = session.get('business_id')
+    biz = Business.query.get_or_404(biz_id)
+
+    if request.method == 'POST':
         listing_id = request.form.get("listing_id")
         referral_code = request.form.get("referral_code")
-        return render_template(
-            "listing_disclaimer.html",
-            listing_id=listing_id,
-            referral_code=referral_code
-        )
-    return redirect(url_for("business_dashboard"))
+        accept_terms = request.form.get("accept_terms")
+        # (You may want to check accept_terms here if using POST to capture consent.)
+        if not accept_terms:
+            flash("You must accept the terms and conditions.")
+            return render_template(
+                "listing_disclaimer.html",
+                listing_id=listing_id,
+                referral_code=referral_code,
+                biz=biz
+            )
+        return redirect(url_for('send_for_review'))
+
+    # GET (or POST fallback): pull from form or args
+    listing_id = request.args.get("listing_id") or request.form.get("listing_id")
+    referral_code = request.args.get("referral_code") or request.form.get("referral_code")
+
+    return render_template(
+        "listing_disclaimer.html",
+        listing_id=listing_id,
+        referral_code=referral_code,
+        biz=biz
+    )
 
 @app.route("/send-for-review", methods=["POST"])
 @business_login_required
 def send_for_review():
     biz_id = session.get('business_id')
     biz = Business.query.get_or_404(biz_id)
+    return render_template(
+        "listing_disclaimer.html",
+        listing_id=listing_id,
+        referral_code=referral_code
+    )
 
     # New check: redirect if account balance is less than $1
     if biz.account_balance is None or biz.account_balance < 1:
