@@ -29,6 +29,10 @@ from functools import wraps
 from flask import session, flash, redirect, url_for, request
 from sqlalchemy import or_, and_
 from sqlalchemy import func, literal
+from flask import render_template
+from flask_login import current_user
+from models import Business, BusinessTransaction, UserTransaction
+
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -628,7 +632,53 @@ def usd(value):
 @app.route("/")
 def home():
     approved_listings = Business.query.filter_by(status="approved").all()
-    return render_template("home.html", approved_listings=approved_listings)
+
+    # User totals
+    user_transactions = UserTransaction.query.all()
+    total_user_tier1 = sum(t.cash_back or 0 for t in user_transactions)
+    total_user_commission = sum(
+        (t.tier2_commission or 0) + (t.tier3_commission or 0) + 
+        (t.tier4_commission or 0) + (t.tier5_commission or 0)
+        for t in user_transactions
+    )
+    total_user_biz_commission = sum(
+        (t.tier1_business_user_commission or 0) +
+        (t.tier2_business_user_commission or 0) +
+        (t.tier3_business_user_commission or 0) +
+        (t.tier4_business_user_commission or 0) +
+        (t.tier5_business_user_commission or 0)
+        for t in user_transactions
+    )
+    total_member_paid = total_user_tier1 + total_user_commission + total_user_biz_commission
+
+    # Business totals
+    business_transactions = BusinessTransaction.query.all()
+    total_biz_paid = sum(
+        (t.cash_back or 0) +
+        (t.tier2_commission or 0) +
+        (t.tier3_commission or 0) +
+        (t.tier4_commission or 0) +
+        (t.tier5_commission or 0)
+        for t in business_transactions
+    )
+    total_gross_sales = sum(t.amount or 0 for t in business_transactions)
+
+    # Advertising fees
+    total_ad_fees = sum((t.ad_fee or 0) for t in business_transactions)
+
+    # Percent of ad fees paid by PerkMiner
+    total_paid_out = total_member_paid + total_biz_paid
+    percent_fees_paid = ( (total_paid_out / total_ad_fees) * 100 ) if total_ad_fees > 0 else 0
+
+    return render_template(
+        "home.html",
+        approved_listings=approved_listings,
+        total_member_paid=total_member_paid,
+        total_biz_paid=total_biz_paid,
+        total_gross_sales=total_gross_sales,
+        total_ad_fees=total_ad_fees,
+        percent_fees_paid=percent_fees_paid
+    )
 
 @app.route("/business")
 def business_home():
