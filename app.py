@@ -3179,31 +3179,37 @@ def listing_disclaimer():
 def send_for_review():
     biz_id = session.get('business_id')
     biz = Business.query.get_or_404(biz_id)
-    return render_template(
-        "listing_disclaimer.html",
-        listing_id=listing_id,
-        referral_code=referral_code
-    )
 
-    # New check: redirect if account balance is less than $1
+    # Always fetch these from the form FIRST
+    listing_id = request.form.get("listing_id") or request.args.get("listing_id")
+    referral_code = request.form.get("referral_code") or request.args.get("referral_code")
+
+    # Check: redirect if account balance is less than $1
     if biz.account_balance is None or biz.account_balance < 1:
         flash("You must have an account balance of at least $1 to submit your listing. Please fund your account.")
         return redirect(url_for("fund_account"))
 
-    listing_id = request.form.get("listing_id")
-    referral_code = request.form.get("referral_code")
     accept_terms = request.form.get("accept_terms")
     if not accept_terms:
         flash("You must accept the terms and conditions.")
-        return redirect(url_for("listing_disclaimer"))
+        return render_template(
+            "listing_disclaimer.html",
+            listing_id=listing_id,
+            referral_code=referral_code,
+            biz=biz
+        )
 
     # Only require/upload a doc if it hasn't been uploaded yet (first submission)
     if not biz.business_registration_doc:
         file = request.files.get("business_registration_doc")
         if not file or file.filename == '':
             flash("Business registration document is required.")
-            return redirect(url_for("listing_disclaimer"))
-
+            return render_template(
+                "listing_disclaimer.html",
+                listing_id=listing_id,
+                referral_code=referral_code,
+                biz=biz
+            )
         # Save the file securely
         filename = secure_filename(file.filename)
         upload_folder = app.config.get("UPLOAD_FOLDER", "uploads")
