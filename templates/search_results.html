@@ -58,6 +58,11 @@
         background: #fff;
         border: 2px solid #daeae6;
       }
+      .miles-away-label {
+        color: #888; 
+        font-size: 0.97em; 
+        margin-bottom: 2px;
+      }
       .btn-primary, .btn-success { background: var(--pm-primary); border: none; color: #fff !important; }
       .btn-primary:hover, .btn-success:hover, .btn-outline-primary:focus { background: var(--pm-accent); color: var(--pm-text) !important; }
       .btn-outline-primary { border-color: var(--pm-primary); color: var(--pm-primary);}
@@ -124,6 +129,12 @@
                   <i class="bi bi-{{ categories | selectattr('name','equalto',biz.category) | map(attribute='icon') | list | first or 'grid-3x3-gap' }} category-icon" aria-hidden="true"></i>
                 {% endif %}
                 <h5 class="card-title mb-2" style="font-weight: bold;">{{ biz.business_name }}</h5>
+                {% if biz.distance_mi is defined and biz.distance_mi is not none %}
+                  <div class="miles-away-label">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {{ biz.distance_mi }} miles away
+                  </div>
+                {% endif %}
                 <div class="mb-1 small" style="font-weight: 500;">
                   <i class="bi bi-tag-fill" style="font-size:1em; color:var(--pm-primary);"></i>
                   {{ biz.category }}
