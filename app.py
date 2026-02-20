@@ -31,8 +31,6 @@ from sqlalchemy import or_, and_
 from sqlalchemy import func, literal
 from flask import render_template
 from flask_login import current_user
-from models import Business, BusinessTransaction, UserTransaction
-
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
