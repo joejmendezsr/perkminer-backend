@@ -3,189 +3,291 @@
 <head>
     <title>PerkMiner Homepage</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<style>
-:root {
-  --pm-primary: #2a5859;
-  --pm-accent: #ffd66b;
-  --pm-bg: #ffffff;
-  --pm-text: #222;
-  --pm-hover: #e6f6f5;
-}
-body {
-  background: var(--pm-bg);
-  color: var(--pm-text);
-}
-body > nav {
-  margin-bottom: 2rem !important;
-}
-.navbar {
-  box-shadow: 0 2px 8px #f0f2f3;
-}
-.card {
-  border: none;
-  opacity: 0;
-  transform: translateY(30px);
-  animation: fadeinCard 0.7s ease forwards;
-}
-@keyframes fadeinCard {
-  to { opacity: 1; transform: none; }
-}
-.card .card-title, .card span {
-  color: var(--pm-primary);
-}
-.card:hover, .card:focus-within {
-  background: var(--pm-hover);
-  box-shadow: 0 4px 16px #b4dad9;
-  transform: scale(1.045);
-  z-index: 1;
-  transition: background 0.18s, box-shadow 0.18s, transform 0.16s;
-}
-.btn-primary {
-  background: var(--pm-primary);
-  border: none;
-  color: #fff !important;
-}
-.btn-primary:hover {
-  background: var(--pm-accent);
-  color: var(--pm-text) !important;
-}
-.input-group {
-  border-radius: 18px;
-  box-shadow: 0 2px 10px #f2f5f5;
-}
-.input-group .form-control, .input-group .btn {
-  border-radius: 18px !important;
-}
-.category-icon {
-  font-size: 2em;
-  margin-bottom: 4px;
-  color: var(--pm-primary);
-  display: block;
-}
-@media (max-width: 600px) {
-  .card {
-    min-width: 90vw !important;
-    margin: 0 auto 12px auto;
-  }
-  .input-group {
-    max-width: 100% !important;
-  }
-}
-footer {
-  background: #f8fafb;
-  color: #999;
-  padding: 1.5rem 0;
-  margin-top: 3rem;
-  text-align: center;
-  font-size: 1em;
-  border-top: 1px solid #e1e7ea;
-}
-.breadcrumb {
-  background: none;
-  padding-left: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-</style>
+    <style>
+    :root {
+      --pm-primary: #2a5859;
+      --pm-accent: #ffd66b;
+      --pm-bg: #ffffff;
+      --pm-text: #222;
+      --pm-hover: #e6f6f5;
+    }
+    body {
+      background: var(--pm-bg);
+      color: var(--pm-text);
+    }
+    body > nav {
+      margin-bottom: 0 !important;
+    }
+    .navbar {
+      box-shadow: 0 2px 8px #f0f2f3;
+    }
+    /* Hero section styles */
+    .hero-section {
+      min-height: 55vh;
+      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=60') center/cover no-repeat;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-section .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(42,88,89,.53);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      color: #fff;
+    }
+    .hero-content h1 {
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(34,40,39,0.15);
+    }
+    /* Search bar styles */
+    .search-form .input-group {
+      border-radius: 18px;
+      box-shadow: 0 2px 10px #f2f5f5;
+      background: #fff;
+      overflow: hidden;
+    }
+    .search-form .form-control, .search-form .btn {
+      border-radius: 18px !important;
+      font-size: 1.1em;
+    }
+    .search-form .btn-location {
+      background: var(--pm-accent);
+      border: none;
+      color: var(--pm-primary);
+    }
+    .search-form .btn-location:hover {
+      background: #ffe7a2;
+      color: var(--pm-primary);
+    }
+    /* Category card styles */
+    .category-card {
+      border-radius: 10px;
+      overflow: hidden;
+      border: none;
+      box-shadow: 0 3px 10px #d1e7e0;
+      transition: transform 0.17s, box-shadow 0.17s;
+      cursor: pointer;
+      background: #fff;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      opacity: 0.95;
+    }
+    .category-card:hover, .category-card:focus-within {
+      transform: scale(1.038);
+      box-shadow: 0 7px 28px #aacfc6;
+      background: var(--pm-hover);
+    }
+    .category-image {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 7px;
+      box-shadow: 0 2px 8px #ddebe8;
+      background: #fff;
+    }
+    .category-label {
+      font-size: 1.07em;
+      color: var(--pm-primary);
+      font-weight: 500;
+      text-align: center;
+    }
+    /* Responsive grid tweaks */
+    @media (max-width: 767px) {
+      .category-card {
+        min-height: 110px;
+      }
+    }
+    @media (max-width: 575px) {
+      .hero-section {
+        min-height: 41vh;
+      }
+      .category-card {
+        min-height: 90px;
+      }
+    }
+    .card.business-listing {
+      border: none;
+      box-shadow: 0 2px 10px #deedea;
+      margin-bottom: 1.2em;
+    }
+    .business-listing .category-image {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 3px;
+    }
+    /* Footer */
+    footer {
+      background: #f8fafb;
+      color: #999;
+      padding: 1.5rem 0;
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 1em;
+      border-top: 1px solid #e1e7ea;
+    }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">PerkMiner</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                    <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-                    <a class="nav-link" href="{{ url_for('business_home') }}">Advertise with Us</a>
-                </div>
-            </div>
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-0">
+      <div class="container">
+        <a class="navbar-brand" href="/">PerkMiner</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="#">Login</a>
+            <a class="nav-link" href="#">Register</a>
+            <a class="nav-link" href="#">Advertise with Us</a>
+          </div>
         </div>
+      </div>
     </nav>
-    <main class="container">
-      <div class="py-5 text-center">
-        <h1 class="display-4">Welcome to PerkMiner!</h1>
-        <p class="lead">Your secure, custom site is now live.</p>
-        <hr class="my-4">
-
-        <form method="get" action="{{ url_for('search') }}">
-          <div class="input-group mb-4" style="max-width: 600px; margin: 0 auto;">
-            <input type="text" class="form-control" name="q" placeholder="Search for products, services, or businesses..." aria-label="Search" style="font-size: 1.2em;">
+    <!-- Hero section with background image & search -->
+    <section class="hero-section">
+      <div class="overlay"></div>
+      <div class="container hero-content text-center">
+        <h1 class="mb-3">Welcome to PerkMiner</h1>
+        <form class="search-form mb-4" method="get" action="#">
+          <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Search for products, services, or businesses..." aria-label="Search">
+            <button class="btn btn-location" type="button" id="geoBtn" title="Use my location">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 16a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-1A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm.93-11.412a.5.5 0 0 1 .675.738l-2.29 2.293A.5.5 0 0 1 6.352 7.5h-2.5a.5.5 0 0 1 0-1h2.086l2.292-2.293a.5.5 0 0 1 .704.381z"/>
+                </svg>
+            </button>
             <button class="btn btn-primary" type="submit">Search</button>
           </div>
+          <input type="hidden" name="lat" id="search-lat">
+          <input type="hidden" name="lng" id="search-lng">
         </form>
-
-        <div class="d-flex overflow-auto pb-3 mb-4" style="gap:18px;">
-          {% set categories = [
-            {'name':'Handyman-Contractor', 'icon':'wrench'},
-            {'name':'Auto Parts & Service', 'icon':'car-front-fill'},
-            {'name':'Home and Garden', 'icon':'house-door-fill'},
-            {'name':'Retail Outlet', 'icon':'shop'},
-            {'name':'Professional Services', 'icon':'safe-fill'},
-            {'name':'Restaurant', 'icon':'cup-straw'},
-            {'name':'Real Estate', 'icon':'building'},
-            {'name':'More', 'icon':'grid-3x3-gap'}
-          ] %}
-          {% for cat in categories %}
-            <a class="text-decoration-none" href="{{ url_for('category_browse', name=cat.name) }}">
-              <div class="card shadow-sm px-4 py-3 h-100 text-center pointer"
-                    style="min-width:170px; min-height:118px; display:flex; flex-direction:column; justify-content:center; align-items:center; border-radius: 12px; transition: box-shadow 0.2s;">
-                <i class="bi bi-{{ cat.icon }} category-icon" {% if cat.name == 'More' %}style="color: var(--pm-accent);"{% endif %}></i>
-                <span style="font-size: 1.1em; {% if cat.name == 'More' %}color: var(--pm-accent);{% endif %}">{{ cat.name }}</span>
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-
-        <!-- MOCK DEMO LISTINGS -->
-        <div class="mb-5">
-          <h3 class="mb-4 text-start">Featured Businesses</h3>
-          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            {% set demo_listings = [
-                {'business_name':'Sparks & Sons Handyman','category':'Handyman-Contractor','website_url':'','about_us':'Skilled repairs and home improvement.','profile_photo':'','address':'123 Maple Drive'},
-                {'business_name':'Evergreen Motors','category':'Auto Parts & Service','website_url':'https://evergreenmotors.com','about_us':'Your neighborhood auto care experts.','profile_photo':'','address':'881 Fixit Ave'},
-                {'business_name':'Blossom Gardens','category':'Home and Garden','website_url':'','about_us':'Garden design and lawn maintenance.','profile_photo':'','address':'14 Flower Rd'},
-                {'business_name':'Downtown Styles','category':'Retail Outlet','website_url':'https://dtnstyles.example','about_us':'Trendy clothing and more.','profile_photo':'','address':'45 Center St'},
-                {'business_name':'Safe Choice Insurance','category':'Insurance','website_url':'https://safechoice.com','about_us':'Peace of mind for your family and business.','profile_photo':'','address':'900 Policy Pkwy'},
-                {'business_name':'Sunrise Diner','category':'Restaurant','website_url':'','about_us':'Breakfast, lunch, and dinner—open late!','profile_photo':'','address':'789 Egg Ct'},
-                {'business_name':'Smart Realty Group','category':'Real Estate','website_url':'https://smartrealty.com','about_us':'Finding your dream home made easy.','profile_photo':'','address':'1620 Lakefront Blvd'}
-            ] %}
-            {% for biz in demo_listings %}
-              <div class="col">
-                <div class="card h-100 shadow-sm">
-                  <div class="card-body">
-                    <i class="bi bi-{{ categories | selectattr('name','equalto',biz.category) | map(attribute='icon') | list | first or 'grid-3x3-gap' }} category-icon"></i>
-                    <h5 class="card-title mb-2" style="font-weight: bold;">{{ biz.business_name }}</h5>
-                    <div class="mb-1 small" style="font-weight: 500;">
-                      <i class="bi bi-tag-fill" style="font-size:1em; color:var(--pm-primary);"></i>
-                      {{ biz.category }}
-                    </div>
-                    {% if biz.website_url %}
-                      <div class="mb-1"><strong>Website:</strong> <a href="{{ biz.website_url }}" target="_blank" rel="noopener">{{ biz.website_url }}</a></div>
-                    {% endif %}
-                    <div class="mb-1"><strong>Address:</strong> {{ biz.address }}</div>
-                    {% if biz.about_us %}
-                      <div class="mb-1"><strong>About:</strong> {{ biz.about_us }}</div>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
-          {% if demo_listings|length == 0 %}
-            <div class="alert alert-warning text-center mt-4">
-              No featured businesses yet. <a href="{{ url_for('business_home') }}" class="btn btn-link">Be the first to advertise here!</a>
+      </div>
+    </section>
+    <!-- Main content -->
+    <main class="container my-5">
+      <!-- Categories grid -->
+      <h2 class="mb-4 mt-3 mt-md-0 text-center">Browse by Category</h2>
+      <div class="row g-3 g-md-4 justify-content-center">
+        <!-- Each col-6 (mobile), col-md-4 (tablet), col-lg-2 (desktop): 6 per row on large screen -->
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="#" class="text-decoration-none">
+            <div class="category-card text-center">
+              <img src="https://images.unsplash.com/photo-1503389152951-9a67d2c3ab77?auto=format&fit=crop&w=80&q=30" alt="Handyman-Contractor" class="category-image">
+              <div class="category-label">Handyman</div>
             </div>
-          {% endif %}
+          </a>
         </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="#" class="text-decoration-none">
+            <div class="category-card text-center">
+              <img src="https://images.unsplash.com/photo-1483728642387-f033b3f040ca?auto=format&fit=crop&w=80&q=30" alt="Auto Parts & Service" class="category-image">
+              <div class="category-label">Auto Service</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="#" class="text-decoration-none">
+            <div class="category-card text-center">
+              <img src="https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=80&q=30" alt="Home and Garden" class="category-image">
+              <div class="category-label">Home & Garden</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="#" class="text-decoration-none">
+            <div class="category-card text-center">
+              <img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b3025?auto=format&fit=crop&w=80&q=30" alt="Retail Outlet" class="category-image">
+              <div class="category-label">Retail Outlet</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="#" class="text-decoration-none">
+            <div class="category-card text-center">
+              <img src="https://images.unsplash.com/photo-1507679622743-cd90225c18d4?auto=format&fit=crop&w=80&q=30" alt="Professional Services" class="category-image">
+              <div class="category-label">Professional</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="#" class="text-decoration-none">
+            <div class="category-card text-center">
+              <img src="https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=80&q=30" alt="Restaurant" class="category-image">
+              <div class="category-label">Restaurant</div>
+            </div>
+          </a>
+        </div>
+      </div>
 
-        <p>Explore top businesses, find your next deal, or <a href="{{ url_for('business_home') }}" style="color:var(--pm-primary); font-weight: 500;">get listed today</a>.</p>
+      <!-- Featured Businesses Section -->
+      <h3 class="mt-5 mb-3 text-start">Featured Businesses</h3>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <!-- Example Listing -->
+        <div class="col">
+          <div class="card business-listing h-100">
+            <div class="card-body">
+              <img src="https://images.unsplash.com/photo-1503389152951-9a67d2c3ab77?auto=format&fit=crop&w=36&q=20" alt="Handyman" class="category-image mb-2">
+              <h5 class="card-title mb-1">Sparks & Sons Handyman</h5>
+              <div class="mb-1 small">
+                <span class="badge bg-success">Handyman-Contractor</span>
+              </div>
+              <div class="mb-1"><strong>Address:</strong> 123 Maple Drive</div>
+              <div class="mb-1"><strong>About:</strong> Skilled repairs & home improvement.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card business-listing h-100">
+            <div class="card-body">
+              <img src="https://images.unsplash.com/photo-1483728642387-f033b3f040ca?auto=format&fit=crop&w=36&q=20" alt="Auto" class="category-image mb-2">
+              <h5 class="card-title mb-1">Evergreen Motors</h5>
+              <div class="mb-1 small">
+                <span class="badge bg-primary">Auto Parts & Service</span>
+              </div>
+              <div class="mb-1"><strong>Website:</strong> <a href="https://evergreenmotors.com" target="_blank" rel="noopener">evergreenmotors.com</a></div>
+              <div class="mb-1"><strong>Address:</strong> 881 Fixit Ave</div>
+              <div class="mb-1"><strong>About:</strong> Your neighborhood auto care experts.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card business-listing h-100">
+            <div class="card-body">
+              <img src="https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=36&q=20" alt="Garden" class="category-image mb-2">
+              <h5 class="card-title mb-1">Blossom Gardens</h5>
+              <div class="mb-1 small">
+                <span class="badge bg-warning text-dark">Home & Garden</span>
+              </div>
+              <div class="mb-1"><strong>Address:</strong> 14 Flower Rd</div>
+              <div class="mb-1"><strong>About:</strong> Garden design & maintenance.</div>
+            </div>
+          </div>
+        </div>
+        <!-- More business cards as needed -->
+      </div>
+      <div class="text-center mt-4">
+        <p>Explore top businesses, find your next deal, or <a href="#" style="color:var(--pm-primary);font-weight:500;">get listed today</a>.</p>
       </div>
     </main>
+    <!-- Footer -->
     <footer>
       <div>
         <div class="mb-2">
@@ -200,6 +302,22 @@ footer {
         </div>
       </div>
     </footer>
+    <!-- Bootstrap JS and bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Geolocation JS -->
+    <script>
+    document.getElementById('geoBtn').addEventListener('click', function() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          document.getElementById('search-lat').value = position.coords.latitude;
+          document.getElementById('search-lng').value = position.coords.longitude;
+        }, function(error) {
+          alert('Unable to retrieve location. Please allow location access.');
+        });
+      } else {
+        alert('Geolocation not supported by your browser.');
+      }
+    });
+    </script>
 </body>
 </html>
