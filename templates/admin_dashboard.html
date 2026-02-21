@@ -184,8 +184,8 @@
     <td>{{ biz.category }}</td>
     <td>{{ biz.referral_code }}</td>
     <td>
-      {% set approver = User.query.get(biz.approved_by) %}
-      {{ approver.email if approver else biz.approved_by or '' }}
+      {% set approver = user_lookup.get(biz.approved_by) %}
+      {{ approver.email if approver else (biz.approved_by or '') }}
     </td>
     <td>
       <a href="{{ url_for('admin_edit_business', business_id=biz.id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>

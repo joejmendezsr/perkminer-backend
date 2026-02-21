@@ -3006,6 +3006,7 @@ def admin_reset_password(token):
 @admin_required
 def admin_dashboard():
     users = User.query.all()
+    user_lookup = {user.id: user for user in users}
     businesses = Business.query.all()
     EmptyFormInstance = EmptyForm  # Alias if you prefer
 
@@ -3016,6 +3017,7 @@ def admin_dashboard():
         users=users,
         businesses=businesses,
         business_forms=business_forms
+        user_lookup=user_lookup,
     )
 
 @app.route("/finance-dashboard", methods=["GET"])
