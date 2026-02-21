@@ -12,72 +12,77 @@
         --pm-bg: #fff;
         --pm-text: #222;
         --pm-hover: #e6f6f5;
-        --pm-highlight: #f7ffe7;
-        --pm-focus: #fadd92;
       }
-      body { background: var(--pm-bg); color: var(--pm-text); }
-      .navbar { box-shadow: 0 2px 8px #f0f2f3; }
-      .card {
-        border: none;
-        opacity: 0;
-        transform: translateY(30px);
-        animation: fadeinCard 0.7s ease forwards;
+      body { background: var(--pm-bg); color: var(--pm-text);}
+      .navbar { box-shadow: 0 2px 8px #f0f2f3;}
+      /* Modern small listing card */
+      .small-listing-modern {
+        border: 1px solid #d9ece7;
+        border-radius: 14px;
+        background: #fafefe;
+        box-shadow: 0 1px 5px #e6f9f4;
+        margin-bottom: 1.2rem;
+        padding: 10px 12px 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        max-width: 420px;
+        min-width: 230px;
         cursor: pointer;
-        min-width: 190px;
+        transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
       }
-      @keyframes fadeinCard {
-        to { opacity: 1; transform: none; }
-      }
-      .card .card-title { color: var(--pm-primary);}
-      .card:focus-within, .card:active {
-        box-shadow: 0 4px 16px #b4dad9;
-        outline: 2px solid var(--pm-focus);
-      }
-      .card:hover {
+      .small-listing-modern:hover {
         background: var(--pm-hover);
-        box-shadow: 0 4px 16px #b4dad9;
-        transform: scale(1.045);
-        z-index: 1;
-        transition: background 0.18s, box-shadow 0.18s, transform 0.16s;
+        box-shadow: 0 4px 18px #b4dad9;
+        transform: scale(1.03);
       }
-      .category-icon, .biz-photo {
-        font-size: 2.3em;
-        margin-bottom: 8px;
-        color: var(--pm-primary);
-        display: block;
-        border-radius: 50%;
-        background: var(--pm-highlight);
-        width: 72px;
-        height: 72px;
-        line-height: 72px;
-        text-align: center;
+      .small-listing-modern-img {
+        width: 88px;
+        height: 88px;
         object-fit: cover;
-        outline: 1px solid #e4eee9;
+        border-radius:10px;
+        box-shadow: 0 2px 8px #ddebe8;
+        margin-left: 4px;
+        background: #f7f7f7;
       }
-      .biz-photo {
-        background: #fff;
-        border: 2px solid #daeae6;
+      @media (max-width:600px) {
+        .small-listing-modern { flex-direction: column; align-items: flex-start; max-width: 99vw;}
+        .small-listing-modern-img { width:58px; height:58px;}
       }
-      .miles-away-label {
-        color: #888; 
-        font-size: 0.97em; 
-        margin-bottom: 2px;
+      .small-listing-info { font-size: 0.98em; width:100%; }
+      .small-listing-title { font-weight: 700; margin-bottom: 6px; font-size:1.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+      .small-listing-category-badge {
+        font-size:.95em;
+        font-weight:500;
+        border-radius:10px;
+        background: #e6f6f5;
+        color: #2a5859;
+        padding:4px 10px;
+        margin-bottom:4px;
+        display:inline-block;
       }
-      .btn-primary, .btn-success { background: var(--pm-primary); border: none; color: #fff !important; }
-      .btn-primary:hover, .btn-success:hover, .btn-outline-primary:focus { background: var(--pm-accent); color: var(--pm-text) !important; }
-      .btn-outline-primary { border-color: var(--pm-primary); color: var(--pm-primary);}
-      .btn-outline-primary:hover { background: var(--pm-primary); color: #fff;}
-      footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea; }
+      .small-listing-mile-badge {
+        font-size: .95em;
+        background: #eef8fa;
+        color: #357;
+        border-radius: 9px;
+        padding: 2px 12px 2px 8px;
+        margin-bottom:4px;
+        margin-right:6px;
+        display:inline-block;
+        white-space: nowrap;
+        border:1px solid #e5eef3;
+        opacity:.93;
+      }
+      .small-listing-services {
+        color: #345;
+        opacity: .93;
+        word-break: break-word;
+        font-size:.98em;
+      }
+      /* Misc */
+      footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea;}
       .breadcrumb { background: none; padding-left: 0.5rem; margin-bottom: 1.5rem;}
-      [aria-busy="true"] { opacity: 0.4; filter: blur(1px); pointer-events: none; }
-      @media (max-width: 900px) { .row-cols-lg-3 > * { flex: 0 0 100%; max-width: 100%; } }
-      @media (max-width: 600px) {
-        .card { min-width: 96vw !important; margin: 0 auto 12px auto; }
-        .biz-photo, .category-icon { width: 58px; height: 58px; line-height: 58px; font-size: 1.5em;}
-        .btn, .btn-outline-primary { width: 100%; margin-bottom:8px;}
-        .breadcrumb { font-size: 1em; }
-        h2 { font-size: 1.18em; }
-      }
     </style>
 </head>
 <body>
@@ -105,50 +110,44 @@
 
     <div id="result-count-announcement" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
-    {% set categories = [
-      {'name':'Handyman-Contractor', 'icon':'wrench'},
-      {'name':'Auto Parts & Service', 'icon':'car-front-fill'},
-      {'name':'Home and Garden', 'icon':'house-door-fill'},
-      {'name':'Retail Outlet', 'icon':'shop'},
-      {'name':'Insurance', 'icon':'safe-fill'},
-      {'name':'Restaurant', 'icon':'cup-straw'},
-      {'name':'Real Estate', 'icon':'building'},
-      {'name':'More', 'icon':'grid-3x3-gap'}
-    ] %}
     {% if results and results|length > 0 %}
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="biz-results" aria-busy="false">
         {% for biz in results %}
           <div class="col">
-            <div class="card h-100 shadow-sm small-listing-card"
-                tabindex="0" aria-label="{{ biz.business_name }}"
-                onclick="window.location.href='{{ url_for('view_listing', biz_id=biz.id) }}'">
-              <div class="card-body text-center">
+            <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi) }}" style="text-decoration:none;">
+              <div class="small-listing-modern">
                 {% if biz.profile_photo %}
-                  <img src="{{ biz.profile_photo }}" class="biz-photo mb-2" alt="{{ biz.business_name }} logo" width="70" height="70">
+                  <img src="{{ biz.profile_photo }}" class="small-listing-modern-img" alt="{{ biz.business_name }} logo">
                 {% else %}
-                  <i class="bi bi-{{ categories | selectattr('name','equalto',biz.category) | map(attribute='icon') | list | first or 'grid-3x3-gap' }} category-icon" aria-hidden="true"></i>
-                {% endif %}
-                <h5 class="card-title mb-2" style="font-weight: bold;">{{ biz.business_name }}</h5>
-                {% if biz.distance_mi is defined and biz.distance_mi is not none %}
-                  <div class="miles-away-label">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    {{ biz.distance_mi }} miles away
+                  <div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border">
+                    <i class="bi bi-shop" style="font-size:1.6em; color:#2a5859;"></i>
                   </div>
                 {% endif %}
-                <div class="mb-1 small" style="font-weight: 500;">
-                  <i class="bi bi-tag-fill" style="font-size:1em; color:var(--pm-primary);"></i>
-                  {{ biz.category }}
-                </div>
-                {% if biz.address %}
-                  <div class="mb-1"><strong>Address:</strong> {{ biz.address }}</div>
-                {% endif %}
-                <div class="mb-1">
-                  <strong>Services:</strong>
-                  {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
-                  {{ services|select('string')|reject('equalto','')|join(', ') if services|select('string')|reject('equalto','')|list else 'N/A' }}
+                <div class="small-listing-info">
+                  <div class="small-listing-title">{{ biz.business_name }}</div>
+                  <div>
+                    <span class="small-listing-category-badge">{{ biz.category }}</span>
+                    {% if biz.distance_mi is defined and biz.distance_mi is not none %}
+                      <span class="small-listing-mile-badge">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        {{ biz.distance_mi|round(2) }} mi away
+                      </span>
+                    {% endif %}
+                  </div>
+                  {% if biz.address %}
+                    <div style="font-size:.97em;">
+                      <i class="bi bi-geo-alt" style="color:var(--pm-primary);"></i>
+                      <span> {{ biz.address }}</span>
+                    </div>
+                  {% endif %}
+                  <div class="small-listing-services mt-1">
+                    <b>Services:</b>
+                    {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+                    {{ services|select|reject('equalto','')|join(', ') if services|select|reject('equalto','')|list else 'N/A' }}
+                  </div>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         {% endfor %}
       </div>

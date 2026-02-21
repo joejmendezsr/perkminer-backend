@@ -3477,9 +3477,11 @@ def view_listing(biz_id):
         return redirect(url_for("login"))  # or use your custom login page
     
     # Render large listing as normal
+    distance_mi = request.args.get("distance_mi")
     biz = Business.query.get_or_404(biz_id)
+    biz.distance_mi = float(distance_mi) if distance_mi else None
     return render_template("large_listing.html", biz=biz)
-
+    
 @app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
 def combined_detailed_report():
