@@ -95,6 +95,111 @@
           font-size: 1em;
           border-top: 1px solid #e1e7ea;
         }
+
+        /* Modern small preview card */
+        .small-listing-modern {
+          border: 1px solid #d9ece7;
+          border-radius: 14px;
+          background: #fafefe;
+          box-shadow: 0 1px 5px #e6f9f4;
+          margin-bottom: 1.2rem;
+          padding: 10px 12px 10px 0;
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+          max-width: 380px;
+        }
+        .small-listing-modern-img {
+          width: 180px;
+          height: 180px;
+          object-fit: cover;
+          border-radius:12px;
+          box-shadow: 0 2px 8px #ddebe8;
+          margin-right: 8px;
+          background: #f7f7f7;
+        }
+        @media (max-width:600px) {
+          .small-listing-modern { flex-direction: column; align-items: flex-start; max-width: 99vw;}
+          .small-listing-modern-img { width:120px; height:120px;}
+        }
+        .small-listing-info { font-size: 0.98em;}
+        .small-listing-title { font-weight: 700; margin-bottom: 6px; font-size:1.06em; }
+        .small-listing-category-badge {
+          font-size:.95em;
+          font-weight:500;
+          border-radius:10px;
+          background: #e6f6f5;
+          color: #2a5859;
+          padding:4px 10px;
+          margin-bottom:4px;
+          display:inline-block;
+        }
+        /* Large listing preview */
+        .listing-pic-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+        .large-profile-pic {
+          width: 300px;
+          height: 300px;
+          border-radius: 16px;
+          box-shadow: 0 3px 18px #e4ebef;
+          object-fit: cover;
+          background: #f4f9fa;
+          border: 2.5px solid #ffd66b;
+          margin-bottom: 1.1rem;
+          margin-top: .35rem;
+          display: block;
+        }
+        @media (max-width: 700px) {
+          .large-profile-pic { width: 170px; height: 170px;}
+        }
+        .biz-category-badge {
+          font-size:1em;
+          font-weight:500;
+          border-radius:16px;
+          padding:6px 16px;
+          background: #e6f6f5;
+          color: #2a5859;
+          display:inline-block;
+          margin-bottom: 9px;
+        }
+        .main-info-row {
+          margin-bottom: .49rem;
+          display:flex;
+          align-items:center;
+          gap:8px;
+          color: #314655;
+          font-weight:500;
+        }
+        .about-block {
+          background: #f4f5fb;
+          border-radius: 10px;
+          padding: .79rem 1.01rem;
+          margin-bottom: 1.1rem;
+          min-height: 38px;
+          font-size: .99em;
+          color: #374759;
+        }
+        .service-list-label {
+          font-weight:700;
+          color: #2a5859;
+          margin-bottom:4px;
+          font-size:1em;
+        }
+        .service-list {
+          background: #f7faf8;
+          border-radius: 9px;
+          padding: .6rem 1.02rem .6rem 1.1rem;
+          margin-bottom: 1.05rem;
+          margin-top: 0;
+          font-size:1em;
+          box-shadow:0 1px 2px #eee;
+        }
+        .service-list li { margin-bottom: 3px; }
+
     </style>
     <script>
       function calculateNetworkEarnings() {
@@ -575,7 +680,9 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="listing_id" value="{{ biz.id }}">
               <input type="hidden" name="referral_code" value="{{ biz.referral_code }}">
-              <button type="submit" class="btn btn-warning w-100 mb-2">Submit for Review</br>$0 Account Balance Not Allowed</button>
+              <button type="submit" class="btn btn-warning w-100 mb-2">
+                Submit for Review<br>$0 Account Balance Not Allowed
+              </button>
             </form>
             {% if (biz.account_balance is not none and biz.account_balance|float <= 0.0) and biz.status in ["not_submitted", "draft"] %}
               <div class="text-danger fw-bold text-center mb-2" style="font-size:1.07em;">
@@ -596,82 +703,84 @@
       </div>
     </div>
 
-    <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      let previewBtn = document.getElementById('previewListingBtn');
-      let modal = document.getElementById('listingPreviewModal');
-      let modalContent = document.getElementById('listing-preview-content');
-      let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  let previewBtn = document.getElementById('previewListingBtn');
+  let modal = document.getElementById('listingPreviewModal');
+  let modalContent = document.getElementById('listing-preview-content');
+  let previewModal = modal && window.bootstrap ? new bootstrap.Modal(modal) : null;
 
-      previewBtn && previewBtn.addEventListener('click', function(){
-        let name = document.querySelector('[name="business_name"]')?.value || {{ biz.business_name | tojson }};
-        let address = document.getElementById('address-autocomplete')?.value || {{ biz.address | tojson }};
-        let category = document.getElementById('business_category')?.value || {{ biz.category | tojson }};
-        let phone = document.getElementById('us-phone')?.value || {{ biz.phone_number | tojson }};
-        let website = document.getElementById('website_url')?.value || {{ biz.website_url | tojson }};
-        let about = document.getElementById('about_us')?.value || {{ biz.about_us | tojson }};
-        let keywords = document.getElementById('search_keywords')?.value || {{ biz.search_keywords | tojson }};
-        let services = [];
-        document.querySelectorAll('#services-list input').forEach(input => {
-          if(input.value.trim()!="") services.push(input.value.trim());
-        });
-        let img = {{ (profile_img_url if profile_img_url else "") | tojson }};
-
-        let smallListing = `
-          <div class="card mb-3">
-            <div class="row g-0 align-items-center">
-              <div class="col-md-3 text-center">
-                ${img? `<img src="${img}" class="rounded-circle" style="width:60px;height:60px;object-fit:cover;">` : ""}
-              </div>
-              <div class="col-md-9">
-                <b>${name}</b><br/>
-                <span class="text-muted">${category}</span><br/>
-                <span>${address}</span><br/>
-                <small>Services: ${services.length ? services.join(', ') : 'N/A'}</small>
-              </div>
-            </div>
-          </div>
-        `;
-        let largeListing = `
-          <div>
-            ${img? `<div class="mb-3 text-center"><img src="${img}" class="rounded-circle" style="width:120px;height:120px;object-fit:cover;"></div>` : ""}
-            <h3>${name}</h3>
-            <div><strong>Category:</strong> ${category}</div>
-            <div><strong>Address:</strong> ${address}</div>
-            <div id="preview-map" style="width:100%;height:150px;border-radius:8px;margin:8px 0;"></div>
-            <div><strong>Phone:</strong> ${phone}</div>
-            <div><strong>Website:</strong> ${website? `<a href="${website}" target="_blank">${website}</a>` : '-'}</div>
-            <div><strong>Email:</strong> {{ biz.business_email }}</div>
-            <div><strong>About us:</strong> ${about}</div>
-            <div><strong>Services:</strong> ${services.length ? "<ul>" + services.map(s=>`<li>${s}</li>`).join('') + "</ul>" : "N/A"}</div>
-          </div>
-        `;
-
-        let html = `
-          <h5>Small Listing Preview</h5>
-          ${smallListing}
-          <hr/>
-          <h5>Large Listing Preview</h5>
-          ${largeListing}
-        `;
-        // Only replace what follows the form in the modal body.
-        let modalForm = modalContent.querySelector('form');
-        modalContent.innerHTML = (modalForm ? modalForm.outerHTML : '') + html;
-        setTimeout(function() {
-          let lat = Number(document.getElementById('latitude')?.value) || 39.8283;
-          let lng = Number(document.getElementById('longitude')?.value) || -98.5795;
-          if (window.google && document.getElementById('preview-map')) {
-            let previewMap = new google.maps.Map(document.getElementById('preview-map'), {
-              center: {lat: lat, lng: lng},
-              zoom: 16
-            });
-            new google.maps.Marker({position: {lat: lat, lng: lng}, map: previewMap});
-          }
-        }, 200);
-        previewModal && previewModal.show();
-      });
+  previewBtn && previewBtn.addEventListener('click', function(){
+    let name = document.querySelector('[name="business_name"]')?.value || {{ biz.business_name | tojson }};
+    let address = document.getElementById('address-autocomplete')?.value || {{ biz.address | tojson }};
+    let category = document.getElementById('business_category')?.value || {{ biz.category | tojson }};
+    let phone = document.getElementById('us-phone')?.value || {{ biz.phone_number | tojson }};
+    let website = document.getElementById('website_url')?.value || {{ biz.website_url | tojson }};
+    let about = document.getElementById('about_us')?.value || {{ biz.about_us | tojson }};
+    let email = {{ biz.business_email | tojson }};
+    let services = [];
+    document.querySelectorAll('#services-list input').forEach(input => {
+      if(input.value.trim()!="") services.push(input.value.trim());
     });
-    </script>
+    let img = {{ (profile_img_url if profile_img_url else "") | tojson }};
+
+    // MODERN SMALL LISTING PREVIEW (matches homepage)
+    let smallListing = `
+      <div class="small-listing-modern">
+        ${img
+          ? `<img src="${img}" class="small-listing-modern-img" alt="${name}">`
+          : `<div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border"><i class="bi bi-shop" style="font-size:1.9em; color:#a3bdbc;"></i></div>`
+        }
+        <div class="small-listing-info">
+          <div class="small-listing-title">${name}</div>
+          <div class="small-listing-category-badge">${category}</div>
+          <div><b>Address:</b> ${address}</div>
+          <div>
+            <b>Services:</b> ${services.length ? services.join(', ') : 'N/A'}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // MODERN LARGE LISTING PREVIEW (matches large_listing)
+    let largeListing = `
+      <div class="listing-pic-wrap">
+        ${img
+          ? `<img src="${img}" class="large-profile-pic" alt="${name}">`
+          : `<div class="large-profile-pic d-flex align-items-center justify-content-center bg-light border"><i class="bi bi-shop" style="font-size:2.9em; color:#a3bdbc;"></i></div>`
+        }
+        <h2 class="listing-title">${name}</h2>
+        <span class="biz-category-badge mb-2">${category}</span>
+      </div>
+      <div class="main-info-row"><i class="bi bi-pin-map"></i><span><b>Address:</b> ${address}</span></div>
+      <div class="main-info-row"><i class="bi bi-telephone"></i><span><b>Phone:</b> ${phone}</span></div>
+      <div class="main-info-row"><i class="bi bi-envelope"></i><span><b>Email:</b> ${email}</span></div>
+      <div class="main-info-row"><i class="bi bi-globe"></i>
+        <b>Website:</b> ${website ? `<a href="${website}" target="_blank">${website}</a>` : "-"}
+      </div>
+      <div class="about-block">
+        <b>About Us:</b><br>${about || "&mdash;"}
+      </div>
+      <div class="service-list-label">Products or Services Offered:</div>
+      <ul class="service-list">
+        ${services.length ? services.map(s=>`<li>${s}</li>`).join('') : "<li>N/A</li>"}
+      </ul>
+    `;
+
+    let html = `
+      <h5>Small Listing Preview</h5>
+      ${smallListing}
+      <hr/>
+      <h5>Large Listing Preview</h5>
+      ${largeListing}
+    `;
+    // Only replace what follows the form in the modal body.
+    let modalForm = modalContent.querySelector('form');
+    modalContent.innerHTML = (modalForm ? modalForm.outerHTML : '') + html;
+    previewModal && previewModal.show && previewModal.show();
+  });
+});
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -788,5 +897,8 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+
+
 </body>
 </html>
