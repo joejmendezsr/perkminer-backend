@@ -723,6 +723,10 @@ window.addEventListener('DOMContentLoaded', function() {
       if(input.value.trim()!="") services.push(input.value.trim());
     });
     let img = {{ (profile_img_url if profile_img_url else "") | tojson }};
+    let lat = document.getElementById('latitude')?.value || "0";
+    let lng = document.getElementById('longitude')?.value || "0";
+    if (!lat || isNaN(Number(lat))) lat = "";
+    if (!lng || isNaN(Number(lng))) lng = "";
 
     // MODERN SMALL LISTING PREVIEW (matches homepage)
     let smallListing = `
@@ -743,29 +747,47 @@ window.addEventListener('DOMContentLoaded', function() {
     `;
 
     // MODERN LARGE LISTING PREVIEW (matches large_listing)
-    let largeListing = `
-      <div class="listing-pic-wrap">
-        ${img
-          ? `<img src="${img}" class="large-profile-pic" alt="${name}">`
-          : `<div class="large-profile-pic d-flex align-items-center justify-content-center bg-light border"><i class="bi bi-shop" style="font-size:2.9em; color:#a3bdbc;"></i></div>`
-        }
-        <h2 class="listing-title">${name}</h2>
-        <span class="biz-category-badge mb-2">${category}</span>
-      </div>
-      <div class="main-info-row"><i class="bi bi-pin-map"></i><span><b>Address:</b> ${address}</span></div>
-      <div class="main-info-row"><i class="bi bi-telephone"></i><span><b>Phone:</b> ${phone}</span></div>
-      <div class="main-info-row"><i class="bi bi-envelope"></i><span><b>Email:</b> ${email}</span></div>
-      <div class="main-info-row"><i class="bi bi-globe"></i>
-        <b>Website:</b> ${website ? `<a href="${website}" target="_blank">${website}</a>` : "-"}
-      </div>
-      <div class="about-block">
-        <b>About Us:</b><br>${about || "&mdash;"}
-      </div>
-      <div class="service-list-label">Products or Services Offered:</div>
-      <ul class="service-list">
-        ${services.length ? services.map(s=>`<li>${s}</li>`).join('') : "<li>N/A</li>"}
-      </ul>
-    `;
+let largeListing = `
+  <div class="listing-pic-wrap">
+    ${img
+      ? `<img src="${img}" class="large-profile-pic" alt="${name}">`
+      : `<div class="large-profile-pic d-flex align-items-center justify-content-center bg-light border"><i class="bi bi-shop" style="font-size:2.9em; color:#a3bdbc;"></i></div>`
+    }
+    <h2 class="listing-title">${name}</h2>
+    <span class="biz-category-badge mb-2">${category}</span>
+  </div>
+  <div class="main-info-row"><i class="bi bi-pin-map"></i><span><b>Address:</b> ${address}</span></div>
+  <div class="main-info-row"><i class="bi bi-telephone"></i><span><b>Phone:</b> ${phone}</span></div>
+  <div class="main-info-row"><i class="bi bi-envelope"></i><span><b>Email:</b> ${email}</span></div>
+  <div class="main-info-row"><i class="bi bi-globe"></i>
+    <b>Website:</b> ${website ? `<a href="${website}" target="_blank">${website}</a>` : "-"}
+  </div>
+  <div class="about-block">
+    <b>About Us:</b><br>${about || "&mdash;"}
+  </div>
+  <div class="service-list-label">Products or Services Offered:</div>
+  <ul class="service-list">
+    ${services.length ? services.map(s=>`<li>${s}</li>`).join('') : "<li>N/A</li>"}
+  </ul>
+  ${lat && lng ? `
+    <div class="map-wrap">
+      <iframe
+        width="100%" height="100%" style="border:0"
+        loading="lazy" allowfullscreen
+        referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4&q=${lat},${lng}">
+      </iframe>
+    </div>
+    <div class="mt-2 mb-3">
+      <a id="directions-link"
+         class="btn btn-outline-primary map-link-btn"
+         target="_blank"
+         href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}">
+        Driving directions
+      </a>
+    </div>
+  ` : '<div class="text-muted mb-2">Map unavailable</div>'}
+`;
 
     let html = `
       <h5>Small Listing Preview</h5>

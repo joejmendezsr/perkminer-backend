@@ -3428,8 +3428,12 @@ def admin_delete_business(business_id):
 from flask_login import login_required
 
 @app.route("/listing/<int:biz_id>")
-@login_required
 def view_listing(biz_id):
+    # BLOCK if NOT user AND NOT business
+    if not (current_user.is_authenticated or session.get("business_id")):
+        return redirect(url_for("login"))  # or use your custom login page
+    
+    # Render large listing as normal
     biz = Business.query.get_or_404(biz_id)
     return render_template("large_listing.html", biz=biz)
 
