@@ -47,16 +47,11 @@
       display: flex;
       flex-direction: column;
     }
-    .business-listing-modern:hover { box-shadow: 0 9px 36px #daeaea; transform: translateY(-4px) scale(1.025);}
-    .biz-feature-img-wrap { width: 100%; height: 180px; overflow: hidden; border-radius: 14px 14px 0 0; background: #f7f7f7;}
-    .biz-feature-img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px 14px 0 0; }
-    .card-body.text-center { flex: 1 1 140px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; }
-    .card-title { font-size: 1.12em; font-weight: 700; margin-bottom: 0.38rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 98%; }
     .biz-services {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 240px;
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      max-width: 100%;
       margin: 0 auto;
       display: block;
       font-size: .94em;
@@ -209,10 +204,6 @@
               <div class="mb-1 small" style="font-weight:500;">
                 <span class="badge bg-success">{{ biz.category }}</span>
               </div>
-              {% if biz.website_url %}
-              <div class="mb-1"><strong>Website:</strong>
-                <a href="{{ biz.website_url }}" target="_blank" rel="noopener" style="word-break:break-all;">{{ biz.website_url }}</a>
-              </div>
               {% endif %}
               <div class="mb-1">
                 <strong>Address:</strong> {{ biz.address or "N/A" }}
@@ -268,5 +259,28 @@
       }
     });
   </script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        var url = new URL(window.location.href);
+        // Only reload if not already set
+        var hasLatLng = url.searchParams.has('lat') && url.searchParams.has('lng');
+        if (!hasLatLng) {
+          url.searchParams.set('lat', lat);
+          url.searchParams.set('lng', lng);
+          window.location.replace(url);
+        } else {
+          document.getElementById('search-lat').value = lat;
+          document.getElementById('search-lng').value = lng;
+        }
+      }
+    );
+  }
+});
+</script>
 </body>
 </html>
