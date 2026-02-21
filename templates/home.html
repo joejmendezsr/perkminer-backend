@@ -190,11 +190,12 @@
             <div class="mb-1">
               <strong>Address:</strong> {{ biz.address or "N/A" }}
             </div>
-            {% if biz.about_us %}
             <div class="mb-1">
-              <strong>About:</strong> {{ biz.about_us }}
-            </div>
-            {% endif %}
+              <strong>Services:</strong>
+              {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, 
+                                 biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+              {{ services|select|reject('equalto','')|join(', ') if services|select|reject('equalto','')|list else 'N/A' }}
+
           </div>
         </div>
       </div>
