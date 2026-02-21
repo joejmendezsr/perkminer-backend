@@ -161,6 +161,7 @@
                 <th>Email Verified</th>
                 <th>Category</th>
                 <th>Referral Code</th>
+                <th>Approved by</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -181,6 +182,9 @@
                 </td>
                 <td>{{ biz.category }}</td>
                 <td>{{ biz.referral_code }}</td>
+                  {% set approver = User.query.get(biz.approved_by) %}
+                  {{ approver.email if approver else biz.approved_by }}
+                  {% endif %}
                 <td>
                   <a href="{{ url_for('admin_edit_business', business_id=biz.id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>
                   <form method="post" action="{{ url_for('admin_delete_business', business_id=biz.id) }}" style="display:inline;" onsubmit="return confirm('Delete this business?');">
