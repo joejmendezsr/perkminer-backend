@@ -435,7 +435,7 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Hero Banner with Logo -->
                 <tr>
                     <td style="position:relative;">
-                        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769979390/Email_Background_yn4vvi.jpg" width="600"
+                        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771635742/Email_Background_kgfx10.jpg" width="600"
                         alt="PerkMiner Hero Banner"
                         style="display:block; width:100%; height:auto; border:0;" border="0">
         </td>
