@@ -39,6 +39,10 @@
         margin-top: .35rem;
         display: block;
     }
+    .distance-badge {
+        margin-bottom: 8px;
+        display: block;
+    }
     .btn-set-top { margin-right: 1.1rem; }
     .listing-btn-row {
         display: flex;
@@ -137,28 +141,27 @@
       .listing-title {font-size:1.25em;}
     }
     </style>
-    <script>
-      function showQR() {
-        document.getElementById('qr-row').style.display = 'block';
-        document.getElementById('show-qr-btn').style.display = 'none';
-      }
-    </script>
 </head>
 <body>
-    <!-- BUTTONS AT THE TOP -->
-    <div class="listing-btn-row mb-0">
-      <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action btn-set-top">
-        &larr; Back to results
-      </a>
-      <a href="{{ url_for('start_purchase', biz_id=biz.id) }}" class="btn btn-success btn-action btn-set-top">
-        Show My QR
-      </a>
-      <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action btn-set-top">
-        Request Service
-      </a>
-    </div>
 <div class="container">
   <div class="main-card">
+    <div class="listing-pic-wrap">
+      {% if biz.profile_photo %}
+        <img src="{{ biz.profile_photo }}" alt="Logo" class="large-profile-pic">
+      {% else %}
+        <div class="large-profile-pic d-flex align-items-center justify-content-center bg-light border">
+          <i class="bi bi-buildings" style="font-size:4em; color:#bbb;"></i>
+        </div>
+      {% endif %}
+      {% if biz.distance_mi is defined and biz.distance_mi is not none %}
+        <span class="badge bg-light text-dark distance-badge" style="font-size:1.1em;">
+          <i class="bi bi-geo-alt" style="color:#2a5859;"></i>
+          {{ biz.distance_mi|round(2) }} mi away
+        </span>
+      {% endif %}
+      <h2 class="listing-title">{{ biz.business_name }}</h2>
+      <span class="biz-category-badge mb-2">{{ biz.category }}</span>
+    </div>
     <!-- BUTTONS AT THE TOP -->
     <div class="listing-btn-row mb-0">
       <a href="{{ url_for('search', q=request.args.get('q', '')) }}" class="btn btn-secondary btn-action btn-set-top">
@@ -171,7 +174,6 @@
         Request Service
       </a>
     </div>
-
     <div class="main-info mt-2">
       <div class="main-info-row">
         <i class="bi bi-pin-map"></i>
