@@ -630,25 +630,61 @@ def admin_roles_landing():
 def usd(value):
     return "${:,.2f}".format(value or 0.0)
 
+from sqlalchemy import func
+from flask import request, render_template
+# import Business, BusinessTransaction, UserTransaction as before
+
 @app.route("/")
 def home():
     approved_listings = Business.query.filter_by(status="approved").all()
+    N_FEATURED = 5
 
-    # ------------ FEATURED BUSINESS LOGIC ------------
-    # 1. First pull all manually featured and approved businesses
-    manual_featured = Business.query.filter_by(manual_feature=True, status="approved").order_by(Business.rank.desc()).all()
-    # 2. Fill with auto-featured (highest rank) to make list up to 3
-    needed = 5 - len(manual_featured)
-    auto_featured = []
-    if needed > 0:
-        auto_featured = Business.query.filter(
-            Business.manual_feature == False,
-            Business.status == "approved"
-        ).order_by(Business.rank.desc()).limit(needed).all()
-    # 3. Combine for frontend
+    # User location detection (GET params: lat/lng)
+    lat = request.args.get("lat", type=float)
+    lng = request.args.get("lng", type=float)
+    search_radius = 5  # miles
+
+    # Queries
+    manual_query = Business.query.filter_by(manual_feature=True, status="approved")
+    auto_query = Business.query.filter_by(manual_feature=False, status="approved")
+
+    if lat is not None and lng is not None:
+        haversine = (
+            3959 * func.acos(
+                func.least(
+                    1.0,
+                    func.cos(func.radians(lat)) *
+                    func.cos(func.radians(Business.latitude)) *
+                    func.cos(func.radians(Business.longitude) - func.radians(lng)) +
+                    func.sin(func.radians(lat)) *
+                    func.sin(func.radians(Business.latitude))
+                )
+            )
+        )
+        manual_query = manual_query.add_columns(haversine.label('distance')) \
+            .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
+            .filter(haversine <= search_radius)
+        auto_query = auto_query.add_columns(haversine.label('distance')) \
+            .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
+            .filter(haversine <= search_radius)
+
+        manual_featured = manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all()
+        manual_featured = [biz for biz, _ in manual_featured]
+        needed = N_FEATURED - len(manual_featured)
+        auto_featured = []
+        if needed > 0:
+            auto_results = auto_query.order_by(Business.rank.desc()).limit(needed).all()
+            auto_featured = [biz for biz, _ in auto_results]
+    else:
+        manual_featured = manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all()
+        needed = N_FEATURED - len(manual_featured)
+        auto_featured = []
+        if needed > 0:
+            auto_featured = auto_query.order_by(Business.rank.desc()).limit(needed).all()
+
     featured_listings = manual_featured + auto_featured
 
-    # ------------ Total Calculations (unchanged) ------------
+    # ------------ Totals ------------
     user_transactions = UserTransaction.query.all()
     total_user_tier1 = sum(t.cash_back or 0 for t in user_transactions)
     total_user_commission = sum(
@@ -678,7 +714,7 @@ def home():
     total_gross_sales = sum(t.amount or 0 for t in business_transactions)
     total_ad_fees = sum((t.ad_fee or 0) for t in business_transactions)
     total_paid_out = total_member_paid + total_biz_paid
-    percent_fees_paid = ( (total_paid_out / total_ad_fees) * 100 ) if total_ad_fees > 0 else 0
+    percent_fees_paid = ((total_paid_out / total_ad_fees) * 100) if total_ad_fees > 0 else 0
 
     return render_template(
         "home.html",
