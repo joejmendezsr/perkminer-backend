@@ -97,10 +97,28 @@
       white-space: normal;
     }
     .categories-scroll-fade { display: none; }
-    .card.business-listing {
-      border: none; box-shadow: 0 2px 10px #deedea; margin-bottom: 1.1em;
+
+    /* FEATURED BUSINESS MODERN CARD */
+    .business-listing-modern {
+      border: none;
+      overflow: hidden;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 4px 18px #e5eceb;
+      transition: box-shadow 0.18s, transform 0.16s;
     }
-    .business-listing .category-image { width: 36px; height: 36px; margin-bottom: 3px;}
+    .business-listing-modern:hover {
+      box-shadow: 0 9px 36px #daeaea;
+      transform: translateY(-4px) scale(1.025);
+    }
+    .biz-feature-img-wrap {
+      width: 100%; height: 180px; overflow: hidden; border-radius: 14px 14px 0 0; background: #f7f7f7;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .biz-feature-img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 14px 14px 0 0;
+    }
+    .card.business-listing { border: none; box-shadow: 0 2px 10px #deedea; margin-bottom: 1.1em;}
     footer {
       background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 2.3rem;
       text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea;
@@ -182,9 +200,6 @@
       </div>
     </div>
   </nav>
-  <!-- ...rest of your code stays unchanged... -->
-  <!-- (categories, featured businesses, footer, script as before) -->
-  <!-- [copy from earlier version] -->
   <main class="container my-5">
     <h2 class="mb-2 mt-3 mt-md-0 text-center">Browse by Popular Categories</h2>
     <div class="d-md-none categories-swiper-label text-center mb-2">
@@ -192,6 +207,7 @@
     </div>
     <div class="categories-scroll-wrap position-relative mb-4">
       <div class="categories-row">
+        <!-- ...category cards unchanged... -->
         <a href="/category/Handyman-Contractor" class="text-decoration-none">
           <div class="category-card text-center">
             <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Handyman_ig9cin.jpg?auto=format&fit=crop&w=300&q=40" alt="Handyman-Contractor" class="category-image">
@@ -230,49 +246,44 @@
         </a>
       </div>
     </div>
-    <!-- Featured Businesses ... [copy rest unchanged from your previous code] -->
+    <!-- DYNAMIC FEATURED BUSINESSES -->
     <h3 class="mt-5 mb-3 text-start">Featured Businesses</h3>
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for biz in featured_listings %}
       <div class="col">
-        <div class="card business-listing h-100">
-          <div class="card-body">
-            <img src="https://images.unsplash.com/photo-1503389152951-9a67d2c3ab77?auto=format&fit=crop&w=36&q=20" alt="Handyman" class="category-image mb-2">
-            <h5 class="card-title mb-1">Sparks & Sons Handyman</h5>
-            <div class="mb-1 small">
-              <span class="badge bg-success">Handyman-Contractor</span>
+        <div class="card business-listing-modern h-100 shadow-lg border-0">
+          <div class="biz-feature-img-wrap">
+            <img src="{{ biz.profile_photo or '/static/business-default.jpg' }}" alt="{{ biz.business_name }}" class="biz-feature-img">
+          </div>
+          <div class="card-body text-center px-3">
+            <h5 class="card-title mb-2" style="font-weight:700;">{{ biz.business_name }}</h5>
+            <div class="mb-1 small" style="font-weight:500;">
+              <span class="badge bg-success">{{ biz.category }}</span>
             </div>
-            <div class="mb-1"><strong>Address:</strong> 123 Maple Drive</div>
-            <div class="mb-1"><strong>About:</strong> Skilled repairs & home improvement.</div>
+            {% if biz.website_url %}
+            <div class="mb-1"><strong>Website:</strong>
+              <a href="{{ biz.website_url }}" target="_blank" rel="noopener">{{ biz.website_url }}</a>
+            </div>
+            {% endif %}
+            <div class="mb-1">
+              <strong>Address:</strong> {{ biz.address or "N/A" }}
+            </div>
+            {% if biz.about_us %}
+            <div class="mb-1">
+              <strong>About:</strong> {{ biz.about_us }}
+            </div>
+            {% endif %}
           </div>
         </div>
       </div>
-      <div class="col">
-        <div class="card business-listing h-100">
-          <div class="card-body">
-            <img src="https://images.unsplash.com/photo-1483728642387-f033b3f040ca?auto=format&fit=crop&w=36&q=20" alt="Auto" class="category-image mb-2">
-            <h5 class="card-title mb-1">Evergreen Motors</h5>
-            <div class="mb-1 small">
-              <span class="badge bg-primary">Auto Parts & Service</span>
-            </div>
-            <div class="mb-1"><strong>Website:</strong> <a href="https://evergreenmotors.com" target="_blank" rel="noopener">evergreenmotors.com</a></div>
-            <div class="mb-1"><strong>Address:</strong> 881 Fixit Ave</div>
-            <div class="mb-1"><strong>About:</strong> Your neighborhood auto care experts.</div>
-          </div>
+      {% endfor %}
+      {% if featured_listings|length == 0 %}
+      <div class="col-12">
+        <div class="alert alert-warning text-center mt-3">
+          No featured businesses at this time.
         </div>
       </div>
-      <div class="col">
-        <div class="card business-listing h-100">
-          <div class="card-body">
-            <img src="https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=36&q=20" alt="Garden" class="category-image mb-2">
-            <h5 class="card-title mb-1">Blossom Gardens</h5>
-            <div class="mb-1 small">
-              <span class="badge bg-warning text-dark">Home & Garden</span>
-            </div>
-            <div class="mb-1"><strong>Address:</strong> 14 Flower Rd</div>
-            <div class="mb-1"><strong>About:</strong> Garden design & maintenance.</div>
-          </div>
-        </div>
-      </div>
+      {% endif %}
     </div>
     <div class="text-center mt-4">
       <p>Explore top businesses, find your next deal, or <a href="/business" style="color:var(--pm-primary);font-weight:500;">get listed today</a>.</p>
