@@ -46,7 +46,7 @@
                     <span class="badge rounded-pill bg-warning text-dark">In Review</span>
                   {% endif %}
                 </td>
-                <td class="d-flex flex-wrap gap-1 align-items-center" style="min-width:145px;">
+                <td class="d-flex flex-wrap gap-1 align-items-center" style="min-width:180px;">
                   <form method="post" action="{{ url_for('start_review', listing_id=biz.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-primary btn-sm"
@@ -56,6 +56,13 @@
                   </form>
                   <form method="post" action="{{ url_for('approve_listing', listing_id=biz.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if current_user.is_authenticated and current_user.has_role('super_admin') %}
+                      <div class="form-check form-switch my-2">
+                        <input class="form-check-input" type="checkbox" id="manual_feature_{{ biz.id }}" name="manual_feature"
+                           {% if biz.manual_feature %}checked{% endif %}>
+                        <label class="form-check-label" for="manual_feature_{{ biz.id }}">Manually Feature</label>
+                      </div>
+                    {% endif %}
                     <button type="submit" class="btn btn-success btn-sm"
                       {% if biz.status != "in_review" %}disabled{% endif %}>
                       Approve

@@ -222,6 +222,9 @@ class Business(db.Model):
     account_balance = db.Column(db.Float, nullable=False, default=0.0)
     ad_fee = db.Column(db.Float)
     business_registration_doc = db.Column(db.String(255))  # stores filename or URL (S3, cloud, or local)
+    featured = db.Column(db.Boolean, default=False)          # True if currently featured
+    rank = db.Column(db.Float, default=0.0)                  # For algorithmic ranking
+    manual_feature = db.Column(db.Boolean, default=False)     # Admin sets this manually
 
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
@@ -3120,10 +3123,10 @@ def finance_dashboard():
         month=month
     )
 
-@app.route("/approve-reject-dashboard")
+@app.route("/approve_reject_dashboard")
 @role_required("approve_reject_listings")
+@login_required
 def approve_reject_dashboard():
-    # Query all pending or in_review businesses
     pending_listings = Business.query.filter(Business.status.in_(["pending", "in_review"])).all()
     return render_template("approve_reject_dashboard.html", pending_listings=pending_listings)
 
@@ -3164,6 +3167,7 @@ def admin_suspend_user(user_id):
 
 @app.route("/admin/listing/<int:listing_id>/start_review", methods=["POST"])
 @role_required("approve_reject_listings")
+@login_required
 def start_review(listing_id):
     biz = Business.query.get_or_404(listing_id)
     if biz.status == "pending":
@@ -3174,10 +3178,11 @@ def start_review(listing_id):
 
 @app.route("/admin/listing/<int:listing_id>/approve", methods=["POST"])
 @role_required("approve_reject_listings")
+@login_required
 def approve_listing(listing_id):
     biz = Business.query.get_or_404(listing_id)
     if biz.status in ["pending", "in_review", "approved"]:
-        # Promote all draft fields to live fields if they exist
+        # Promote draft fields to live fields if needed; this block is unchanged
         promote_fields = [
             "business_name", "listing_type", "category", "phone_number", "address", "latitude", "longitude",
             "website_url", "about_us", "hours_of_operation", "search_keywords",
@@ -3185,34 +3190,28 @@ def approve_listing(listing_id):
             "service_6", "service_7", "service_8", "service_9", "service_10",
             "profile_photo"
         ]
-        changed = False
-        # Print draft and live before promoting
-        print("Before promotion:")
-        print("DRAFT listing_type:", getattr(biz, "draft_listing_type", "MISSING"))
-        print("LIVE listing_type:", getattr(biz, "listing_type", "MISSING"))
-
         for field in promote_fields:
             draft_attr = f"draft_{field}"
             draft_value = getattr(biz, draft_attr, None)
-            print(f"Promoting field: {field}, draft value: {draft_value}")
             if draft_value not in [None, ""]:
                 setattr(biz, field, draft_value)
                 setattr(biz, draft_attr, None)
-                print(f"--> Promoted {field} and cleared {draft_attr}")
-                changed = True
 
-        # Print draft and live after promoting
-        print("After promotion:")
-        print("DRAFT listing_type:", getattr(biz, "draft_listing_type", "MISSING"))
-        print("LIVE listing_type:", getattr(biz, "listing_type", "MISSING"))
-
+        # Status update
         biz.status = "approved"
+
+        # Only super_admin can update manual_feature
+        if current_user.is_authenticated and getattr(current_user, 'has_role', None) and current_user.has_role("super_admin"):
+            biz.manual_feature = bool(request.form.get("manual_feature"))
+        # Otherwise, ignore
+
         db.session.commit()
-        flash(f"Listing {biz.business_name} approved!" + (" Draft changes promoted." if changed else ""))
+        flash(f"Listing {biz.business_name} approved!" + (" Manually Featured." if getattr(biz, 'manual_feature', False) else ""))
     return redirect(url_for("approve_reject_dashboard"))
 
 @app.route("/admin/listing/<int:listing_id>/reject", methods=["POST"])
 @role_required("approve_reject_listings")
+@login_required
 def reject_listing(listing_id):
     biz = Business.query.get_or_404(listing_id)
     if biz.status in ["pending", "in_review"]:
