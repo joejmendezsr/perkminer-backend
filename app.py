@@ -3045,7 +3045,9 @@ def admin_dashboard():
         business_query = business_query.filter(Business.status == biz_status)
     businesses = business_query.all()
 
-    # user_lookup and business_forms as before...
+    # Now create business_forms AFTER you have 'businesses'
+    business_forms = {biz.id: EmptyForm() for biz in businesses}  # Or whatever form you use
+
     return render_template(
         "admin_dashboard.html",
         users=users,
