@@ -225,6 +225,7 @@ class Business(db.Model):
     featured = db.Column(db.Boolean, default=False)          # True if currently featured
     rank = db.Column(db.Float, default=0.0)                  # For algorithmic ranking
     manual_feature = db.Column(db.Boolean, default=False)     # Admin sets this manually
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # If your admin is a User, use their User ID
 
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
@@ -3245,6 +3246,9 @@ def approve_listing(listing_id):
 
         # Status update
         biz.status = "approved"
+
+        # Add this to record who approved it:
+        biz.approved_by = current_user.id   # (or current_user.email if you want email)
 
         # Only super_admin can update manual_feature
         if current_user.is_authenticated and getattr(current_user, 'has_role', None) and current_user.has_role("super_admin"):
