@@ -199,30 +199,32 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-4">
       {% for biz in featured_listings %}
       <div class="col">
-        <div class="card business-listing-modern h-100 shadow-lg border-0">
-          <div class="biz-feature-img-wrap">
-            <img src="{{ biz.profile_photo or '/static/business-default.jpg' }}" alt="{{ biz.business_name }}" class="biz-feature-img">
+        <a href="{{ url_for('view_listing', biz_id=biz.id) }}" class="text-decoration-none" style="display:block;">
+          <div class="card business-listing-modern h-100 shadow-lg border-0">
+            <div class="biz-feature-img-wrap">
+              <img src="{{ biz.profile_photo or '/static/business-default.jpg' }}" alt="{{ biz.business_name }}" class="biz-feature-img">
+            </div>
+            <div class="card-body text-center px-3">
+              <h5 class="card-title mb-2">{{ biz.business_name }}</h5>
+              <div class="mb-1 small" style="font-weight:500;">
+                <span class="badge bg-success">{{ biz.category }}</span>
+              </div>
+              {% if biz.website_url %}
+              <div class="mb-1"><strong>Website:</strong>
+                <a href="{{ biz.website_url }}" target="_blank" rel="noopener" style="word-break:break-all;">{{ biz.website_url }}</a>
+              </div>
+              {% endif %}
+              <div class="mb-1">
+                <strong>Address:</strong> {{ biz.address or "N/A" }}
+              </div>
+              <div class="mb-1 biz-services" title="{{ [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10]|select|reject('equalto','')|join(', ') }}">
+                <strong>Services:</strong>
+                {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+                {{ services|select|reject('equalto','')|join(', ') if services|select|reject('equalto','')|list else 'N/A' }}
+              </div>
+            </div>
           </div>
-          <div class="card-body text-center px-3">
-            <h5 class="card-title mb-2">{{ biz.business_name }}</h5>
-            <div class="mb-1 small" style="font-weight:500;">
-              <span class="badge bg-success">{{ biz.category }}</span>
-            </div>
-            {% if biz.website_url %}
-            <div class="mb-1"><strong>Website:</strong>
-              <a href="{{ biz.website_url }}" target="_blank" rel="noopener">{{ biz.website_url }}</a>
-            </div>
-            {% endif %}
-            <div class="mb-1">
-              <strong>Address:</strong> {{ biz.address or "N/A" }}
-            </div>
-            <div class="mb-1 biz-services" title="{{ [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10]|select|reject('equalto','')|join(', ') }}">
-              <strong>Services:</strong>
-              {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
-              {{ services|select|reject('equalto','')|join(', ') if services|select|reject('equalto','')|list else 'N/A' }}
-            </div>
-          </div>
-        </div>
+        </a>
       </div>
       {% endfor %}
       {% if featured_listings|length == 0 %}
