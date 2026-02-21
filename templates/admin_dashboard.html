@@ -166,49 +166,49 @@
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        {% for biz in businesses %}
-        <tr>
-          <td>{{ biz.id }}</td>
-          <td>
-            {{ biz.business_name or '' }}<br>
-            <small>{{ biz.business_email }}</small>
-          </td>
-          <td>
-            {% if biz.email_confirmed %}
-              <span class="badge bg-success">Yes</span>
-            {% else %}
-              <span class="badge bg-secondary">No</span>
-            {% endif %}
-          </td>
-          <td>{{ biz.category }}</td>
-          <td>{{ biz.referral_code }}</td>
-          <td>
-            {% set approver = User.query.get(biz.approved_by) %}
-            {{ approver.email if approver else biz.approved_by or '' }}
-          </td>
-          <td>
-            <a href="{{ url_for('admin_edit_business', business_id=biz.id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>
-            <form method="post" action="{{ url_for('admin_delete_business', business_id=biz.id) }}" style="display:inline;" onsubmit="return confirm('Delete this business?');">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              {{ business_forms[biz.id].hidden_tag() }}
-              <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-            </form>
-            <form method="post" action="{{ url_for('admin_suspend_business', business_id=biz.id) }}" style="display:inline;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              {{ business_forms[biz.id].hidden_tag() }}
-              {% if biz.is_suspended %}
-                <button type="submit" class="btn btn-sm btn-success mb-1" title="Unsuspend">Unsuspend</button>
-              {% else %}
-                <button type="submit" class="btn btn-sm btn-secondary mb-1" title="Suspend">Suspend</button>
-              {% endif %}
-            </form>
-            <button class="btn btn-sm btn-success disabled mb-1">Approve Listing</button>
-            <button class="btn btn-sm btn-success disabled mb-1">Reject Listing</button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+<tbody>
+  {% for biz in businesses %}
+  <tr>
+    <td>{{ biz.id }}</td>
+    <td>
+      {{ biz.business_name or '' }}<br>
+      <small>{{ biz.business_email }}</small>
+    </td>
+    <td>
+      {% if biz.email_confirmed %}
+        <span class="badge bg-success">Yes</span>
+      {% else %}
+        <span class="badge bg-secondary">No</span>
+      {% endif %}
+    </td>
+    <td>{{ biz.category }}</td>
+    <td>{{ biz.referral_code }}</td>
+    <td>
+      {% set approver = User.query.get(biz.approved_by) %}
+      {{ approver.email if approver else biz.approved_by or '' }}
+    </td>
+    <td>
+      <a href="{{ url_for('admin_edit_business', business_id=biz.id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>
+      <form method="post" action="{{ url_for('admin_delete_business', business_id=biz.id) }}" style="display:inline;" onsubmit="return confirm('Delete this business?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ business_forms[biz.id].hidden_tag() }}
+        <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
+      </form>
+      <form method="post" action="{{ url_for('admin_suspend_business', business_id=biz.id) }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ business_forms[biz.id].hidden_tag() }}
+        {% if biz.is_suspended %}
+          <button type="submit" class="btn btn-sm btn-success mb-1" title="Unsuspend">Unsuspend</button>
+        {% else %}
+          <button type="submit" class="btn btn-sm btn-secondary mb-1" title="Suspend">Suspend</button>
+        {% endif %}
+      </form>
+      <button class="btn btn-sm btn-success disabled mb-1">Approve Listing</button>
+      <button class="btn btn-sm btn-success disabled mb-1">Reject Listing</button>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
     </table>
   </div>
 </div>
