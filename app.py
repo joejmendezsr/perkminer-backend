@@ -3005,19 +3005,54 @@ def admin_reset_password(token):
 @app.route("/admin/dashboard")
 @admin_required
 def admin_dashboard():
-    users = User.query.all()
-    user_lookup = {user.id: user for user in users}
-    businesses = Business.query.all()
-    EmptyFormInstance = EmptyForm  # Alias if you prefer
+    # --- Users search ---
+    user_query = User.query
+    user_search = request.args.get("user_search", "").strip()
+    user_role = request.args.get("user_role", "")
+    user_status = request.args.get("user_status", "")
 
-    # Create a form instance for each business (by id)
-    business_forms = {biz.id: EmptyFormInstance() for biz in businesses}
+    if user_search:
+        user_query = user_query.filter(
+            (User.email.ilike(f"%{user_search}%")) |
+            (User.name.ilike(f"%{user_search}%")) |
+            (User.referral_code.ilike(f"%{user_search}%"))
+        )
+    if user_role:
+        user_query = user_query.join(User.roles).filter(Role.name == user_role)
+    if user_status == "confirmed":
+        user_query = user_query.filter(User.email_confirmed == True)
+    elif user_status == "pending":
+        user_query = user_query.filter(User.email_confirmed == False)
+    elif user_status == "suspended":
+        user_query = user_query.filter(User.is_suspended == True)
+    users = user_query.all()
+
+    # --- Businesses search ---
+    business_query = Business.query
+    biz_search = request.args.get("biz_search", "").strip()
+    biz_category = request.args.get("biz_category", "")
+    biz_status = request.args.get("biz_status", "")
+
+    if biz_search:
+        business_query = business_query.filter(
+            (Business.business_name.ilike(f"%{biz_search}%")) |
+            (Business.business_email.ilike(f"%{biz_search}%")) |
+            (Business.referral_code.ilike(f"%{biz_search}%"))
+        )
+    if biz_category:
+        business_query = business_query.filter(Business.category == biz_category)
+    if biz_status:
+        business_query = business_query.filter(Business.status == biz_status)
+    businesses = business_query.all()
+
+    # user_lookup and business_forms as before...
     return render_template(
         "admin_dashboard.html",
         users=users,
         businesses=businesses,
+        roles=Role.query.all(),
         business_forms=business_forms,
-        user_lookup=user_lookup,
+        user_lookup={user.id: user for user in users},
     )
 
 @app.route("/finance-dashboard", methods=["GET"])
