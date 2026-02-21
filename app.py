@@ -3016,7 +3016,7 @@ def admin_dashboard():
         "admin_dashboard.html",
         users=users,
         businesses=businesses,
-        business_forms=business_forms
+        business_forms=business_forms,
         user_lookup=user_lookup,
     )
 
