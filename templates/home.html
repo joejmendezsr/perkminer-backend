@@ -214,20 +214,15 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-4">
       {% for biz in featured_listings %}
       <div class="col">
-        <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi) }}" class="text-decoration-none" style="display:block;">
-          <div class="card business-listing-modern h-100 shadow-lg border-0">
-            <div class="biz-feature-img-wrap">
-              <img src="{{ biz.profile_photo or '/static/business-default.jpg' }}" alt="{{ biz.business_name }}" class="biz-feature-img">
-            </div>
-
-            <div class="mb-1">
-              {% if biz.distance_mi is defined and biz.distance_mi is not none %}
-                <span class="badge bg-light text-dark" style="font-size:0.97em;">
-                  <i class="bi bi-geo-alt" style="color:#2a5859;"></i>
-                  {{ biz.distance_mi|round(2) }} mi away
-                 </span>
-              {% endif %}
-            </div>
+            <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi) }}" style="text-decoration:none;">
+              <div class="small-listing-modern">
+                {% if biz.profile_photo %}
+                  <img src="{{ biz.profile_photo }}" class="small-listing-modern-img" alt="{{ biz.business_name }} logo">
+                {% else %}
+                  <div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border">
+                    <i class="bi bi-shop" style="font-size:1.6em; color:#2a5859;"></i>
+                  </div>
+                {% endif %}
 
             <div class="card-body text-center px-3">
               <h5 class="card-title mb-2">{{ biz.business_name }}</h5>
