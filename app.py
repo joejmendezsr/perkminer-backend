@@ -645,7 +645,7 @@ def home():
     # User location detection (GET params: lat/lng)
     lat = request.args.get("lat", type=float)
     lng = request.args.get("lng", type=float)
-    search_radius = 5  # miles
+    search_radius = 10  # miles
 
     # Queries
     manual_query = Business.query.filter_by(manual_feature=True, status="approved")
