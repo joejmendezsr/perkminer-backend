@@ -4041,7 +4041,7 @@ def report_purchase():
     return jsonify({"status": "success", "message": "Transaction recorded and rewards credited."})
 
 @app.route('/store_terms', methods=['GET', 'POST'])
-@login_required
+@business_login_required
 def store_terms():
     if request.method == 'POST':
         agreed = request.form.get('agree_checkbox')
@@ -4055,7 +4055,7 @@ def store_terms():
 stripe.api_key = "sk_test_..."  # Your secret key
 
 @app.route('/store_payment')
-@login_required
+@business_login_required
 def store_payment():
     YOUR_DOMAIN = 'https://YOURDOMAIN.com'  # Update!
     # Option 1: Use Stripe Payment Link (no backend processing)
@@ -4079,7 +4079,7 @@ def store_payment():
     return redirect(checkout_session.url)
 
 @app.route('/store_payment_success')
-@login_required
+@business_login_required
 def store_payment_success():
     # Mark the business as e-commerce enabled in the DB
     business = Business.query.filter_by(owner_id=current_user.id).first()
