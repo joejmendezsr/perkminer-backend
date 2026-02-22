@@ -26,3 +26,4 @@ WTForms==3.2.1
 cloudinary
 qrcode[pil]
 pillow
+stripe
