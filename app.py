@@ -4039,6 +4039,55 @@ def report_purchase():
     # All done!
     return jsonify({"status": "success", "message": "Transaction recorded and rewards credited."})
 
+@app.route('/store_terms', methods=['GET', 'POST'])
+@login_required
+def store_terms():
+    if request.method == 'POST':
+        agreed = request.form.get('agree_checkbox')
+        if agreed == "on":
+            # You could store in session or redirect to payment page
+            return redirect(url_for('store_payment'))
+        else:
+            flash('You must accept the terms and conditions to continue.', 'danger')
+    return render_template('store_terms.html')
+
+stripe.api_key = "sk_test_..."  # Your secret key
+
+@app.route('/store_payment')
+@login_required
+def store_payment():
+    YOUR_DOMAIN = 'https://YOURDOMAIN.com'  # Update!
+    # Option 1: Use Stripe Payment Link (no backend processing)
+    # Option 2: Use Stripe Checkout Session (this code below)
+
+    # Replace with the business's user's email or other info
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        mode='subscription',  # or 'payment' if one-time
+        line_items=[
+          {
+            'price': 'price_12345',  # Replace with your Stripe subscription price ID
+            'quantity': 1,
+          },
+        ],
+        customer_email=current_user.email,
+        success_url=YOUR_DOMAIN + '/store_payment_success',
+        cancel_url=YOUR_DOMAIN + '/store_terms',
+    )
+
+    return redirect(checkout_session.url)
+
+@app.route('/store_payment_success')
+@login_required
+def store_payment_success():
+    # Mark the business as e-commerce enabled in the DB
+    business = Business.query.filter_by(owner_id=current_user.id).first()
+    if business:
+        business.has_ecommerce_store = True
+        db.session.commit()
+    flash('Your online store is now active!', 'success')
+    return redirect(url_for('business_dashboard'))
+
 @app.route("/seed_admins_once")
 def seed_admins_once():
     from app import db, User, Role, bcrypt
