@@ -1,38 +1,22 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session, send_from_directory
+from flask import Flask, request, redirect, url_for, render_template, flash, session, abort, send_from_directory, Response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
-from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField
+from flask_wtf import FlaskForm, CSRFProtect, RecaptchaField
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from werkzeug.utils import secure_filename
 from functools import wraps
-from flask import abort
-from flask_login import current_user, login_required
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, Email, Optional
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, Length
-from flask_wtf import RecaptchaField
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from flask_wtf import FlaskForm
-from wtforms import SelectField, TextAreaField, DecimalField, SubmitField
-from wtforms.validators import DataRequired, NumberRange, Length
-from flask_mail import Message as MailMessage
-from datetime import datetime
-from datetime import date, datetime
+from sqlalchemy import or_, and_, func, literal
+from flask_migrate import Migrate
 from datetime import datetime, date
-from functools import wraps
-from flask import session, flash, redirect, url_for, request
-from sqlalchemy import or_, and_
-from sqlalchemy import func, literal
-from flask import render_template
-from flask_login import current_user
-from flask import request, render_template
-from sqlalchemy import func
+import os, re, random, string, time, logging, csv, uuid, hmac, hashlib
+from io import StringIO, BytesIO
+import cloudinary
+import cloudinary.uploader
+import qrcode
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -155,12 +139,12 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    name = db.Column(db.String(100))
     referral_code = db.Column(db.String(32), unique=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     business_referral_id = db.Column(db.String(32))
     email_confirmed = db.Column(db.Boolean, default=False)
     email_code = db.Column(db.String(16))
-    name = db.Column(db.String(100))
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
@@ -170,7 +154,14 @@ class User(db.Model, UserMixin):
 
 class Business(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    business_name = db.Column(db.String(100), unique=True, nullable=False)
+    business_name = db.Column(db.String(100), unique=True, nullable=False)  # use this for the display name
+    store_slug = db.Column(db.String(80), unique=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    theme_id = db.Column(db.Integer, db.ForeignKey('theme.id'))
+    custom_html = db.Column(db.Text)
+    grapesjs_html = db.Column(db.Text)
+    stripe_account_id = db.Column(db.String(100))
+    has_ecommerce_store = db.Column(db.Boolean, default=False)
     listing_type = db.Column(db.String(50))
     category = db.Column(db.String(50), nullable=False, default="Other")
     business_email = db.Column(db.String(200), unique=True, nullable=False)
@@ -223,14 +214,28 @@ class Business(db.Model):
     draft_search_keywords = db.Column(db.String(500))
     account_balance = db.Column(db.Float, nullable=False, default=0.0)
     ad_fee = db.Column(db.Float)
-    business_registration_doc = db.Column(db.String(255))  # stores filename or URL (S3, cloud, or local)
-    featured = db.Column(db.Boolean, default=False)          # True if currently featured
-    rank = db.Column(db.Float, default=0.0)                  # For algorithmic ranking
-    manual_feature = db.Column(db.Boolean, default=False)     # Admin sets this manually
-    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # If your admin is a User, use their User ID
-
+    business_registration_doc = db.Column(db.String(255))
+    featured = db.Column(db.Boolean, default=False)
+    rank = db.Column(db.Float, default=0.0)
+    manual_feature = db.Column(db.Boolean, default=False)
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
+
+class Theme(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30))
+    css_url = db.Column(db.String(150))
+    thumbnail_url = db.Column(db.String(200))
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'))
+    name = db.Column(db.String(100))
+    price = db.Column(db.Float)
+    description = db.Column(db.Text)
+    image_url = db.Column(db.String(200))
+    stock = db.Column(db.Integer)
 
 class Invite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
