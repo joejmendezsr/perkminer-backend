@@ -169,15 +169,15 @@
       &larr; Back to featured
     </a>
   {% else %}
-    <a href="{{ url_for('search', 
-        q=request.args.get('q', ''), 
-        distance=request.args.get('distance', ''), 
-        lat=request.args.get('lat', ''), 
-        lng=request.args.get('lng', '')
-      ) }}" 
-      class="btn btn-secondary btn-action btn-set-top">
-      &larr; Back to results
-    </a>
+<a href="{{ url_for('search', 
+    q=request.args.get('q', ''), 
+    distance=request.args.get('distance', ''), 
+    lat=request.args.get('lat', ''), 
+    lng=request.args.get('lng', '')
+  ) }}"
+  class="btn btn-secondary btn-action btn-set-top">
+  &larr; Back to results
+</a>
   {% endif %}
   <a href="{{ url_for('start_purchase', biz_id=biz.id) }}" class="btn btn-success btn-action btn-set-top">
     Show My QR
