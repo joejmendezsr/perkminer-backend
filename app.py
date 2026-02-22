@@ -18,6 +18,7 @@ import cloudinary
 import cloudinary.uploader
 import qrcode
 from flask_mail import Message as MailMessage
+import stripe
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(

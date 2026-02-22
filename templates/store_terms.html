@@ -1,0 +1,24 @@
+<form method="POST">
+    <h2>E-Commerce Website Terms and Subscription</h2>
+    <p>
+      Please review the terms and conditions for enabling your online store.<br>
+      <strong>Subscription Fee:</strong> $49/month (or your amount)<br>
+      [Add your detailed terms here...]
+    </p>
+    <div>
+        <input type="checkbox" id="agree_checkbox" name="agree_checkbox" required>
+        <label for="agree_checkbox">I agree to the Terms and Conditions and the subscription fee.</label>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2" id="agree_btn" disabled>Agree & Continue to Payment</button>
+</form>
+
+<script>
+  // Enable button only if checkbox is checked
+  document.addEventListener('DOMContentLoaded', () => {
+    const agreeCheck = document.getElementById('agree_checkbox');
+    const agreeBtn = document.getElementById('agree_btn');
+    agreeCheck.addEventListener('change', () => {
+      agreeBtn.disabled = !agreeCheck.checked;
+    });
+  });
+</script>
