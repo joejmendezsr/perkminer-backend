@@ -17,6 +17,7 @@ from io import StringIO, BytesIO
 import cloudinary
 import cloudinary.uploader
 import qrcode
+from flask_mail import Message
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -383,7 +384,7 @@ def random_business_code(business_name):
     return code
 
 def send_email(to, subject, html_body):
-    msg = MailMessage(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
+    msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
     try:
         mail.send(msg)
     except Exception as e:
