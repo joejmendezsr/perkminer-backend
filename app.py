@@ -4054,39 +4054,78 @@ def store_terms():
 
 stripe.api_key = "sk_test_..."  # Your secret key
 
+# Make sure you have this decorator defined somewhere in your code:
+# def business_login_required(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         if not session.get('business_id'):
+#             flash('Please log in as a business to access this page.', 'warning')
+#             return redirect(url_for('business_login', next=request.path))
+#         return f(*args, **kwargs)
+#     return decorated_function
+
+import stripe
+
+stripe.api_key = "sk_test_..."  # Replace with your real Stripe secret key
+YOUR_DOMAIN = "https://www.perkminer.com"  # Update to your actual domain
+
+@app.route('/store_terms', methods=['GET', 'POST'])
+@business_login_required
+def store_terms():
+    if request.method == 'POST':
+        agreed = request.form.get('agree_checkbox')
+        if agreed == "on":
+            return redirect(url_for('store_payment'))
+        else:
+            flash('You must accept the terms and conditions to continue.', 'danger')
+    return render_template('store_terms.html')
+
 @app.route('/store_payment')
 @business_login_required
 def store_payment():
-    YOUR_DOMAIN = 'https://YOURDOMAIN.com'  # Update!
-    # Option 1: Use Stripe Payment Link (no backend processing)
-    # Option 2: Use Stripe Checkout Session (this code below)
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
 
-    # Replace with the business's user's email or other info
-    checkout_session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        mode='subscription',  # or 'payment' if one-time
-        line_items=[
-          {
-            'price': 'price_12345',  # Replace with your Stripe subscription price ID
-            'quantity': 1,
-          },
-        ],
-        customer_email=current_user.email,
-        success_url=YOUR_DOMAIN + '/store_payment_success',
-        cancel_url=YOUR_DOMAIN + '/store_terms',
-    )
-
-    return redirect(checkout_session.url)
+    # Replace 'price_12345' with your real Stripe Price ID for the subscription
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='subscription',  # use 'payment' if it's a one-time charge
+            line_items=[{
+                'price': 'price_12345',  # TODO: Replace with your Stripe price ID
+                'quantity': 1,
+            }],
+            customer_email=biz.business_email,
+            success_url=YOUR_DOMAIN + '/store_payment_success',
+            cancel_url=YOUR_DOMAIN + '/store_terms',
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        import logging
+        logging.error(f"Stripe checkout session creation failed: {e}")
+        flash("There was a problem redirecting to payment. Please try again or contact support.", "danger")
+        return redirect(url_for("store_terms"))
 
 @app.route('/store_payment_success')
 @business_login_required
 def store_payment_success():
-    # Mark the business as e-commerce enabled in the DB
-    business = Business.query.filter_by(owner_id=current_user.id).first()
-    if business:
-        business.has_ecommerce_store = True
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+
+    # Mark the business as e-commerce enabled
+    if not biz.has_ecommerce_store:
+        biz.has_ecommerce_store = True
         db.session.commit()
-    flash('Your online store is now active!', 'success')
+        flash('Your online store is now active! You can set it up from your dashboard.', 'success')
+    else:
+        flash('Your online store subscription is already active.', 'info')
+
     return redirect(url_for('business_dashboard'))
 
 @app.route("/seed_admins_once")
