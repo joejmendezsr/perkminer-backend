@@ -31,6 +31,8 @@ from sqlalchemy import or_, and_
 from sqlalchemy import func, literal
 from flask import render_template
 from flask_login import current_user
+from flask import request, render_template
+from sqlalchemy import func
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -669,19 +671,26 @@ def home():
             .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
             .filter(haversine <= search_radius)
 
-        manual_featured = manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all()
-        manual_featured = [biz for biz, _ in manual_featured]
+        manual_featured = []
+        for biz, dist in manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all():
+            biz.distance_mi = round(dist, 2) if dist is not None else None
+            manual_featured.append(biz)
         needed = N_FEATURED - len(manual_featured)
         auto_featured = []
         if needed > 0:
-            auto_results = auto_query.order_by(Business.rank.desc()).limit(needed).all()
-            auto_featured = [biz for biz, _ in auto_results]
+            for biz, dist in auto_query.order_by(Business.rank.desc()).limit(needed).all():
+                biz.distance_mi = round(dist, 2) if dist is not None else None
+                auto_featured.append(biz)
     else:
         manual_featured = manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all()
+        for biz in manual_featured:
+            biz.distance_mi = None
         needed = N_FEATURED - len(manual_featured)
         auto_featured = []
         if needed > 0:
             auto_featured = auto_query.order_by(Business.rank.desc()).limit(needed).all()
+            for biz in auto_featured:
+                biz.distance_mi = None
 
     featured_listings = manual_featured + auto_featured
 
