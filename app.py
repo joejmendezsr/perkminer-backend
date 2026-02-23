@@ -94,6 +94,7 @@ import cloudinary.uploader
 import random
 import qrcode
 import uuid  # <-- only needs to be here once! Put with other imports
+import json
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -231,6 +232,7 @@ class Theme(db.Model):
     name = db.Column(db.String(30))
     css_url = db.Column(db.String(150))
     thumbnail_url = db.Column(db.String(200))
+    starter_html = db.Column(db.Text)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -677,6 +679,17 @@ def store_payment():
         flash("There was a problem redirecting to payment. Please try again or contact support.", "danger")
         return redirect(url_for("store_terms"))
 
+@app.route('/store_admin')
+@business_login_required
+def store_admin():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    # You can add queries for products, orders, etc. as you build them.
+    return render_template('store_admin.html', biz=biz)
+
 @app.route('/store_payment_success')
 @business_login_required
 def store_payment_success():
@@ -694,6 +707,33 @@ def store_payment_success():
         flash('Your online store subscription is already active.', 'info')
 
     return redirect(url_for('business_dashboard'))
+
+@app.route('/store_builder', methods=['GET', 'POST'])
+@business_login_required
+def store_builder():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    themes = Theme.query.all()
+    if request.method == 'POST':
+        page_html = request.form.get('page_html')
+        if page_html:
+            biz.grapesjs_html = page_html
+            db.session.commit()
+            flash("Website changes saved!", "success")
+        else:
+            flash("No HTML received; website not updated.", "danger")
+        return redirect(url_for('store_builder'))
+
+    saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
+    # Build a dict: theme_id => starter_html
+    theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+    return render_template(
+        'store_builder.html',
+        biz=biz,
+        themes=themes,
+        saved_html=saved_html,
+        theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
+    )
 
 @app.route("/admin-roles")
 @login_required

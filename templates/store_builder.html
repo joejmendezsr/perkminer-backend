@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Website Builder – Drag & Drop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <style>
+    body { background: #f9fbfc; }
+    #gjs {
+      border-radius: 8px;
+      border: 1px solid #dde7ee;
+      box-shadow: 0 2px 14px #dde9fa88;
+      min-height: 75vh;
+      background: #fff;
+      margin-bottom: 3rem;
+    }
+    @media (max-width:900px) {
+      #gjs { min-height: 48vh; }
+    }
+  </style>
+</head>
+<body>
+<div class="container py-4">
+  <h2 class="text-center mb-4">Create Your Storefront Website</h2>
+
+  <!-- Theme selection Starter -->
+  <div class="mb-4">
+    <h5>Step 1: Pick a Template</h5>
+    <div class="row g-3 align-items-end mb-3">
+      {% for theme in themes %}
+      <div class="col-6 col-md-3 text-center">
+        <div class="card p-2 shadow-sm border">
+          <img src="{{ theme.thumbnail_url or 'https://via.placeholder.com/170x110?text=Theme' }}" alt="{{ theme.name }}" style="width: 100%; border-radius:8px; object-fit:cover;">
+          <div class="mt-2 fw-medium">{{ theme.name }}</div>
+          <button class="btn btn-outline-primary btn-sm mt-2 select-theme-btn" data-theme="{{ theme.id }}">Use This Theme</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h5>Step 2: Build and Save Your Home Page</h5>
+  <div id="gjs" style="height:480px;"></div>
+  <form id="save-html-form" method="POST" action="">
+    <input type="hidden" name="page_html" id="page_html">
+    <button type="submit" class="btn btn-success mt-3">Save Website</button>
+    <a href="{{ url_for('store_admin') }}" class="btn btn-secondary mt-3 ms-2">Back to Store Admin</a>
+  </form>
+</div>
+
+<script src="https://unpkg.com/grapesjs"></script>
+<script>
+  // Map of theme_id => starter_html (injected from Flask via Jinja)
+  const themeHtmlMap = {{ theme_html_map | safe }};
+  let savedHTML = `{{ saved_html | safe }}`;
+  let defaultHTML = `<section style="padding:40px 0;text-align:center;background:#f8faff;"><h2>Welcome to Your Store</h2><p>Drag content to start building your front page.</p></section>`;
+
+  const editor = grapesjs.init({
+    container: '#gjs',
+    fromElement: false,
+    height: '480px',
+    width: 'auto',
+    storageManager: false,
+    plugins: [],
+    components: savedHTML || defaultHTML,
+    style: '',
+  });
+
+  // Theme selection button click: load that theme's starter HTML
+  document.querySelectorAll('.select-theme-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      let themeId = btn.dataset.theme;
+      let html = themeHtmlMap[themeId] || defaultHTML;
+      editor.setComponents(html);
+      // Optionally, clear styles too: editor.setStyle('');
+    });
+  });
+
+  document.getElementById('save-html-form').addEventListener('submit', function(e){
+      document.getElementById('page_html').value = editor.getHtml();
+  });
+</script>
+</body>
+</html>

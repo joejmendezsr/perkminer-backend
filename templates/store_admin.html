@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Your Online Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f9fafb;
+      color: #222;
+    }
+    .admin-overview-box {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 20px #e0e8ee88;
+      margin-bottom: 2rem;
+      padding: 2rem 1.5rem 1rem 1.5rem;
+    }
+    .dash-section-card {
+      background: #fff;
+      border-radius: 9px;
+      box-shadow: 0 2px 12px #e3e9ee;
+      margin-bottom: 1.6rem;
+      padding: 1.25rem 1.1rem;
+      min-width: 150px;
+      min-height: 110px;
+      transition: box-shadow 0.1s;
+    }
+    .dash-section-card:hover {
+      box-shadow: 0 6px 28px #b4d5ee44;
+    }
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      color: #245656;
+    }
+    .dash-links a {
+      text-decoration: none;
+      color: #184f7a;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.6rem;
+      transition: color 0.18s;
+    }
+    .dash-links a:hover {
+      color: #166b83;
+      text-decoration: underline;
+    }
+    @media (max-width: 768px) {
+      .admin-overview-box {
+        padding: 1.2rem 0.5rem 0.5rem 0.7rem;
+      }
+      .section-title { font-size: 1.11rem;}
+    }
+  </style>
+</head>
+<body>
+<div class="container my-4">
+  <div class="admin-overview-box">
+    <h2 class="text-center mb-4">Store Admin Dashboard</h2>
+    <div class="row g-4">
+      <!-- Theme & Template Selection -->
+      <div class="col-md-6 col-lg-4">
+        <div class="dash-section-card">
+          <div class="section-title">
+            <i class="bi bi-palette2"></i> Website Styles & Templates
+          </div>
+          <div class="dash-links">
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Choose a Website Theme</a>
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Preview All Templates</a>
+          </div>
+          <div class="small text-muted">Pick from 5 modern designs.</div>
+        </div>
+      </div>
+      <!-- Custom HTML/Drag & Drop Builder -->
+      <div class="col-md-6 col-lg-4">
+        <div class="dash-section-card">
+          <div class="section-title">
+            <i class="bi bi-grid-1x2"></i> Homepage Builder
+          </div>
+          <div class="dash-links">
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Custom HTML Section</a>
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Drag &amp; Drop Visual Editor</a>
+          </div>
+          <div class="small text-muted">Advanced: Full layout control.</div>
+        </div>
+      </div>
+      <!-- Product Management -->
+      <div class="col-md-6 col-lg-4">
+        <div class="dash-section-card">
+          <div class="section-title">
+            <i class="bi bi-boxes"></i> Product Management
+          </div>
+          <div class="dash-links">
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Add New Product</a>
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>View / Edit Products</a>
+          </div>
+          <div class="small text-muted">Up to 50 products per store.</div>
+        </div>
+      </div>
+      <!-- Orders & Transactions -->
+      <div class="col-md-6 col-lg-4">
+        <div class="dash-section-card">
+          <div class="section-title">
+            <i class="bi bi-receipt-cutoff"></i> Orders &amp; Sales
+          </div>
+          <div class="dash-links">
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>View Orders</a>
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Process Refunds</a>
+          </div>
+          <div class="small text-muted">Track all store transactions.</div>
+        </div>
+      </div>
+      <!-- Settings & More -->
+      <div class="col-md-6 col-lg-4">
+        <div class="dash-section-card">
+          <div class="section-title">
+            <i class="bi bi-gear"></i> Store Settings
+          </div>
+          <div class="dash-links">
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Update Store Details</a>
+            <a href="#"><i class="bi bi-chevron-right ms-1 me-2"></i>Connect Stripe</a>
+          </div>
+          <div class="small text-muted">Set up payments, info & more.</div>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div class="text-center mt-2">
+      <a class="btn btn-secondary" href="{{ url_for('business_dashboard') }}">← Back to Business Dashboard</a>
+    </div>
+  </div>
+</div>
+<!-- Bootstrap Icons CDN (for icons, or use plain font-awesome/replace with text) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</body>
+</html>
