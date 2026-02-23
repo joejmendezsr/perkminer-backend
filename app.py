@@ -19,7 +19,7 @@ import cloudinary.uploader
 import qrcode
 from flask_mail import Message as MailMessage
 import stripe
-stripe.api_key = "sk_test_..."  # <-- Use your REAL Stripe secret key here!
+stripe.api_key = os.environ.get("STRIPE_API_KEY")
 YOUR_DOMAIN = "https://perkminer.com"  # <-- Use your real domain
 
 class ServiceRequestForm(FlaskForm):
