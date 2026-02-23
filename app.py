@@ -21,6 +21,47 @@ from flask_mail import Message as MailMessage
 import stripe
 stripe.api_key = os.environ.get("STRIPE_API_KEY")
 YOUR_DOMAIN = "https://perkminer.com"  # <-- Use your real domain
+from flask_mail import Message as MailMessage
+
+def send_order_alert(business_email, product_name, amount, buyer_email=None):
+    msg = MailMessage(
+        subject="New Online Order Received!",
+        recipients=[business_email],
+        html=(
+            f"<h3>You've received a new order!</h3>"
+            f"<p><b>Product:</b> {product_name}<br>"
+            f"<b>Amount:</b> ${amount:.2f}<br>"
+            + (f"<b>Buyer Email:</b> {buyer_email}<br>" if buyer_email else "") +
+            f"</p><hr><p>Login to your dashboard for details.</p>"
+        ),
+        sender="orders@perkminer.com"
+    )
+    try:
+        mail.send(msg)
+    except Exception as e:
+        import logging
+        logging.error("Order email failed: %s", e)
+
+def send_customer_receipt(buyer_email, product_name, amount, business_name):
+    if not buyer_email:
+        return
+    msg = MailMessage(
+        subject="Your Order Receipt – " + business_name,
+        recipients=[buyer_email],
+        html=(
+            f"<h3>Order Confirmation from {business_name}</h3>"
+            f"<p>Thank you for your order!</p>"
+            f"<b>Product:</b> {product_name}<br>"
+            f"<b>Amount Paid:</b> ${amount:.2f}<br>"
+            f"<p>If you have any questions, please contact the business directly.</p>"
+        ),
+        sender="orders@perkminer.com"
+    )
+    try:
+        mail.send(msg)
+    except Exception as e:
+        import logging
+        logging.error("Customer receipt email failed: %s", e)
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -226,6 +267,7 @@ class Business(db.Model):
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
+    website_approved = db.Column(db.Boolean, default=False)
 
 class Theme(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -640,6 +682,16 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField('Reset Password')
 
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    buyer_email = db.Column(db.String(200))
+    amount = db.Column(db.Float)
+    stripe_checkout_id = db.Column(db.String(100))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(30), default="paid")  # or pending, refunded, cancelled, etc.
+
 @app.route('/store_terms', methods=['GET', 'POST'])
 @business_login_required
 def store_terms():
@@ -734,6 +786,268 @@ def store_builder():
         saved_html=saved_html,
         theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
     )
+
+@app.route('/stores/<store_slug>')
+def public_storefront(store_slug):
+    biz = Business.query.filter_by(
+        store_slug=store_slug,
+        has_ecommerce_store=True,
+        website_approved=True  # Only show if approved!
+    ).first()
+    if not biz or not biz.grapesjs_html:
+        return render_template('storefront_coming_soon.html', biz=biz), 404
+    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
+    products = Product.query.filter_by(business_id=biz.id).all()
+    return render_template('public_storefront.html', biz=biz, theme=theme, products=products)
+
+@app.route('/store_products', methods=['GET', 'POST'])
+@business_login_required
+def store_products():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    # Only allow up to 50 products per business
+    products = Product.query.filter_by(business_id=biz.id).limit(50).all()
+
+    # Simple add product logic
+    if request.method == 'POST':
+        name = request.form.get('name')
+        price = request.form.get('price')
+        description = request.form.get('description')
+        image_url = request.form.get('image_url')
+        stock = request.form.get('stock')
+        if name and price and len(products) < 50:
+            new_product = Product(
+                business_id=biz.id,
+                name=name,
+                price=float(price),
+                description=description,
+                image_url=image_url,
+                stock=int(stock) if stock else 0
+            )
+            db.session.add(new_product)
+            db.session.commit()
+            flash("Product added successfully!", "success")
+            return redirect(url_for('store_products'))
+        elif len(products) >= 50:
+            flash("Limit reached: 50 products max.", "danger")
+    return render_template('store_products.html', biz=biz, products=products)
+
+@app.route('/edit_product/<int:product_id>', methods=['GET', 'POST'])
+@business_login_required
+def edit_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    biz_id = session.get('business_id')
+    if product.business_id != biz_id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('store_products'))
+    if request.method == 'POST':
+        product.name = request.form.get('name')
+        product.price = float(request.form.get('price') or product.price)
+        product.description = request.form.get('description')
+        product.image_url = request.form.get('image_url')
+        product.stock = int(request.form.get('stock') or product.stock)
+        db.session.commit()
+        flash("Product updated!", "success")
+        return redirect(url_for('store_products'))
+    return render_template('edit_product.html', product=product)
+
+@app.route('/delete_product/<int:product_id>', methods=['POST'])
+@business_login_required
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    biz_id = session.get('business_id')
+    if product.business_id != biz_id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('store_products'))
+    db.session.delete(product)
+    db.session.commit()
+    flash("Product deleted.", "success")
+    return redirect(url_for('store_products'))
+
+@app.route('/buy_product/<int:product_id>')
+def buy_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    # Optional: check stock, only allow if in stock
+    if product.stock is not None and product.stock <= 0:
+        flash("Sorry, this product is out of stock.", "danger")
+        return redirect(request.referrer or '/')
+    biz = Business.query.get(product.business_id)
+    if not biz or not biz.stripe_account_id:
+        flash("This business cannot accept payment online yet.", "danger")
+        return redirect(request.referrer or '/')
+
+    import stripe
+    YOUR_DOMAIN = "https://perkminer.com"
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='payment',
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': product.name,
+                        'description': product.description or '',
+                    },
+                    'unit_amount': int(product.price * 100),  # Stripe expects cents
+                },
+                'quantity': 1,
+            }],
+            payment_intent_data={
+                'application_fee_amount': int(product.price * 100 * 0.10),  # 10% fee to you
+                'transfer_data': {
+                    'destination': biz.stripe_account_id,
+                },
+            },
+            metadata={
+                "product_id": str(product.id),
+                "business_id": str(biz.id),
+            },
+            customer_email=request.args.get('buyer_email'),  # Pass buyer email if you have it
+            success_url=YOUR_DOMAIN + '/thank_you',
+            cancel_url=request.referrer or YOUR_DOMAIN,
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        import logging
+        logging.error(f"Stripe checkout session failed: {e}")
+        flash("Could not start checkout. Please try again.", "danger")
+        return redirect(request.referrer or '/')
+
+@app.route('/store_orders')
+@business_login_required
+def store_orders():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    orders = Order.query.filter_by(business_id=biz.id).order_by(Order.timestamp.desc()).all()
+    # Useful to join with Product for display
+    product_map = {p.id: p for p in Product.query.filter_by(business_id=biz.id).all()}
+    return render_template('store_orders.html', orders=orders, product_map=product_map)
+
+import os
+import stripe
+from flask import request
+from flask_mail import Message as MailMessage
+
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+
+def send_order_alert(business_email, product_name, amount, buyer_email=None):
+    msg = MailMessage(
+        subject="New Online Order Received!",
+        recipients=[business_email],
+        html=(
+            f"<h3>You've received a new order!</h3>"
+            f"<p><b>Product:</b> {product_name}<br>"
+            f"<b>Amount:</b> ${amount:.2f}<br>"
+            + (f"<b>Buyer Email:</b> {buyer_email}<br>" if buyer_email else "") +
+            f"</p><hr><p>Login to your dashboard for details.</p>"
+        ),
+        sender="orders@perkminer.com"
+    )
+    try:
+        mail.send(msg)
+    except Exception as e:
+        import logging
+        logging.error("Order email failed: %s", e)
+
+def send_customer_receipt(buyer_email, product_name, amount, business_name):
+    if not buyer_email:
+        return
+    msg = MailMessage(
+        subject="Your Order Receipt – " + business_name,
+        recipients=[buyer_email],
+        html=(
+            f"<h3>Order Confirmation from {business_name}</h3>"
+            f"<p>Thank you for your order!</p>"
+            f"<b>Product:</b> {product_name}<br>"
+            f"<b>Amount Paid:</b> ${amount:.2f}<br>"
+            f"<p>If you have any questions, please contact the business directly.</p>"
+        ),
+        sender="orders@perkminer.com"
+    )
+    try:
+        mail.send(msg)
+    except Exception as e:
+        import logging
+        logging.error("Customer receipt email failed: %s", e)
+
+@app.route('/stripe_webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError:
+        return "Invalid signature", 400
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        buyer_email = session.get('customer_email')
+        amount = (session.get('amount_total') or 0) / 100.0
+        stripe_checkout_id = session.get('id')
+        product_id = None
+        business_id = None
+
+        if session.get('metadata'):
+            product_id = session['metadata'].get('product_id')
+            business_id = session['metadata'].get('business_id')
+
+        if product_id and business_id:
+            from models import Order, Product, Business  # Import inside route to avoid circular import
+            existing = Order.query.filter_by(stripe_checkout_id=stripe_checkout_id).first()
+            if not existing:
+                order = Order(
+                    business_id=business_id,
+                    product_id=product_id,
+                    buyer_email=buyer_email,
+                    amount=amount,
+                    stripe_checkout_id=stripe_checkout_id,
+                    status='paid'
+                )
+                db.session.add(order)
+                db.session.commit()
+                # Decrement inventory
+                product = Product.query.get(product_id)
+                if product and product.stock is not None and product.stock > 0:
+                    product.stock -= 1
+                    db.session.commit()
+                # Send emails
+                try:
+                    business = Business.query.get(int(business_id))
+                    if business and product:
+                        send_order_alert(
+                            business.business_email,
+                            product.name,
+                            amount,
+                            buyer_email
+                        )
+                        send_customer_receipt(
+                            buyer_email,
+                            product.name,
+                            amount,
+                            business.business_name
+                        )
+                except Exception as e:
+                    import logging
+                    logging.error("Order/customer email error: %s", e)
+
+    return '', 200
+
+@app.route('/thank_you')
+def thank_you():
+    return render_template('thank_you.html')
 
 @app.route("/admin-roles")
 @login_required
