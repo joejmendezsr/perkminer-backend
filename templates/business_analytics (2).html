@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Business Analytics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { background: #f9fbfc; }
+    .dashboard-kpi { text-align: center; padding: 18px 4px 8px 4px; border-radius: 9px; box-shadow: 0 1px 8px #e6ebf0; margin-bottom: 28px; background: #fff; }
+    .dashboard-kpi .value { font-size: 2.1rem; font-weight: 600; color: #2a5859; }
+    .dashboard-kpi .label { font-size:1.05rem; color: #444; }
+    @media (max-width: 900px) { .row.g-4 { row-gap: 1.3rem; } }
+  </style>
+</head>
+<body>
+<div class="container py-4">
+  <h2 class="text-center mb-4">Store Analytics Dashboard</h2>
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="dashboard-kpi">
+        <div class="value">${{ total_revenue or '0.00' }}</div>
+        <div class="label">Total Revenue</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dashboard-kpi">
+        <div class="value">{{ total_orders or '0' }}</div>
+        <div class="label">Total Orders</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dashboard-kpi">
+        <div class="value">{{ top_product or 'None' }}</div>
+        <div class="label">Best Seller</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <h5>Sales Trend (Last 30 Days)</h5>
+    <canvas id="salesChart" height="130"></canvas>
+  </div>
+
+  <div class="mb-5">
+    <h5>Top Products</h5>
+    <canvas id="productsChart" height="120"></canvas>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('store_admin') }}" class="btn btn-secondary">← Back to Store Admin</a>
+  </div>
+</div>
+<!-- Charts.js setup -->
+<script>
+  // Replace the data arrays with real stats from Flask as you build analytics!
+  new Chart(document.getElementById('salesChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: {{ sales_dates|default(['Day '+String(i+1) for i in range(30)])|tojson }},
+      datasets: [{
+        label: 'Sales $',
+        data: {{ sales_data|default([20,35,40,50,100,91,80,60,30,45,25,35,65,70,90,112,130,120,140,124,110,99,125,120,130,115,125,110,119,121])|tojson }},
+        borderColor: '#36b37e', backgroundColor:'#d5f5e3', fill:true, tension:.4
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display: false}}, scales:{x:{grid:{display:false}}, y:{beginAtZero:true}} }
+  });
+
+  new Chart(document.getElementById('productsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: {{ top_products|default(['Product A','Product B','Product C'])|tojson }},
+      datasets: [{
+        label: 'Units Sold',
+        data: {{ top_sales|default([120,90,50])|tojson }},
+        backgroundColor:['#36b37e','#5846f8','#ffc468','#d24932','#3399ff'],
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display: false}}, scales:{ x:{grid:{display:false}}, y:{beginAtZero:true}} }
+  });
+</script>
+</body>
+</html>
