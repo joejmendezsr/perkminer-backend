@@ -77,7 +77,9 @@
       <div class="theme-preview-card">
         <img class="theme-preview-thumb" src="{{ theme.thumbnail_url or 'https://via.placeholder.com/206x120.png?text=Theme' }}" alt="{{ theme.name }}">
         <div class="theme-preview-title">{{ theme.name }}</div>
-        <div class="theme-preview-desc">{{ theme.starter_html[:110]|striptags|e }}...</div>
+        <div class="theme-preview-desc">
+          {{ theme.starter_html|striptags|truncate(90, True, '...')|e }}
+        </div>
         <button class="theme-preview-btn" onclick="loadBuilderTheme('{{ theme.id }}')">Load</button>
       </div>
     {% endfor %}
