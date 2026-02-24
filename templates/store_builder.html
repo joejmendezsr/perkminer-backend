@@ -4,146 +4,48 @@
   <meta charset="UTF-8">
   <title>Store Website Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Hi-tech gradient and dark UI -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet">
   <style>
-    body {
-      background: linear-gradient(120deg, #151e28 0%, #203b4e 100%);
-      color: #e9f2fb;
-      min-height: 100vh;
-      font-family: 'Segoe UI', Arial, sans-serif;
-    }
-    .builder-toolbar {
-      background: linear-gradient(90deg, #141927 0%, #29526f 99%);
-      box-shadow: 0 4px 24px #00111980;
-      border-radius: 13px;
-      max-width: 1200px;
-      margin: 24px auto 16px auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      padding: 0.55em 2.1em 0.45em 1.6em;
-    }
-    .builder-title {
-      font-size: 1.7em;
-      font-weight: bold;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, #6afadc, #50cdc1, #5b8dfa, #db8abf);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .theme-toggle {
-      background: #101a28;
-      color: #89c5ff;
-      border-radius: 6px;
-      border: 2px solid #2f81d8;
-      cursor: pointer;
-      padding: 5px 18px;
-      margin-left: 1em;
-      font-size: 1em;
-      transition: background 0.23s, color 0.23s;
-    }
-    .theme-toggle.active {
-      background: #223d60;
-      color: #ffe25a;
-      border-color: #db8abf;
-    }
-    .page-bar {
-      display: flex;
-      gap: 1.3em;
-      align-items: center;
-      margin-top: 0.15em;
-    }
-    .page-btn {
-      background: #262a40;
-      color: #8ad6f6;
-      border: 1.5px solid #498bf0;
-      border-radius: 6px;
-      font-weight: 500;
-      padding: 4px 14px;
-      margin-right: 4px;
-      font-size: 1.03em;
-      cursor: pointer;
-    }
-    .page-btn.active, .page-btn:focus { background: #3e5388; color: #ffe25a; border-color: #db8abf; }
-    #builder-main-row { display:flex; gap:34px; max-width:1260px; margin:auto; }
-    #gjs-sidebar {
-      flex-shrink:0;
-      width:225px;
-      background:rgba(21,35,67,0.97);
-      box-shadow: 0 2px 14px #12233eaa;
-      border-radius: 12px;
-      padding: 26px 12px 24px 12px;
-      margin-top: 10px;
-    }
-    #gjs {
-      flex:1 1 0px;
-      border-radius: 12px;
-      box-shadow: 0 6px 36px #112434;
-      min-height: 74vh;
-      background: #0d121c;
-      border: 1.5px solid #4679e3;
-      margin-bottom: 2rem;
-    }
-    .block-list { list-style:none; margin:0; padding:0;}
-    .block-list li { margin-bottom: 1.2rem; }
-    .block-btn {
-      display: flex; align-items: center; gap: 11px;
-      background: #101d30;
-      border: 1.5px solid #567bd8;
-      border-radius:8px;
-      padding: 9px 19px 9px 13px;
-      font-size: 1em;
-      color: #ace0fa;
-      cursor: move;
-      box-shadow:0 2px 8px #163a66ad;
-      transition: background 0.13s, color 0.13s, border 0.13s;
-    }
-    .block-btn:hover { background: #2659cf; color: #fff; border: 1.5px solid #e4adf7;}
-    .block-btn .bi { font-size:1.19em;}
-    @media (max-width:1000px) {
-      #builder-main-row { flex-direction:column; gap:12px; }
-      #gjs-sidebar { width:100%; margin-bottom:14px;}
-      #gjs { min-height:42vh;}
-    }
-    @media (max-width:600px) {
-      .builder-toolbar { flex-direction:column; gap:5px; padding:1em 0.5em;}
-      #gjs-sidebar { padding:15px 2px; }
-    }
+    body { background: linear-gradient(120deg, #151e28 0%, #203b4e 100%); color: #e9f2fb !important; font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh;}
+    .builder-toolbar { background: #21253b; box-shadow: 0 4px 18px #002f5988; border-radius: 13px; max-width:1300px; margin:26px auto 10px auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:0.6em 2em;}
+    .builder-title { font-size: 1.7em; font-weight: bold; background: linear-gradient(93deg, #6afadc, #db8abf, #50cdc1, #5b8dfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;}
+    .theme-toggle { background: #1a293c; color: #89c5ff; border-radius:5px; border:2px solid #2f81d8; padding:5px 17px; font-size:1em; cursor:pointer;}
+    .gjs-editor-row { max-width: 1260px; margin:auto; min-height:400px;}
+    #gjs { min-height: 68vh; border-radius: 13px; background: #f6fbfd; box-shadow: 0 8px 48px #03253621; border: 2.5px solid #4373b7; }
+    .theme-gallery-wrap { background:#181b24; border-radius:15px; box-shadow:0 2px 14px #0a112084; max-width:1220px; margin:10px auto 3rem auto; padding:22px 18px;}
+    .theme-gallery-title { color: #5bddff; font-size:1.3em; font-weight:700;}
+    .theme-gallery-row { display: flex; gap:1.1em; flex-wrap:wrap; justify-content:center;}
+    .theme-preview-card { width:200px; background:#fff; border-radius:10px; box-shadow:0 2px 14px #89caf029; margin-bottom:16px;}
+    .theme-preview-thumb { width:100%; height:108px; object-fit:cover; border-top-left-radius:10px; border-top-right-radius:10px;}
+    .theme-preview-title { font-weight:700; font-size:1.06em; color:#262e40; padding:0.51em 0 0 1.0em; text-align:left;}
+    .theme-preview-desc { font-size:.93em; color:#4a5979; min-height:36px; padding:0 1em 0.9em 1em; text-align:left;}
+    .theme-preview-btn { display:block; background:#2659cf;color:#fff; border-radius:5px; padding:7px 0; text-align:center; font-weight:600; margin:0 1em 1em 1em; border:none; cursor:pointer;}
+    .theme-preview-btn:hover { background:#177b6d;}
   </style>
 </head>
 <body>
 <div class="builder-toolbar">
   <span class="builder-title"><i class="bi bi-cpu me-1"></i> Store Website Builder</span>
-  <div class="page-bar">
-    <button class="page-btn active" data-page="home">Home Page</button>
-    <button class="page-btn" data-page="page2">Page 2</button>
-    <button class="page-btn" data-page="page3">Page 3</button>
-  </div>
   <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
 </div>
-<div id="builder-main-row">
-  <div id="gjs-sidebar">
-      <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
-      <ul class="block-list">
-        <li><div class="block-btn" id="block-hero"><i class="bi bi-star"></i> Hero section</div></li>
-        <li><div class="block-btn" id="block-img"><i class="bi bi-image"></i> Image</div></li>
-        <li><div class="block-btn" id="block-paragraph"><i class="bi bi-align-left"></i> Paragraph</div></li>
-        <li><div class="block-btn" id="block-products"><i class="bi bi-collection"></i> Product Grid</div></li>
-        <li><div class="block-btn" id="block-testimonial"><i class="bi bi-chat-quote"></i> Testimonial</div></li>
-        <li><div class="block-btn" id="block-contact"><i class="bi bi-envelope"></i> Contact Form</div></li>
-        <li><div class="block-btn" id="block-header"><i class="bi bi-window"></i> Header/Nav Bar</div></li>
-        <li><div class="block-btn" id="block-footer"><i class="bi bi-strava"></i> Footer</div></li>
-        <li><div class="block-btn" id="block-divider"><i class="bi bi-dash-lg"></i> Divider</div></li>
-        <li><div class="block-btn" id="block-btn"><i class="bi bi-square"></i> Button</div></li>
-        <li><div class="block-btn" id="block-map"><i class="bi bi-geo-alt"></i> Map</div></li>
-      </ul>
+<div class="gjs-editor-row">
+  <div id="gjs"></div>
+</div>
+<!-- THEME GALLERY BELOW BUILDER -->
+<div class="theme-gallery-wrap mb-5">
+  <div class="theme-gallery-title mb-3">⭐ Or pick a full-page starting template (click "Load"):</div>
+  <div class="theme-gallery-row">
+    {% for theme in themes %}
+      <div class="theme-preview-card">
+        <img class="theme-preview-thumb" src="{{ theme.thumbnail_url or 'https://via.placeholder.com/206x120.png?text=Theme' }}" alt="{{ theme.name }}">
+        <div class="theme-preview-title">{{ theme.name }}</div>
+        <div class="theme-preview-desc">{{ theme.starter_html[:110]|striptags }}...</div>
+        <button class="theme-preview-btn" onclick="loadBuilderTheme('{{ theme.id }}')">Load</button>
+      </div>
+    {% endfor %}
   </div>
-  <div id="gjs" style="height:480px;"></div>
 </div>
 <form id="save-html-form" method="POST" action="">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -154,136 +56,48 @@
 
 <script src="https://unpkg.com/grapesjs"></script>
 <script>
-  // Theme switcher (simple color class swap—expand for more schemes)
-  const toggleBtn = document.getElementById('themeToggle');
-  toggleBtn.addEventListener('click', function() {
+  // Toggle color scheme
+  document.getElementById('themeToggle').addEventListener('click', function() {
     document.body.classList.toggle('dark-theme');
-    toggleBtn.classList.toggle('active');
-    // Extend: change GrapesJS CSS too if you want
+    this.classList.toggle('active');
   });
 
-  // Multi-page logic (simple in-memory for now; expand with backend persist as needed)
-  const pages = { home: `{{ saved_html | safe }}`, page2: '', page3: '' };
-  let currentPageKey = 'home';
-
-  function loadPage(pageKey) {
-    currentPageKey = pageKey;
-    editor.setComponents(pages[pageKey] || '');
-    document.querySelectorAll('.page-btn').forEach(btn =>
-      btn.classList.toggle('active', btn.dataset.page === pageKey)
-    );
-  }
-  document.querySelectorAll('.page-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      // Save current page HTML before switching
-      pages[currentPageKey] = editor.getHtml();
-      loadPage(btn.dataset.page);
-    });
-  });
-
-  // Map of theme_id => starter_html from Flask
+  // Theme selection logic
   const themeHtmlMap = {{ theme_html_map | safe }};
-  let defaultHTML = `<section style="padding:40px 0;text-align:center;background:#f8faff;"><h2>Welcome to Your Store</h2><p>Drag content to start building your front page.</p></section>`;
+  function loadBuilderTheme(themeId) {
+    editor.setComponents(themeHtmlMap[themeId] || '');
+  }
+
+  // All builder blocks
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
-    height: '480px',
+    height: '580px',
     width: 'auto',
     storageManager: false,
-    plugins: [],
-    components: pages['home'] || defaultHTML,
-    style: '',
-    blockManager: { appendTo: null }
+    blockManager: {
+      appendTo: null,
+      blocks: [
+        { id:'hero', label:'<i class="bi bi-star"></i> Hero', category:'Sections', content:`<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2 class="mb-2">Welcome!</h2><p>Your main message here.</p></section>` },
+        { id:'img', label:'<i class="bi bi-image"></i> Image', category:'Media', content:{type:'image',src:'https://via.placeholder.com/500x200.png?text=Add+Your+Image'} },
+        { id:'row-lr', label:'<i class="bi bi-layout-sidebar"></i> Img left/Text right', category:'Layouts', content:`<div style="display:flex;gap:18px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://via.placeholder.com/260x140.png?text=Image" style="width:38%;border-radius:11px;"><div><h4>Product or Service</h4><p>Describe it here.</p></div></div>` },
+        { id:'row-rl', label:'<i class="bi bi-layout-sidebar-reverse"></i> Text left/Img right', category:'Layouts', content:`<div style="display:flex;gap:18px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>Another Feature</h4><p>Explain with text here.</p></div><img src="https://via.placeholder.com/260x140.png?text=Image" style="width:38%;border-radius:11px;"></div>` },
+        { id:'slider', label:'<i class="bi bi-sliders"></i> Image Slider', category:'Media', content:`<div class="swiper mySwiper" style="max-width:600px;margin:40px auto;"><div class="swiper-wrapper"><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+1" style="width:100%;border-radius:10px;"></div><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+2" style="width:100%;border-radius:10px;"></div><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+3" style="width:100%;border-radius:10px;"></div></div><div class="swiper-pagination"></div></div><script>try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}<\/script>` },
+        { id:'paragraph', label:'<i class="bi bi-align-left"></i> Paragraph', category:'Content', content:`<div class="py-3" style="max-width:560px;margin:auto;"><p style="font-size:1.1em;">Write about your story, value, or any detail here.</p></div>` },
+        { id:'products', label:'<i class="bi bi-collection"></i> Products', category:'Store', content:`<div class="mx-auto my-3" style="max-width:950px;"><h3 class="mb-3 text-center">Featured Products</h3><div style="display:flex;flex-wrap:wrap;gap:1.4rem;justify-content:center;"><div style="width:220px;" class="p-3 border rounded bg-light"><img src="https://via.placeholder.com/200x130.png?text=Product+1" style="width:100%;border-radius:7px;"><div class="fw-semibold mt-2">Product Name</div><div class="text-success mb-1">$19.95</div></div><div style="width:220px;" class="p-3 border rounded bg-light"><img src="https://via.placeholder.com/200x130.png?text=Product+2" style="width:100%;border-radius:7px;"><div class="fw-semibold mt-2">Product Name</div><div class="text-success mb-1">$24.99</div></div></div></div>` },
+        { id:'testimonial', label:'<i class="bi bi-chat-quote"></i> Testimonial', category:'Content', content:`<blockquote style="max-width:560px;margin:2.5rem auto;padding:20px 26px;background:#f9f6eb;border-left:5px solid #ffd66b;border-radius:10px;"><div style="font-size:1.15em;font-style:italic;">“Amazing service! Quick, easy, and just what my family needed.”</div><hr><div style="color:#9a8965;font-weight:600;">– Happy Customer</div></blockquote>` },
+        { id:'contact', label:'<i class="bi bi-envelope"></i> Contact', category:'Content', content:`<section style="padding:35px 0;text-align:center;"><div style="max-width:500px;margin:auto"><h4>Contact Us</h4><form><input type="text" placeholder="Your Name" class="form-control mb-2"><input type="email" placeholder="Your Email" class="form-control mb-2"><textarea class="form-control mb-2" placeholder="Message"></textarea><button class="btn btn-primary">Send Message</button></form></div></section>` },
+        { id:'divider', label:'<i class="bi bi-dash-lg"></i> Divider', category:'Content', content:`<hr style="margin:40px 0;border:0;height:2px;background:linear-gradient(90deg,transparent,#9cf 60%,transparent 100%);">` },
+        { id:'btn', label:'<i class="bi bi-square"></i> Button', category:'Content', content:`<a href="#" class="btn btn-primary">Click Me</a>` },
+        { id:'map', label:'<i class="bi bi-geo-alt"></i> Map', category:'Content', content:`<div style="width:100%;max-width:430px;margin:18px auto;"><iframe width="100%" height="180" style="border-radius:11px;border:0" src="https://maps.google.com/maps?q=Springfield&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe></div>` }
+      ]
+    }
   });
 
-  // Helper: Add block to current page (preserves per-page)
-  function addBlock(html) {
-    editor.addComponents(html);
-    // Save immediately
-    pages[currentPageKey] = editor.getHtml();
-  }
-
-  // Drag-and-drop block sidebar, powered by GrapesJS
-  function initDraggableBlock(btnId, html) {
-    const btn = document.getElementById(btnId);
-    btn.setAttribute('draggable', 'true');
-    btn.addEventListener('dragstart', function(e) {
-      e.dataTransfer.setData('text', html);
-    });
-    btn.addEventListener('click', function() {
-      addBlock(html); // also allow click-to-add
-    });
-  }
-  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;">
-    <h2 class="mb-2" style="font-size:2.15em;font-weight:800;">Welcome to Our Store!</h2>
-    <p style="font-size:1.25em;">Drag elements to build your business page.</p>
-    <a href="#products" class="btn btn-primary btn-lg mt-2">Shop Now</a>
-  </section>`);
-  initDraggableBlock('block-img', `<img src="https://via.placeholder.com/400x200.png?text=Your+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
-  initDraggableBlock('block-paragraph', `<div class="py-3" style="max-width:560px;margin:auto;">
-    <p style="font-size:1.1em;">Describe your business, add info or details here.</p>
-  </div>`);
-  initDraggableBlock('block-products', `<div class="mx-auto my-3" style="max-width:950px;">
-    <h3 class="mb-3 text-center">Featured Products</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:1.4rem;justify-content:center;">
-      <div style="width:220px;" class="p-3 border rounded bg-light">
-        <img src="https://via.placeholder.com/200x130.png?text=Product+1" style="width:100%;border-radius:7px;">
-        <div class="fw-semibold mt-2">Product Name</div>
-        <div class="text-success mb-1">$19.95</div>
-      </div>
-      <div style="width:220px;" class="p-3 border rounded bg-light">
-        <img src="https://via.placeholder.com/200x130.png?text=Product+2" style="width:100%;border-radius:7px;">
-        <div class="fw-semibold mt-2">Product Name</div>
-        <div class="text-success mb-1">$24.99</div>
-      </div>
-    </div>
-  </div>`);
-  initDraggableBlock('block-testimonial', `<blockquote style="max-width:560px;margin:2.5rem auto;padding:20px 26px;background:#f9f6eb;border-left:5px solid #ffd66b;border-radius:10px;">
-      <div style="font-size:1.15em;font-style:italic;">“Amazing service! Quick, easy, and just what my family needed.”</div>
-      <hr>
-      <div style="color:#9a8965;font-weight:600;">– Happy Customer</div>
-    </blockquote>`);
-  initDraggableBlock('block-contact', `<section style="padding:35px 0;text-align:center;">
-    <div style="max-width:500px;margin:auto">
-      <h4>Contact Us</h4>
-      <form><input type="text" placeholder="Your Name" class="form-control mb-2">
-      <input type="email" placeholder="Your Email" class="form-control mb-2">
-      <textarea class="form-control mb-2" placeholder="Message"></textarea>
-      <button class="btn btn-primary">Send Message</button></form>
-    </div>
-  </section>`);
-  initDraggableBlock('block-header', `<header class="mb-4" style="background:#222333;color:white;padding:16px 7px;border-radius:8px;text-align:center;">
-    <h2 style="font-weight:900;font-size:2em;">My Store</h2>
-    <nav><a href="#" class="mx-2" style="color:#8ef0fd;">Home</a><a href="#" class="mx-2" style="color:#8ef0fd;">Shop</a><a href="#" class="mx-2" style="color:#8ef0fd;">Contact</a></nav>
-  </header>`);
-  initDraggableBlock('block-footer', `<footer style="background:#1a2239;color:#89c6ec;padding:22px 12px;margin-top:24px;">
-    <div style="text-align:center;">&copy; 2026 My Store. All rights reserved.</div></footer>`);
-  initDraggableBlock('block-divider', `<hr style="margin:40px 0;border:0;height:2px;background:linear-gradient(90deg,transparent,#9cf 60%,transparent 100%);">`);
-  initDraggableBlock('block-btn', `<a href="#" class="btn btn-primary">Click Me</a>`);
-  initDraggableBlock('block-map', `<div style="width:100%;max-width:430px;margin:18px auto;">
-    <iframe width="100%" height="180" style="border-radius:11px;border:0" src="https://maps.google.com/maps?q=Springfield&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
-    </div>`);
-
-  // Theme/template selection logic for switching starter HTML
-  document.querySelectorAll('.select-theme-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      // Save current page before switching
-      pages[currentPageKey] = editor.getHtml();
-      let themeId = btn.dataset.theme;
-      let html = themeHtmlMap[themeId] || defaultHTML;
-      editor.setComponents(html);
-      pages[currentPageKey] = html;
-    });
-  });
-
-  // Save the current page when form is submitted
   document.getElementById('save-html-form').addEventListener('submit', function(e){
-    pages[currentPageKey] = editor.getHtml();
-    document.getElementById('page_html').value = pages[currentPageKey];
+    document.getElementById('page_html').value = editor.getHtml();
   });
 
-  // Initialize builder with Home page content
-  loadPage('home');
 </script>
 </body>
 </html>
