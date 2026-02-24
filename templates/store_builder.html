@@ -5,25 +5,24 @@
   <title>Store Website Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.css">
+  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet">
   <style>
-    body { background: linear-gradient(120deg, #151e28 0%, #203b4e 100%); color: #e9f2fb; min-height: 100vh; font-family: 'Segoe UI', Arial, sans-serif;}
-    .builder-toolbar { background: #21253b; box-shadow: 0 4px 18px #002f5988; border-radius: 13px; max-width:1200px; margin:24px auto 16px auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:0.55em 2.1em 0.45em 1.6em;}
+    body { background: linear-gradient(120deg, #151e28 0%, #203b4e 100%); color: #e9f2fb; min-height: 100vh;}
+    .builder-toolbar { background: #21253b; box-shadow: 0 4px 18px #002f5988; border-radius: 13px; max-width:1350px; margin:24px auto 10px auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:0.6em 2em;}
     .builder-title { font-size: 1.7em; font-weight: bold; background: linear-gradient(93deg, #6afadc, #db8abf, #50cdc1, #5b8dfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;}
     .theme-toggle { background:#1a293c; color:#89c5ff;border-radius:5px;border:2px solid #2f81d8; padding:5px 17px; font-size:1em; cursor:pointer;}
-    .page-bar {gap: 1.1em; padding: 0.2em 0;}
+    .page-bar {gap:1.1em;}
     .page-btn {background: #22253a; color: #8ad6f6; border: 1.5px solid #498bf0; border-radius:6px; font-weight:500; padding:4.5px 13px; font-size:1.08em; cursor:pointer;}
     .page-btn.active, .page-btn:focus {background:#3657a8; color:#ffe25a; border-color: #db8abf;}
-    #builder-main-row {display:flex; gap:32px; max-width:1280px; margin:auto;}
-    #gjs-sidebar {flex-shrink:0;width:175px; background:rgba(14,27,53,0.97); box-shadow: 0 2px 14px #12233eaa; border-radius: 12px; padding:22px 7px 17px 7px; margin-top: 10px;}
-    #gjs { flex:1 1 0px; border-radius: 13px; background: #f6fbfd; box-shadow: 0 8px 48px #03253621; border: 2.5px solid #4373b7; min-height:72vh; margin-bottom:2rem;}
+    #builder-main-row {display:flex; gap:28px; max-width:1270px; margin:auto;}
+    #gjs-sidebar {flex-shrink:0;width:165px; background:rgba(14,27,53,0.97); box-shadow: 0 2px 14px #12233eaa; border-radius: 12px; padding:14px 5px 11px 5px; margin-top: 10px;}
+    #gjs { flex:1 1 0px; border-radius: 13px; background: #f6fbfd; box-shadow: 0 8px 48px #03253621; border: 2.5px solid #4373b7; min-height:72vh; margin-bottom:1.7rem;}
     .block-list { list-style:none; margin:0; padding:0;}
-    .block-list li { margin-bottom: 1.05rem; }
-    .block-btn { display:flex; align-items:center; gap:7px; background:#111821; border:1.6px solid #5693e0; border-radius:7px; padding:5.5px 8px; font-size:0.98em; color:#ace0fa; cursor:move; box-shadow:0 2px 7px #163a66ad; transition: background .13s, color .13s, border .13s;}
+    .block-list li { margin-bottom: .7rem; }
+    .block-btn { display:flex; align-items:center; gap:7px; background:#111821; border:1.4px solid #5693e0; border-radius:7px; padding:5px 8px; font-size:0.97em; color:#ace0fa; cursor:move; box-shadow:0 2px 7px #163a66ad; transition: background .13s, color .13s, border .13s;}
     .block-btn:hover { background:#2659cf; color:#ffedbd; border:1.7px solid #e4adf7;}
-    .block-btn .bi { font-size:1.12em;}
+    .block-btn .bi { font-size:1.14em;}
     .theme-gallery-wrap {background:#181b24; border-radius:15px; box-shadow:0 2px 14px #0a112084; max-width:1220px; margin:10px auto 3rem auto; padding:22px 18px;}
     .theme-gallery-title { color:#5bddff;font-size:1.3em;font-weight:700;}
     .theme-gallery-row {display:flex;gap:1.1em;flex-wrap:wrap;justify-content:center;}
@@ -31,8 +30,8 @@
     .theme-preview-thumb {width:100%;height:108px;object-fit:cover;border-top-left-radius:10px;border-top-right-radius:10px;}
     .theme-preview-title {font-weight:700;font-size:1.06em;color:#262e40;padding:0.51em 0 0 1.0em;text-align:left;}
     .theme-preview-desc {font-size:.93em;color:#4a5979;min-height:36px;padding:0 1em 0.9em 1em;text-align:left;}
-    .theme-preview-btn {display:block;width: 92%;margin: 1em auto 1.1em auto,background:#ffca2c;color:#181b24;border-radius:7px;border: 2px solid #ffd05b;padding:12px 0;text-align:center;font-weight:700;font-size: 1.09em;box-shadow: 0 2px 8px #ffe47242;letter-spacing: .01em;cursor:pointer;transition: box-shadow .16s, background .15s, color .12s;}
-    .theme-preview-btn:hover {background:#ffe484;color: #222,box-shadow: 0 6px 18px #ffe77c88;border-color: #44d05b}
+    .theme-preview-btn {display:block;width: 92%;margin: 1em auto 1.1em auto;background:#ffca2c;color:#181b24;border-radius:7px;border:2px solid #ffd05b;padding:12px 0;text-align:center;font-weight:700;font-size: 1.09em;box-shadow: 0 2px 8px #ffe47242;letter-spacing: .01em;cursor:pointer;transition: box-shadow .16s, background .15s, color .12s;}
+    .theme-preview-btn:hover {background:#ffe484;color: #222;box-shadow: 0 6px 18px #ffe77c88;border-color: #ffd05b;}
     @media (max-width:1000px) { #builder-main-row { flex-direction:column; gap:13px;} #gjs-sidebar {width:100%;margin-bottom:12px;} #gjs {min-height:42vh;} }
     @media (max-width:600px) { .builder-toolbar {flex-direction:column;gap:6px;padding:1em 0.5em;} #gjs-sidebar{padding:14px 2px;} }
   </style>
@@ -118,7 +117,7 @@
     });
   });
 
-  // Theme gallery logic
+  // Theme gallery load logic
   const themeHtmlMap = {{ theme_html_map | safe }};
   function loadBuilderTheme(themeId) {
     editor.setComponents(themeHtmlMap[themeId] || '');
@@ -130,7 +129,7 @@
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
-    height: '840px',
+    height: '860px',
     width: 'auto',
     storageManager: false,
     plugins: [],
@@ -145,8 +144,7 @@
     btn.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text', html); });
     btn.addEventListener('click', function(){ addBlock(html); });
   }
-
-  // --- Add all block types ---
+  // Blocks
   initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
   initDraggableBlock('block-img', `<img src="https://via.placeholder.com/400x200.png?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
   initDraggableBlock('block-paragraph', `<div class="py-3" style="max-width:560px;margin:auto;"><p>Tell your story or describe your offers here.</p></div>`);
@@ -168,7 +166,6 @@
     document.getElementById('current_page').value = currentPageKey;
   });
 
-  // Home is initial
   loadPage('home');
 </script>
 </body>
