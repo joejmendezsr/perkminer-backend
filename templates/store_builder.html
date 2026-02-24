@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.css">
   <style>
     body { background: linear-gradient(120deg, #151e28 0%, #203b4e 100%); color: #e9f2fb; min-height: 100vh; font-family: 'Segoe UI', Arial, sans-serif;}
-    .builder-toolbar { background: #21253b; box-shadow: 0 4px 18px #002f5988; border-radius: 13px; max-width:1200px; margin:24px auto 16px auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:0.55em 2.1em 0.45em 1.6em;}
+    .builder-toolbar { background: #21253b; box-shadow: 0 4px 18px #002f5988; border-radius: 13px; max-width:1350px; margin:24px auto 10px auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:0.6em 2em;}
     .builder-title { font-size: 1.7em; font-weight: bold; background: linear-gradient(93deg, #6afadc, #db8abf, #50cdc1, #5b8dfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;}
     .theme-toggle { background:#1a293c; color:#89c5ff;border-radius:5px;border:2px solid #2f81d8; padding:5px 17px; font-size:1em; cursor:pointer;}
     .page-bar {gap: 1.1em; padding: 0.2em 0;}
@@ -31,8 +31,30 @@
     .theme-preview-thumb {width:100%;height:108px;object-fit:cover;border-top-left-radius:10px;border-top-right-radius:10px;}
     .theme-preview-title {font-weight:700;font-size:1.06em;color:#262e40;padding:0.51em 0 0 1.0em;text-align:left;}
     .theme-preview-desc {font-size:.93em;color:#4a5979;min-height:36px;padding:0 1em 0.9em 1em;text-align:left;}
-    .theme-preview-btn {display:block;width: 92%;margin: 1em auto 1.1em auto;background:#ffca2c;color:#181b24;border-radius:7px;border:2px solid #ffd05b;padding:12px 0;text-align:center;font-weight:700;font-size: 1.09em;box-shadow: 0 2px 8px #ffe47242;letter-spacing: .01em;cursor:pointer;transition: box-shadow .16s, background .15s, color .12s;}
-    .theme-preview-btn:hover {background:#ffe484;color: #222,box-shadow: 0 6px 18px #ffe77c88;border-color: #44d05b}
+    .theme-preview-btn {
+      display: block;
+      width: 92%;
+      margin: 1em auto 1.1em auto;   /* Center horizontally and space vertically */
+      background: #ffca2c;
+      color: #181b24 !important;
+      border-radius: 7px;
+      border: 2px solid #ffd05b;
+      padding: 12px 0;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.09em;
+      box-shadow: 0 2px 8px #ffe47242;
+      letter-spacing: .01em;
+      cursor: pointer;
+      transition: box-shadow .16s, background .15s, color .12s;
+    }
+    .theme-preview-btn:hover {
+      background: #ffe484;
+      color: #222;
+      box-shadow: 0 6px 18px #ffe77c88;
+      border-color: #ffd05b;
+    }
+    
     @media (max-width:1000px) { #builder-main-row { flex-direction:column; gap:13px;} #gjs-sidebar {width:100%;margin-bottom:12px;} #gjs {min-height:42vh;} }
     @media (max-width:600px) { .builder-toolbar {flex-direction:column;gap:6px;padding:1em 0.5em;} #gjs-sidebar{padding:14px 2px;} }
   </style>
@@ -130,7 +152,7 @@
   const editor = grapesjs.init({
     container: '#gjs',
     fromElement: false,
-    height: '860px',
+    height: '540px',
     width: 'auto',
     storageManager: false,
     plugins: [],
