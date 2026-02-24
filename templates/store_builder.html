@@ -31,7 +31,7 @@
     .theme-preview-thumb {width:100%;height:108px;object-fit:cover;border-top-left-radius:10px;border-top-right-radius:10px;}
     .theme-preview-title {font-weight:700;font-size:1.06em;color:#262e40;padding:0.51em 0 0 1.0em;text-align:left;}
     .theme-preview-desc {font-size:.93em;color:#4a5979;min-height:36px;padding:0 1em 0.9em 1em;text-align:left;}
-    .theme-preview-btn {display:block;background:#2659cf;color:#fff;border-radius:5px;padding:7px 0;text-align:center;font-weight:600;margin:0 1em 1em 1em;border:none;cursor:pointer;}
+    .theme-preview-btn {display:block;width: 90%;margin: 0 5% 1em 5%,background:#2659cf;color:#fff;border-radius:7px;padding:11px 0;text-align:center;font-weight:600;font-size: 1.13em;border:none;cursor:pointer;transition: background .16s, color .16s;letter-spacing:.01em;}
     .theme-preview-btn:hover {background:#177b6d;}
     @media (max-width:1000px) { #builder-main-row { flex-direction:column; gap:13px;} #gjs-sidebar {width:100%;margin-bottom:12px;} #gjs {min-height:42vh;} }
     @media (max-width:600px) { .builder-toolbar {flex-direction:column;gap:6px;padding:1em 0.5em;} #gjs-sidebar{padding:14px 2px;} }
@@ -77,7 +77,7 @@
       <div class="theme-preview-card">
         <img class="theme-preview-thumb" src="{{ theme.thumbnail_url or 'https://via.placeholder.com/206x120.png?text=Theme' }}" alt="{{ theme.name }}">
         <div class="theme-preview-title">{{ theme.name }}</div>
-        <div class="theme-preview-desc">{{ theme.starter_html[:110]|striptags }}...</div>
+        <div class="theme-preview-desc">{{ theme.starter_html[:110]|striptags|e }}...</div>
         <button class="theme-preview-btn" onclick="loadBuilderTheme('{{ theme.id }}')">Load</button>
       </div>
     {% endfor %}
