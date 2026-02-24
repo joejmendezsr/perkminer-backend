@@ -1309,11 +1309,6 @@ def order_lookup():
     return render_template('order_lookup.html', found_orders=found_orders, show_results=show_results)
 
 # ------------------- STUBS FOR ADMIN, PUBLIC STORE, ETC -----------------
-@app.route('/store_admin')
-@business_login_required
-def store_admin():
-    return render_template('store_admin.html')
-
 @app.route('/store_orders')
 @business_login_required
 def store_orders():
