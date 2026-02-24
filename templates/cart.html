@@ -13,6 +13,7 @@
 <div class="container py-4">
   <h2 class="mb-4 text-center">Your Cart</h2>
   <form method="POST" action="{{ url_for('apply_coupon') }}" class="mb-3 row g-2">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="col">
       <input type="text" class="form-control" name="coupon_code" placeholder="Enter coupon code" value="{{ session.get('applied_coupon', '') }}">
     </div>

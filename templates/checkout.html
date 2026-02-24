@@ -10,6 +10,7 @@
 <div class="container py-4">
   <h2 class="mb-4 text-center">Checkout</h2>
   <form method="POST" class="bg-white p-4 rounded shadow-sm mb-4" style="max-width:450px;margin:0 auto;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
       <label for="email" class="form-label">Your Email</label>
       <input type="email" name="email" id="email" class="form-control" required value="{{ form.email.data }}">

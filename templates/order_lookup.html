@@ -10,6 +10,7 @@
 <div class="container py-4" style="max-width:480px;">
   <h2 class="mb-4 text-center">Find Your Order</h2>
   <form method="POST" class="bg-white p-4 rounded shadow-sm mb-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
       <label for="email" class="form-label">Buyer Email</label>
       <input type="email" class="form-control" name="email" id="email" placeholder="you@email.com">
