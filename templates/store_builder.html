@@ -251,7 +251,42 @@
     style: '',
   });
 
-  function addBlock(html) { editor.addComponents(html); pages[currentPageKey] = editor.getHtml(); }
+  // Override addBlock to auto-initialize Swiper for both .mySwiper and .myCarousel
+  function addBlock(html) {
+    editor.addComponents(html);
+    pages[currentPageKey] = editor.getHtml();
+    setTimeout(() => {
+      // Init .mySwiper blocks
+      document.querySelectorAll('.mySwiper').forEach(el => {
+        try {
+          if (!el._swiper) {
+            el._swiper = new Swiper(el, {
+              pagination: {
+                el: el.querySelector('.swiper-pagination'),
+                clickable: true
+              },
+              loop: true
+            });
+          }
+        } catch(e){}
+      });
+      // Init .myCarousel blocks
+      document.querySelectorAll('.myCarousel').forEach(el => {
+        try {
+          if (!el._swiper) {
+            el._swiper = new Swiper(el, {
+              pagination: {
+                el: el.querySelector('.swiper-pagination'),
+                clickable: true
+              },
+              loop: true
+            });
+          }
+        } catch(e){}
+      });
+    }, 0);
+  }
+
   function initDraggableBlock(btnId, html) {
     const btn = document.getElementById(btnId);
     if(!btn) return;
@@ -259,6 +294,18 @@
     btn.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text', html); });
     btn.addEventListener('click', function(){ addBlock(html); });
   }
+
+  // ---- All your initDraggableBlock calls go here ----
+  // (Insert your corrected block initializers, as provided in previous response)
+
+  document.getElementById('save-html-form').addEventListener('submit', function(e){
+    pages[currentPageKey] = editor.getHtml();
+    document.getElementById('page_html').value = pages[currentPageKey];
+    document.getElementById('current_page').value = currentPageKey;
+  });
+
+  loadPage('home');
+</script>
 
   // All block inits (one per sub-button)
 initDraggableBlock('block-img', `<img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">
@@ -282,7 +329,6 @@ initDraggableBlock('block-overlay-img', `
       </div>
       <div class="swiper-pagination"></div>
     </div>
-    try{ new Swiper('.myCarousel', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(e){}
 `);
 
 initDraggableBlock('block-gallery', `
@@ -305,7 +351,6 @@ initDraggableBlock('block-slider', `
     </div>
     <div class="swiper-pagination"></div>
   </div>
-  try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}
 `);
 
 // Layout
