@@ -251,27 +251,12 @@
     style: '',
   });
 
-  // Override addBlock to auto-initialize Swiper for both .mySwiper and .myCarousel
+  // Swiper auto-initializer for both .mySwiper and .myCarousel blocks
   function addBlock(html) {
     editor.addComponents(html);
     pages[currentPageKey] = editor.getHtml();
     setTimeout(() => {
-      // Init .mySwiper blocks
-      document.querySelectorAll('.mySwiper').forEach(el => {
-        try {
-          if (!el._swiper) {
-            el._swiper = new Swiper(el, {
-              pagination: {
-                el: el.querySelector('.swiper-pagination'),
-                clickable: true
-              },
-              loop: true
-            });
-          }
-        } catch(e){}
-      });
-      // Init .myCarousel blocks
-      document.querySelectorAll('.myCarousel').forEach(el => {
+      document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
         try {
           if (!el._swiper) {
             el._swiper = new Swiper(el, {
@@ -296,30 +281,15 @@
   }
 
   // ---- All your initDraggableBlock calls go here ----
-  // (Insert your corrected block initializers, as provided in previous response)
-
-  document.getElementById('save-html-form').addEventListener('submit', function(e){
-    pages[currentPageKey] = editor.getHtml();
-    document.getElementById('page_html').value = pages[currentPageKey];
-    document.getElementById('current_page').value = currentPageKey;
-  });
-
-  loadPage('home');
-</script>
-
-  // All block inits (one per sub-button)
-initDraggableBlock('block-img', `<img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">
-`);
-
-initDraggableBlock('block-overlay-img', `
-  <div style="position:relative; width:360px; height:200px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
-  </div>
-`);
-
-  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>
-`);
+  // Images
+  initDraggableBlock('block-img', `<img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
+  initDraggableBlock('block-overlay-img', `
+    <div style="position:relative; width:360px; height:200px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
+    </div>
+  `);
+  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
   initDraggableBlock('block-carousel', `
     <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
       <div class="swiper-wrapper">
@@ -329,35 +299,45 @@ initDraggableBlock('block-overlay-img', `
       </div>
       <div class="swiper-pagination"></div>
     </div>
-`);
-
-initDraggableBlock('block-gallery', `
-  <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=1" style="width:180px; border-radius:8px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=2" style="width:180px; border-radius:8px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=3" style="width:180px; border-radius:8px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=4" style="width:180px; border-radius:8px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=5" style="width:180px; border-radius:8px;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=6" style="width:180px; border-radius:8px;">
-  </div>
-`);
-
-initDraggableBlock('block-slider', `
-  <div class="swiper mySwiper" style="max-width:600px;margin:40px auto;">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+1" style="width:100%;border-radius:10px;"></div>
-      <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+2" style="width:100%;border-radius:10px;"></div>
-      <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+3" style="width:100%;border-radius:10px;"></div>
+  `);
+  initDraggableBlock('block-gallery', `
+    <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=1" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=2" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=3" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=4" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=5" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=6" style="width:180px; border-radius:8px;">
     </div>
-    <div class="swiper-pagination"></div>
-  </div>
-`);
+  `);
+  initDraggableBlock('block-slider', `
+    <div class="swiper mySwiper" style="max-width:600px;margin:40px auto;">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+1" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+2" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+3" style="width:100%;border-radius:10px;"></div>
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+  `);
 
-// Layout
-initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>
-`);
-initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"></div>
-`);
+  // Layout & Multi-Layer
+  initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
+  initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"></div>`);
+  initDraggableBlock('block-img-txt-p', `
+    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
+      <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
+    </div>
+    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
+  `);
+  initDraggableBlock('block-txt-img-p', `
+    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+      <div><h4>Text Left</h4><p>Some text here.</p></div>
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
+    </div>
+    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
+  `);
 
 // Multi-Layer
 initDraggableBlock('block-text', `
@@ -366,14 +346,6 @@ initDraggableBlock('block-text', `
       <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
       <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
     </div>
-    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
-  </div>
-`);
-
-initDraggableBlock('block-txt-img-p', `
-  <div class="text-block" style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-    <div><h4>Text Left</h4><p>Some text here.</p></div>
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
     <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
   </div>
 `);
@@ -476,6 +448,7 @@ initDraggableBlock('block-map-large', `
       allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
   </div>
 `);
+
   document.getElementById('save-html-form').addEventListener('submit', function(e){
     pages[currentPageKey] = editor.getHtml();
     document.getElementById('page_html').value = pages[currentPageKey];
