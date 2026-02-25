@@ -76,119 +76,111 @@
     <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
     </div>
     <div id="builder-main-row">
-      <div id="gjs-sidebar">
-        <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
-<ul class="block-list">
-  <!-- Image Category -->
-  <li>
-    <div class="block-btn" id="btn-image-menu">Image</div>
-    <ul class="sub-list" id="sub-image" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-img">Single Image</div></li>
-      <li><div class="block-btn" id="block-overlay-img">Overlay Image</div></li>
-      <li><div class="block-btn" id="block-hero">Hero</div></li>
-      <li><div class="block-btn" id="block-carousel">Carousel</div></li>
-      <li><div class="block-btn" id="block-gallery">Gallery (up to 6 images)</div></li>
-      <li><div class="block-btn" id="block-slider">Slider</div></li>
-    </ul>
-  </li>
+<div id="gjs-sidebar">
+  <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
+  <ul class="block-list">
+    <!-- Image Category -->
+    <li>
+      <div class="block-btn" id="btn-image-menu">Image</div>
+      <ul class="sub-list" id="sub-image" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-img">Single Image</div></li>
+        <li><div class="block-btn" id="block-overlay-img">Overlay Image</div></li>
+        <li><div class="block-btn" id="block-hero">Hero</div></li>
+        <li><div class="block-btn" id="block-carousel">Carousel</div></li>
+        <li><div class="block-btn" id="block-gallery">Gallery (up to 6 images)</div></li>
+        <li><div class="block-btn" id="block-slider">Slider</div></li>
+      </ul>
+    </li>
+    <!-- Layout Category -->
+    <li>
+      <div class="block-btn" id="btn-layout-menu">Layout</div>
+      <ul class="sub-list" id="sub-layout" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-row-lr">Image Left / Text Right</div></li>
+        <li><div class="block-btn" id="block-row-rl">Text Left / Image Right</div></li>
+      </ul>
+    </li>
+    <!-- Multi-Layer Category -->
+    <li>
+      <div class="block-btn" id="btn-multilayer-menu">Multi-Layer</div>
+      <ul class="sub-list" id="sub-multilayer" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-img-txt-p">Image Left / Text Right / Paragraph Below</div></li>
+        <li><div class="block-btn" id="block-txt-img-p">Text Left / Image Right / Paragraph Below</div></li>
+      </ul>
+    </li>
+    <!-- Products Category -->
+    <li>
+      <div class="block-btn" id="btn-products-menu">Products</div>
+      <ul class="sub-list" id="sub-products" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-product-single">Add A Product</div></li>
+        <li><div class="block-btn" id="block-product-multi">Add Multiple Products</div></li>
+      </ul>
+    </li>
+    <!-- Text Category -->
+    <li>
+      <div class="block-btn" id="btn-text-menu">Text</div>
+      <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-btn">Single Line</div></li>
+        <li><div class="block-btn" id="block-paragraph">Paragraph</div></li>
+        <li><div class="block-btn" id="block-about">About Us</div></li>
+      </ul>
+    </li>
+    <!-- Menu Category -->
+    <li>
+      <div class="block-btn" id="btn-menu-menu">Menu</div>
+      <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-header">Side-by-Side</div></li>
+        <li><div class="block-btn" id="block-footer">Drop Down</div></li>
+      </ul>
+    </li>
+    <!-- Customization Category -->
+    <li>
+      <div class="block-btn" id="btn-custom-menu">Customization</div>
+      <ul class="sub-list" id="sub-custom" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-embed-script">Embed Script</div></li>
+        <li><div class="block-btn" id="block-custom-html">Custom HTML</div></li>
+      </ul>
+    </li>
+    <!-- Contact Category -->
+    <li>
+      <div class="block-btn" id="btn-contact-menu">Contact</div>
+      <ul class="sub-list" id="sub-contact" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-contact-form">Contact Form</div></li>
+        <li><div class="block-btn" id="block-contact-details">Details (Email/Address/Phone)</div></li>
+      </ul>
+    </li>
+    <!-- Map Category -->
+    <li>
+      <div class="block-btn" id="btn-map-menu">Map</div>
+      <ul class="sub-list" id="sub-map" style="display:none; margin-top:7px;">
+        <li><div class="block-btn" id="block-map-small">Small Map</div></li>
+        <li><div class="block-btn" id="block-map-large">Large Map</div></li>
+      </ul>
+    </li>
+  </ul>
 
-  <!-- Layout Category -->
-  <li>
-    <div class="block-btn" id="btn-layout-menu">Layout</div>
-    <ul class="sub-list" id="sub-layout" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-row-lr">Image Left / Text Right</div></li>
-      <li><div class="block-btn" id="block-row-rl">Text Left / Image Right</div></li>
-    </ul>
-  </li>
-
-  <!-- Multi-Layer Category -->
-  <li>
-    <div class="block-btn" id="btn-multilayer-menu">Multi-Layer</div>
-    <ul class="sub-list" id="sub-multilayer" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-img-txt-p">Image Left / Text Right / Paragraph Below</div></li>
-      <li><div class="block-btn" id="block-txt-img-p">Text Left / Image Right / Paragraph Below</div></li>
-    </ul>
-  </li>
-
-  <!-- Products Category -->
-  <li>
-    <div class="block-btn" id="btn-products-menu">Products</div>
-    <ul class="sub-list" id="sub-products" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-product-single">Add A Product</div></li>
-      <li><div class="block-btn" id="block-product-multi">Add Multiple Products</div></li>
-    </ul>
-  </li>
-
-  <!-- Text Category -->
-  <li>
-    <div class="block-btn" id="btn-text-menu">Text</div>
-    <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-btn">Single Line</div></li>
-      <li><div class="block-btn" id="block-paragraph">Paragraph</div></li>
-      <li><div class="block-btn" id="block-about">About Us</div></li>
-    </ul>
-  </li>
-
-  <!-- Menu Category -->
-  <li>
-    <div class="block-btn" id="btn-menu-menu">Menu</div>
-    <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-header">Side-by-Side</div></li>
-      <li><div class="block-btn" id="block-footer">Drop Down</div></li>
-      <!-- Add mobile menu if you want -->
-    </ul>
-  </li>
-
-  <!-- Customization Category -->
-  <li>
-    <div class="block-btn" id="btn-custom-menu">Customization</div>
-    <ul class="sub-list" id="sub-custom" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-embed-script">Embed Script</div></li>
-      <li><div class="block-btn" id="block-custom-html">Custom HTML</div></li>
-    </ul>
-  </li>
-
-  <!-- Contact Category -->
-  <li>
-    <div class="block-btn" id="btn-contact-menu">Contact</div>
-    <ul class="sub-list" id="sub-contact" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-contact-form">Contact Form</div></li>
-      <li><div class="block-btn" id="block-contact-details">Details (Email/Address/Phone)</div></li>
-    </ul>
-  </li>
-
-  <!-- Map Category -->
-  <li>
-    <div class="block-btn" id="btn-map-menu">Map</div>
-    <ul class="sub-list" id="sub-map" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-map-small">Small Map</div></li>
-      <li><div class="block-btn" id="block-map-large">Large Map</div></li>
-    </ul>
-  </li>
-</ul>
-
-<script>
-  [
-    ['btn-image-menu', 'sub-image'],
-    ['btn-layout-menu', 'sub-layout'],
-    ['btn-multilayer-menu', 'sub-multilayer'],
-    ['btn-products-menu', 'sub-products'],
-    ['btn-contact-menu', 'sub-contact'],  // Contact menu
-    ['btn-map-menu', 'sub-map'],          // Map menu
-    ['btn-text-menu', 'sub-text'],
-    ['btn-menu-menu', 'sub-menu'],
-    ['btn-custom-menu', 'sub-custom']
-  ].forEach(pair => {
-    const [btnId, subId] = pair;
-    const btn = document.getElementById(btnId);
-    const sub = document.getElementById(subId);
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.sub-list').forEach(lst => { if (lst !== sub) lst.style.display = 'none'; });
-      sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
+  <!-- Sidebar Submenu Toggle Script -->
+  <script>
+    [
+      ['btn-image-menu', 'sub-image'],
+      ['btn-layout-menu', 'sub-layout'],
+      ['btn-multilayer-menu', 'sub-multilayer'],
+      ['btn-products-menu', 'sub-products'],
+      ['btn-text-menu', 'sub-text'],
+      ['btn-menu-menu', 'sub-menu'],
+      ['btn-custom-menu', 'sub-custom'],
+      ['btn-contact-menu', 'sub-contact'],
+      ['btn-map-menu', 'sub-map']
+    ].forEach(pair => {
+      const [btnId, subId] = pair;
+      const btn = document.getElementById(btnId);
+      const sub = document.getElementById(subId);
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sub-list').forEach(lst => { if (lst !== sub) lst.style.display = 'none'; });
+        sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
+      });
     });
-  });
-</script>
-  </div>
+  </script>
+</div>
   <div id="gjs" style="height:540px;"></div>
 </div>
 <!-- THEME GALLERY BELOW BUILDER -->
@@ -217,37 +209,9 @@
 <script src="https://unpkg.com/grapesjs"></script>
 <script src="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.js"></script>
 <script>
-  document.getElementById('themeToggle').addEventListener('click', function() {
-    document.body.classList.toggle('dark-theme');
-    this.classList.toggle('active');
-  });
+  // ... Any prep code and event handlers like theme toggle ...
 
-  // Multi-page logic and save
-  const pages = { home: `{{ saved_html | safe }}`, products: '', contact: '' };
-  let currentPageKey = 'home';
-  function loadPage(pageKey) {
-    currentPageKey = pageKey;
-    editor.setComponents(pages[pageKey] || '');
-    document.getElementById('current_page').value = currentPageKey;
-    document.querySelectorAll('.page-btn').forEach(btn =>
-      btn.classList.toggle('active', btn.dataset.page === pageKey)
-    );
-  }
-  document.querySelectorAll('.page-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      pages[currentPageKey] = editor.getHtml();
-      loadPage(btn.dataset.page);
-    });
-  });
-
-  // Theme gallery logic
-  const themeHtmlMap = {{ theme_html_map | safe }};
-  function loadBuilderTheme(themeId) {
-    editor.setComponents(themeHtmlMap[themeId] || '');
-    pages[currentPageKey] = themeHtmlMap[themeId] || '';
-  }
-
-  // GrapesJS init—only the work area is inside #gjs (sidebar is native, not HTML)
+  // Initialize GrapesJS
   let defaultHTML = `<section style="padding:44px 0;text-align:center;background:#f8faff;"><h2>Welcome!</h2><p>Drag blocks from the left into your site.</p></section>`;
   const editor = grapesjs.init({
     container: '#gjs',
@@ -268,48 +232,27 @@
     btn.addEventListener('click', function(){ addBlock(html); });
   }
 
-// IMAGE CATEGORY
-initDraggableBlock('block-img', `<img src="https://via.placeholder.com/400x200.png?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
-initDraggableBlock('block-overlay-img', `
-  <div style="position:relative; width:360px; height:200px;">
-    <img src="https://via.placeholder.com/300x200.png?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
-    <img src="https://via.placeholder.com/160x100.png?text=Overlay" 
-         style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
-  </div>
-`);
-initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
-initDraggableBlock('block-carousel', `
-  <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=First" style="width:100%"></div>
-      <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Second" style="width:100%"></div>
-      <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Third" style="width:100%"></div>
-    </div>
-    <div class="swiper-pagination"></div>
-  </div>
-  <script>try{ new Swiper('.myCarousel', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(e){}</script>
-`);
-initDraggableBlock('block-gallery', `
-  <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
-    <img src="https://via.placeholder.com/180x120?text=1" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=2" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=3" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=4" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=5" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=6" style="width:180px; border-radius:8px;">
-  </div>
-`);
-initDraggableBlock('block-slider', `
-  <div class="swiper mySwiper" style="max-width:600px;margin:40px auto;">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+1" style="width:100%;border-radius:10px;"></div>
-      <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+2" style="width:100%;border-radius:10px;"></div>
-      <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+3" style="width:100%;border-radius:10px;"></div>
-    </div>
-    <div class="swiper-pagination"></div>
-  </div>
-  <script>try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}</script>
-`);
+  // (Optional) Quick check for missing sidebar blocks
+  [
+    'block-img','block-overlay-img','block-hero','block-carousel','block-gallery','block-slider',
+    'block-row-lr','block-row-rl','block-img-txt-p','block-txt-img-p',
+    'block-product-single','block-product-multi','block-btn','block-paragraph','block-about',
+    'block-header','block-footer','block-embed-script','block-custom-html',
+    'block-contact-form','block-contact-details','block-map-small','block-map-large'
+  ].forEach(id => {
+    if (!document.getElementById(id)) {
+      console.error("Sidebar button not found:", id);
+    }
+  });
+
+  // NOW all your initDraggableBlock() calls for every block you want:
+  // IMAGE CATEGORY
+  initDraggableBlock('block-img', `<img src="https://via.placeholder.com/400x200.png?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
+  initDraggableBlock('block-overlay-img', `<div style="position:relative; width:360px; height:200px;"><img src="https://via.placeholder.com/300x200.png?text=BG+Image" style="width:100%; height:100%; border-radius:7px;"><img src="https://via.placeholder.com/160x100.png?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;"></div>`);
+  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
+  initDraggableBlock('block-carousel', `<div class="swiper myCarousel" style="max-width:400px;margin:20px auto;"><div class="swiper-wrapper"><div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=First" style="width:100%"></div><div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Second" style="width:100%"></div><div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Third" style="width:100%"></div></div><div class="swiper-pagination"></div></div><script>try{ new Swiper('.myCarousel', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(e){}</script>`);
+  initDraggableBlock('block-gallery', `<div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;"><img src="https://via.placeholder.com/180x120?text=1" style="width:180px; border-radius:8px;"><img src="https://via.placeholder.com/180x120?text=2" style="width:180px; border-radius:8px;"><img src="https://via.placeholder.com/180x120?text=3" style="width:180px; border-radius:8px;"><img src="https://via.placeholder.com/180x120?text=4" style="width:180px; border-radius:8px;"><img src="https://via.placeholder.com/180x120?text=5" style="width:180px; border-radius:8px;"><img src="https://via.placeholder.com/180x120?text=6" style="width:180px; border-radius:8px;"></div>`);
+  initDraggableBlock('block-slider', `<div class="swiper mySwiper" style="max-width:600px;margin:40px auto;"><div class="swiper-wrapper"><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+1" style="width:100%;border-radius:10px;"></div><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+2" style="width:100%;border-radius:10px;"></div><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+3" style="width:100%;border-radius:10px;"></div></div><div class="swiper-pagination"></div></div><script>try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}</script>`);
 
 // LAYOUT CATEGORY
 initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://via.placeholder.com/250x150.png?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
