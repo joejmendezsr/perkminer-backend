@@ -40,7 +40,7 @@
     .theme-preview-btn {
       display: block;
       width: 92%;
-      margin: 1em auto 1.1em auto;   /* Center horizontally and space vertically */
+      margin: 1em auto 1.1em auto;
       background: #ffca2c;
       color: #181b24 !important;
       border-radius: 7px;
@@ -60,7 +60,6 @@
       box-shadow: 0 6px 18px #ffe77c88;
       border-color: #ffd05b;
     }
-    
     @media (max-width:1000px) { #builder-main-row { flex-direction:column; gap:13px;} #gjs-sidebar {width:100%;margin-bottom:12px;} #gjs {min-height:42vh;} }
     @media (max-width:600px) { .builder-toolbar {flex-direction:column;gap:6px;padding:1em 0.5em;} #gjs-sidebar{padding:14px 2px;} }
   </style>
@@ -72,13 +71,14 @@
     <button class="page-btn active" data-page="home">Home Page</button>
     <button class="page-btn" data-page="products">Products</button>
     <button class="page-btn" data-page="contact">Contact</button>
-    </div>
-    <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
-    </div>
-    <div id="builder-main-row">
-      <div id="gjs-sidebar">
-        <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
+  </div>
+  <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
+</div>
+<div id="builder-main-row">
+  <div id="gjs-sidebar">
+    <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
 <ul class="block-list">
+  <!-- Image Category -->
   <li>
     <div class="block-btn" id="btn-image-menu">Image</div>
     <ul class="sub-list" id="sub-image" style="display:none; margin-top:7px;">
@@ -90,6 +90,7 @@
       <li><div class="block-btn" id="block-slider">Slider</div></li>
     </ul>
   </li>
+  <!-- Layout Category -->
   <li>
     <div class="block-btn" id="btn-layout-menu">Layout</div>
     <ul class="sub-list" id="sub-layout" style="display:none; margin-top:7px;">
@@ -97,6 +98,7 @@
       <li><div class="block-btn" id="block-row-rl">Text Left / Image Right</div></li>
     </ul>
   </li>
+  <!-- Multi-Layer Category -->
   <li>
     <div class="block-btn" id="btn-multilayer-menu">Multi-Layer</div>
     <ul class="sub-list" id="sub-multilayer" style="display:none; margin-top:7px;">
@@ -104,30 +106,32 @@
       <li><div class="block-btn" id="block-txt-img-p">Text Left / Image Right / Paragraph Below</div></li>
     </ul>
   </li>
+  <!-- Products Category -->
+  <li>
+    <div class="block-btn" id="btn-products-menu">Products</div>
+    <ul class="sub-list" id="sub-products" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-product-single">Add A Product</div></li>
+      <li><div class="block-btn" id="block-product-multi">Add Multiple Products</div></li>
+    </ul>
+  </li>
+  <!-- Text Category -->
   <li>
     <div class="block-btn" id="btn-text-menu">Text</div>
     <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;">
       <li><div class="block-btn" id="block-btn">Single Line</div></li>
       <li><div class="block-btn" id="block-paragraph">Paragraph</div></li>
+      <li><div class="block-btn" id="block-about">About Us</div></li>
     </ul>
   </li>
-
-<li>
-  <div class="block-btn" id="btn-products-menu">Products</div>
-  <ul class="sub-list" id="sub-products" style="display:none; margin-top:7px;">
-    <li><div class="block-btn" id="block-product-single">Add A Product</div></li>
-    <li><div class="block-btn" id="block-product-multi">Add Multiple Products</div></li>
-  </ul>
-</li>
-
+  <!-- Menu Category -->
   <li>
     <div class="block-btn" id="btn-menu-menu">Menu</div>
     <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;">
       <li><div class="block-btn" id="block-header">Side-by-Side</div></li>
       <li><div class="block-btn" id="block-footer">Drop Down</div></li>
-      <!-- Add a block-menu-mobile if you have code for it. -->
     </ul>
   </li>
+  <!-- Customization Category -->
   <li>
     <div class="block-btn" id="btn-custom-menu">Customization</div>
     <ul class="sub-list" id="sub-custom" style="display:none; margin-top:7px;">
@@ -135,32 +139,28 @@
       <li><div class="block-btn" id="block-custom-html">Custom HTML</div></li>
     </ul>
   </li>
+  <!-- Contact Category -->
+  <li>
+    <div class="block-btn" id="btn-contact-menu">Contact</div>
+    <ul class="sub-list" id="sub-contact" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-contact-form">Contact Form</div></li>
+      <li><div class="block-btn" id="block-contact-details">Details (Email/Address/Phone)</div></li>
+    </ul>
+  </li>
+  <!-- Map Category -->
+  <li>
+    <div class="block-btn" id="btn-map-menu">Map</div>
+    <ul class="sub-list" id="sub-map" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-map-small">Small Map</div></li>
+      <li><div class="block-btn" id="block-map-large">Large Map</div></li>
+    </ul>
+  </li>
 </ul>
-<script>
-  // Toggle sidebar sub-menus
-  [
-    ['btn-image-menu','sub-image'],
-    ['btn-layout-menu','sub-layout'],
-    ['btn-multilayer-menu','sub-multilayer'],
-    ['btn-text-menu','sub-text'],
-    ['btn-products-menu','sub-products'],
-    ['btn-menu-menu','sub-menu'],
-    ['btn-custom-menu','sub-custom']
-  ].forEach(pair => {
-    const [btnId, subId] = pair;
-    const btn = document.getElementById(btnId);
-    const sub = document.getElementById(subId);
-    btn.addEventListener('click', () => {
-      // Close other submenus
-      document.querySelectorAll('.sub-list').forEach(lst => { if(lst!==sub) lst.style.display='none'; });
-      // Toggle this one
-      sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
-    });
-  });
-</script>
-  </div>
+  </div> <!-- end of #gjs-sidebar -->
+
   <div id="gjs" style="height:540px;"></div>
-</div>
+</div> <!-- end of #builder-main-row -->
+
 <!-- THEME GALLERY BELOW BUILDER -->
 <div class="theme-gallery-wrap mb-5">
   <div class="theme-gallery-title mb-3">⭐ Or pick a full-page template (click "Load"):</div>
@@ -177,6 +177,7 @@
     {% endfor %}
   </div>
 </div>
+
 <form id="save-html-form" method="POST" action="">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="page_html" id="page_html">
@@ -190,6 +191,27 @@
   document.getElementById('themeToggle').addEventListener('click', function() {
     document.body.classList.toggle('dark-theme');
     this.classList.toggle('active');
+  });
+
+  // Sidebar submenu toggle
+  [
+    ['btn-image-menu', 'sub-image'],
+    ['btn-layout-menu', 'sub-layout'],
+    ['btn-multilayer-menu', 'sub-multilayer'],
+    ['btn-products-menu', 'sub-products'],
+    ['btn-text-menu', 'sub-text'],
+    ['btn-menu-menu', 'sub-menu'],
+    ['btn-custom-menu', 'sub-custom'],
+    ['btn-contact-menu', 'sub-contact'],
+    ['btn-map-menu', 'sub-map']
+  ].forEach(pair => {
+    const [btnId, subId] = pair;
+    const btn = document.getElementById(btnId);
+    const sub = document.getElementById(subId);
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sub-list').forEach(lst => { if (lst !== sub) lst.style.display = 'none'; });
+      sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
+    });
   });
 
   // Multi-page logic and save
@@ -210,14 +232,13 @@
     });
   });
 
-  // Theme gallery logic
   const themeHtmlMap = {{ theme_html_map | safe }};
   function loadBuilderTheme(themeId) {
     editor.setComponents(themeHtmlMap[themeId] || '');
     pages[currentPageKey] = themeHtmlMap[themeId] || '';
   }
 
-  // GrapesJS init—only the work area is inside #gjs (sidebar is native, not HTML)
+  // GrapesJS initialization
   let defaultHTML = `<section style="padding:44px 0;text-align:center;background:#f8faff;"><h2>Welcome!</h2><p>Drag blocks from the left into your site.</p></section>`;
   const editor = grapesjs.init({
     container: '#gjs',
@@ -233,119 +254,155 @@
   function addBlock(html) { editor.addComponents(html); pages[currentPageKey] = editor.getHtml(); }
   function initDraggableBlock(btnId, html) {
     const btn = document.getElementById(btnId);
+    if(!btn) return;
     btn.setAttribute('draggable','true');
     btn.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text', html); });
     btn.addEventListener('click', function(){ addBlock(html); });
   }
 
-  // --- Add all block types ---
-  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
+  // All block inits (one per sub-button)
   initDraggableBlock('block-img', `<img src="https://via.placeholder.com/400x200.png?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
-  initDraggableBlock('block-paragraph', `<div class="py-3" style="max-width:560px;margin:auto;"><p>Tell your story or describe your offers here.</p></div>`);
-  initDraggableBlock('block-products', `<div class="mx-auto my-3" style="max-width:950px;"><h3 class="mb-3 text-center">Featured Products</h3><div style="display:flex;flex-wrap:wrap;gap:1.4rem;justify-content:center;"><div style="width:220px;" class="p-3 border rounded bg-light"><img src="https://via.placeholder.com/200x130.png?text=Product+1" style="width:100%;border-radius:7px;"><div class="fw-semibold mt-2">Product Name</div><div class="text-success mb-1">$19.95</div></div><div style="width:220px;" class="p-3 border rounded bg-light"><img src="https://via.placeholder.com/200x130.png?text=Product+2" style="width:100%;border-radius:7px;"><div class="fw-semibold mt-2">Product Name</div><div class="text-success mb-1">$24.99</div></div></div></div>`);
+  initDraggableBlock('block-overlay-img', `
+    <div style="position:relative; width:360px; height:200px;">
+      <img src="https://via.placeholder.com/300x200.png?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
+      <img src="https://via.placeholder.com/160x100.png?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
+    </div>
+  `);
+  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
+  initDraggableBlock('block-carousel', `
+    <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=First" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Second" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Third" style="width:100%"></div>
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <script>try{ new Swiper('.myCarousel', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(e){}</script>
+  `);
+  initDraggableBlock('block-gallery', `
+    <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
+      <img src="https://via.placeholder.com/180x120?text=1" style="width:180px; border-radius:8px;">
+      <img src="https://via.placeholder.com/180x120?text=2" style="width:180px; border-radius:8px;">
+      <img src="https://via.placeholder.com/180x120?text=3" style="width:180px; border-radius:8px;">
+      <img src="https://via.placeholder.com/180x120?text=4" style="width:180px; border-radius:8px;">
+      <img src="https://via.placeholder.com/180x120?text=5" style="width:180px; border-radius:8px;">
+      <img src="https://via.placeholder.com/180x120?text=6" style="width:180px; border-radius:8px;">
+    </div>
+  `);
+  initDraggableBlock('block-slider', `
+    <div class="swiper mySwiper" style="max-width:600px;margin:40px auto;">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+1" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+2" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+3" style="width:100%;border-radius:10px;"></div>
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <script>try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}</script>
+  `);
+  // Layout
   initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://via.placeholder.com/250x150.png?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
   initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://via.placeholder.com/250x150.png?text=Image" style="width:44%;border-radius:13px;"></div>`);
-  initDraggableBlock('block-slider', `<div class="swiper mySwiper" style="max-width:600px;margin:40px auto;"><div class="swiper-wrapper"><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+1" style="width:100%;border-radius:10px;"></div><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+2" style="width:100%;border-radius:10px;"></div><div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+3" style="width:100%;border-radius:10px;"></div></div><div class="swiper-pagination"></div></div><script>try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}<\/script>`);
-  initDraggableBlock('block-testimonial', `<blockquote style="max-width:560px;margin:2.5rem auto;padding:20px 26px;background:#f9f6eb;border-left:5px solid #ffd66b;border-radius:10px;"><div style="font-size:1.15em;font-style:italic;">“Amazing service! Quick, easy, and just what my family needed.”</div><hr><div style="color:#9a8965;font-weight:600;">– Happy Customer</div></blockquote>`);
-  initDraggableBlock('block-contact', `<section style="padding:35px 0;text-align:center;"><div style="max-width:500px;margin:auto"><h4>Contact Us</h4><form><input type="text" placeholder="Your Name" class="form-control mb-2"><input type="email" placeholder="Your Email" class="form-control mb-2"><textarea class="form-control mb-2" placeholder="Message"></textarea><button class="btn btn-primary">Send Message</button></form></div></section>`);
+  // Multi-Layer
+  initDraggableBlock('block-img-txt-p', `
+    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+      <img src="https://via.placeholder.com/180x160?text=Image" style="width:38%;border-radius:10px;">
+      <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
+    </div>
+    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
+  `);
+  initDraggableBlock('block-txt-img-p', `
+    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+      <div><h4>Text Left</h4><p>Some text here.</p></div>
+      <img src="https://via.placeholder.com/180x160?text=Image" style="width:38%;border-radius:10px;">
+    </div>
+    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
+  `);
+  // Products
+  initDraggableBlock('block-product-single', `
+    <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; max-width:290px; box-shadow:0 2px 8px #0002; margin:0 auto 16px auto;">
+      <img src="https://via.placeholder.com/230x150.png?text=Product+Image" style="width:100%;border-radius:5px; margin-bottom:12px;">
+      <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product Name</div>
+      <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product description goes here.</div>
+      <div style="font-weight:600; color:#36b786;">$19.95</div>
+      <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 42</div>
+      <button class="btn btn-primary">Add to Cart</button>
+    </div>
+  `);
+  initDraggableBlock('block-product-multi', `
+    <div class="product-list" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center; margin:0 auto 16px auto;">
+      <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
+        <img src="https://via.placeholder.com/230x150.png?text=Product+1" style="width:100%;border-radius:5px; margin-bottom:12px;">
+        <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 1</div>
+        <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 1 description.</div>
+        <div style="font-weight:600; color:#36b786;">$14.99</div>
+        <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 22</div>
+        <button class="btn btn-primary">Add to Cart</button>
+      </div>
+      <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
+        <img src="https://via.placeholder.com/230x150.png?text=Product+2" style="width:100%;border-radius:5px; margin-bottom:12px;">
+        <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 2</div>
+        <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 2 description.</div>
+        <div style="font-weight:600; color:#36b786;">$35.00</div>
+        <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 15</div>
+        <button class="btn btn-primary">Add to Cart</button>
+      </div>
+    </div>
+  `);
+  // Text
+  initDraggableBlock('block-btn', `<a href="#" class="btn btn-primary">Single Line</a>`);
+  initDraggableBlock('block-paragraph', `<div class="py-3" style="max-width:560px;margin:auto;"><p>Tell your story or describe your offers here.</p></div>`);
+  initDraggableBlock('block-about', `
+    <section style="margin:32px auto; max-width:560px; background:#f2f7fd; border-radius:10px; padding:28px 22px;">
+      <h3 style="color:#21506a; margin-bottom:10px;">About Us</h3>
+      <div style="color:#2b3952; font-size:1.04em;">
+        {{ business.about_us }}
+      </div>
+    </section>
+  `);
+  // Menu
   initDraggableBlock('block-header', `<header class="mb-4" style="background:#222333;color:white;padding:16px 7px;border-radius:8px;text-align:center;"><h2 style="font-weight:900;font-size:2em;">My Store</h2><nav><a href="#" class="mx-2" style="color:#8ef0fd;">Home</a><a href="#" class="mx-2" style="color:#8ef0fd;">Shop</a><a href="#" class="mx-2" style="color:#8ef0fd;">Contact</a></nav></header>`);
   initDraggableBlock('block-footer', `<footer style="background:#1a2239;color:#89c6ec;padding:22px 12px;margin-top:24px;"><div style="text-align:center;">&copy; 2026 My Store. All rights reserved.</div></footer>`);
-  initDraggableBlock('block-divider', `<hr style="margin:40px 0;border:0;height:2px;background:linear-gradient(90deg,transparent,#9cf 60%,transparent 100%);">`);
-  initDraggableBlock('block-btn', `<a href="#" class="btn btn-primary">Click Me</a>`);
-  initDraggableBlock('block-map', `<div style="width:100%;max-width:430px;margin:18px auto;"><iframe width="100%" height="180" style="border-radius:11px;border:0" src="https://maps.google.com/maps?q=Springfield&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe></div>`);
-
-// Overlay Image example (image over another background image)
-initDraggableBlock('block-overlay-img', `
-  <div style="position:relative; width:360px; height:200px;">
-    <img src="https://via.placeholder.com/300x200.png?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
-    <img src="https://via.placeholder.com/160x100.png?text=Overlay" 
-         style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
-  </div>
-`);
-
-// Carousel (swipeable images example)
-initDraggableBlock('block-carousel', `
-  <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=First" style="width:100%"></div>
-      <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Second" style="width:100%"></div>
-      <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Third" style="width:100%"></div>
+  // Customization
+  initDraggableBlock('block-embed-script', `<script>// Paste your script here!<\/script>`);
+  initDraggableBlock('block-custom-html', `<div><!-- Place your custom HTML here --></div>`);
+  // Contact
+  initDraggableBlock('block-contact-form', `
+    <section style="padding:32px 0;text-align:center;">
+      <div style="max-width:420px;margin:auto;">
+        <h4>Contact Us</h4>
+        <form>
+          <input type="text" placeholder="Your Name" class="form-control mb-2">
+          <input type="email" placeholder="Your Email" class="form-control mb-2">
+          <textarea class="form-control mb-2" placeholder="Message"></textarea>
+          <button class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </section>
+  `);
+  initDraggableBlock('block-contact-details', `
+    <div class="contact-details" style="background:#f3f9fc; border-radius:8px; padding:24px; max-width:420px;margin:18px auto; box-shadow:0 2px 8px #bfddec42;">
+      <div style="font-weight:600; color:#10365f; margin-bottom:4px;">Email: <span id="biz-email">{{ business.email }}</span></div>
+      <div style="font-weight:600; color:#10365f; margin-bottom:4px;">Address: <span id="biz-address">{{ business.address }}</span></div>
+      <div style="font-weight:600; color:#10365f;">Phone: <span id="biz-phone">{{ business.phone }}</span></div>
     </div>
-    <div class="swiper-pagination"></div>
-  </div>
-  <script>try{ new Swiper('.myCarousel', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(e){}</script>
-`);
-
-// Gallery (up to 6 images)
-initDraggableBlock('block-gallery', `
-  <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
-    <img src="https://via.placeholder.com/180x120?text=1" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=2" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=3" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=4" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=5" style="width:180px; border-radius:8px;">
-    <img src="https://via.placeholder.com/180x120?text=6" style="width:180px; border-radius:8px;">
-  </div>
-`);
-
-// Multi-layer (Image Left / Text Right / Paragraph Below)
-initDraggableBlock('block-img-txt-p', `
-  <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-    <img src="https://via.placeholder.com/180x160?text=Image" style="width:38%;border-radius:10px;">
-    <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
-  </div>
-  <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
-`);
-
-// Multi-layer (Text Left / Image Right / Paragraph Below)
-initDraggableBlock('block-txt-img-p', `
-  <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-    <div><h4>Text Left</h4><p>Some text here.</p></div>
-    <img src="https://via.placeholder.com/180x160?text=Image" style="width:38%;border-radius:10px;">
-  </div>
-  <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
-`);
-
-// Embed Script
-initDraggableBlock('block-embed-script', `<script>// Paste your script here!<\/script>`);
-
-// Custom HTML
-initDraggableBlock('block-custom-html', `<div><!-- Place your custom HTML here --></div>`);
-
-// Add A Product (Single)
-initDraggableBlock('block-product-single', `
-  <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; max-width:290px; box-shadow:0 2px 8px #0002; margin:0 auto 16px auto;">
-    <img src="https://via.placeholder.com/230x150.png?text=Product+Image" style="width:100%;border-radius:5px; margin-bottom:12px;">
-    <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product Name</div>
-    <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product description goes here.</div>
-    <div style="font-weight:600; color:#36b786;">$19.95</div>
-    <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 42</div>
-    <button class="btn btn-primary">Add to Cart</button>
-  </div>
-`);
-
-// Add Multiple Products (Grid)
-initDraggableBlock('block-product-multi', `
-  <div class="product-list" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center; margin:0 auto 16px auto;">
-    <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
-      <img src="https://via.placeholder.com/230x150.png?text=Product+1" style="width:100%;border-radius:5px; margin-bottom:12px;">
-      <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 1</div>
-      <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 1 description.</div>
-      <div style="font-weight:600; color:#36b786;">$14.99</div>
-      <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 22</div>
-      <button class="btn btn-primary">Add to Cart</button>
+  `);
+  // Map
+  initDraggableBlock('block-map-small', `
+    <div style="width:100%;max-width:430px;margin:18px auto;">
+      <iframe width="100%" height="180" style="border-radius:11px;border:0"
+        src="https://maps.google.com/maps?q={{ business.latitude }},{{ business.longitude }}&t=&z=14&ie=UTF8&iwloc=&output=embed"
+        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
-    <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
-      <img src="https://via.placeholder.com/230x150.png?text=Product+2" style="width:100%;border-radius:5px; margin-bottom:12px;">
-      <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 2</div>
-      <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 2 description.</div>
-      <div style="font-weight:600; color:#36b786;">$35.00</div>
-      <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 15</div>
-      <button class="btn btn-primary">Add to Cart</button>
+  `);
+  initDraggableBlock('block-map-large', `
+    <div style="width:100%;max-width:780px;margin:22px auto;">
+      <iframe width="100%" height="340" style="border-radius:17px;border:0"
+        src="https://maps.google.com/maps?q={{ business.latitude }},{{ business.longitude }}&t=&z=12&ie=UTF8&iwloc=&output=embed"
+        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
-    <!-- Add more products as needed -->
-  </div>
-`);
+  `);
 
   document.getElementById('save-html-form').addEventListener('submit', function(e){
     pages[currentPageKey] = editor.getHtml();
@@ -353,7 +410,6 @@ initDraggableBlock('block-product-multi', `
     document.getElementById('current_page').value = currentPageKey;
   });
 
-  // Home is initial
   loadPage('home');
 </script>
 </body>
