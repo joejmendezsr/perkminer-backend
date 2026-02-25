@@ -72,27 +72,39 @@
     <button class="page-btn active" data-page="home">Home Page</button>
     <button class="page-btn" data-page="products">Products</button>
     <button class="page-btn" data-page="contact">Contact</button>
-  </div>
-  <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
-</div>
-<div id="builder-main-row">
-  <div id="gjs-sidebar">
-    <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
-    <ul class="block-list">
-      <li><div class="block-btn" id="block-hero"><i class="bi bi-star"></i>Hero</div></li>
-      <li><div class="block-btn" id="block-img"><i class="bi bi-image"></i>Image</div></li>
-      <li><div class="block-btn" id="block-paragraph"><i class="bi bi-align-left"></i>Paragraph</div></li>
-      <li><div class="block-btn" id="block-products"><i class="bi bi-collection"></i>Product Grid</div></li>
-      <li><div class="block-btn" id="block-row-lr"><i class="bi bi-layout-sidebar"></i>Img Left/Text Right</div></li>
-      <li><div class="block-btn" id="block-row-rl"><i class="bi bi-layout-sidebar-reverse"></i>Text Left/Img Right</div></li>
-      <li><div class="block-btn" id="block-slider"><i class="bi bi-sliders"></i>Slider</div></li>
-      <li><div class="block-btn" id="block-testimonial"><i class="bi bi-chat-quote"></i>Testimonial</div></li>
-      <li><div class="block-btn" id="block-contact"><i class="bi bi-envelope"></i>Contact</div></li>
-      <li><div class="block-btn" id="block-header"><i class="bi bi-window"></i>Header</div></li>
-      <li><div class="block-btn" id="block-footer"><i class="bi bi-strava"></i>Footer</div></li>
-      <li><div class="block-btn" id="block-divider"><i class="bi bi-dash-lg"></i>Divider</div></li>
-      <li><div class="block-btn" id="block-btn"><i class="bi bi-square"></i>Button</div></li>
-      <li><div class="block-btn" id="block-map"><i class="bi bi-geo-alt"></i>Map</div></li>
+    </div>
+    <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
+    </div>
+    <div id="builder-main-row">
+      <div id="gjs-sidebar">
+        <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
+        <ul class="block-list">
+      <li>
+        <div class="block-btn" id="btn-image-menu">Image</div>
+        <ul class="sub-list" id="sub-image" style="display:none; margin-top:7px;">
+          <!-- sub-buttons go here -->
+        </ul>
+      </li>
+      <li>
+        <div class="block-btn" id="btn-layout-menu">Layout</div>
+        <ul class="sub-list" id="sub-layout" style="display:none; margin-top:7px;"></ul>
+      </li>
+      <li>
+        <div class="block-btn" id="btn-multilayer-menu">Multi-Layer</div>
+        <ul class="sub-list" id="sub-multilayer" style="display:none; margin-top:7px;"></ul>
+      </li>
+      <li>
+        <div class="block-btn" id="btn-text-menu">Text</div>
+        <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;"></ul>
+      </li>
+      <li>
+        <div class="block-btn" id="btn-menu-menu">Menu</div>
+        <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;"></ul>
+      </li>
+      <li>
+        <div class="block-btn" id="btn-custom-menu">Customization</div>
+        <ul class="sub-list" id="sub-custom" style="display:none; margin-top:7px;"></ul>
+      </li>
     </ul>
   </div>
   <div id="gjs" style="height:540px;"></div>
@@ -199,5 +211,24 @@
   // Home is initial
   loadPage('home');
 </script>
+// Toggle sidebar sub-menus
+[
+  ['btn-image-menu','sub-image'],
+  ['btn-layout-menu','sub-layout'],
+  ['btn-multilayer-menu','sub-multilayer'],
+  ['btn-text-menu','sub-text'],
+  ['btn-menu-menu','sub-menu'],
+  ['btn-custom-menu','sub-custom']
+].forEach(pair => {
+  const [btnId, subId] = pair;
+  const btn = document.getElementById(btnId);
+  const sub = document.getElementById(subId);
+  btn.addEventListener('click', () => {
+    // Close other submenus
+    document.querySelectorAll('.sub-list').forEach(lst => { if(lst!==sub) lst.style.display='none'; });
+    // Toggle this one
+    sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
+  });
+});
 </body>
 </html>
