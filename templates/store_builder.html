@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/tokens.css') }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.css">
   <style>
@@ -167,7 +167,7 @@
   <div class="theme-gallery-row">
     {% for theme in themes %}
       <div class="theme-preview-card">
-        <img class="theme-preview-thumb" src="{{ theme.thumbnail_url or 'https://via.placeholder.com/206x120.png?text=Theme' }}" alt="{{ theme.name }}">
+        <img class="theme-preview-thumb" src="{{ theme.thumbnail_url or 'https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Theme' }}" alt="{{ theme.name }}">
         <div class="theme-preview-title">{{ theme.name }}</div>
         <div class="theme-preview-desc">
           {{ theme.starter_html|striptags|truncate(90, True, '...')|e }}
@@ -261,20 +261,20 @@
   }
 
   // All block inits (one per sub-button)
-  initDraggableBlock('block-img', `<img src="https://via.placeholder.com/400x200.png?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
+  initDraggableBlock('block-img', `<img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Add+Image" style="width:100%;max-width:440px;border-radius:11px;margin:18px auto;display:block;">`);
   initDraggableBlock('block-overlay-img', `
     <div style="position:relative; width:360px; height:200px;">
-      <img src="https://via.placeholder.com/300x200.png?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
-      <img src="https://via.placeholder.com/160x100.png?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=BG+Image" style="width:100%; height:100%; border-radius:7px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
     </div>
   `);
   initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
   initDraggableBlock('block-carousel', `
     <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
       <div class="swiper-wrapper">
-        <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=First" style="width:100%"></div>
-        <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Second" style="width:100%"></div>
-        <div class="swiper-slide"><img src="https://via.placeholder.com/400x160?text=Third" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
       </div>
       <div class="swiper-pagination"></div>
     </div>
@@ -282,32 +282,32 @@
   `);
   initDraggableBlock('block-gallery', `
     <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
-      <img src="https://via.placeholder.com/180x120?text=1" style="width:180px; border-radius:8px;">
-      <img src="https://via.placeholder.com/180x120?text=2" style="width:180px; border-radius:8px;">
-      <img src="https://via.placeholder.com/180x120?text=3" style="width:180px; border-radius:8px;">
-      <img src="https://via.placeholder.com/180x120?text=4" style="width:180px; border-radius:8px;">
-      <img src="https://via.placeholder.com/180x120?text=5" style="width:180px; border-radius:8px;">
-      <img src="https://via.placeholder.com/180x120?text=6" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=1" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=2" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=3" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=4" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=5" style="width:180px; border-radius:8px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=6" style="width:180px; border-radius:8px;">
     </div>
   `);
   initDraggableBlock('block-slider', `
     <div class="swiper mySwiper" style="max-width:600px;margin:40px auto;">
       <div class="swiper-wrapper">
-        <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+1" style="width:100%;border-radius:10px;"></div>
-        <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+2" style="width:100%;border-radius:10px;"></div>
-        <div class="swiper-slide"><img src="https://via.placeholder.com/600x200.png?text=Slide+3" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+1" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+2" style="width:100%;border-radius:10px;"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+3" style="width:100%;border-radius:10px;"></div>
       </div>
       <div class="swiper-pagination"></div>
     </div>
     <script>try{ new Swiper('.mySwiper', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(err) {}</script>
   `);
   // Layout
-  initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://via.placeholder.com/250x150.png?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
-  initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://via.placeholder.com/250x150.png?text=Image" style="width:44%;border-radius:13px;"></div>`);
+  initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
+  initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"></div>`);
   // Multi-Layer
   initDraggableBlock('block-img-txt-p', `
     <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-      <img src="https://via.placeholder.com/180x160?text=Image" style="width:38%;border-radius:10px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
       <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
     </div>
     <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
@@ -315,14 +315,14 @@
   initDraggableBlock('block-txt-img-p', `
     <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
       <div><h4>Text Left</h4><p>Some text here.</p></div>
-      <img src="https://via.placeholder.com/180x160?text=Image" style="width:38%;border-radius:10px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
     </div>
     <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
   `);
   // Products
   initDraggableBlock('block-product-single', `
     <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; max-width:290px; box-shadow:0 2px 8px #0002; margin:0 auto 16px auto;">
-      <img src="https://via.placeholder.com/230x150.png?text=Product+Image" style="width:100%;border-radius:5px; margin-bottom:12px;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Product+Image" style="width:100%;border-radius:5px; margin-bottom:12px;">
       <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product Name</div>
       <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product description goes here.</div>
       <div style="font-weight:600; color:#36b786;">$19.95</div>
@@ -333,7 +333,7 @@
   initDraggableBlock('block-product-multi', `
     <div class="product-list" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center; margin:0 auto 16px auto;">
       <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
-        <img src="https://via.placeholder.com/230x150.png?text=Product+1" style="width:100%;border-radius:5px; margin-bottom:12px;">
+        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Product+1" style="width:100%;border-radius:5px; margin-bottom:12px;">
         <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 1</div>
         <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 1 description.</div>
         <div style="font-weight:600; color:#36b786;">$14.99</div>
@@ -341,7 +341,7 @@
         <button class="btn btn-primary">Add to Cart</button>
       </div>
       <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
-        <img src="https://via.placeholder.com/230x150.png?text=Product+2" style="width:100%;border-radius:5px; margin-bottom:12px;">
+        <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Product+2" style="width:100%;border-radius:5px; margin-bottom:12px;">
         <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 2</div>
         <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 2 description.</div>
         <div style="font-weight:600; color:#36b786;">$35.00</div>
