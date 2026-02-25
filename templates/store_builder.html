@@ -78,34 +78,72 @@
     <div id="builder-main-row">
       <div id="gjs-sidebar">
         <div class="fw-semibold mb-2" style="color:#75fff0;letter-spacing:1px;">Elements</div>
-        <ul class="block-list">
-      <li>
-        <div class="block-btn" id="btn-image-menu">Image</div>
-        <ul class="sub-list" id="sub-image" style="display:none; margin-top:7px;">
-          <!-- sub-buttons go here -->
-        </ul>
-      </li>
-      <li>
-        <div class="block-btn" id="btn-layout-menu">Layout</div>
-        <ul class="sub-list" id="sub-layout" style="display:none; margin-top:7px;"></ul>
-      </li>
-      <li>
-        <div class="block-btn" id="btn-multilayer-menu">Multi-Layer</div>
-        <ul class="sub-list" id="sub-multilayer" style="display:none; margin-top:7px;"></ul>
-      </li>
-      <li>
-        <div class="block-btn" id="btn-text-menu">Text</div>
-        <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;"></ul>
-      </li>
-      <li>
-        <div class="block-btn" id="btn-menu-menu">Menu</div>
-        <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;"></ul>
-      </li>
-      <li>
-        <div class="block-btn" id="btn-custom-menu">Customization</div>
-        <ul class="sub-list" id="sub-custom" style="display:none; margin-top:7px;"></ul>
-      </li>
+<ul class="block-list">
+  <li>
+    <div class="block-btn" id="btn-image-menu">Image</div>
+    <ul class="sub-list" id="sub-image" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-img">Single Image</div></li>
+      <li><div class="block-btn" id="block-hero">Hero</div></li>
+      <li><div class="block-btn" id="block-slider">Slider</div></li>
+      <!-- Add your Carousel, Overlay Image, Gallery as needed with their IDs! -->
     </ul>
+  </li>
+  <li>
+    <div class="block-btn" id="btn-layout-menu">Layout</div>
+    <ul class="sub-list" id="sub-layout" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-row-lr">Image Left / Text Right</div></li>
+      <li><div class="block-btn" id="block-row-rl">Text Left / Image Right</div></li>
+    </ul>
+  </li>
+  <li>
+    <div class="block-btn" id="btn-multilayer-menu">Multi-Layer</div>
+    <ul class="sub-list" id="sub-multilayer" style="display:none; margin-top:7px;">
+      <!-- Example placeholder; update with actual IDs/blocks when you add advanced layouts -->
+    </ul>
+  </li>
+  <li>
+    <div class="block-btn" id="btn-text-menu">Text</div>
+    <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-btn">Single Line</div></li>
+      <li><div class="block-btn" id="block-paragraph">Paragraph</div></li>
+    </ul>
+  </li>
+  <li>
+    <div class="block-btn" id="btn-menu-menu">Menu</div>
+    <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;">
+      <li><div class="block-btn" id="block-header">Side-by-Side</div></li>
+      <li><div class="block-btn" id="block-footer">Drop Down</div></li>
+      <!-- Add Mobile Menu if you have a separate block -->
+    </ul>
+  </li>
+  <li>
+    <div class="block-btn" id="btn-custom-menu">Customization</div>
+    <ul class="sub-list" id="sub-custom" style="display:none; margin-top:7px;">
+      <!-- Add buttons for embed/script and custom HTML and connect them in JS -->
+    </ul>
+  </li>
+</ul>
+<script>
+  // Toggle sidebar sub-menus
+  [
+    ['btn-image-menu','sub-image'],
+    ['btn-layout-menu','sub-layout'],
+    ['btn-multilayer-menu','sub-multilayer'],
+    ['btn-text-menu','sub-text'],
+    ['btn-menu-menu','sub-menu'],
+    ['btn-custom-menu','sub-custom']
+  ].forEach(pair => {
+    const [btnId, subId] = pair;
+    const btn = document.getElementById(btnId);
+    const sub = document.getElementById(subId);
+    btn.addEventListener('click', () => {
+      // Close other submenus
+      document.querySelectorAll('.sub-list').forEach(lst => { if(lst!==sub) lst.style.display='none'; });
+      // Toggle this one
+      sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
+    });
+  });
+</script>
   </div>
   <div id="gjs" style="height:540px;"></div>
 </div>
@@ -211,24 +249,5 @@
   // Home is initial
   loadPage('home');
 </script>
-// Toggle sidebar sub-menus
-[
-  ['btn-image-menu','sub-image'],
-  ['btn-layout-menu','sub-layout'],
-  ['btn-multilayer-menu','sub-multilayer'],
-  ['btn-text-menu','sub-text'],
-  ['btn-menu-menu','sub-menu'],
-  ['btn-custom-menu','sub-custom']
-].forEach(pair => {
-  const [btnId, subId] = pair;
-  const btn = document.getElementById(btnId);
-  const sub = document.getElementById(subId);
-  btn.addEventListener('click', () => {
-    // Close other submenus
-    document.querySelectorAll('.sub-list').forEach(lst => { if(lst!==sub) lst.style.display='none'; });
-    // Toggle this one
-    sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
-  });
-});
 </body>
 </html>
