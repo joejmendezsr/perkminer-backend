@@ -124,13 +124,14 @@
     </ul>
   </li>
   <!-- Menu Category -->
-  <li>
-    <div class="block-btn" id="btn-menu-menu">Menu</div>
-    <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;">
-      <li><div class="block-btn" id="block-header">Side-by-Side</div></li>
-      <li><div class="block-btn" id="block-footer">Drop Down</div></li>
-    </ul>
-  </li>
+<li>
+  <div class="block-btn" id="btn-menu-menu">Menu</div>
+  <ul class="sub-list" id="sub-menu" style="display:none; margin-top:7px;">
+    <li><div class="block-btn" id="block-menu-text">Text Menu</div></li>
+    <li><div class="block-btn" id="block-menu-buttons">Button Menu</div></li>
+    <li><div class="block-btn" id="block-dropdown-menu">Drop Down Menu</div></li>
+  </ul>
+</li>
   <!-- Customization Category -->
   <li>
     <div class="block-btn" id="btn-custom-menu">Customization</div>
@@ -147,6 +148,16 @@
       <li><div class="block-btn" id="block-contact-details">Details (Email/Address/Phone)</div></li>
     </ul>
   </li>
+
+  <!-- Header/Footer -->
+<li>
+  <div class="block-btn" id="btn-header-footer-menu">Header/Footer</div>
+  <ul class="sub-list" id="sub-header-footer" style="display:none; margin-top:7px;">
+    <li><div class="block-btn" id="block-header-main">Header</div></li>
+    <li><div class="block-btn" id="block-footer-main">Footer</div></li>
+  </ul>
+</li>
+
   <!-- Map Category -->
   <li>
     <div class="block-btn" id="btn-map-menu">Map</div>
@@ -204,6 +215,7 @@
     ['btn-custom-menu', 'sub-custom'],
     ['btn-contact-menu', 'sub-contact'],
     ['btn-map-menu', 'sub-map']
+    ['btn-header-footer-menu', 'sub-header-footer'],
   ].forEach(pair => {
     const [btnId, subId] = pair;
     const btn = document.getElementById(btnId);
@@ -252,25 +264,29 @@
   });
 
   // Swiper auto-initializer for both .mySwiper and .myCarousel blocks
-  function addBlock(html) {
-    editor.addComponents(html);
-    pages[currentPageKey] = editor.getHtml();
-    setTimeout(() => {
-      document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
-        try {
-          if (!el._swiper) {
-            el._swiper = new Swiper(el, {
-              pagination: {
-                el: el.querySelector('.swiper-pagination'),
-                clickable: true
-              },
-              loop: true
-            });
-          }
-        } catch(e){}
-      });
-    }, 0);
-  }
+function addBlock(html) {
+  editor.addComponents(html);
+  pages[currentPageKey] = editor.getHtml();
+  setTimeout(() => {
+    document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
+      try {
+        if (!el._swiper) {
+          el._swiper = new Swiper(el, {
+            pagination: {
+              el: el.querySelector('.swiper-pagination'),
+              clickable: true
+            },
+            navigation: {
+              nextEl: el.querySelector('.swiper-button-next'),
+              prevEl: el.querySelector('.swiper-button-prev')
+            },
+            loop: true
+          });
+        }
+      } catch(e){}
+    });
+  }, 0);
+}
 
   function initDraggableBlock(btnId, html) {
     const btn = document.getElementById(btnId);
@@ -289,17 +305,17 @@
       <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Overlay" style="position:absolute; top:50px; left:100px; width:160px; border-radius:4px; box-shadow:0 4px 12px #0002;">
     </div>
   `);
-  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>`);
-  initDraggableBlock('block-carousel', `
-    <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
-      <div class="swiper-wrapper">
-        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
-        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
-        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
-      </div>
-      <div class="swiper-pagination"></div>
+
+initDraggableBlock('block-hero', `
+  <section style="position:relative;min-height:290px;display:flex;align-items:center;justify-content:center;background:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80') center/cover no-repeat;border-radius:17px;box-shadow:0 8px 32px #1a2b3d33;margin:28px 0;">
+    <div style="position:absolute;inset:0;background:rgba(28,36,50,0.64);border-radius:17px;"></div>
+    <div style="position:relative;z-index:2;text-align:center;padding:54px 16px 50px 16px;max-width:98vw;">
+      <h1 style="color:#ffffff;font-size:2.6em;font-weight:900;line-height:1.07;letter-spacing:.04em;margin-bottom:11px;">Create Your Bold Brand</h1>
+      <p style="color:#ffe25a;font-size:1.18em;max-width:650px;margin:auto;font-weight:500;text-shadow:0 4px 12px #000a;">Make your online store look as modern as 2026.</p>
     </div>
-  `);
+  </section>
+`);
+
   initDraggableBlock('block-gallery', `
     <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; max-width:600px; margin:18px auto;">
       <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=1" style="width:180px; border-radius:8px;">
@@ -310,43 +326,76 @@
       <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=6" style="width:180px; border-radius:8px;">
     </div>
   `);
-  initDraggableBlock('block-slider', `
-    <div class="swiper mySwiper" style="max-width:600px;margin:40px auto;">
-      <div class="swiper-wrapper">
-        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+1" style="width:100%;border-radius:10px;"></div>
-        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+2" style="width:100%;border-radius:10px;"></div>
-        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Slide+3" style="width:100%;border-radius:10px;"></div>
-      </div>
-      <div class="swiper-pagination"></div>
+initDraggableBlock('block-slider', `
+  <div class="swiper mySwiper" style="max-width:600px;margin:42px auto 38px auto;border-radius:16px;box-shadow:0 6px 24px #33445518;">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide"><img src="https://images.unsplash.com/photo-1454023492550-5696f8ff10e1?fit=crop&w=600&q=80" style="width:100%;border-radius:16px;"></div>
+      <div class="swiper-slide"><img src="https://images.unsplash.com/photo-1465101178521-c1a9136a3d37?fit=crop&w=600&q=80" style="width:100%;border-radius:16px;"></div>
+      <div class="swiper-slide"><img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?fit=crop&w=600&q=80" style="width:100%;border-radius:16px;"></div>
     </div>
-  `);
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  </div>
+`);
 
-  // Layout & Multi-Layer
+initDraggableBlock('block-carousel', `
+  <div class="swiper myCarousel" style="max-width:600px;margin:42px auto 38px auto;border-radius:16px;box-shadow:0 6px 24px #33445518;">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide"><img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?fit=crop&w=600&q=80" style="width:100%;border-radius:16px;"></div>
+      <div class="swiper-slide"><img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?fit=crop&w=600&q=80" style="width:100%;border-radius:16px;"></div>
+      <div class="swiper-slide"><img src="https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?fit=crop&w=600&q=80" style="width:100%;border-radius:16px;"></div>
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  </div>
+`);
+
+  // Layout
   initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
   initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"></div>`);
-  initDraggableBlock('block-img-txt-p', `
-    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
-      <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
-    </div>
-    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
-  `);
-  initDraggableBlock('block-txt-img-p', `
-    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-      <div><h4>Text Left</h4><p>Some text here.</p></div>
-      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
-    </div>
-    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
-  `);
 
 // Multi-Layer
-initDraggableBlock('block-text', `
-  <div class="text-block" style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
-      <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
+initDraggableBlock('block-img-txt-p', `
+  <div style="display:flex;gap:24px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
+    <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?fit=crop&w=420&q=80" style="width:44%;min-width:220px;border-radius:12px;">
+    <div style="flex:1 1 200px;min-width:220px;">
+      <div contenteditable="true" style="font-size:1.44em;font-weight:800;background:linear-gradient(90deg,#ffca2c,#5bddff 60%,#db8abf);color:transparent;-webkit-background-clip:text;background-clip:text;outline:none;border-bottom:2px solid #ffe25a;">Multi-Layer Section</div>
+      <div contenteditable="true" style="margin-top:7px;min-height:36px;font-size:1.09em;color:#314058;outline:none;">Type or paste here! You can <b>bold</b>, <i>italicize</i>, <u>underline</u>, or <span style='color:#db8abf;'>change color</span> (highlight, right click → style).</div>
+      <div style="margin-top:9px;">
+        <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#355098;">B</button>
+        <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;">I</button>
+        <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#355098;">U</button>
+        <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
+        <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
+        <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+      </div>
     </div>
-    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
+  </div>
+  <div contenteditable="true" style="max-width:800px;margin:24px auto 0 auto;padding:18px;border-radius:10px;background:#f2f7fd;outline:none;font-size:1.1em;min-height:34px;">
+    Add an editable paragraph here. Click the style buttons above to format.
+  </div>
+`);
+
+initDraggableBlock('block-txt-img-p', `
+  <div style="display:flex;gap:24px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
+    <div style="flex:1 1 200px;min-width:220px;">
+      <div contenteditable="true" style="font-size:1.44em;font-weight:900;background:linear-gradient(90deg,#db8abf,#2ce5ee,#ffe25a);color:transparent;-webkit-background-clip:text;background-clip:text;outline:none;border-bottom:2px solid #db8abf;">Multi-Layer Headline</div>
+      <div contenteditable="true" style="margin-top:7px;min-height:36px;font-size:1.09em;color:#203448;outline:none;">Edit this text with <b>bold</b>, <i>italic</i>, or <span style="color:#2ce5ee;">color</span>.</div>
+      <div style="margin-top:9px;">
+        <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#355098;">B</button>
+        <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;">I</button>
+        <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#355098;">U</button>
+        <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
+        <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
+        <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+      </div>
+    </div>
+    <img src="https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?fit=crop&w=420&q=80" style="width:44%;min-width:220px;border-radius:12px;">
+  </div>
+  <div contenteditable="true" style="max-width:800px;margin:24px auto 0 auto;padding:18px;border-radius:10px;background:#f2f7fd;outline:none;font-size:1.12em;min-height:34px;">
+    The paragraph below is fully editable and can be styled with the buttons above.
   </div>
 `);
 
@@ -384,10 +433,38 @@ initDraggableBlock('block-product-multi', `
 `);
 
 // Text
-initDraggableBlock('block-btn', `<a href="#" class="btn btn-primary">Single Line</a>
+initDraggableBlock('block-btn', `
+  <div style="max-width:680px;margin:34px auto;text-align:center;">
+    <div contenteditable="true" style="font-size:1.45em;font-weight:900;color:#21253b;padding:13px 0;outline:none;border-bottom:2.5px solid #5bddff;letter-spacing:.02em;transition:.2s;">
+      Edit this headline. Make it <b>bold</b>, <i>italic</i>, <u>underlined</u>, <span style='color:#db8abf;'>colored</span>, or <span style='font-size:1.3em;'>bigger</span>.
+    </div>
+    <div style="margin-top:11px;">
+      <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#098;font-size:1.07em;margin-right:4px;">B</button>
+      <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;font-size:1.07em;margin-right:4px;">I</button>
+      <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#b07be3;font-size:1.07em;margin-right:4px;">U</button>
+      <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
+      <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
+      <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+    </div>
+  </div>
 `);
-initDraggableBlock('block-paragraph', `<div class="py-3" style="max-width:560px;margin:auto;"><p>Tell your story or describe your offers here.</p></div>
+
+initDraggableBlock('block-paragraph', `
+  <div style="max-width:720px;margin:36px auto;padding:26px 20px 18px 20px;box-shadow:0 1px 8px #e9f2fb44;border-radius:11px;background:#f8fcff;">
+    <div contenteditable="true" style="min-height:42px;font-size:1.13em;color:#234;font-weight:600;outline:none;line-height:1.55;">
+      Type or paste your paragraph. Highlight text and use the buttons below (or your browser’s formatting toolbar) for <b>bold</b>, <i>italic</i>, <u>underline</u>, color, font, alignment, or size.
+    </div>
+    <div style="margin-top:12px;">
+      <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#098;font-size:1.07em;margin-right:4px;">B</button>
+      <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;font-size:1.07em;margin-right:4px;">I</button>
+      <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#b07be3;font-size:1.07em;margin-right:4px;">U</button>
+      <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
+      <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
+      <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+    </div>
+  </div>
 `);
+
 initDraggableBlock('block-about', `
   <section style="margin:32px auto; max-width:560px; background:#f2f7fd; border-radius:10px; padding:28px 22px;">
     <h3 style="color:#21506a; margin-bottom:10px;">About Us</h3>
@@ -397,40 +474,137 @@ initDraggableBlock('block-about', `
   </section>
 `);
 
-// Menu
-initDraggableBlock('block-header', `<header class="mb-4" style="background:#222333;color:white;padding:16px 7px;border-radius:8px;text-align:center;"><h2 style="font-weight:900;font-size:2em;">My Store</h2><nav><a href="#" class="mx-2" style="color:#8ef0fd;">Home</a><a href="#" class="mx-2" style="color:#8ef0fd;">Shop</a><a href="#" class="mx-2" style="color:#8ef0fd;">Contact</a></nav></header>
-`);
-initDraggableBlock('block-footer', `<footer style="background:#1a2239;color:#89c6ec;padding:22px 12px;margin-top:24px;"><div style="text-align:center;">&copy; 2026 My Store. All rights reserved.</div></footer>
+// Header/Footer
+initDraggableBlock('block-header-main', `
+  <header style="background:#21253b;display:flex;align-items:center;justify-content:space-between;padding:18px 30px;border-radius:15px;margin:24px 0 8px 0;box-shadow:0 3px 16px #1122cc22;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <img src="{{ business.profile_photo or 'https://via.placeholder.com/60?text=Logo' }}" style="width:60px;height:60px;object-fit:cover;border-radius:14px;border:3px solid #ffe25a;box-shadow:0 2px 10px #ffe25a44;">
+      <span style="font-size:1.63em;font-weight:800;color:#ffe25a;text-shadow:0 3px 9px #33448866;">{{ business.name }}</span>
+    </div>
+    <nav style="display:flex;gap:29px;flex-wrap:wrap;">
+      <a href="#" style="color:#5bddff;font-size:1.13em;font-weight:700;text-decoration:none;transition:.2s;">Home</a>
+      <a href="#" style="color:#ffe25a;font-size:1.13em;font-weight:700;text-decoration:none;transition:.2s;">Products</a>
+      <a href="#" style="color:#db8abf;font-size:1.13em;font-weight:700;text-decoration:none;transition:.2s;">Contact</a>
+    </nav>
+  </header>
 `);
 
+initDraggableBlock('block-footer-main', `
+  <footer style="background:#18306a;color:#b7e5ff;padding:32px 19px;margin-top:38px;border-radius:15px;box-shadow:0 2px 12px #21253b22;">
+    <div style="font-size:1.12em;font-weight:800;margin-bottom:10px;">{{ business.name }}</div>
+    <div style="margin-bottom:5px;">
+      <strong>Address:</strong> {{ business.address }}<br>
+      <strong>Phone:</strong> {{ business.phone }}<br>
+      <strong>Email:</strong> <a href="mailto:{{ business.email }}" style="color:#ffe25a;text-decoration:underline;">{{ business.email }}</a><br>
+      <strong>Website:</strong> <a href="{{ business.website_url }}" style="color:#5bddff;text-decoration:underline;">{{ business.website_url }}</a>
+    </div>
+    <div style="font-size:0.97em;margin-top:14px;">
+      &copy; 2026 {{ business.name }}. All rights reserved.
+    </div>
+  </footer>
+`);
+
+// Menu
+initDraggableBlock('block-dropdown-menu', `
+  <nav style="display:flex;align-items:center;justify-content:center;background:#21253B;border-radius:10px;padding:14px 28px;margin:26px auto;max-width:650px;box-shadow:0 2px 18px #1a2b3d22;position:relative;">
+    <a href="#" style="color:#fff;font-weight:700;font-size:1.08em;margin-right:26px;text-decoration:none;">Home</a>
+    <div class="dropdown" style="position:relative;display:inline-block;">
+      <button class="dd-btn" style="background:#355098;color:#ffe25a;border:none;padding:8px 22px 8px 15px;border-radius:8px;font-weight:700;font-size:1.02em;cursor:pointer;outline:none;box-shadow:0 3px 12px #25336518;">
+        Products <span style="margin-left:7px;font-size:95%;">▼</span>
+      </button>
+      <div class="dropdown-menu" style="display:none;position:absolute;left:0;top:110%;background:#fff;border-radius:8px;box-shadow:0 2px 18px #20335522;min-width:166px;z-index:30;padding:8px 0;">
+        <a href="#" style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Featured</a>
+        <a href="#" style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Basket</a>
+        <a href="#" style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Sale</a>
+      </div>
+    </div>
+    <a href="#" style="color:#ffe25a;font-weight:700;font-size:1.07em;margin-left:26px;text-decoration:none;">Contact</a>
+  </nav>
+  <script>
+    setTimeout(function() {
+      document.querySelectorAll('.dd-btn').forEach(btn=>{
+        btn.onclick = function(event) {
+          event.stopPropagation();
+          var menu = btn.nextElementSibling;
+          if(menu) menu.style.display = menu.style.display==='block' ? 'none' : 'block';
+        };
+      });
+      document.addEventListener('click', function() {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+      });
+    }, 0);
+  </script>
+`);
+
+initDraggableBlock('block-menu-text', `
+  <nav style="display:flex;gap:30px;justify-content:center;align-items:center;margin:26px auto 18px auto;max-width:740px;background:#21253b;padding:15px 0;border-radius:12px;box-shadow:0 3px 14px #16234516;">
+    <a href="#" style="color:#ffe25a;font-weight:800;font-size:1.15em;text-decoration:none;letter-spacing:.01em;transition:.17s;">Home</a>
+    <a href="#" style="color:#5bddff;font-weight:800;font-size:1.15em;text-decoration:none;letter-spacing:.01em;transition:.17s;">Products</a>
+    <a href="#" style="color:#db8abf;font-weight:800;font-size:1.15em;text-decoration:none;letter-spacing:.01em;transition:.17s;">Contact</a>
+  </nav>
+`);
+
+initDraggableBlock('block-menu-buttons', `
+  <nav style="display:flex;gap:22px;justify-content:center;align-items:center;margin:26px auto 18px auto;max-width:720px;background:transparent;padding:7px 0;">
+    <a href="#" style="background:#21253b;color:#ffe25a;border:none;padding:11px 28px;border-radius:9px;font-weight:800;font-size:1.09em;box-shadow:0 1px 6px #1a345644;margin:0 2px;text-decoration:none;transition:.17s;">Home</a>
+    <a href="#" style="background:#355098;color:#5bddff;border:none;padding:11px 28px;border-radius:9px;font-weight:800;font-size:1.09em;box-shadow:0 1px 6px #1a345633;margin:0 2px;text-decoration:none;transition:.17s;">Products</a>
+    <a href="#" style="background:#db8abf;color:#fff;border:none;padding:11px 28px;border-radius:9px;font-weight:800;font-size:1.09em;box-shadow:0 1px 6px #733a7a22;margin:0 2px;text-decoration:none;transition:.17s;">Contact</a>
+  </nav>
+`);
+
+// Customization
 initDraggableBlock('block-embed-script', `
-  <!-- Optional embed script content -->
+  <div contenteditable="true" style="border:2px dashed #ffe25a;min-height:32px;padding:9px;background:#fff7e8;">
+    <!-- Paste YouTube, Google Maps or other trusted EMBED codes (iframe etc.) here. -->
+    &lt;iframe src="https://www.youtube.com/embed/xyz..." width="320" height="180" allowfullscreen&gt;&lt;/iframe&gt;
+  </div>
 `);
 
 initDraggableBlock('block-custom-html', `
-<div><!-- Place your custom HTML here --></div>
+  <div contenteditable="true" style="border:2px dashed #5dd3ea;min-height:48px;padding:14px;overflow:auto;background:#fafdff;border-radius:8px;font-family:monospace;">
+    Paste your custom HTML here
+  </div>
 `);
 
 // Contact
 initDraggableBlock('block-contact-form', `
-  <section style="padding:32px 0;text-align:center;">
-    <div style="max-width:420px;margin:auto;">
-      <h4>Contact Us</h4>
-      <form>
-        <input type="text" placeholder="Your Name" class="form-control mb-2">
-        <input type="email" placeholder="Your Email" class="form-control mb-2">
-        <textarea class="form-control mb-2" placeholder="Message"></textarea>
-        <button class="btn btn-primary">Send</button>
-      </form>
+  <form style="max-width:420px;margin:40px auto;background:#f7fcff;padding:34px 24px 28px 24px;border-radius:16px;box-shadow:0 4px 24px #1a295f18;">
+    <h2 style="font-weight:900;font-size:2.2em;color:#1a3456;line-height:1;margin-bottom:19px;letter-spacing:.012em;">Get in Touch</h2>
+    <div style="margin-bottom:17px;">
+      <input class="form-control" style="padding:13px 14px;font-size:1.13em;border-radius:9px;border:2px solid #c2e7ff;background:#fff;" placeholder="Your Name">
+    </div>
+    <div style="margin-bottom:17px;">
+      <input class="form-control" type="email" style="padding:13px 14px;font-size:1.13em;border-radius:9px;border:2px solid #c2e7ff;background:#fff;" placeholder="Your Email">
+    </div>
+    <div style="margin-bottom:21px;">
+      <textarea class="form-control" style="padding:15px 14px;font-size:1.11em;border-radius:9px;border:2px solid #e4faff;min-height:100px;resize:vertical;background:#fff;" placeholder="Type your message here"></textarea>
+    </div>
+    <button type="submit" class="btn" style="background:#21253b;color:#ffe25a;font-weight:800;font-size:1.13em;border-radius:9px;width:100%;padding:14px 0;box-shadow:0 3px 16px #1122cc15;">Send Message</button>
+  </form>
+`);
+
+initDraggableBlock('block-about-details', `
+  <section style="background:#fafdff;border-radius:15px;box-shadow:0 4px 16px #92cbfa21;padding:36px 26px;max-width:590px;margin:42px auto;">
+    <div style="text-align:center;">
+      <img src="{{ business.profile_photo or 'https://via.placeholder.com/90?text=Logo' }}" style="width:82px;height:82px;object-fit:cover;border-radius:50%;margin-bottom:13px;border:4px solid #ddeafc;">
+      <h1 style="font-size:2.1em;font-weight:900;color:#2b447d;margin-bottom:7px;">{{ business.name }}</h1>
+      <div style="color:#578ad9;font-size:1.19em;font-weight:600;">About Us</div>
+    </div>
+    <div style="margin:29px 0 17px 0;padding:24px 17px;background:#e4faff;border-radius:11px;">
+      <div style="font-size:1.05em;color:#25334d;margin-bottom:7px;"><b>Email:</b> {{ business.email }}</div>
+      <div style="font-size:1.05em;color:#25334d;margin-bottom:7px;"><b>Address:</b> {{ business.address }}</div>
+      <div style="font-size:1.05em;color:#25334d;margin-bottom:7px;"><b>Phone:</b> {{ business.phone }}</div>
+      <div style="font-size:1.05em;color:#25334d;margin-bottom:7px;"><b>Website:</b> <a href="{{ business.website_url }}" style="color:#4388e4;">{{ business.website_url }}</a></div>
+      <div style="font-size:1.05em;color:#25334d;"><b>Hours:</b> {{ business.hours_of_operation }}</div>
+    </div>
+    <div style="margin-bottom:13px;">
+      <h3 style="font-size:1.2em;font-weight:800;color:#21253b;margin-bottom:7px;">Our Services</h3>
+      <div style="color:#164d58;font-size:1.08em;line-height:1.5;">{{ business.services or 'Custom services content goes here.' }}</div>
+    </div>
+    <div style="background:#dbeeff;border-radius:10px;padding:11px 16px;text-align:center;color:#21506a;font-weight:500;margin-top:19px;">
+      <span style="font-size:1.09em;">More details? <a href="mailto:{{ business.email }}" style="color:#355098;text-decoration:underline;">Email us</a></span>
     </div>
   </section>
-`);
-initDraggableBlock('block-contact-details', `
-  <div class="contact-details" style="background:#f3f9fc; border-radius:8px; padding:24px; max-width:420px;margin:18px auto; box-shadow:0 2px 8px #bfddec42;">
-    <div style="font-weight:600; color:#10365f; margin-bottom:4px;">Email: <span id="biz-email">{{ business.email }}</span></div>
-    <div style="font-weight:600; color:#10365f; margin-bottom:4px;">Address: <span id="biz-address">{{ business.address }}</span></div>
-    <div style="font-weight:600; color:#10365f;">Phone: <span id="biz-phone">{{ business.phone }}</span></div>
-  </div>
 `);
 
 // Map
