@@ -116,6 +116,7 @@
     <ul class="sub-list" id="sub-text" style="display:none; margin-top:7px;">
       <li><div class="block-btn" id="block-btn">Single Line</div></li>
       <li><div class="block-btn" id="block-paragraph">Paragraph</div></li>
+      <li><div class="block-btn" id="block-about">About Us</div></li>
     </ul>
   </li>
   <li>
@@ -157,21 +158,21 @@
 
 <script>
   [
-    ['btn-image-menu','sub-image'],
-    ['btn-layout-menu','sub-layout'],
-    ['btn-multilayer-menu','sub-multilayer'],
-    ['btn-products-menu','sub-products'],
-    ['btn-contact-menu','sub-contact'],
-    ['btn-map-menu','sub-map'],
-    ['btn-text-menu','sub-text'],
-    ['btn-menu-menu','sub-menu'],
-    ['btn-custom-menu','sub-custom']
+    ['btn-image-menu', 'sub-image'],
+    ['btn-layout-menu', 'sub-layout'],
+    ['btn-multilayer-menu', 'sub-multilayer'],
+    ['btn-products-menu', 'sub-products'],
+    ['btn-contact-menu', 'sub-contact'],  // Contact menu
+    ['btn-map-menu', 'sub-map'],          // Map menu
+    ['btn-text-menu', 'sub-text'],
+    ['btn-menu-menu', 'sub-menu'],
+    ['btn-custom-menu', 'sub-custom']
   ].forEach(pair => {
     const [btnId, subId] = pair;
     const btn = document.getElementById(btnId);
     const sub = document.getElementById(subId);
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.sub-list').forEach(lst => { if(lst!==sub) lst.style.display='none'; });
+      document.querySelectorAll('.sub-list').forEach(lst => { if (lst !== sub) lst.style.display = 'none'; });
       sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
     });
   });
@@ -401,6 +402,15 @@ initDraggableBlock('block-map-large', `
       src="https://maps.google.com/maps?q={{ business.latitude }},{{ business.longitude }}&t=&z=12&ie=UTF8&iwloc=&output=embed"
       allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
   </div>
+`);
+
+initDraggableBlock('block-about', `
+  <section style="margin:32px auto; max-width:560px; background:#f2f7fd; border-radius:10px; padding:28px 22px;">
+    <h3 style="color:#21506a; margin-bottom:10px;">About Us</h3>
+    <div style="color:#2b3952; font-size:1.04em;">
+      {{ business.about_us }}
+    </div>
+  </section>
 `);
 
   // Home is initial

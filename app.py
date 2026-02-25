@@ -843,23 +843,25 @@ def store_builder():
     # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
 
-    # Build a simple dict for business details (protect against None)
+    # This dict must match your actual column names in the Business model
     business = {
-        "email": biz.email if biz and biz.email else "",
+        "email": biz.business_email if biz and biz.business_email else "",
         "address": biz.address if biz and biz.address else "",
-        "phone": biz.phone if biz and biz.phone else "",
+        "phone": biz.phone_number if biz and biz.phone_number else "",
         "latitude": biz.latitude if biz and biz.latitude else "",
         "longitude": biz.longitude if biz and biz.longitude else "",
-        # Add more fields if needed
+        "name": biz.business_name if biz and biz.business_name else "",
+        "profile_photo": biz.profile_photo if biz and biz.profile_photo else "",
+        "about_us": biz.about_us if biz and biz.about_us else "",
     }
 
     return render_template(
         'store_builder.html',
         biz=biz,
-        business=business,  # <-- this is NEW and matches your Jinja template
+        business=business,
         themes=themes,
         saved_html=saved_html,
-        theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
+        theme_html_map=json.dumps(theme_html_map)
     )
 
 @app.route('/stores/<store_slug>')
