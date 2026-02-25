@@ -316,20 +316,22 @@ initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-item
 `);
 
 // Multi-Layer
-initDraggableBlock('block-img-txt-p', `
-  <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
-    <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
+initDraggableBlock('block-text', `
+  <div class="text-block" style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+    <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
+      <div><h4>Text Right</h4><p>Paragraph next to image.</p></div>
+    </div>
+    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
   </div>
-  <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
 `);
 
 initDraggableBlock('block-txt-img-p', `
-  <div style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
+  <div class="text-block" style="display:flex;gap:18px;align-items:center;max-width:850px;margin:22px auto;">
     <div><h4>Text Left</h4><p>Some text here.</p></div>
     <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:38%;border-radius:10px;">
+    <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
   </div>
-  <div style="max-width:800px;margin:12px auto;"><p>Paragraph below row layout.</p></div>
 `);
 
 // Products
@@ -386,8 +388,10 @@ initDraggableBlock('block-footer', `<footer style="background:#1a2239;color:#89c
 `);
 
 // Customization
-initDraggableBlock('block-embed-script', `<script>// Paste your script here!<\/script>
+initDraggableBlock('block-embed-script', `
+  <!-- embed script block content -->
 `);
+
 initDraggableBlock('block-custom-html', `
 <div><!-- Place your custom HTML here --></div>
 `);
