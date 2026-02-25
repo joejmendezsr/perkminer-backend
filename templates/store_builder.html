@@ -271,35 +271,18 @@ initDraggableBlock('block-overlay-img', `
   </div>
 `);
 
-initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>
+  initDraggableBlock('block-hero', `<section style="padding:50px 0;text-align:center;background:#eaf6fd;"><h2>Big Welcome Here!</h2><p>Your main message for customers.</p></section>
 `);
-
-initDraggableBlock('block-carousel', `
-  <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
-      <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
-      <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
+  initDraggableBlock('block-carousel', `
+    <div class="swiper myCarousel" style="max-width:400px;margin:20px auto;">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
+        <div class="swiper-slide"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg" style="width:100%"></div>
+      </div>
+      <div class="swiper-pagination"></div>
     </div>
-    <div class="swiper-pagination"></div>
-  </div>
-
-initDraggableBlock('block-carousel', `
-  <div class="swiper myCarousel">
-    <div class="swiper-wrapper">
-      <!-- slides go here -->
-    </div>
-    <div class="swiper-pagination"></div>
-  </div>
-
-  <script>
-    try {
-      new Swiper('.myCarousel', {
-        pagination: { el: '.swiper-pagination', clickable: true },
-        loop: true
-      });
-    } catch (e) {}
-  </script>
+    <script>try{ new Swiper('.myCarousel', {pagination:{el:'.swiper-pagination',clickable:true},loop:true}); }catch(e){}</script>
 `);
 
 initDraggableBlock('block-gallery', `
