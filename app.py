@@ -842,9 +842,21 @@ def store_builder():
     saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
     # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+
+    # Build a simple dict for business details (protect against None)
+    business = {
+        "email": biz.email if biz and biz.email else "",
+        "address": biz.address if biz and biz.address else "",
+        "phone": biz.phone if biz and biz.phone else "",
+        "latitude": biz.latitude if biz and biz.latitude else "",
+        "longitude": biz.longitude if biz and biz.longitude else "",
+        # Add more fields if needed
+    }
+
     return render_template(
         'store_builder.html',
         biz=biz,
+        business=business,  # <-- this is NEW and matches your Jinja template
         themes=themes,
         saved_html=saved_html,
         theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
