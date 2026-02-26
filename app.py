@@ -838,7 +838,7 @@ def store_builder():
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
 
-    # Handle save from builder form
+    # Handle save from builder
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -849,21 +849,23 @@ def store_builder():
             flash("No HTML received; website not updated.", "danger")
         return redirect(url_for('store_builder'))
 
-    # Get the business's own HTML, or use their theme's starter if empty
-    if biz.grapesjs_html:
-        starter_html = biz.grapesjs_html or ""
-    else:
-        # Find the active theme for the business; fallback to Theme 1 if none selected
-        theme = Theme.query.get(biz.theme_id) if biz.theme_id else Theme.query.first()
-        starter_html = theme.starter_html if theme else ""
+    # Load template (use the business's code if it exists)
+    starter_html = biz.grapesjs_html or ""
 
-    # Construct business dict with all needed keys (add/adjust as needed!)
+    # --- Build services HTML from all 10 service fields ---
+    service_fields = [
+        biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5,
+        biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10
+    ]
+    services_list = [s for s in service_fields if s and s.strip()]
+    services = "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>" if services_list else ""
+
+    # Construct business dict for use in your templates
     business = {
         "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
         "name": biz.business_name or "",
         "about_us": biz.about_us or "",
-        # You may want this as formatted HTML if you support lists.
-        "services": "<ul>" + "".join([f"<li>{s.strip()}</li>" for s in (biz.services or "").split(";") if s.strip()]) + "</ul>" if biz and biz.services else "",
+        "services": services,
         "address": biz.address or "",
         "phone": biz.phone_number or "",
         "email": biz.business_email or "",
@@ -874,14 +876,14 @@ def store_builder():
         "linkedin_url": biz.linkedin_url or "#",
         "latitude": str(biz.latitude) if getattr(biz, 'latitude', None) else "",
         "longitude": str(biz.longitude) if getattr(biz, 'longitude', None) else "",
-        # Demo/sample product fields (if used as placeholders)
+        # Sample product fields for your dynamic product cards (customize/add if needed):
         "product_name": "Sample Product",
         "product_description": "This is a demo product.",
         "product_price": "$9.99",
         "product_stock": "12"
     }
 
-    # Safe, field-by-field placeholder replacement
+    # Safe field-by-field placeholder replacement
     filled_html = starter_html
     for key, val in business.items():
         filled_html = filled_html.replace(f'{{{key}}}', str(val or ''))
@@ -893,8 +895,8 @@ def store_builder():
         biz=biz,
         business=business,
         themes=themes,
-        saved_html=biz.grapesjs_html,  # Existing user-saved content
-        filled_html=filled_html,       # Dynamic template for preview/builder
+        saved_html=biz.grapesjs_html,  # What the user last saved/edited
+        filled_html=filled_html,       # What will be rendered with dynamic data
         theme_html_map=json.dumps(theme_html_map)
     )
 
