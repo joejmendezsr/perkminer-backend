@@ -628,6 +628,10 @@ class Business(db.Model):
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
+    facebook_url = db.Column(db.String(255))
+    twitter_url = db.Column(db.String(255))
+    instagram_url = db.Column(db.String(255))
+    linkedin_url = db.Column(db.String(255))
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -843,7 +847,7 @@ def store_builder():
     # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
 
-    # This dict must match your actual column names in the Business model
+    # Full business context for template with all needed fields
     business = {
         "email": biz.business_email if biz and biz.business_email else "",
         "address": biz.address if biz and biz.address else "",
@@ -853,6 +857,12 @@ def store_builder():
         "name": biz.business_name if biz and biz.business_name else "",
         "profile_photo": biz.profile_photo if biz and biz.profile_photo else "",
         "about_us": biz.about_us if biz and biz.about_us else "",
+        "services": biz.services if biz and biz.services else "",
+        "website_url": biz.website_url if biz and biz.website_url else "",
+        "facebook_url": biz.facebook_url if biz and biz.facebook_url else "",
+        "twitter_url": biz.twitter_url if biz and biz.twitter_url else "",
+        "instagram_url": biz.instagram_url if biz and biz.instagram_url else "",
+        "linkedin_url": biz.linkedin_url if biz and biz.linkedin_url else "",
     }
 
     return render_template(
