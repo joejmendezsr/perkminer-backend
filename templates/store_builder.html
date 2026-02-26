@@ -196,6 +196,46 @@
   <button type="submit" class="btn btn-success mt-3 ms-1">Save Website</button>
   <a href="{{ url_for('store_admin') }}" class="btn btn-secondary mt-3 ms-2">Back to Store Admin</a>
 </form>
+
+<!-- Place the formatting toolbar here (outside the builder/canvas!) -->
+<div id="format-toolbar" style="display:none;position:absolute;z-index:9999;background:#fff;border:2px solid #5bddff;padding:8px 16px 8px 8px;border-radius:11px;box-shadow:0 8px 28px #4d9be96e;gap:4px;align-items:center;">
+  <!-- ... toolbar controls as previously provided ... -->
+  <select id="toolbar-font" style="margin-right:6px;">
+    <option value="Arial">Arial</option>
+    <option value="Georgia">Georgia</option>
+    <option value="Tahoma">Tahoma</option>
+    <option value="Verdana">Verdana</option>
+    <option value="Times New Roman">Times</option>
+  </select>
+  <select id="toolbar-size" style="margin-right:4px;">
+    <option value="3">Normal</option>
+    <option value="5">Large</option>
+    <option value="7">Very Large</option>
+  </select>
+  <button onclick="document.execCommand('bold')" title="Bold" type="button"><b>B</b></button>
+  <button onclick="document.execCommand('italic')" title="Italic" type="button"><i>I</i></button>
+  <button onclick="document.execCommand('underline')" title="Underline" type="button"><u>U</u></button>
+  <button onclick="document.execCommand('strikeThrough')" title="Strikethrough" type="button"><s>S</s></button>
+  <button onclick="document.execCommand('foreColor',false,prompt('Color (hex or name):','#355098'))" title="Font Color" type="button" style="color:#355098;">&#9632;</button>
+  <button onclick="document.execCommand('justifyLeft')" title="Align Left" type="button">&#8672;</button>
+  <button onclick="document.execCommand('justifyCenter')" title="Align Center" type="button">&#8596;</button>
+  <button onclick="document.execCommand('justifyRight')" title="Align Right" type="button">&#8674;</button>
+  <button onclick="
+    var sel=window.getSelection();
+    var url=prompt('Link url:','https://');
+    var openType=confirm('Open in new window?') ? '_blank' : '_self';
+    if(url&&sel.rangeCount){
+      document.execCommand('createLink',false,url);
+      setTimeout(()=>{
+        var anchor=document.getSelection().anchorNode && document.getSelection().anchorNode.parentElement;
+        if(anchor && anchor.tagName==='A'){
+          anchor.target=openType;
+        }
+      },10);
+    }
+  " title="Add/Edit Link" type="button" style="color:#4478dd;">&#128279;</button>
+</div>
+
 <script src="https://unpkg.com/grapesjs"></script>
 <script src="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.js"></script>
 <script>
@@ -600,25 +640,8 @@ initDraggableBlock('block-product-multi', `
 // Text
 initDraggableBlock('block-btn', `
   <div style="max-width:780px;margin:36px auto;text-align:center;">
-    <div contenteditable="true" style="font-size:1.55em;font-family:Georgia,serif;font-weight:900;color:#2a1755;padding:15px 0;outline:none;border-bottom:3px solid #5bddff;">
-      Big, bold headline—Edit and format!
-    </div>
-    <div style="margin-top:11px;">
-      <button onclick="document.execCommand('bold')" type="button">B</button>
-      <button onclick="document.execCommand('italic')" type="button">I</button>
-      <button onclick="document.execCommand('underline')" type="button">U</button>
-      <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
-      <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
-      <select onchange="document.execCommand('fontName', false, this.value)">
-        <option value='Arial'>Arial</option>
-        <option value='Georgia'>Georgia</option>
-        <option value='Tahoma'>Tahoma</option>
-      </select>
-      <select onchange="document.execCommand('fontSize',false,this.value)">
-        <option value='3'>Normal</option>
-        <option value='5'>Large</option>
-        <option value='7'>Huge</option>
-      </select>
+    <div id="editable-headline" contenteditable="true" style="font-size:1.55em;font-family:Georgia,serif;font-weight:900;color:#2a1755;padding:15px 0;outline:none;border-bottom:3px solid #5bddff;cursor:text;">
+      Click and type your bold headline here!
     </div>
   </div>
 `);
