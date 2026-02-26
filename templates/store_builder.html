@@ -215,25 +215,27 @@
   <button onclick="document.execCommand('bold')" title="Bold" type="button"><b>B</b></button>
   <button onclick="document.execCommand('italic')" title="Italic" type="button"><i>I</i></button>
   <button onclick="document.execCommand('underline')" title="Underline" type="button"><u>U</u></button>
-  <button onclick="document.execCommand('strikeThrough')" title="Strikethrough" type="button"><s>S</s></button>
-  <button onclick="document.execCommand('foreColor',false,prompt('Color (hex or name):','#355098'))" title="Font Color" type="button" style="color:#355098;">&#9632;</button>
-  <button onclick="document.execCommand('justifyLeft')" title="Align Left" type="button">&#8672;</button>
-  <button onclick="document.execCommand('justifyCenter')" title="Align Center" type="button">&#8596;</button>
-  <button onclick="document.execCommand('justifyRight')" title="Align Right" type="button">&#8674;</button>
+  <button onclick="document.execCommand('strikeThrough')" ...>S</button>
+  <button onclick="document.execCommand('foreColor',...)" ...>&#9632;</button>
+  <button onclick="document.execCommand('justifyLeft')" ...>&#8672;</button>
+  <button onclick="document.execCommand('justifyCenter')" ...>&#8596;</button>
+  <button onclick="document.execCommand('justifyRight')" ...>&#8674;</button>
+  <!-- New enhanced link button here: -->
   <button onclick="
     var sel=window.getSelection();
-    var url=prompt('Link url:','https://');
-    var openType=confirm('Open in new window?') ? '_blank' : '_self';
-    if(url&&sel.rangeCount){
-      document.execCommand('createLink',false,url);
-      setTimeout(()=>{
-        var anchor=document.getSelection().anchorNode && document.getSelection().anchorNode.parentElement;
-        if(anchor && anchor.tagName==='A'){
-          anchor.target=openType;
-        }
-      },10);
+    if(sel.rangeCount){
+      var url=prompt('Link URL:','https://');
+      if(url){
+        var target=confirm('Open in new window?') ? '_blank':'_self';
+        document.execCommand('createLink',false,url);
+        setTimeout(()=>{
+          var anchor=document.getSelection().anchorNode && document.getSelection().anchorNode.parentElement;
+          if(anchor && anchor.tagName==='A'){anchor.target=target;}
+        },10);
+      }
     }
   " title="Add/Edit Link" type="button" style="color:#4478dd;">&#128279;</button>
+
 </div>
 
 <script src="https://unpkg.com/grapesjs"></script>
