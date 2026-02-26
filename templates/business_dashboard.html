@@ -292,6 +292,11 @@
           data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
           View/Edit Profile
         </button>
+          {% if not business.has_ecommerce_store %}
+            <a href="{{ url_for('store_terms') }}" class="btn btn-warning">
+              Activate E-Commerce Store
+            </a>
+          {% endif %}
       </div>
       <!-- Account Balance and Fund/Add Funds Button -->
       <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap">

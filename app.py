@@ -33,6 +33,7 @@ from flask import render_template
 from flask_login import current_user
 from flask import request, render_template
 from sqlalchemy import func
+from flask_mail import Message
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -106,6 +107,7 @@ import cloudinary.uploader
 import random
 import qrcode
 import uuid  # <-- only needs to be here once! Put with other imports
+import stripe
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -378,7 +380,7 @@ def random_business_code(business_name):
     return code
 
 def send_email(to, subject, html_body):
-    msg = MailMessage(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
+    msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
     try:
         mail.send(msg)
     except Exception as e:
@@ -645,7 +647,7 @@ def home():
     # User location detection (GET params: lat/lng)
     lat = request.args.get("lat", type=float)
     lng = request.args.get("lng", type=float)
-    search_radius = 5  # miles
+    search_radius = 10  # miles
 
     # Queries
     manual_query = Business.query.filter_by(manual_feature=True, status="approved")
