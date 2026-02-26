@@ -263,28 +263,28 @@
     style: '',
   });
 
-  // Swiper auto-initializer for both .mySwiper and .myCarousel blocks
+// Swiper auto-initializer for both .mySwiper and .myCarousel blocks AND dropdown support
 function addBlock(html) {
   editor.addComponents(html);
   pages[currentPageKey] = editor.getHtml();
-    setTimeout(() => {
-      document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
-        try {
-          if (!el._swiper) {
-            el._swiper = new Swiper(el, {
-              pagination: { el: el.querySelector('.swiper-pagination'), clickable: true },
-              navigation: {
-                nextEl: el.querySelector('.swiper-button-next'),
-                prevEl: el.querySelector('.swiper-button-prev')
-              },
-              loop: true,
-              effect: 'slide', // or 'fade'
-              autoplay: { delay: 5000 } // 5000ms = 5sec, can modify this per-user!
-            });
-          }
-        } catch(e){}
-      });
-    }, 0);
+  setTimeout(() => {
+    // Swiper init
+    document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
+      try {
+        if (!el._swiper) {
+          el._swiper = new Swiper(el, {
+            pagination: { el: el.querySelector('.swiper-pagination'), clickable: true },
+            navigation: {
+              nextEl: el.querySelector('.swiper-button-next'),
+              prevEl: el.querySelector('.swiper-button-prev')
+            },
+            loop: true,
+            effect: 'slide', // or 'fade'
+            autoplay: { delay: 5000 } // 5000ms = 5sec, can modify per-user!
+          });
+        }
+      } catch(e){}
+    });
 
     // Dropdown menu support
     document.querySelectorAll('.dropdown-nav').forEach(menu => {
@@ -300,10 +300,13 @@ function addBlock(html) {
           }
         };
       });
-      // global click to close
-      document.addEventListener('click', function() {
-        menu.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
-      });
+      // Only set this listener ONCE per menu to avoid duplicates
+      if (!menu._dropdownGlobalListener) {
+        menu._dropdownGlobalListener = true;
+        document.addEventListener('click', function() {
+          menu.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+        });
+      }
     });
   }, 0);
 }
