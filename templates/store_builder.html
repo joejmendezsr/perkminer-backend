@@ -372,7 +372,7 @@ function addBlock(html) {
   `);
 
 initDraggableBlock('block-hero', `
-  <section style="position:relative;min-height:290px;display:flex;align-items:center;justify-content:center;background:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80') center/cover no-repeat;border-radius:17px;box-shadow:0 8px 32px #1a2b3d33;margin:28px 0;">
+  <section style="position:relative;min-height:290px;display:flex;align-items:center;justify-content:center;background:url('https://res.cloudinary.com/dmrntlcfd/image/upload/v1772082254/restaurant_2_poi2bc.jpghttps://res.cloudinary.com/dmrntlcfd/image/upload/v1772082254/restaurant_2_poi2bc.jpg?auto=format&fit=crop&w=900&q=80') center/cover no-repeat;border-radius:17px;box-shadow:0 8px 32px #1a2b3d33;margin:28px 0;">
     <div style="position:absolute;inset:0;background:rgba(28,36,50,0.64);border-radius:17px;"></div>
     <div style="position:relative;z-index:2;text-align:center;padding:54px 16px 50px 16px;max-width:98vw;">
       <h1 style="color:#ffffff;font-size:2.6em;font-weight:900;line-height:1.07;letter-spacing:.04em;margin-bottom:11px;">Create Your Bold Brand</h1>
@@ -709,8 +709,8 @@ initDraggableBlock('block-about', `
 // Header/Footer
 initDraggableBlock('block-header-main', `
   <header style="background:#21253b;display:flex;align-items:center;justify-content:space-between;padding:18px 30px;border-radius:15px;margin:24px 0 8px 0;box-shadow:0 3px 16px #1122cc22;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:16px;">
-      <img src="{{ business.profile_photo or 'https://via.placeholder.com/60?text=Logo' }}" style="width:60px;height:60px;object-fit:cover;border-radius:14px;border:3px solid #ffe25a;box-shadow:0 2px 10px #ffe25a44;">
+    <div style="display:flex;align-items:center;gap:0px;">
+      <img src="{{ business.profile_photo or 'https://via.placeholder.com/60?text=Logo' }}" style="width:60px;height:60px;object-fit:cover;border-radius:0px;border:3px solid #ffe25a;box-shadow:0 2px 10px #ffe25a44;">
       <span style="font-size:1.63em;font-weight:800;color:#ffe25a;text-shadow:0 3px 9px #33448866;">{{ business.name }}</span>
     </div>
     <nav style="display:flex;gap:29px;flex-wrap:wrap;">
