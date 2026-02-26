@@ -855,7 +855,7 @@ def store_builder():
         "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
         "name": biz.business_name or "",
         "about_us": biz.about_us or "",
-        "services": biz.service1 or "",
+        "services": biz.service_1 or "",
         "address": biz.address or "",
         "phone": biz.phone_number or "",
         "email": biz.business_email or "",
