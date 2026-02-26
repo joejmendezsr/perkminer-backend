@@ -635,6 +635,7 @@ class Business(db.Model):
     twitter_url = db.Column(db.String(255))
     instagram_url = db.Column(db.String(255))
     linkedin_url = db.Column(db.String(255))
+    starter_html = theme.starter_html
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -837,6 +838,7 @@ def store_builder():
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
 
+    # Handle save from builder form
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -847,15 +849,21 @@ def store_builder():
             flash("No HTML received; website not updated.", "danger")
         return redirect(url_for('store_builder'))
 
-    saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
-    theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+    # Get the business's own HTML, or use their theme's starter if empty
+    if biz.grapesjs_html:
+        starter_html = biz.grapesjs_html
+    else:
+        # Find the active theme for the business; fallback to Theme 1 if none selected
+        theme = Theme.query.get(biz.theme_id) if biz.theme_id else Theme.query.first()
+        starter_html = theme.starter_html if theme else ""
 
-    # Build business data dict (add or adjust fields as needed)
+    # Construct business dict with all needed keys (add/adjust as needed!)
     business = {
         "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
         "name": biz.business_name or "",
         "about_us": biz.about_us or "",
-        "services": biz.service_1 or "",
+        # You may want this as formatted HTML if you support lists.
+        "services": "<ul>" + "".join([f"<li>{s.strip()}</li>" for s in (biz.services or "").split(";") if s.strip()]) + "</ul>" if biz and biz.services else "",
         "address": biz.address or "",
         "phone": biz.phone_number or "",
         "email": biz.business_email or "",
@@ -864,28 +872,29 @@ def store_builder():
         "twitter_url": biz.twitter_url or "#",
         "instagram_url": biz.instagram_url or "#",
         "linkedin_url": biz.linkedin_url or "#",
-        # Add product/sample product keys as needed for your HTML:
+        "latitude": str(biz.latitude) if getattr(biz, 'latitude', None) else "",
+        "longitude": str(biz.longitude) if getattr(biz, 'longitude', None) else "",
+        # Demo/sample product fields (if used as placeholders)
         "product_name": "Sample Product",
         "product_description": "This is a demo product.",
         "product_price": "$9.99",
-        "product_stock": "12",
-        "latitude": biz.latitude or "",
-        "longitude": biz.longitude or "",
+        "product_stock": "12"
     }
 
-    # Replace {field} in starter_html (from DB) with real values
-    starter_html = biz.starter_html or ""
+    # Safe, field-by-field placeholder replacement
     filled_html = starter_html
     for key, val in business.items():
         filled_html = filled_html.replace(f'{{{key}}}', str(val or ''))
+
+    theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
 
     return render_template(
         'store_builder.html',
         biz=biz,
         business=business,
         themes=themes,
-        saved_html=saved_html,     # Old way
-        filled_html=filled_html,   # Now use this!
+        saved_html=biz.grapesjs_html,  # Existing user-saved content
+        filled_html=filled_html,       # Dynamic template for preview/builder
         theme_html_map=json.dumps(theme_html_map)
     )
 
