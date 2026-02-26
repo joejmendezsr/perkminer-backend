@@ -27,6 +27,9 @@ from wtforms import StringField, Form
 from wtforms.validators import DataRequired, Email
 from flask import Response, send_file, url_for
 from flask import request, jsonify
+from flask import Flask, render_template, session, redirect, url_for, flash
+app = Flask(__name__)
+
 
 # --- Cart Logic ---
 def get_cart():
@@ -833,6 +836,7 @@ def store_builder():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
+
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -844,33 +848,44 @@ def store_builder():
         return redirect(url_for('store_builder'))
 
     saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
-    # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
 
-    # Full business context for template with all needed fields
+    # Build business data dict (add or adjust fields as needed)
     business = {
-        "email": biz.business_email if biz and biz.business_email else "",
-        "address": biz.address if biz and biz.address else "",
-        "phone": biz.phone_number if biz and biz.phone_number else "",
-        "latitude": biz.latitude if biz and biz.latitude else "",
-        "longitude": biz.longitude if biz and biz.longitude else "",
-        "name": biz.business_name if biz and biz.business_name else "",
-        "profile_photo": biz.profile_photo if biz and biz.profile_photo else "",
-        "about_us": biz.about_us if biz and biz.about_us else "",
-        "services": biz.services if biz and biz.services else "",
-        "website_url": biz.website_url if biz and biz.website_url else "",
-        "facebook_url": biz.facebook_url if biz and biz.facebook_url else "",
-        "twitter_url": biz.twitter_url if biz and biz.twitter_url else "",
-        "instagram_url": biz.instagram_url if biz and biz.instagram_url else "",
-        "linkedin_url": biz.linkedin_url if biz and biz.linkedin_url else "",
+        "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
+        "name": biz.business_name or "",
+        "about_us": biz.about_us or "",
+        "services": biz.service1 or "",
+        "address": biz.address or "",
+        "phone": biz.phone_number or "",
+        "email": biz.business_email or "",
+        "website_url": biz.website_url or "",
+        "facebook_url": biz.facebook_url or "#",
+        "twitter_url": biz.twitter_url or "#",
+        "instagram_url": biz.instagram_url or "#",
+        "linkedin_url": biz.linkedin_url or "#",
+        # Add product/sample product keys as needed for your HTML:
+        "product_name": "Sample Product",
+        "product_description": "This is a demo product.",
+        "product_price": "$9.99",
+        "product_stock": "12",
+        "latitude": biz.latitude or "",
+        "longitude": biz.longitude or "",
     }
+
+    # Replace {field} in starter_html (from DB) with real values
+    starter_html = biz.starter_html or ""
+    filled_html = starter_html
+    for key, val in business.items():
+        filled_html = filled_html.replace(f'{{{key}}}', str(val or ''))
 
     return render_template(
         'store_builder.html',
         biz=biz,
         business=business,
         themes=themes,
-        saved_html=saved_html,
+        saved_html=saved_html,     # Old way
+        filled_html=filled_html,   # Now use this!
         theme_html_map=json.dumps(theme_html_map)
     )
 
