@@ -838,7 +838,7 @@ def store_builder():
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
 
-    # Handle save from builder
+    # Handle site saves from the builder
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -849,18 +849,17 @@ def store_builder():
             flash("No HTML received; website not updated.", "danger")
         return redirect(url_for('store_builder'))
 
-    # Load template (use the business's code if it exists)
+    # Use business's saved HTML, or fallback to their theme if empty
     starter_html = biz.grapesjs_html or ""
 
-    # --- Build services HTML from all 10 service fields ---
+    # Build services HTML (from 10 individual service fields)
     service_fields = [
         biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5,
         biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10
     ]
     services_list = [s for s in service_fields if s and s.strip()]
-    services = "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>" if services_list else ""
+    services = "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>" if services_list else "<ul><li>No services listed.</li></ul>"
 
-    # Construct business dict for use in your templates
     business = {
         "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
         "name": biz.business_name or "",
@@ -876,14 +875,10 @@ def store_builder():
         "linkedin_url": biz.linkedin_url or "#",
         "latitude": str(biz.latitude) if getattr(biz, 'latitude', None) else "",
         "longitude": str(biz.longitude) if getattr(biz, 'longitude', None) else "",
-        # Sample product fields for your dynamic product cards (customize/add if needed):
-        "product_name": "Sample Product",
-        "product_description": "This is a demo product.",
-        "product_price": "$9.99",
-        "product_stock": "12"
+        # Use any other fields if you want more {field} fields!
     }
 
-    # Safe field-by-field placeholder replacement
+    # Do the placeholder replacement, field-by-field
     filled_html = starter_html
     for key, val in business.items():
         filled_html = filled_html.replace(f'{{{key}}}', str(val or ''))
