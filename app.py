@@ -851,7 +851,7 @@ def store_builder():
 
     # Get the business's own HTML, or use their theme's starter if empty
     if biz.grapesjs_html:
-        starter_html = biz.grapesjs_html
+        starter_html = biz.grapesjs_html or ""
     else:
         # Find the active theme for the business; fallback to Theme 1 if none selected
         theme = Theme.query.get(biz.theme_id) if biz.theme_id else Theme.query.first()
