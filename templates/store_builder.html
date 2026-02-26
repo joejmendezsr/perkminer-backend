@@ -267,25 +267,25 @@
 function addBlock(html) {
   editor.addComponents(html);
   pages[currentPageKey] = editor.getHtml();
-  setTimeout(() => {
-    // Swiper support
-    document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
-      try {
-        if (!el._swiper) {
-          el._swiper = new Swiper(el, {
-            pagination: {
-              el: el.querySelector('.swiper-pagination'),
-              clickable: true
-            },
-            navigation: {
-              nextEl: el.querySelector('.swiper-button-next'),
-              prevEl: el.querySelector('.swiper-button-prev')
-            },
-            loop: true
-          });
-        }
-      } catch(e){}
-    });
+    setTimeout(() => {
+      document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
+        try {
+          if (!el._swiper) {
+            el._swiper = new Swiper(el, {
+              pagination: { el: el.querySelector('.swiper-pagination'), clickable: true },
+              navigation: {
+                nextEl: el.querySelector('.swiper-button-next'),
+                prevEl: el.querySelector('.swiper-button-prev')
+              },
+              loop: true,
+              effect: 'slide', // or 'fade'
+              autoplay: { delay: 5000 } // 5000ms = 5sec, can modify this per-user!
+            });
+          }
+        } catch(e){}
+      });
+    }, 0);
+
     // Dropdown menu support
     document.querySelectorAll('.dropdown-nav').forEach(menu => {
       menu.querySelectorAll('.dd-btn').forEach(btn => {
@@ -373,123 +373,307 @@ initDraggableBlock('block-carousel', `
 `);
 
   // Layout
-  initDraggableBlock('block-row-lr', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"><div><h4>Describe it here.</h4><p>Your text goes here.</p></div></div>`);
-  initDraggableBlock('block-row-rl', `<div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;"><div><h4>More Info</h4><p>Paragraph text here.</p></div><img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Image" style="width:44%;border-radius:13px;"></div>`);
-
-// Multi-Layer
-initDraggableBlock('block-img-txt-p', `
-  <div style="display:flex;gap:24px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
-    <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?fit=crop&w=420&q=80" style="width:44%;min-width:220px;border-radius:12px;">
-    <div style="flex:1 1 200px;min-width:220px;">
-      <div contenteditable="true" style="font-size:1.44em;font-weight:800;background:linear-gradient(90deg,#ffca2c,#5bddff 60%,#db8abf);color:transparent;-webkit-background-clip:text;background-clip:text;outline:none;border-bottom:2px solid #ffe25a;">Multi-Layer Section</div>
-      <div contenteditable="true" style="margin-top:7px;min-height:36px;font-size:1.09em;color:#314058;outline:none;">Type or paste here! You can <b>bold</b>, <i>italicize</i>, <u>underline</u>, or <span style='color:#db8abf;'>change color</span> (highlight, right click → style).</div>
+initDraggableBlock('block-row-lr', `
+  <div style="display:flex;gap:22px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
+    <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?fit=crop&w=400&q=80" style="width:44%;min-width:180px;border-radius:13px;">
+    <div style="flex:1;">
+      <div contenteditable="true" style="font-size:1.32em;font-weight:800;color:#21253b;outline:none;border-bottom:2px solid #5bddff;letter-spacing:.02em;">Modern Headline – Edit Me!</div>
+      <div contenteditable="true" style="margin:8px 0 0 0;font-size:1.12em;color:#314058;outline:none;min-height:36px;">
+        Add <b>bold</b>, <i>italic</i>, <u>underline</u>, change <span style="color:#db8abf;">color</span> and 
+        <a href="https://openai.com" target="_blank" style="color:#5bddff;text-decoration:underline;">editable link</a>.
+      </div>
       <div style="margin-top:9px;">
-        <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#355098;">B</button>
-        <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;">I</button>
-        <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#355098;">U</button>
-        <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
-        <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
-        <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+        <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;">B</button>
+        <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;">I</button>
+        <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;">U</button>
+        <button onclick="document.execCommand('createLink', false, prompt('Enter URL:','https://'));"
+                type="button" style="font-weight:bold;color:#098;border-radius:4px;">Link</button>
+        <button onclick="
+          var link = document.getSelection().anchorNode.parentElement;
+          if(link && link.tagName==='A'){
+            var target = prompt('Open in new tab? (yes/no)','yes');
+            link.target=target==='yes'?'_blank':'_self';
+          }
+        " type="button" style="font-weight:bold;border-radius:4px;">Set Target</button>
+        <select onchange="document.execCommand('fontName', false, this.value);">
+          <option value='Arial'>Arial</option>
+          <option value='Georgia'>Georgia</option>
+          <option value='Tahoma'>Tahoma</option>
+          <option value='Helvetica'>Helvetica</option>
+        </select>
       </div>
     </div>
-  </div>
-  <div contenteditable="true" style="max-width:800px;margin:24px auto 0 auto;padding:18px;border-radius:10px;background:#f2f7fd;outline:none;font-size:1.1em;min-height:34px;">
-    Add an editable paragraph here. Click the style buttons above to format.
   </div>
 `);
 
-initDraggableBlock('block-txt-img-p', `
+initDraggableBlock('block-row-rl', `
   <div style="display:flex;gap:24px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
-    <div style="flex:1 1 200px;min-width:220px;">
-      <div contenteditable="true" style="font-size:1.44em;font-weight:900;background:linear-gradient(90deg,#db8abf,#2ce5ee,#ffe25a);color:transparent;-webkit-background-clip:text;background-clip:text;outline:none;border-bottom:2px solid #db8abf;">Multi-Layer Headline</div>
-      <div contenteditable="true" style="margin-top:7px;min-height:36px;font-size:1.09em;color:#203448;outline:none;">Edit this text with <b>bold</b>, <i>italic</i>, or <span style="color:#2ce5ee;">color</span>.</div>
+    <div style="flex:1;">
+      <div contenteditable="true" style="font-size:1.35em;font-family:Arial,Helvetica,sans-serif;font-weight:900;color:#1a3456;outline:0;margin-bottom:8px;border-bottom:2px solid #5bddff;">
+        Edit your bold headline!
+      </div>
+      <div contenteditable="true" style="font-size:1.09em;font-family:Tahoma,Verdana,sans-serif;color:#284674;min-height:35px;outline:0;">
+        Type here. <b>Bold</b>, <i>Italic</i>, <u>Underline</u>, <span style='color:#db8abf;'>Color</span>. 
+        <a href="https://example.com" target="_blank">Editable link</a>
+      </div>
       <div style="margin-top:9px;">
-        <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#355098;">B</button>
-        <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;">I</button>
-        <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#355098;">U</button>
-        <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
-        <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
-        <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+        <button onclick="document.execCommand('bold')" type="button">B</button>
+        <button onclick="document.execCommand('italic')" type="button">I</button>
+        <button onclick="document.execCommand('underline')" type="button">U</button>
+        <button onclick="document.execCommand('justifyLeft')" type="button">&#8672;</button>
+        <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+        <button onclick="document.execCommand('justifyRight')" type="button">&#8674;</button>
+        <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+        <select onchange="document.execCommand('fontName', false, this.value)">
+          <option value='Arial'>Arial</option>
+          <option value='Georgia'>Georgia</option>
+          <option value='Tahoma'>Tahoma</option>
+        </select>
+        <select onchange="document.execCommand('fontSize',false,this.value)">
+          <option value='3'>Normal</option>
+          <option value='5'>Large</option>
+          <option value='7'>Huge</option>
+        </select>
       </div>
     </div>
-    <img src="https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?fit=crop&w=420&q=80" style="width:44%;min-width:220px;border-radius:12px;">
+    <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?fit=crop&w=400&q=80" style="width:44%;min-width:170px;border-radius:13px;">
   </div>
-  <div contenteditable="true" style="max-width:800px;margin:24px auto 0 auto;padding:18px;border-radius:10px;background:#f2f7fd;outline:none;font-size:1.12em;min-height:34px;">
-    The paragraph below is fully editable and can be styled with the buttons above.
+`);
+
+// Multi-Layer
+initDraggableBlock('block-txt-img-p', `
+  <div style="display:flex;gap:24px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
+    <div style="flex:1;">
+      <div contenteditable="true" style="font-size:1.37em;font-family:Tahoma,Verdana,sans-serif;font-weight:900;color:#203448;outline:0;margin-bottom:8px;">Edit headline here!</div>
+      <div contenteditable="true" style="font-size:1.11em;font-family:Arial,sans-serif;color:#176d8d;min-height:35px;outline:0;">
+        Type here and <b>bold</b>, <i>italicize</i>, <u>underline</u>, <span style="color:#f75;">color</span>. 
+        <a href="https://example.com" target="_blank">Editable link</a>
+      </div>
+      <div style="margin-top:9px;">
+        <button onclick="document.execCommand('bold')" type="button">B</button>
+        <button onclick="document.execCommand('italic')" type="button">I</button>
+        <button onclick="document.execCommand('underline')" type="button">U</button>
+        <button onclick="document.execCommand('justifyLeft')" type="button">&#8672;</button>
+        <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+        <button onclick="document.execCommand('justifyRight')" type="button">&#8674;</button>
+        <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+        <select onchange="document.execCommand('fontName', false, this.value)">
+          <option value='Arial'>Arial</option>
+          <option value='Georgia'>Georgia</option>
+          <option value='Tahoma'>Tahoma</option>
+        </select>
+        <select onchange="document.execCommand('fontSize',false,this.value)">
+          <option value='3'>Normal</option>
+          <option value='5'>Large</option>
+          <option value='7'>Huge</option>
+        </select>
+      </div>
+    </div>
+    <img src="https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?fit=crop&w=400&q=80" style="width:44%;min-width:180px;border-radius:13px;">
+  </div>
+`);
+
+initDraggableBlock('block-img-txt-p', `
+  <div style="display:flex;gap:24px;align-items:center;max-width:900px;margin:38px auto;flex-wrap:wrap;">
+    <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?fit=crop&w=400&q=80" style="width:44%;min-width:180px;border-radius:13px;">
+    <div style="flex:1;">
+      <div contenteditable="true" style="font-size:1.37em;font-family:Tahoma,Verdana,sans-serif;font-weight:900;color:#203448;outline:0;margin-bottom:8px;">Modern headline, ready to format!</div>
+      <div contenteditable="true" style="font-size:1.12em;font-family:Arial,sans-serif;color:#314058;min-height:36px;outline:0;">
+        Enter text, <b>bold</b>, <i>italic</i>, <u>underline</u>, <span style="color:#f75;">color</span>. 
+        <a href="https://example.com" target="_self">Link example</a>
+      </div>
+      <div style="margin-top:9px;">
+        <button onclick="document.execCommand('bold')" type="button">B</button>
+        <button onclick="document.execCommand('italic')" type="button">I</button>
+        <button onclick="document.execCommand('underline')" type="button">U</button>
+        <button onclick="document.execCommand('justifyLeft')" type="button">&#8672;</button>
+        <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+        <button onclick="document.execCommand('justifyRight')" type="button">&#8674;</button>
+        <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+        <select onchange="document.execCommand('fontName', false, this.value)">
+          <option value='Arial'>Arial</option>
+          <option value='Georgia'>Georgia</option>
+          <option value='Tahoma'>Tahoma</option>
+        </select>
+        <select onchange="document.execCommand('fontSize',false,this.value)">
+          <option value='3'>Normal</option>
+          <option value='5'>Large</option>
+          <option value='7'>Huge</option>
+        </select>
+      </div>
+    </div>
   </div>
 `);
 
 // Products
 initDraggableBlock('block-product-single', `
-  <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; max-width:290px; box-shadow:0 2px 8px #0002; margin:0 auto 16px auto;">
-    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Product+Image" style="width:100%;border-radius:5px; margin-bottom:12px;">
-    <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product Name</div>
-    <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product description goes here.</div>
-    <div style="font-weight:600; color:#36b786;">$19.95</div>
-    <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 42</div>
-    <button class="btn btn-primary">Add to Cart</button>
+  <div style="background:#fff;border-radius:15px;box-shadow:0 4px 24px #b3e5ff24;max-width:330px;margin:24px auto;padding:24px 18px;">
+    <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?fit=crop&w=320&q=80"
+         style="width:100%;border-radius:12px;margin-bottom:19px;box-shadow:0 3px 14px #ffe25a18;">
+    <div contenteditable="true" style="font-weight:900;font-size:1.29em;font-family:Segoe UI,Tahoma,sans-serif;color:#18306a;margin-bottom:5px;outline:0;text-align:center;">
+      Product Name Here
+    </div>
+    <div contenteditable="true" style="font-size:1.06em;font-family:Arial,Helvetica,sans-serif;color:#426;font-weight:600;outline:0;min-height:32px;text-align:center;margin-bottom:8px;">
+      Product description goes here. Add <b>bold</b>, <u>underline</u>, color <span style="color:#5bddff;">text</span>.
+    </div>
+    <div style="text-align:center;font-size:1.17em;font-weight:800;margin-bottom:7px;color:#32c988;">
+      <span contenteditable="true" style="outline:0;cursor:text;">$24.99</span>
+    </div>
+    <div style="text-align:center;font-size:0.98em;margin-bottom:10px;color:#808c97;">
+      In Stock: <span contenteditable="true" style="outline:0;cursor:text;">20</span>
+    </div>
+    <div style="text-align:center;margin-top:15px;">
+      <button style="background:linear-gradient(90deg,#2ce5ee,#5bddff 80%);color:#111;font-weight:800;font-size:1.12em;padding:13px 38px;border:none;border-radius:9px;box-shadow:0 3px 10px #5bddff22;letter-spacing:.01em;cursor:pointer;transition:.2s;">
+        Add to Cart
+      </button>
+    </div>
+    <div style="margin:13px 0 0 0;text-align:center;">
+      <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;">B</button>
+      <button onclick="document.execCommand('italic')" type="button">I</button>
+      <button onclick="document.execCommand('underline')" type="button">U</button>
+      <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+      <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+      <select onchange="document.execCommand('fontName', false, this.value)">
+        <option value='Arial'>Arial</option>
+        <option value='Georgia'>Georgia</option>
+        <option value='Tahoma'>Tahoma</option>
+      </select>
+      <select onchange="document.execCommand('fontSize',false,this.value)">
+        <option value='3'>Normal</option>
+        <option value='5'>Large</option>
+        <option value='7'>Huge</option>
+      </select>
+    </div>
   </div>
 `);
 
 initDraggableBlock('block-product-multi', `
-  <div class="product-list" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center; margin:0 auto 16px auto;">
-    <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
-      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Product+1" style="width:100%;border-radius:5px; margin-bottom:12px;">
-      <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 1</div>
-      <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 1 description.</div>
-      <div style="font-weight:600; color:#36b786;">$14.99</div>
-      <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 22</div>
-      <button class="btn btn-primary">Add to Cart</button>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;justify-content:center;margin:24px 0;">
+    <div style="background:#fff;border-radius:15px;box-shadow:0 4px 24px #b3e5ff24;max-width:300px;padding:22px 15px;">
+      <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?fit=crop&w=300&q=80"
+           style="width:100%;border-radius:12px;margin-bottom:13px;box-shadow:0 3px 14px #ffe25a18;">
+      <div contenteditable="true" style="font-weight:800;font-size:1.22em;font-family:Segoe UI,Tahoma,sans-serif;color:#18306a;margin-bottom:4px;outline:0;text-align:center;">
+        Product 1
+      </div>
+      <div contenteditable="true" style="font-size:1.04em;font-family:Arial,Helvetica,sans-serif;color:#426;font-weight:600;outline:0;min-height:28px;text-align:center;margin-bottom:7px;">
+        Description. <span style="color:#db8abf;">Colorful</span>, <b>bold</b>, <u>underline</u>.
+      </div>
+      <div style="text-align:center;font-size:1.13em;font-weight:800;margin-bottom:7px;color:#32c988;">
+        <span contenteditable="true" style="outline:0;cursor:text;">$19.95</span>
+      </div>
+      <div style="text-align:center;font-size:0.97em;margin-bottom:8px;color:#808c97;">
+        In Stock: <span contenteditable="true" style="outline:0;cursor:text;">12</span>
+      </div>
+      <div style="text-align:center;margin-top:13px;">
+        <button style="background:linear-gradient(90deg,#2ce5ee,#5bddff 80%);color:#111;font-weight:800;font-size:1.07em;padding:10px 26px;border:none;border-radius:8px;box-shadow:0 2px 8px #5bddff22;letter-spacing:.01em;cursor:pointer;transition:.19s;">
+          Add to Cart
+        </button>
+      </div>
     </div>
-    <div class="product-card" style="background:#fff; border-radius:8px; padding:20px; width:270px; box-shadow:0 2px 8px #0002;">
-      <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771737549/azzvbyblcytbqtr2vxdn.jpg?text=Product+2" style="width:100%;border-radius:5px; margin-bottom:12px;">
-      <div style="font-weight:600; font-size:1.1em; color:#27384e;">Product 2</div>
-      <div style="color:#7e8e9f; font-size:0.96em; margin-bottom:6px;">Product 2 description.</div>
-      <div style="font-weight:600; color:#36b786;">$35.00</div>
-      <div style="font-size:0.92em; color:#808c97; margin-bottom:10px;">In Stock: 15</div>
-      <button class="btn btn-primary">Add to Cart</button>
+    <div style="background:#fff;border-radius:15px;box-shadow:0 4px 24px #db8abf22;max-width:300px;padding:22px 15px;">
+      <img src="https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?fit=crop&w=300&q=80"
+           style="width:100%;border-radius:12px;margin-bottom:13px;box-shadow:0 3px 14px #ffe25a18;">
+      <div contenteditable="true" style="font-weight:800;font-size:1.22em;font-family:Georgia,serif;color:#942ea8;margin-bottom:4px;outline:0;text-align:center;">
+        Product 2
+      </div>
+      <div contenteditable="true" style="font-size:1.04em;font-family:Tahoma,Verdana,sans-serif;color:#316d6f;font-weight:600;outline:0;min-height:28px;text-align:center;margin-bottom:7px;">
+        Edit this. <span style="color:#5bddff;">Bright</span>, <b>bold</b>, <i>italic</i>.
+      </div>
+      <div style="text-align:center;font-size:1.13em;font-weight:800;margin-bottom:7px;color:#db8abf;">
+        <span contenteditable="true" style="outline:0;cursor:text;">$31.00</span>
+      </div>
+      <div style="text-align:center;font-size:0.97em;margin-bottom:8px;color:#808c97;">
+        In Stock: <span contenteditable="true" style="outline:0;cursor:text;">9</span>
+      </div>
+      <div style="text-align:center;margin-top:13px;">
+        <button style="background:linear-gradient(90deg,#db8abf,#ffe25a 95%);color:#234;font-weight:800;font-size:1.07em;padding:10px 26px;border:none;border-radius:8px;box-shadow:0 2px 8px #db8abf22;letter-spacing:.01em;cursor:pointer;transition:.19s;">
+          Add to Cart
+        </button>
+      </div>
     </div>
   </div>
 `);
 
 // Text
 initDraggableBlock('block-btn', `
-  <div style="max-width:680px;margin:34px auto;text-align:center;">
-    <div contenteditable="true" style="font-size:1.45em;font-weight:900;color:#21253b;padding:13px 0;outline:none;border-bottom:2.5px solid #5bddff;letter-spacing:.02em;transition:.2s;">
-      Edit this headline. Make it <b>bold</b>, <i>italic</i>, <u>underlined</u>, <span style='color:#db8abf;'>colored</span>, or <span style='font-size:1.3em;'>bigger</span>.
+  <div style="max-width:780px;margin:36px auto;text-align:center;">
+    <div contenteditable="true" style="font-size:1.55em;font-family:Georgia,serif;font-weight:900;color:#2a1755;padding:15px 0;outline:none;border-bottom:3px solid #5bddff;">
+      Big, bold headline—Edit and format!
     </div>
     <div style="margin-top:11px;">
-      <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#098;font-size:1.07em;margin-right:4px;">B</button>
-      <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;font-size:1.07em;margin-right:4px;">I</button>
-      <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#b07be3;font-size:1.07em;margin-right:4px;">U</button>
-      <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
-      <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
-      <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+      <button onclick="document.execCommand('bold')" type="button">B</button>
+      <button onclick="document.execCommand('italic')" type="button">I</button>
+      <button onclick="document.execCommand('underline')" type="button">U</button>
+      <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+      <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+      <select onchange="document.execCommand('fontName', false, this.value)">
+        <option value='Arial'>Arial</option>
+        <option value='Georgia'>Georgia</option>
+        <option value='Tahoma'>Tahoma</option>
+      </select>
+      <select onchange="document.execCommand('fontSize',false,this.value)">
+        <option value='3'>Normal</option>
+        <option value='5'>Large</option>
+        <option value='7'>Huge</option>
+      </select>
     </div>
   </div>
 `);
 
 initDraggableBlock('block-paragraph', `
-  <div style="max-width:720px;margin:36px auto;padding:26px 20px 18px 20px;box-shadow:0 1px 8px #e9f2fb44;border-radius:11px;background:#f8fcff;">
-    <div contenteditable="true" style="min-height:42px;font-size:1.13em;color:#234;font-weight:600;outline:none;line-height:1.55;">
-      Type or paste your paragraph. Highlight text and use the buttons below (or your browser’s formatting toolbar) for <b>bold</b>, <i>italic</i>, <u>underline</u>, color, font, alignment, or size.
+  <div style="max-width:800px;margin:36px auto;padding:28px 18px 18px 18px;box-shadow:0 1px 8px #e9f2fb44;border-radius:12px;background:#f8fcff;">
+    <div contenteditable="true" style="min-height:44px;font-size:1.13em;font-family:Tahoma,Verdana,sans-serif;color:#234;font-weight:600;outline:none;line-height:1.54;">
+      Type your text here. Highlight to <b>bold</b>, <u>underline</u>, <span style="color:#2ce5ee;">color</span>, or <a href="https://example.com" target="_blank">link</a>.
     </div>
     <div style="margin-top:12px;">
-      <button onclick="document.execCommand('bold')" type="button" style="font-weight:bold;color:#098;font-size:1.07em;margin-right:4px;">B</button>
-      <button onclick="document.execCommand('italic')" type="button" style="font-style:italic;color:#355098;font-size:1.07em;margin-right:4px;">I</button>
-      <button onclick="document.execCommand('underline')" type="button" style="text-decoration:underline;color:#b07be3;font-size:1.07em;margin-right:4px;">U</button>
-      <button onclick="document.execCommand('justifyLeft')" type="button" style="color:#355098;">&#8672;</button>
-      <button onclick="document.execCommand('justifyCenter')" type="button" style="color:#355098;">&#8596;</button>
-      <button onclick="document.execCommand('justifyRight')" type="button" style="color:#355098;">&#8674;</button>
+      <button onclick="document.execCommand('bold')" type="button">B</button>
+      <button onclick="document.execCommand('italic')" type="button">I</button>
+      <button onclick="document.execCommand('underline')" type="button">U</button>
+      <button onclick="document.execCommand('justifyLeft')" type="button">&#8672;</button>
+      <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+      <button onclick="document.execCommand('justifyRight')" type="button">&#8674;</button>
+      <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+      <select onchange="document.execCommand('fontName', false, this.value)">
+        <option value='Arial'>Arial</option>
+        <option value='Georgia'>Georgia</option>
+        <option value='Tahoma'>Tahoma</option>
+      </select>
+      <select onchange="document.execCommand('fontSize',false,this.value)">
+        <option value='3'>Normal</option>
+        <option value='5'>Large</option>
+        <option value='7'>Huge</option>
+      </select>
     </div>
   </div>
 `);
 
 initDraggableBlock('block-about', `
-  <section style="margin:32px auto; max-width:560px; background:#f2f7fd; border-radius:10px; padding:28px 22px;">
-    <h3 style="color:#21506a; margin-bottom:10px;">About Us</h3>
-    <div style="color:#2b3952; font-size:1.04em;">
-      {{ business.about_us }}
+  <section style="max-width:710px;margin:42px auto;background:#f7fcfc;border-radius:17px;box-shadow:0 8px 32px #ddd9ffe8;padding:38px 22px;">
+    <h2 contenteditable="true" style="font-size:2em;font-weight:900;font-family:Georgia,serif;margin-bottom:13px;color:#1a3a77;outline:0;">
+      Edit About Us Headline
+    </h2>
+    <div contenteditable="true" style="min-height:46px;font-size:1.13em;font-family:Tahoma,Verdana,sans-serif;color:#2b3952;outline:0;line-height:1.44;">
+      Add your company story. <b>Bold.</b> <u>Underline.</u> <i>Italic.</i> <span style="color:#dc74c6;">Colors</span>.
+      <a href="https://example.com" target="_blank">Editable link</a>
+    </div>
+    <div style="margin-top:12px;">
+      <button onclick="document.execCommand('bold')" type="button">B</button>
+      <button onclick="document.execCommand('italic')" type="button">I</button>
+      <button onclick="document.execCommand('underline')" type="button">U</button>
+      <button onclick="document.execCommand('justifyLeft')" type="button">&#8672;</button>
+      <button onclick="document.execCommand('justifyCenter')" type="button">&#8596;</button>
+      <button onclick="document.execCommand('justifyRight')" type="button">&#8674;</button>
+      <button onclick="var url=prompt('Link:','https://');if(url)document.execCommand('createLink',false,url);" type="button">Link</button>
+      <select onchange="document.execCommand('fontName', false, this.value)">
+        <option value='Arial'>Arial</option>
+        <option value='Georgia'>Georgia</option>
+        <option value='Tahoma'>Tahoma</option>
+      </select>
+      <select onchange="document.execCommand('fontSize',false,this.value)">
+        <option value='3'>Normal</option>
+        <option value='5'>Large</option>
+        <option value='7'>Huge</option>
+      </select>
     </div>
   </section>
 `);
@@ -526,19 +710,22 @@ initDraggableBlock('block-footer-main', `
 
 // Menu
 initDraggableBlock('block-dropdown-menu', `
-  <nav class="dropdown-nav" style="display:flex;align-items:center;justify-content:center;background:#21253B;border-radius:10px;padding:14px 28px;margin:26px auto;max-width:650px;box-shadow:0 2px 18px #1a2b3d22;position:relative;">
-    <a href="#" style="color:#fff;font-weight:700;font-size:1.08em;margin-right:26px;text-decoration:none;">Home</a>
+  <nav class="dropdown-nav" style="display:flex;align-items:center;justify-content:center;background:#21253B;border-radius:10px;padding:14px 28px;margin:26px auto;max-width:650px;box-shadow:0 2px 18px #1a2b3d22;">
+    <a href="#" contenteditable="true" style="color:#fff;font-weight:700;font-size:1.08em;margin-right:26px;text-decoration:none;">Home</a>
     <div class="dropdown" style="position:relative;display:inline-block;">
       <button class="dd-btn" style="background:#355098;color:#ffe25a;border:none;padding:8px 22px 8px 15px;border-radius:8px;font-weight:700;font-size:1.02em;cursor:pointer;outline:none;box-shadow:0 3px 12px #25336518;">
         Products <span style="margin-left:7px;font-size:95%;">▼</span>
       </button>
       <div class="dropdown-menu" style="display:none;position:absolute;left:0;top:110%;background:#fff;border-radius:8px;box-shadow:0 2px 18px #20335522;min-width:166px;z-index:30;padding:8px 0;">
-        <a href="#" style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Featured</a>
-        <a href="#" style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Basket</a>
-        <a href="#" style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Sale</a>
+        <a href="https://example.com/featured" target="_blank" contenteditable="true" title="Double-click to rename. Right-click to set link/target." style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Featured</a>
+        <a href="#basket" target="_self" contenteditable="true" title="Double-click to rename. Right-click to set link/target." style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Basket</a>
+        <a href="#sale" target="_blank" contenteditable="true" title="Double-click to rename. Right-click to set link/target." style="display:block;padding:12px 19px;color:#235;text-decoration:none;">Sale</a>
       </div>
     </div>
-    <a href="#" style="color:#ffe25a;font-weight:700;font-size:1.07em;margin-left:26px;text-decoration:none;">Contact</a>
+    <a href="#" contenteditable="true" style="color:#ffe25a;font-weight:700;font-size:1.07em;margin-left:26px;text-decoration:none;">Contact</a>
+    <div style="display:block;width:0;height:0;overflow:hidden;">
+      <small>Tip: Double-click links to rename. Right-click a link to edit URL/target.</small>
+    </div>
   </nav>
 `);
 
@@ -568,8 +755,8 @@ initDraggableBlock('block-embed-script', `
 `);
 
 initDraggableBlock('block-custom-html', `
-  <div contenteditable="true" style="border:2px dashed #5dd3ea;min-height:48px;padding:14px;overflow:auto;background:#fafdff;border-radius:8px;font-family:monospace;">
-    Paste your custom HTML here
+  <div contenteditable="true" style="min-height:40px;padding:12px;border:2px dashed #5dd3ea;background:#fafdff;font-family:monospace;">
+    &lt;iframe src="https://www.youtube.com/embed/xyz..." width="320" height="180" allowfullscreen&gt;&lt;/iframe&gt;
   </div>
 `);
 
