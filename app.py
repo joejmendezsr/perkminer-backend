@@ -182,7 +182,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 csrf = CSRFProtect(app)
 logging.basicConfig(level=logging.INFO)
-db = SQLAlchemy(app)
 mail = Mail(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
