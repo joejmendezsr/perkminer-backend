@@ -182,10 +182,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 csrf = CSRFProtect(app)
 logging.basicConfig(level=logging.INFO)
-mail = Mail(app)
-bcrypt = Bcrypt(app)
-login_manager = LoginManager(app)
-login_manager.login_view = "login"
+
 migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
@@ -796,41 +793,6 @@ class Invite(db.Model):
 # Add others (interaction, message, etc.) as needed here
 
 # ---------------- STORE ROUTES ----------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @app.route('/store_terms', methods=['GET', 'POST'])
 @business_login_required
