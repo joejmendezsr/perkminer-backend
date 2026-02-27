@@ -34,6 +34,8 @@ from flask_login import current_user
 from flask import request, render_template
 from sqlalchemy import func
 from flask_mail import Message
+from flask_login import UserMixin
+from flask_login import login_required
 
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -60,39 +62,6 @@ class EditUserForm(FlaskForm):
     name = StringField('Name', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Save')
-=======
-from flask import Flask, request, redirect, url_for, render_template, flash, session, abort, jsonify, send_from_directory, Response
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message as MailMessage
-from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_wtf import FlaskForm, CSRFProtect, RecaptchaField
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField, TextAreaField, Form
-from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
-from werkzeug.utils import secure_filename
-from functools import wraps
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-import os
-import stripe
-import logging
-from datetime import datetime
-import json
-from sqlalchemy import or_, and_, func, literal
-from flask_migrate import Migrate
-from datetime import datetime, date
-import os, re, random, string, time, logging, csv, uuid, hmac, hashlib
-from io import StringIO, BytesIO
-import cloudinary
-import cloudinary.uploader
-import qrcode
-from flask import session, request, redirect, url_for, flash, render_template
-from wtforms import StringField, Form
-from wtforms.validators import DataRequired, Email
-from flask import Response, send_file, url_for
-from flask import request, jsonify
-from flask import Flask, render_template, session, redirect, url_for, flash
-app = Flask(__name__)
-
 
 # --- Cart Logic ---
 def get_cart():
@@ -155,30 +124,6 @@ def send_customer_receipt(buyer_email, product_name, amount, business_name):
         import logging
         logging.error("Customer receipt email failed: %s", e)
 
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
-def admin_required(f):
-    @wraps(f)
-    @login_required
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not any(r.name == 'super_admin' for r in current_user.roles):
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-<<<<<<< HEAD
-=======
-
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
-def role_required(role_name):
-    def decorator(f):
-        @wraps(f)
-        @login_required
-        def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated or not current_user.has_role(role_name):
-                abort(403)
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
-
 def get_interaction_for_business_and_user(business_id, user_id):
     return Interaction.query.filter_by(
         business_id=business_id,
@@ -186,16 +131,6 @@ def get_interaction_for_business_and_user(business_id, user_id):
         status="active"
     ).first()
 
-def business_login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('business_id'):
-            flash('Please log in as a business to access this page.', 'warning')
-            return redirect(url_for('business_login', next=request.path))
-        return f(*args, **kwargs)
-    return decorated_function
-
-<<<<<<< HEAD
 import csv
 from io import StringIO, BytesIO
 from flask import Response, send_file, url_for
@@ -210,8 +145,6 @@ import qrcode
 import uuid  # <-- only needs to be here once! Put with other imports
 import stripe
 
-=======
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -219,11 +152,8 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
-<<<<<<< HEAD
 app.config['SECRET_KEY'] = 'perkminer_hardcoded_secret_2026'
-=======
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'perkminer_hardcoded_secret_2026')
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -239,7 +169,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-<<<<<<< HEAD
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 db = SQLAlchemy(app)
@@ -252,8 +181,7 @@ mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 csrf = CSRFProtect(app)
-=======
-csrf = CSRFProtect(app)
+logging.basicConfig(level=logging.INFO)
 db = SQLAlchemy(app)
 mail = Mail(app)
 bcrypt = Bcrypt(app)
@@ -267,209 +195,15 @@ stripe.api_key = os.environ.get("STRIPE_API_KEY")
 
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
 YOUR_DOMAIN = "https://perkminer.com"
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 logging.basicConfig(level=logging.INFO)
 
 SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
 MIN_PASSWORD_LENGTH = 8
 
-<<<<<<< HEAD
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(200), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-    referral_code = db.Column(db.String(32), unique=True)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    business_referral_id = db.Column(db.String(32))
-    email_confirmed = db.Column(db.Boolean, default=False)
-    email_code = db.Column(db.String(16))
-    name = db.Column(db.String(100))
-    profile_photo = db.Column(db.String(200))
-    roles = db.relationship('Role', secondary='user_roles', backref='users')
-    is_suspended = db.Column(db.Boolean, default=False)
-
-    def has_role(self, role_name):
-        return any(role.name == role_name for role in self.roles)
-
-class Business(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    business_name = db.Column(db.String(100), unique=True, nullable=False)
-    listing_type = db.Column(db.String(50))
-    category = db.Column(db.String(50), nullable=False, default="Other")
-    business_email = db.Column(db.String(200), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-    referral_code = db.Column(db.String(32), unique=True)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('business.id'))
-    user_sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    email_confirmed = db.Column(db.Boolean, default=False)
-    email_code = db.Column(db.String(16))
-    profile_photo = db.Column(db.String(200))
-    phone_number = db.Column(db.String(30))
-    address = db.Column(db.String(255))
-    latitude = db.Column(db.Float)
-    longitude = db.Column(db.Float)
-    hours_of_operation = db.Column(db.String(100))
-    website_url = db.Column(db.String(255))
-    about_us = db.Column(db.Text)
-    service_1 = db.Column(db.String(100))
-    service_2 = db.Column(db.String(100))
-    service_3 = db.Column(db.String(100))
-    service_4 = db.Column(db.String(100))
-    service_5 = db.Column(db.String(100))
-    service_6 = db.Column(db.String(100))
-    service_7 = db.Column(db.String(100))
-    service_8 = db.Column(db.String(100))
-    service_9 = db.Column(db.String(100))
-    service_10 = db.Column(db.String(100))
-    search_keywords = db.Column(db.String(500))
-    draft_business_name = db.Column(db.String(100))
-    draft_listing_type = db.Column(db.String(50))
-    draft_category = db.Column(db.String(50), default="Other")
-    draft_profile_photo = db.Column(db.String(200))
-    draft_phone_number = db.Column(db.String(30))
-    draft_address = db.Column(db.String(255))
-    draft_latitude = db.Column(db.Float)
-    draft_longitude = db.Column(db.Float)
-    draft_hours_of_operation = db.Column(db.String(100))
-    draft_website_url = db.Column(db.String(255))
-    draft_about_us = db.Column(db.Text)
-    draft_service_1 = db.Column(db.String(100))
-    draft_service_2 = db.Column(db.String(100))
-    draft_service_3 = db.Column(db.String(100))
-    draft_service_4 = db.Column(db.String(100))
-    draft_service_5 = db.Column(db.String(100))
-    draft_service_6 = db.Column(db.String(100))
-    draft_service_7 = db.Column(db.String(100))
-    draft_service_8 = db.Column(db.String(100))
-    draft_service_9 = db.Column(db.String(100))
-    draft_service_10 = db.Column(db.String(100))
-    draft_search_keywords = db.Column(db.String(500))
-    account_balance = db.Column(db.Float, nullable=False, default=0.0)
-    ad_fee = db.Column(db.Float)
-    business_registration_doc = db.Column(db.String(255))  # stores filename or URL (S3, cloud, or local)
-    featured = db.Column(db.Boolean, default=False)          # True if currently featured
-    rank = db.Column(db.Float, default=0.0)                  # For algorithmic ranking
-    manual_feature = db.Column(db.Boolean, default=False)     # Admin sets this manually
-    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # If your admin is a User, use their User ID
-
-    is_suspended = db.Column(db.Boolean, default=False)
-    status = db.Column(db.String(20), nullable=False, default='not_submitted')
-
-class Invite(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    inviter_id = db.Column(db.Integer, nullable=True)
-    inviter_type = db.Column(db.String(16), nullable=False)      # 'user' or 'business'
-    invitee_email = db.Column(db.String(200), nullable=False)
-    invitee_type = db.Column(db.String(16), nullable=False)      # 'user' or 'business'
-    referral_code = db.Column(db.String(32), nullable=False)
-    status = db.Column(db.String(16), nullable=False, default='pending')
-    accepted_id = db.Column(db.Integer, nullable=True)
-    accepted_at = db.Column(db.DateTime)
-
-class Quote(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False, unique=True)
-    amount = db.Column(db.Float, nullable=False)
-    details = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    interaction = db.relationship('Interaction', backref=db.backref('quote', uselist=False))
-
-class UserTransaction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    transaction_id = db.Column(db.String(48), nullable=False, index=True)
-    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
-    date_time = db.Column(db.DateTime, default=datetime.utcnow)
-    amount = db.Column(db.Float, nullable=False)
-    user_referral_id = db.Column(db.String(32), nullable=False)
-    cash_back = db.Column(db.Float, nullable=False)
-    tier2_user_referral_id = db.Column(db.String(32), nullable=False)
-    tier2_commission = db.Column(db.Float, nullable=False)
-    tier3_user_referral_id = db.Column(db.String(32), nullable=False)
-    tier3_commission = db.Column(db.Float, nullable=False)
-    tier4_user_referral_id = db.Column(db.String(32), nullable=False)
-    tier4_commission = db.Column(db.Float, nullable=False)
-    tier5_user_referral_id = db.Column(db.String(32), nullable=False)
-    tier5_commission = db.Column(db.Float, nullable=False)
-    business_referral_id = db.Column(db.String(32))
-    tier1_business_user_referral_id = db.Column(db.String(32))
-    tier1_business_user_commission = db.Column(db.Float)
-    tier2_business_user_referral_id = db.Column(db.String(32))
-    tier2_business_user_commission = db.Column(db.Float)
-    tier3_business_user_referral_id = db.Column(db.String(32))
-    tier3_business_user_commission = db.Column(db.Float)
-    tier4_business_user_referral_id = db.Column(db.String(32))
-    tier4_business_user_commission = db.Column(db.Float)
-    tier5_business_user_referral_id = db.Column(db.String(32))
-    tier5_business_user_commission = db.Column(db.Float)
-
-class BusinessTransaction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    transaction_id = db.Column(db.String(48), nullable=False, index=True)
-    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
-    date_time = db.Column(db.DateTime, default=datetime.utcnow)
-    amount = db.Column(db.Float, nullable=False)
-    business_referral_id = db.Column(db.String(32), nullable=False)
-    cash_back = db.Column(db.Float, nullable=False)
-    tier2_business_referral_id = db.Column(db.String(32), nullable=False)
-    tier2_commission = db.Column(db.Float, nullable=False)
-    tier3_business_referral_id = db.Column(db.String(32), nullable=False)
-    tier3_commission = db.Column(db.Float, nullable=False)
-    tier4_business_referral_id = db.Column(db.String(32), nullable=False)
-    tier4_commission = db.Column(db.Float, nullable=False)
-    tier5_business_referral_id = db.Column(db.String(32), nullable=False)
-    tier5_commission = db.Column(db.Float, nullable=False)
-    ad_fee = db.Column(db.Float)
-
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-
-class UserRoles(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
-
-    user = db.relationship('User', backref=db.backref('user_roles', cascade='all, delete-orphan'))
-    role = db.relationship('Role', backref=db.backref('user_roles', cascade='all, delete-orphan'))
-
-from datetime import datetime
-
-class Interaction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
-    service_type = db.Column(db.String(100), nullable=False)
-    details = db.Column(db.Text, nullable=False)
-    budget_low = db.Column(db.Float)
-    budget_high = db.Column(db.Float)
-    status = db.Column(db.String(32), default="active")  # active, closed, ended, etc.
-    referral_code = db.Column(db.String(32))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    awaiting_finalization = db.Column(db.Boolean, default=False)
-    awaiting_payment = db.Column(db.Boolean, default=False)
-    # relationships for easier querying (optional)
-    user = db.relationship('User', backref='interactions', lazy=True)
-    business = db.relationship('Business', backref='interactions', lazy=True)
-
-from datetime import datetime
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
-    sender_type = db.Column(db.String(16), nullable=False)  # "user" or "business"
-    sender_id = db.Column(db.Integer, nullable=False)        # User or business id, based on sender_type
-    text = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    file_url = db.Column(db.String(255))  # stores the filename or URL
-    file_name = db.Column(db.String(120))  # original name for display
-    interaction = db.relationship('Interaction', backref='messages', lazy=True)
-=======
 # ----------------- WTForms (All Your Forms) -------------------
 class ServiceRequestForm(FlaskForm):
     service_type = SelectField(
@@ -491,7 +225,6 @@ class ServiceRequestForm(FlaskForm):
 class TwoFactorForm(FlaskForm):
     code = StringField('Enter the 6-digit code', validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField('Verify')
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 
 class EditUserForm(FlaskForm):
     name = StringField('Name', validators=[Optional()])
@@ -506,12 +239,11 @@ class BusinessEditForm(FlaskForm):
     address = StringField('Address', validators=[Optional()])
     submit = SubmitField('Save')
 
-<<<<<<< HEAD
 EMAIL_REGEX = r'^[\w.-]+@[\w.-]+.\w{2,}$'
 def valid_email(email): return re.match(EMAIL_REGEX, email or "")
 def valid_password(pw): return pw and len(pw) >= MIN_PASSWORD_LENGTH
 def random_email_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-=======
+
 class InviteForm(FlaskForm):
     invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Send Invitation')
@@ -607,10 +339,6 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField('Reset Password')
 
-# ---------------------- Validators, Roles, and Utilities ----------------------
-
-EMAIL_REGEX = r'^[\w.-]+@[\w.-]+\.\w{2,}$'
-
 def valid_email(email):
     return re.match(EMAIL_REGEX, email or "")
 
@@ -621,7 +349,6 @@ def random_email_code():
     import string, random
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def random_referral_code(email):
     base_code = "REF" + (email.split("@")[0].replace(".", "")[:12])
     code = base_code
@@ -630,10 +357,7 @@ def random_referral_code(email):
         code = f"{base_code}{counter}"
         counter += 1
     return code
-<<<<<<< HEAD
-=======
 
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def random_business_code(business_name):
     base_code = "BIZ" + (business_name.replace(" ", "")[:12])
     code = base_code
@@ -644,16 +368,14 @@ def random_business_code(business_name):
     return code
 
 def send_email(to, subject, html_body):
-<<<<<<< HEAD
     msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
-=======
     msg = MailMessage(
         subject=subject,
         recipients=[to],
         html=html_body,
         sender=app.config['MAIL_USERNAME']
     )
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
+
     try:
         mail.send(msg)
     except Exception as e:
@@ -775,10 +497,7 @@ def build_invite_email(inviter_name, join_url, video_url):
 </html>
     """
     return html_body
-<<<<<<< HEAD
-=======
 
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def send_verification_email(user):
     code = user.email_code
     verify_url = url_for("activate", code=code, _external=True)
@@ -792,10 +511,7 @@ def send_business_verification_email(biz):
     send_email(biz.business_email, "Confirm your PerkMiner business email!", html_body)
 
 def allowed_file(filename):
-<<<<<<< HEAD
-=======
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def generate_reset_token(email, user_type):
@@ -818,96 +534,6 @@ def send_reset_email(recipient_email, reset_url):
         "<p>If you didn't request this, please ignore this email.</p>"
     )
 
-<<<<<<< HEAD
-class InviteForm(FlaskForm):
-    invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Send Invitation')
-class BusinessInviteForm(FlaskForm):
-    invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Send Invitation')
-class VerifyCodeForm(FlaskForm):
-    code = StringField('Code', validators=[DataRequired()])
-    submit = SubmitField('Verify')
-class RegisterForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
-    referral_code = StringField('Referral Code', validators=[Optional()])
-    recaptcha = RecaptchaField()
-    submit = SubmitField('Register')
-class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    recaptcha = RecaptchaField()
-    submit = SubmitField('Login')
-class RewardForm(FlaskForm):
-    invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
-    downline_level = SelectField(
-        'Downline Level',
-        choices=[
-            ('1', 'Tier 1: (your purchases)'), 
-            ('2', 'Tier 2: (direct referral purchases)'),
-            ('3', 'Tier 3: (Tier 2 referral purchases)'),
-            ('4', 'Tier 4: (Tier 3 referral purchases)'),
-            ('5', 'Tier 5: (Tier 4 referral purchases)')
-        ],
-        validators=[DataRequired()],
-        default='1'
-    )
-    submit = SubmitField('Calculate My Reward')
-class BusinessRegisterForm(FlaskForm):
-    business_name = StringField('Business Name', validators=[DataRequired()])
-    business_email = StringField('Business Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH)])
-    referral_code = StringField('Referral Code', validators=[Optional()])
-    submit = SubmitField('Register')
-class BusinessLoginForm(FlaskForm):
-    business_email = StringField('Business Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    recaptcha = RecaptchaField()
-    submit = SubmitField('Login')
-class BusinessRewardForm(FlaskForm):
-    invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
-    downline_level = SelectField(
-        'Downline Level',
-        choices=[
-            ('1', 'Tier 1: (your invoices)'), 
-            ('2', 'Tier 2: (direct referral invoices)'),
-            ('3', 'Tier 3: (Tier 2 referral invoices)'),
-            ('4', 'Tier 4: (Tier 3 referral invoices)'),
-            ('5', 'Tier 5: (Tier 4 referral invoices)')
-        ],
-        validators=[DataRequired()],
-        default='1'
-    )
-    submit = SubmitField('Calculate My Reward')
-class UserProfileForm(FlaskForm):
-    name = StringField('Name', validators=[Optional(), Length(max=100)])
-    profile_photo = FileField('Upload Profile Photo')
-    submit = SubmitField('Save Profile')
-class UserProfileForm(FlaskForm):
-    name = StringField('Name', validators=[Optional(), Length(max=100)])
-    profile_photo = FileField('Upload Profile Photo')
-    submit = SubmitField('Save Profile')
-class BusinessProfileForm(FlaskForm):
-    business_name = StringField('Business Name', validators=[Optional(), Length(max=100)])
-    profile_photo = FileField('Upload Profile Photo')
-    phone_number = StringField('Phone Number', validators=[Optional(), Length(max=30)])
-    address = StringField('Address', validators=[Optional(), Length(max=255)])
-    latitude = StringField('Latitude', validators=[Optional()])
-    longitude = StringField('Longitude', validators=[Optional()])
-    submit = SubmitField('Save Profile')
-
-class EmptyForm(FlaskForm):
-    submit = SubmitField('Submit')
-
-class ForgotPasswordForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Send reset link')
-
-class ResetPasswordForm(FlaskForm):
-    password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
-    submit = SubmitField('Reset Password')
-=======
 # ---------------------- Role & Access Control Decorators -----------------------
 
 def admin_required(f):
@@ -945,8 +571,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ---------------------- Core Database Models ----------------------
-from flask_login import UserMixin
-from datetime import datetime
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -961,6 +585,7 @@ class User(db.Model, UserMixin):
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
+
     def has_role(self, role_name):
         return any(role.name == role_name for role in self.roles)
 
@@ -1173,6 +798,41 @@ class Invite(db.Model):
 # Add others (interaction, message, etc.) as needed here
 
 # ---------------- STORE ROUTES ----------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @app.route('/store_terms', methods=['GET', 'POST'])
 @business_login_required
@@ -1824,7 +1484,6 @@ def product_detail(product_id):
 def edit_variant(variant_id):
     # Edit product variant (size/color/etc.)
     return render_template('edit_variant.html')
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 
 @app.route("/admin-roles")
 @login_required
@@ -1835,11 +1494,6 @@ def admin_roles_landing():
 def usd(value):
     return "${:,.2f}".format(value or 0.0)
 
-<<<<<<< HEAD
-from sqlalchemy import func
-from flask import request, render_template
-=======
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 # import Business, BusinessTransaction, UserTransaction as before
 
 @app.route("/")
@@ -2992,8 +2646,6 @@ def payment_qr_redirect(ref):
             return "No active session found for this customer.", 404
     # This part runs if the QR was scanned by anyone who is NOT a logged-in business.
     return render_template("qr_user_landing.html", user=user)
-
-from datetime import datetime
 
 @app.route("/business/fund-account", methods=["GET", "POST"])
 @business_login_required
@@ -4357,7 +4009,6 @@ def finance_dashboard():
     misc_services = operating_capital * 0.15
 
     # Silent Partners breakdown (with per-partner cap)
-<<<<<<< HEAD
     tito = min(silent_partners * 0.4525, 5000000)
     pedro = min(silent_partners * 0.1725, 1000000)
     paul_tara = min(silent_partners * 0.0875, 500000)
@@ -4376,7 +4027,6 @@ def finance_dashboard():
     ana_pepe = min(silent_partners * 0.01, 50000)
     karen = min(silent_partners * 0.01, 50000)
     raul = min(silent_partners * 0.01, 50000)
-=======
     marjorie = min(silent_partners * 0.20, 20000000)
     tito = min(silent_partners * 0.15, 10000000)
     pedro = min(silent_partners * 0.12, 1000000)
@@ -4406,7 +4056,6 @@ def finance_dashboard():
     loida = min(silent_partners * 0.01, 100000)
     milvia = min(silent_partners * 0.01, 100000)
     shelly = min(silent_partners * 0.01, 100000)
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 
     summary = dict(
         total_ad_revenue=f"{total_ad_revenue:,.2f}",
@@ -4424,10 +4073,7 @@ def finance_dashboard():
         employees=f"{employees:,.2f}",
         webapp_fees=f"{webapp_fees:,.2f}",
         misc_services=f"{misc_services:,.2f}",
-<<<<<<< HEAD
-=======
         marjorie=f"{marjorie:,.2f}",
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
         tito=f"{tito:,.2f}",
         pedro=f"{pedro:,.2f}",
         paul_tara=f"{paul_tara:,.2f}",
@@ -4440,18 +4086,13 @@ def finance_dashboard():
         ramico=f"{ramico:,.2f}",
         michael=f"{michael:,.2f}",
         manuela=f"{manuela:,.2f}",
-<<<<<<< HEAD
         alex=f"{alex:,.2f}",
-=======
         alex_s=f"{alex_s:,.2f}",
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
         victor_r=f"{victor_r:,.2f}",
         john_paul=f"{john_paul:,.2f}",
         ana_pepe=f"{ana_pepe:,.2f}",
         karen=f"{karen:,.2f}",
         raul=f"{raul:,.2f}",
-<<<<<<< HEAD
-=======
         genesis=f"{genesis:,.2f}",
         jen=f"{jen:,.2f}",
         jj=f"{jj:,.2f}",
@@ -4462,7 +4103,6 @@ def finance_dashboard():
         loida=f"{loida:,.2f}",
         milvia=f"{milvia:,.2f}",
         shelly=f"{shelly:,.2f}",
->>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
         period=period,
         year=year,
         month=month
@@ -4734,8 +4374,6 @@ def admin_delete_business(business_id):
     db.session.commit()
     flash(f"Business {biz.business_name} deleted.")
     return redirect(url_for("admin_dashboard"))
-
-from flask_login import login_required
 
 @app.route("/listing/<int:biz_id>")
 def view_listing(biz_id):
