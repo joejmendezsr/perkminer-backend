@@ -909,7 +909,7 @@ def store_builder():
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
 
-    # Handle site saves from the builder
+    # Handle save from the GrapesJS builder
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -920,22 +920,17 @@ def store_builder():
             flash("No HTML received; website not updated.", "danger")
         return redirect(url_for('store_builder'))
 
-    # Use business's saved HTML, or fallback to their theme if empty
-    starter_html = biz.grapesjs_html or ""
+    # ────────────────────────────────────────────────
+    # No starter_html, no automatic data filling anymore
+    # ────────────────────────────────────────────────
+    saved_html = biz.grapesjs_html or ""   # only what user has actually saved
 
-    # Build services HTML (from 10 individual service fields)
-    service_fields = [
-        biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5,
-        biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10
-    ]
-    services_list = [s for s in service_fields if s and s.strip()]
-    services = "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>" if services_list else "<ul><li>No services listed.</li></ul>"
-
+    # Keep business dict if your template still uses it for sidebar/info/etc.
+    # (remove fields you no longer need)
     business = {
         "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
         "name": biz.business_name or "",
         "about_us": biz.about_us or "",
-        "services": services,
         "address": biz.address or "",
         "phone": biz.phone_number or "",
         "email": biz.business_email or "",
@@ -944,26 +939,29 @@ def store_builder():
         "twitter_url": biz.twitter_url or "#",
         "instagram_url": biz.instagram_url or "#",
         "linkedin_url": biz.linkedin_url or "#",
-        "latitude": str(biz.latitude) if getattr(biz, 'latitude', None) else "",
-        "longitude": str(biz.longitude) if getattr(biz, 'longitude', None) else "",
-        # Use any other fields if you want more {field} fields!
     }
 
-    # Do the placeholder replacement, field-by-field
-    filled_html = starter_html
-    for key, val in business.items():
-        filled_html = filled_html.replace(f'{{{key}}}', str(val or ''))
-
-    theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+    # Services list – still generated if your template displays it separately
+    service_fields = [
+        biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5,
+        biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10
+    ]
+    services_list = [s for s in service_fields if s and s.strip()]
+    services_html = (
+        "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>"
+        if services_list else
+        "<p>No services listed yet.</p>"
+    )
 
     return render_template(
         'store_builder.html',
         biz=biz,
-        business=business,
-        themes=themes,
-        saved_html=biz.grapesjs_html,  # What the user last saved/edited
-        filled_html=filled_html,       # What will be rendered with dynamic data
-        theme_html_map=json.dumps(theme_html_map)
+        business=business,              # optional – remove if no longer used
+        services=services_html,         # optional – only if template still shows services
+        themes=themes,                  # if frontend still lets user browse themes
+        saved_html=saved_html,          # ← what GrapesJS loads/editing area shows
+        # filled_html is gone – preview should just use saved_html directly
+        theme_html_map=json.dumps({})   # empty if you no longer need theme preloads
     )
 
 @app.route('/stores/<store_slug>')
