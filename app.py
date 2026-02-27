@@ -671,7 +671,7 @@ class Business(db.Model):
     twitter_url = db.Column(db.String(255))
     instagram_url = db.Column(db.String(255))
     linkedin_url = db.Column(db.String(255))
-    starter_html = db.Column(db.Text)
+    
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
