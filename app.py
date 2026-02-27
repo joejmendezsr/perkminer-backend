@@ -60,6 +60,102 @@ class EditUserForm(FlaskForm):
     name = StringField('Name', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Save')
+=======
+from flask import Flask, request, redirect, url_for, render_template, flash, session, abort, jsonify, send_from_directory, Response
+from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message as MailMessage
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_wtf import FlaskForm, CSRFProtect, RecaptchaField
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField, TextAreaField, Form
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
+from werkzeug.utils import secure_filename
+from functools import wraps
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+import os
+import stripe
+import logging
+from datetime import datetime
+import json
+from sqlalchemy import or_, and_, func, literal
+from flask_migrate import Migrate
+from datetime import datetime, date
+import os, re, random, string, time, logging, csv, uuid, hmac, hashlib
+from io import StringIO, BytesIO
+import cloudinary
+import cloudinary.uploader
+import qrcode
+from flask import session, request, redirect, url_for, flash, render_template
+from wtforms import StringField, Form
+from wtforms.validators import DataRequired, Email
+from flask import Response, send_file, url_for
+from flask import request, jsonify
+from flask import Flask, render_template, session, redirect, url_for, flash
+app = Flask(__name__)
+
+
+# --- Cart Logic ---
+def get_cart():
+    return session.get("cart", {})
+
+def save_cart(cart):
+    session["cart"] = cart
+    session.modified = True
+
+def add_to_cart(product_id, quantity=1):
+    cart = get_cart()
+    pid = str(product_id)
+    cart[pid] = cart.get(pid, 0) + quantity
+    save_cart(cart)
+
+def remove_from_cart(product_id):
+    cart = get_cart()
+    pid = str(product_id)
+    if pid in cart:
+        del cart[pid]
+        save_cart(cart)
+
+def send_order_alert(business_email, product_name, amount, buyer_email=None):
+    msg = MailMessage(
+        subject="New Online Order Received!",
+        recipients=[business_email],
+        html=(
+            f"<h3>You've received a new order!</h3>"
+            f"<p><b>Product:</b> {product_name}<br>"
+            f"<b>Amount:</b> ${amount:.2f}<br>"
+            + (f"<b>Buyer Email:</b> {buyer_email}<br>" if buyer_email else "") +
+            f"</p><hr><p>Login to your dashboard for details.</p>"
+        ),
+        sender="orders@perkminer.com"
+    )
+    try:
+        mail.send(msg)
+    except Exception as e:
+        import logging
+        logging.error("Order email failed: %s", e)
+
+def send_customer_receipt(buyer_email, product_name, amount, business_name):
+    if not buyer_email:
+        return
+    msg = MailMessage(
+        subject="Your Order Receipt – " + business_name,
+        recipients=[buyer_email],
+        html=(
+            f"<h3>Order Confirmation from {business_name}</h3>"
+            f"<p>Thank you for your order!</p>"
+            f"<b>Product:</b> {product_name}<br>"
+            f"<b>Amount Paid:</b> ${amount:.2f}<br>"
+            f"<p>If you have any questions, please contact the business directly.</p>"
+        ),
+        sender="orders@perkminer.com"
+    )
+    try:
+        mail.send(msg)
+    except Exception as e:
+        import logging
+        logging.error("Customer receipt email failed: %s", e)
+
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def admin_required(f):
     @wraps(f)
     @login_required
@@ -68,6 +164,10 @@ def admin_required(f):
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def role_required(role_name):
     def decorator(f):
         @wraps(f)
@@ -95,6 +195,7 @@ def business_login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+<<<<<<< HEAD
 import csv
 from io import StringIO, BytesIO
 from flask import Response, send_file, url_for
@@ -109,6 +210,8 @@ import qrcode
 import uuid  # <-- only needs to be here once! Put with other imports
 import stripe
 
+=======
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
   api_key = '786387955898581',
@@ -116,7 +219,11 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
+<<<<<<< HEAD
 app.config['SECRET_KEY'] = 'perkminer_hardcoded_secret_2026'
+=======
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'perkminer_hardcoded_secret_2026')
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -132,6 +239,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+<<<<<<< HEAD
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 db = SQLAlchemy(app)
@@ -144,11 +252,28 @@ mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 csrf = CSRFProtect(app)
+=======
+csrf = CSRFProtect(app)
+db = SQLAlchemy(app)
+mail = Mail(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+migrate = Migrate(app, db)
+with app.app_context():
+    db.create_all()
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+stripe.api_key = os.environ.get("STRIPE_API_KEY")
+
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+YOUR_DOMAIN = "https://perkminer.com"
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 logging.basicConfig(level=logging.INFO)
 
 SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
 MIN_PASSWORD_LENGTH = 8
 
+<<<<<<< HEAD
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -344,6 +469,29 @@ class Message(db.Model):
     file_url = db.Column(db.String(255))  # stores the filename or URL
     file_name = db.Column(db.String(120))  # original name for display
     interaction = db.relationship('Interaction', backref='messages', lazy=True)
+=======
+# ----------------- WTForms (All Your Forms) -------------------
+class ServiceRequestForm(FlaskForm):
+    service_type = SelectField(
+        "Type of Service Requested",
+        choices=[
+            ("handyman", "Handyman Service"),
+            ("contractor", "Contractor Services"),
+            ("cleaning", "Cleaning Services"),
+            ("lawn", "Lawn Care"),
+            # Add more as needed here
+        ],
+        validators=[DataRequired()]
+    )
+    details = TextAreaField("Service Details", validators=[DataRequired(), Length(max=1000)])
+    budget_low = DecimalField("Budget (Low End)", validators=[NumberRange(min=0)], default=0)
+    budget_high = DecimalField("Budget (High End)", validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField("Submit Request")
+
+class TwoFactorForm(FlaskForm):
+    code = StringField('Enter the 6-digit code', validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField('Verify')
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 
 class EditUserForm(FlaskForm):
     name = StringField('Name', validators=[Optional()])
@@ -358,10 +506,122 @@ class BusinessEditForm(FlaskForm):
     address = StringField('Address', validators=[Optional()])
     submit = SubmitField('Save')
 
+<<<<<<< HEAD
 EMAIL_REGEX = r'^[\w.-]+@[\w.-]+.\w{2,}$'
 def valid_email(email): return re.match(EMAIL_REGEX, email or "")
 def valid_password(pw): return pw and len(pw) >= MIN_PASSWORD_LENGTH
 def random_email_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+=======
+class InviteForm(FlaskForm):
+    invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Invitation')
+
+class BusinessInviteForm(FlaskForm):
+    invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Invitation')
+
+class VerifyCodeForm(FlaskForm):
+    code = StringField('Code', validators=[DataRequired()])
+    submit = SubmitField('Verify')
+
+class RegisterForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    referral_code = StringField('Referral Code', validators=[Optional()])
+    recaptcha = RecaptchaField()
+    submit = SubmitField('Register')
+
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    recaptcha = RecaptchaField()
+    submit = SubmitField('Login')
+
+class RewardForm(FlaskForm):
+    invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
+    downline_level = SelectField(
+        'Downline Level',
+        choices=[
+            ('1', 'Tier 1: (your purchases)'),
+            ('2', 'Tier 2: (direct referral purchases)'),
+            ('3', 'Tier 3: (Tier 2 referral purchases)'),
+            ('4', 'Tier 4: (Tier 3 referral purchases)'),
+            ('5', 'Tier 5: (Tier 4 referral purchases)')
+        ],
+        validators=[DataRequired()],
+        default='1'
+    )
+    submit = SubmitField('Calculate My Reward')
+
+class BusinessRegisterForm(FlaskForm):
+    business_name = StringField('Business Name', validators=[DataRequired()])
+    business_email = StringField('Business Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    referral_code = StringField('Referral Code', validators=[Optional()])
+    submit = SubmitField('Register')
+
+class BusinessLoginForm(FlaskForm):
+    business_email = StringField('Business Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    recaptcha = RecaptchaField()
+    submit = SubmitField('Login')
+
+class BusinessRewardForm(FlaskForm):
+    invoice_amount = DecimalField('Purchase Amount', validators=[DataRequired(), NumberRange(min=0.01, max=2500)], places=2, default=0)
+    downline_level = SelectField(
+        'Downline Level',
+        choices=[
+            ('1', 'Tier 1: (your invoices)'),
+            ('2', 'Tier 2: (direct referral invoices)'),
+            ('3', 'Tier 3: (Tier 2 referral invoices)'),
+            ('4', 'Tier 4: (Tier 3 referral invoices)'),
+            ('5', 'Tier 5: (Tier 4 referral invoices)')
+        ],
+        validators=[DataRequired()],
+        default='1'
+    )
+    submit = SubmitField('Calculate My Reward')
+
+class UserProfileForm(FlaskForm):
+    name = StringField('Name', validators=[Optional(), Length(max=100)])
+    profile_photo = FileField('Upload Profile Photo')
+    submit = SubmitField('Save Profile')
+
+class BusinessProfileForm(FlaskForm):
+    business_name = StringField('Business Name', validators=[Optional(), Length(max=100)])
+    profile_photo = FileField('Upload Profile Photo')
+    phone_number = StringField('Phone Number', validators=[Optional(), Length(max=30)])
+    address = StringField('Address', validators=[Optional(), Length(max=255)])
+    latitude = StringField('Latitude', validators=[Optional()])
+    longitude = StringField('Longitude', validators=[Optional()])
+    submit = SubmitField('Save Profile')
+
+class EmptyForm(FlaskForm):
+    submit = SubmitField('Submit')
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send reset link')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    submit = SubmitField('Reset Password')
+
+# ---------------------- Validators, Roles, and Utilities ----------------------
+
+EMAIL_REGEX = r'^[\w.-]+@[\w.-]+\.\w{2,}$'
+
+def valid_email(email):
+    return re.match(EMAIL_REGEX, email or "")
+
+def valid_password(pw):
+    return pw and len(pw) >= 8
+
+def random_email_code():
+    import string, random
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def random_referral_code(email):
     base_code = "REF" + (email.split("@")[0].replace(".", "")[:12])
     code = base_code
@@ -370,6 +630,10 @@ def random_referral_code(email):
         code = f"{base_code}{counter}"
         counter += 1
     return code
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def random_business_code(business_name):
     base_code = "BIZ" + (business_name.replace(" ", "")[:12])
     code = base_code
@@ -380,7 +644,16 @@ def random_business_code(business_name):
     return code
 
 def send_email(to, subject, html_body):
+<<<<<<< HEAD
     msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
+=======
+    msg = MailMessage(
+        subject=subject,
+        recipients=[to],
+        html=html_body,
+        sender=app.config['MAIL_USERNAME']
+    )
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
     try:
         mail.send(msg)
     except Exception as e:
@@ -502,6 +775,10 @@ def build_invite_email(inviter_name, join_url, video_url):
 </html>
     """
     return html_body
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 def send_verification_email(user):
     code = user.email_code
     verify_url = url_for("activate", code=code, _external=True)
@@ -515,6 +792,10 @@ def send_business_verification_email(biz):
     send_email(biz.business_email, "Confirm your PerkMiner business email!", html_body)
 
 def allowed_file(filename):
+<<<<<<< HEAD
+=======
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def generate_reset_token(email, user_type):
@@ -537,6 +818,7 @@ def send_reset_email(recipient_email, reset_url):
         "<p>If you didn't request this, please ignore this email.</p>"
     )
 
+<<<<<<< HEAD
 class InviteForm(FlaskForm):
     invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Send Invitation')
@@ -625,6 +907,924 @@ class ForgotPasswordForm(FlaskForm):
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField('Reset Password')
+=======
+# ---------------------- Role & Access Control Decorators -----------------------
+
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not any(r.name == 'super_admin' for r in current_user.roles):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+def role_required(role_name):
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_role(role_name):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def business_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('business_id'):
+            flash('Please log in as a business to access this page.', 'warning')
+            return redirect(url_for('business_login', next=request.path))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ---------------------- Flask-Login User Loader ----------------------
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# ---------------------- Core Database Models ----------------------
+from flask_login import UserMixin
+from datetime import datetime
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(200), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+    name = db.Column(db.String(100))
+    referral_code = db.Column(db.String(32), unique=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    business_referral_id = db.Column(db.String(32))
+    email_confirmed = db.Column(db.Boolean, default=False)
+    email_code = db.Column(db.String(16))
+    profile_photo = db.Column(db.String(200))
+    roles = db.relationship('Role', secondary='user_roles', backref='users')
+    is_suspended = db.Column(db.Boolean, default=False)
+    def has_role(self, role_name):
+        return any(role.name == role_name for role in self.roles)
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+
+class UserRoles(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+
+class Business(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_name = db.Column(db.String(100), unique=True, nullable=False)
+    store_slug = db.Column(db.String(80), unique=True)
+    theme_id = db.Column(db.Integer, db.ForeignKey('theme.id'))
+    custom_html = db.Column(db.Text)
+    grapesjs_html = db.Column(db.Text)
+    stripe_account_id = db.Column(db.String(100))
+    has_ecommerce_store = db.Column(db.Boolean, default=False)
+    listing_type = db.Column(db.String(50))
+    category = db.Column(db.String(50), nullable=False, default="Other")
+    business_email = db.Column(db.String(200), unique=True, nullable=False)
+    website_approved = db.Column(db.Boolean, default=False)
+    password = db.Column(db.String(60), nullable=False)
+    referral_code = db.Column(db.String(32), unique=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('business.id'))
+    user_sponsor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    email_confirmed = db.Column(db.Boolean, default=False)
+    email_code = db.Column(db.String(16))
+    profile_photo = db.Column(db.String(200))
+    phone_number = db.Column(db.String(30))
+    address = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    hours_of_operation = db.Column(db.String(100))
+    website_url = db.Column(db.String(255))
+    about_us = db.Column(db.Text)
+    service_1 = db.Column(db.String(100))
+    service_2 = db.Column(db.String(100))
+    service_3 = db.Column(db.String(100))
+    service_4 = db.Column(db.String(100))
+    service_5 = db.Column(db.String(100))
+    service_6 = db.Column(db.String(100))
+    service_7 = db.Column(db.String(100))
+    service_8 = db.Column(db.String(100))
+    service_9 = db.Column(db.String(100))
+    service_10 = db.Column(db.String(100))
+    search_keywords = db.Column(db.String(500))
+    draft_business_name = db.Column(db.String(100))
+    draft_listing_type = db.Column(db.String(50))
+    draft_category = db.Column(db.String(50), default="Other")
+    draft_profile_photo = db.Column(db.String(200))
+    draft_phone_number = db.Column(db.String(30))
+    draft_address = db.Column(db.String(255))
+    draft_latitude = db.Column(db.Float)
+    draft_longitude = db.Column(db.Float)
+    draft_hours_of_operation = db.Column(db.String(100))
+    draft_website_url = db.Column(db.String(255))
+    draft_about_us = db.Column(db.Text)
+    draft_service_1 = db.Column(db.String(100))
+    draft_service_2 = db.Column(db.String(100))
+    draft_service_3 = db.Column(db.String(100))
+    draft_service_4 = db.Column(db.String(100))
+    draft_service_5 = db.Column(db.String(100))
+    draft_service_6 = db.Column(db.String(100))
+    draft_service_7 = db.Column(db.String(100))
+    draft_service_8 = db.Column(db.String(100))
+    draft_service_9 = db.Column(db.String(100))
+    draft_service_10 = db.Column(db.String(100))
+    draft_search_keywords = db.Column(db.String(500))
+    account_balance = db.Column(db.Float, nullable=False, default=0.0)
+    ad_fee = db.Column(db.Float)
+    business_registration_doc = db.Column(db.String(255))
+    featured = db.Column(db.Boolean, default=False)
+    rank = db.Column(db.Float, default=0.0)
+    manual_feature = db.Column(db.Boolean, default=False)
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    is_suspended = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), nullable=False, default='not_submitted')
+    facebook_url = db.Column(db.String(255))
+    twitter_url = db.Column(db.String(255))
+    instagram_url = db.Column(db.String(255))
+    linkedin_url = db.Column(db.String(255))
+    starter_html = db.Column(db.Text)
+
+class Quote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False, unique=True)
+    amount = db.Column(db.Float, nullable=False)
+    details = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    interaction = db.relationship('Interaction', backref=db.backref('quote', uselist=False))
+
+class UserTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    transaction_id = db.Column(db.String(48), nullable=False, index=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
+    date_time = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Float, nullable=False)
+    user_referral_id = db.Column(db.String(32), nullable=False)
+    cash_back = db.Column(db.Float, nullable=False)
+    tier2_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier2_commission = db.Column(db.Float, nullable=False)
+    tier3_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier3_commission = db.Column(db.Float, nullable=False)
+    tier4_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier4_commission = db.Column(db.Float, nullable=False)
+    tier5_user_referral_id = db.Column(db.String(32), nullable=False)
+    tier5_commission = db.Column(db.Float, nullable=False)
+    business_referral_id = db.Column(db.String(32))
+    tier1_business_user_referral_id = db.Column(db.String(32))
+    tier1_business_user_commission = db.Column(db.Float)
+    tier2_business_user_referral_id = db.Column(db.String(32))
+    tier2_business_user_commission = db.Column(db.Float)
+    tier3_business_user_referral_id = db.Column(db.String(32))
+    tier3_business_user_commission = db.Column(db.Float)
+    tier4_business_user_referral_id = db.Column(db.String(32))
+    tier4_business_user_commission = db.Column(db.Float)
+    tier5_business_user_referral_id = db.Column(db.String(32))
+    tier5_business_user_commission = db.Column(db.Float)
+
+class BusinessTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    transaction_id = db.Column(db.String(48), nullable=False, index=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
+    date_time = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Float, nullable=False)
+    business_referral_id = db.Column(db.String(32), nullable=False)
+    cash_back = db.Column(db.Float, nullable=False)
+    tier2_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier2_commission = db.Column(db.Float, nullable=False)
+    tier3_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier3_commission = db.Column(db.Float, nullable=False)
+    tier4_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier4_commission = db.Column(db.Float, nullable=False)
+    tier5_business_referral_id = db.Column(db.String(32), nullable=False)
+    tier5_commission = db.Column(db.Float, nullable=False)
+    ad_fee = db.Column(db.Float)
+
+class Interaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
+    service_type = db.Column(db.String(100), nullable=False)
+    details = db.Column(db.Text, nullable=False)
+    budget_low = db.Column(db.Float)
+    budget_high = db.Column(db.Float)
+    status = db.Column(db.String(32), default="active")  # active, closed, ended, etc.
+    referral_code = db.Column(db.String(32))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    awaiting_finalization = db.Column(db.Boolean, default=False)
+    awaiting_payment = db.Column(db.Boolean, default=False)
+    # relationships for easier querying (optional)
+    user = db.relationship('User', backref='interactions', lazy=True)
+    business = db.relationship('Business', backref='interactions', lazy=True)
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
+    sender_type = db.Column(db.String(16), nullable=False)  # "user" or "business"
+    sender_id = db.Column(db.Integer, nullable=False)        # User or business id, based on sender_type
+    text = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    file_url = db.Column(db.String(255))  # stores the filename or URL
+    file_name = db.Column(db.String(120))  # original name for display
+    interaction = db.relationship('Interaction', backref='messages', lazy=True)
+
+class Theme(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30))
+    css_url = db.Column(db.String(150))
+    thumbnail_url = db.Column(db.String(200))
+    starter_html = db.Column(db.Text)
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'))
+    name = db.Column(db.String(100))
+    price = db.Column(db.Float)
+    description = db.Column(db.Text)
+    image_url = db.Column(db.String(200))
+    stock = db.Column(db.Integer)
+
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    buyer_email = db.Column(db.String(200))
+    amount = db.Column(db.Float)
+    stripe_checkout_id = db.Column(db.String(100))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(30), default="paid")
+
+# Example for invites (included as you had in prior code)
+class Invite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    inviter_id = db.Column(db.Integer, nullable=True)
+    inviter_type = db.Column(db.String(16), nullable=False)
+    invitee_email = db.Column(db.String(200), nullable=False)
+    invitee_type = db.Column(db.String(16), nullable=False)
+    referral_code = db.Column(db.String(32), nullable=False)
+    status = db.Column(db.String(16), nullable=False, default='pending')
+    accepted_id = db.Column(db.Integer, nullable=True)
+    accepted_at = db.Column(db.DateTime)
+
+# Add others (interaction, message, etc.) as needed here
+
+# ---------------- STORE ROUTES ----------------
+
+@app.route('/store_terms', methods=['GET', 'POST'])
+@business_login_required
+def store_terms():
+    if request.method == 'POST':
+        agreed = request.form.get('agree_checkbox')
+        if agreed == "on":
+            return redirect(url_for('store_payment'))
+        else:
+            flash('You must accept the terms and conditions to continue.', 'danger')
+    return render_template('store_terms.html')
+
+@app.route('/store_payment')
+@business_login_required
+def store_payment():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='subscription',  # use 'payment' for a one-time charge
+            line_items=[{
+                'price': 'price_1T3hrXCLrqYII4jepU2edWdw',  # <-- Use your Stripe PRICE ID here!
+                'quantity': 1,
+            }],
+            customer_email=biz.business_email,
+            success_url=YOUR_DOMAIN + '/store_payment_success',
+            cancel_url=YOUR_DOMAIN + '/store_terms',
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        import logging
+        logging.error(f"Stripe checkout session creation failed: {e}")
+        flash("There was a problem redirecting to payment. Please try again or contact support.", "danger")
+        return redirect(url_for("store_terms"))
+
+@app.route('/store_admin')
+@business_login_required
+def store_admin():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    # You can add queries for products, orders, etc. as you build them.
+    return render_template('store_admin.html', biz=biz)
+
+@app.route('/store_payment_success')
+@business_login_required
+def store_payment_success():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+
+    if not biz.has_ecommerce_store:
+        biz.has_ecommerce_store = True
+        db.session.commit()
+        flash('Your online store is now active! You can set it up from your dashboard.', 'success')
+    else:
+        flash('Your online store subscription is already active.', 'info')
+
+    return redirect(url_for('business_dashboard'))
+
+@app.route('/store_builder', methods=['GET', 'POST'])
+@business_login_required
+def store_builder():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    themes = Theme.query.all()
+
+    # Handle site saves from the builder
+    if request.method == 'POST':
+        page_html = request.form.get('page_html')
+        if page_html:
+            biz.grapesjs_html = page_html
+            db.session.commit()
+            flash("Website changes saved!", "success")
+        else:
+            flash("No HTML received; website not updated.", "danger")
+        return redirect(url_for('store_builder'))
+
+    # Use business's saved HTML, or fallback to their theme if empty
+    starter_html = biz.grapesjs_html or ""
+
+    # Build services HTML (from 10 individual service fields)
+    service_fields = [
+        biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5,
+        biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10
+    ]
+    services_list = [s for s in service_fields if s and s.strip()]
+    services = "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>" if services_list else "<ul><li>No services listed.</li></ul>"
+
+    business = {
+        "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
+        "name": biz.business_name or "",
+        "about_us": biz.about_us or "",
+        "services": services,
+        "address": biz.address or "",
+        "phone": biz.phone_number or "",
+        "email": biz.business_email or "",
+        "website_url": biz.website_url or "",
+        "facebook_url": biz.facebook_url or "#",
+        "twitter_url": biz.twitter_url or "#",
+        "instagram_url": biz.instagram_url or "#",
+        "linkedin_url": biz.linkedin_url or "#",
+        "latitude": str(biz.latitude) if getattr(biz, 'latitude', None) else "",
+        "longitude": str(biz.longitude) if getattr(biz, 'longitude', None) else "",
+        # Use any other fields if you want more {field} fields!
+    }
+
+    # Do the placeholder replacement, field-by-field
+    filled_html = starter_html
+    for key, val in business.items():
+        filled_html = filled_html.replace(f'{{{key}}}', str(val or ''))
+
+    theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+
+    return render_template(
+        'store_builder.html',
+        biz=biz,
+        business=business,
+        themes=themes,
+        saved_html=biz.grapesjs_html,  # What the user last saved/edited
+        filled_html=filled_html,       # What will be rendered with dynamic data
+        theme_html_map=json.dumps(theme_html_map)
+    )
+
+@app.route('/stores/<store_slug>')
+def public_storefront(store_slug):
+    biz = Business.query.filter_by(
+        store_slug=store_slug,
+        has_ecommerce_store=True,
+        website_approved=True  # Only show if approved!
+    ).first()
+    if not biz or not biz.grapesjs_html:
+        return render_template('storefront_coming_soon.html', biz=biz), 404
+    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
+    products = Product.query.filter_by(business_id=biz.id).all()
+    return render_template('public_storefront.html', biz=biz, theme=theme, products=products)
+
+@app.route('/store_products', methods=['GET', 'POST'])
+@business_login_required
+def store_products():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    # Only allow up to 50 products per business
+    products = Product.query.filter_by(business_id=biz.id).limit(50).all()
+
+    # Simple add product logic
+    if request.method == 'POST':
+        name = request.form.get('name')
+        price = request.form.get('price')
+        description = request.form.get('description')
+        image_url = request.form.get('image_url')
+        stock = request.form.get('stock')
+        if name and price and len(products) < 50:
+            new_product = Product(
+                business_id=biz.id,
+                name=name,
+                price=float(price),
+                description=description,
+                image_url=image_url,
+                stock=int(stock) if stock else 0
+            )
+            db.session.add(new_product)
+            db.session.commit()
+            flash("Product added successfully!", "success")
+            return redirect(url_for('store_products'))
+        elif len(products) >= 50:
+            flash("Limit reached: 50 products max.", "danger")
+    return render_template('store_products.html', biz=biz, products=products)
+
+@app.route('/edit_product/<int:product_id>', methods=['GET', 'POST'])
+@business_login_required
+def edit_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    biz_id = session.get('business_id')
+    if product.business_id != biz_id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('store_products'))
+    if request.method == 'POST':
+        product.name = request.form.get('name')
+        product.price = float(request.form.get('price') or product.price)
+        product.description = request.form.get('description')
+        product.image_url = request.form.get('image_url')
+        product.stock = int(request.form.get('stock') or product.stock)
+        db.session.commit()
+        flash("Product updated!", "success")
+        return redirect(url_for('store_products'))
+    return render_template('edit_product.html', product=product)
+
+@app.route('/delete_product/<int:product_id>', methods=['POST'])
+@business_login_required
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    biz_id = session.get('business_id')
+    if product.business_id != biz_id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('store_products'))
+    db.session.delete(product)
+    db.session.commit()
+    flash("Product deleted.", "success")
+    return redirect(url_for('store_products'))
+
+@app.route('/buy_product/<int:product_id>')
+def buy_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    # Optional: check stock, only allow if in stock
+    if product.stock is not None and product.stock <= 0:
+        flash("Sorry, this product is out of stock.", "danger")
+        return redirect(request.referrer or '/')
+    biz = Business.query.get(product.business_id)
+    if not biz or not biz.stripe_account_id:
+        flash("This business cannot accept payment online yet.", "danger")
+        return redirect(request.referrer or '/')
+
+    import stripe
+    YOUR_DOMAIN = "https://perkminer.com"
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='payment',
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': product.name,
+                        'description': product.description or '',
+                    },
+                    'unit_amount': int(product.price * 100),  # Stripe expects cents
+                },
+                'quantity': 1,
+            }],
+            payment_intent_data={
+                'application_fee_amount': int(product.price * 100 * 0.10),  # 10% fee to you
+                'transfer_data': {
+                    'destination': biz.stripe_account_id,
+                },
+            },
+            metadata={
+                "product_id": str(product.id),
+                "business_id": str(biz.id),
+            },
+            customer_email=request.args.get('buyer_email'),  # Pass buyer email if you have it
+            success_url=YOUR_DOMAIN + '/thank_you',
+            cancel_url=request.referrer or YOUR_DOMAIN,
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        import logging
+        logging.error(f"Stripe checkout session failed: {e}")
+        flash("Could not start checkout. Please try again.", "danger")
+        return redirect(request.referrer or '/')
+
+@app.route('/store_orders')
+@business_login_required
+def store_orders():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    orders = Order.query.filter_by(business_id=biz.id).order_by(Order.timestamp.desc()).all()
+    # Useful to join with Product for display
+    product_map = {p.id: p for p in Product.query.filter_by(business_id=biz.id).all()}
+    return render_template('store_orders.html', orders=orders, product_map=product_map)
+
+# ---------------- CART & COUPON ROUTES ----------------
+
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+def add_to_cart_route(product_id):
+    add_to_cart(product_id)
+    flash("Added to cart!", "success")
+    return redirect(request.referrer or url_for('view_cart'))
+
+@app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
+def remove_from_cart_route(product_id):
+    remove_from_cart(product_id)
+    flash("Removed from cart.", "success")
+    return redirect(url_for('view_cart'))
+
+@app.route('/cart')
+def view_cart():
+    cart = get_cart()
+    product_ids = [int(pid) for pid in cart.keys()]
+    products = Product.query.filter(Product.id.in_(product_ids)).all() if product_ids else []
+    cart_items = []
+    total = 0
+    for p in products:
+        qty = cart[str(p.id)]
+        line_total = qty * p.price
+        total += line_total
+        cart_items.append({
+            "product": p,
+            "quantity": qty,
+            "line_total": line_total
+        })
+
+    valid_coupons = get_valid_coupons()
+    coupon_code = session.get('applied_coupon')
+    discount_pct = valid_coupons.get(coupon_code, 0) if coupon_code else 0
+    discount = total * discount_pct
+    grand_total = total - discount
+
+    return render_template('cart.html',
+        cart_items=cart_items,
+        total=total,
+        discount=discount,
+        grand_total=grand_total,
+        valid_coupons=valid_coupons
+    )
+
+@app.route('/apply_coupon', methods=['POST'])
+def apply_coupon():
+    code = request.form.get('coupon_code', '').strip().upper()
+    valid_coupons = get_valid_coupons()
+    if code in valid_coupons:
+        session['applied_coupon'] = code
+        flash(f"Coupon '{code}' applied! Discount: {int(valid_coupons[code]*100)}% off", "success")
+    else:
+        session.pop('applied_coupon', None)
+        flash(f"Coupon '{code}' is not valid.", "warning")
+    return redirect(url_for('view_cart'))
+
+# ---------------- CHECKOUT & STRIPE INTEGRATION ----------------
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    cart = get_cart()
+    if not cart:
+        flash("Your cart is empty.", "info")
+        return redirect(url_for('view_cart'))
+
+    class CheckoutForm(Form):
+        email = StringField('Your Email', [DataRequired(), Email()])
+
+    form = CheckoutForm(request.form)
+
+    product_ids = [int(pid) for pid in cart.keys()]
+    products = Product.query.filter(Product.id.in_(product_ids)).all()
+    cart_items = []
+    total = 0
+    for p in products:
+        qty = cart[str(p.id)]
+        line_total = qty * p.price
+        total += line_total
+        cart_items.append({
+            "product": p,
+            "quantity": qty,
+            "line_total": line_total
+        })
+
+    valid_coupons = get_valid_coupons()
+    coupon_code = session.get('applied_coupon')
+    discount_pct = valid_coupons.get(coupon_code, 0) if coupon_code else 0
+    discount = total * discount_pct
+    grand_total = total - discount
+
+    if request.method == 'POST' and form.validate():
+        session['checkout_email'] = form.email.data
+        return redirect(url_for('start_cart_checkout'))
+
+    return render_template('checkout.html',
+        form=form,
+        cart_items=cart_items,
+        total=total,
+        discount=discount,
+        grand_total=grand_total
+    )
+
+@app.route('/start_cart_checkout')
+def start_cart_checkout():
+    cart = session.get("cart", {})
+    buyer_email = session.get("checkout_email")
+    if not cart:
+        flash("Your cart is empty.", "info")
+        return redirect(url_for('view_cart'))
+
+    product_ids = [int(pid) for pid in cart.keys()]
+    products = Product.query.filter(Product.id.in_(product_ids)).all()
+    if not products:
+        flash("No valid products in cart.", "warn")
+        return redirect(url_for('view_cart'))
+
+    business_ids = {p.business_id for p in products}
+    if len(business_ids) != 1:
+        flash("All items in your cart must be from the same business.", "danger")
+        return redirect(url_for('view_cart'))
+
+    biz_id = list(business_ids)[0]
+    biz = Business.query.get(biz_id)
+    if not biz or not biz.stripe_account_id:
+        flash("This business cannot accept payment online yet.", "danger")
+        return redirect(url_for('view_cart'))
+
+    valid_coupons = get_valid_coupons()
+    coupon_code = session.get('applied_coupon')
+    discount_pct = valid_coupons.get(coupon_code, 0) if coupon_code else 0
+
+    line_items = []
+    subtotal = 0
+    for p in products:
+        qty = cart[str(p.id)]
+        price_cents = int(p.price * 100)
+        line_total = qty * p.price
+        subtotal += line_total
+        line_items.append({
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': p.name,
+                    'description': p.description or '',
+                },
+                'unit_amount': price_cents,
+            },
+            'quantity': qty,
+        })
+
+    discount = subtotal * discount_pct
+    grand_total = subtotal - discount
+    application_fee_amount = int(grand_total * 0.10 * 100)
+
+    metadata = {
+        "cart_items": ",".join(str(p.id) for p in products),
+        "business_id": str(biz.id),
+        "coupon_code": coupon_code or '',
+    }
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='payment',
+            line_items=line_items,
+            payment_intent_data={
+                'application_fee_amount': application_fee_amount,
+                'transfer_data': {
+                    'destination': biz.stripe_account_id,
+                },
+            },
+            metadata=metadata,
+            customer_email=buyer_email,
+            success_url=YOUR_DOMAIN + '/thank_you',
+            cancel_url=YOUR_DOMAIN + '/cart',
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        logging.error(f"Stripe cart checkout session failed: {e}")
+        flash("Could not start checkout. Please try again.", "danger")
+        return redirect(url_for('checkout'))
+
+# -------------- STRIPE WEBHOOK (Order, Stock, Emails) --------------
+@app.route('/stripe_webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError:
+        return "Invalid signature", 400
+
+    if event['type'] == 'checkout.session.completed':
+        session_obj = event['data']['object']
+        buyer_email = session_obj.get('customer_email')
+        amount = (session_obj.get('amount_total') or 0) / 100.0
+        stripe_checkout_id = session_obj.get('id')
+        product_id = None
+        business_id = None
+
+        if session_obj.get('metadata'):
+            product_id = session_obj['metadata'].get('product_id')
+            business_id = session_obj['metadata'].get('business_id')
+
+        cart_items = []
+        if session_obj.get('metadata') and session_obj['metadata'].get('cart_items'):
+            cart_items = [int(pid) for pid in session_obj['metadata']['cart_items'].split(',') if pid]
+            business_id = session_obj['metadata'].get('business_id')
+
+        existing = Order.query.filter_by(stripe_checkout_id=stripe_checkout_id).first()
+        if not existing:
+            if product_id and business_id:
+                order = Order(
+                    business_id=business_id,
+                    product_id=product_id,
+                    buyer_email=buyer_email,
+                    amount=amount,
+                    stripe_checkout_id=stripe_checkout_id,
+                    status='paid'
+                )
+                db.session.add(order)
+                db.session.commit()
+                product = Product.query.get(product_id)
+                if product and product.stock is not None and product.stock > 0:
+                    product.stock -= 1
+                    db.session.commit()
+                try:
+                    business = Business.query.get(int(business_id))
+                    if business and product:
+                        send_order_alert(
+                            business.business_email,
+                            product.name,
+                            amount,
+                            buyer_email
+                        )
+                        send_customer_receipt(
+                            buyer_email,
+                            product.name,
+                            amount,
+                            business.business_name
+                        )
+                except Exception as e:
+                    logging.error("Order/customer email error: %s", e)
+            elif cart_items and business_id:
+                from decimal import Decimal, ROUND_HALF_UP
+                subtotal = Decimal(sum(Product.query.get(pid).price for pid in cart_items)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                share = Decimal(amount / len(cart_items)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                for pid in cart_items:
+                    product = Product.query.get(pid)
+                    if product:
+                        order = Order(
+                            business_id=business_id,
+                            product_id=pid,
+                            buyer_email=buyer_email,
+                            amount=float(share),
+                            stripe_checkout_id=stripe_checkout_id,
+                            status='paid'
+                        )
+                        db.session.add(order)
+                        if product.stock is not None and product.stock > 0:
+                            product.stock -= 1
+                db.session.commit()
+                try:
+                    business = Business.query.get(int(business_id))
+                    if business:
+                        send_order_alert(
+                            business.business_email,
+                            "Multiple Products",
+                            amount,
+                            buyer_email
+                        )
+                        send_customer_receipt(
+                            buyer_email,
+                            "Multiple Products",
+                            amount,
+                            business.business_name
+                        )
+                except Exception as e:
+                    logging.error("Order/customer email error: %s", e)
+
+    return '', 200
+
+# --------------------- THANK YOU PAGE -------------------
+@app.route('/thank_you')
+def thank_you():
+    session.pop('cart', None)
+    return render_template('thank_you.html')
+
+# -------------------- CUSTOMER ORDER LOOKUP (Simple) -----------------
+@app.route('/order_lookup', methods=['GET', 'POST'])
+def order_lookup():
+    found_orders = []
+    show_results = False
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        order_number = request.form.get('order_number')
+        q = Order.query
+        if email:
+            q = q.filter(Order.buyer_email.ilike(email))
+        if order_number:
+            try:
+                order_id_int = int(order_number)
+                q = q.filter(Order.id == order_id_int)
+            except ValueError:
+                pass
+        found_orders = q.order_by(Order.timestamp.desc()).all()
+        show_results = True
+    return render_template('order_lookup.html', found_orders=found_orders, show_results=show_results)
+
+# --------- ORDER FULFILLMENT (BUSINESS ONLY, STUB) ----------
+@app.route('/fulfill_order/<int:order_id>', methods=['POST'])
+@business_login_required
+def fulfill_order(order_id):
+    # Mark an order as fulfilled in the database, send customer email
+    flash("Order marked as fulfilled (stub).", "info")
+    return redirect(url_for('store_orders'))
+
+# --------- DIGITAL PRODUCT DOWNLOAD (Stub) ----------
+@app.route('/download/<order_token>')
+def download_product(order_token):
+    # Check validity of token/order before serving file
+    return render_template('download.html')
+
+# --------- ABANDONED CART REMINDER (STUB/ADMIN) ----------
+@app.route('/abandoned_cart_email/<email>')
+def abandoned_cart_email(email):
+    # Admin/dev trigger: send test abandoned cart reminder
+    return "Reminder sent (dev)"
+
+# --------- UPSELLS/CROSS-SELL SUGGESTIONS (AJAX Stub) ----------
+@app.route('/upsell_suggest')
+def upsell_suggest():
+    # TODO: recommend products based on cart/items
+    return jsonify({'suggested': []})
+
+# --------- BUSINESS ANALYTICS DASHBOARD (STUB) ----------
+@app.route('/business/analytics')
+@business_login_required
+def analytics_dashboard():
+    # Add stats/data context here as you expand
+    return render_template('business_analytics.html')
+
+# --------- CUSTOMER PORTAL & ORDER VIEWS (STUB) ----------
+@app.route('/customer_portal', methods=['GET', 'POST'])
+def customer_portal():
+    # Customer logs in or uses magic link
+    return render_template('customer_portal.html')
+
+@app.route('/customer_orders')
+def customer_orders():
+    # Show all authenticated customer orders
+    return render_template('customer_orders.html')
+
+@app.route('/customer_order/<int:order_id>')
+def customer_order_detail(order_id):
+    # Show a single customer order in detail
+    return render_template('customer_order_detail.html')
+
+# --- 4. Product Variants & Options ---
+@app.route('/product/<int:product_id>')
+def product_detail(product_id):
+    # Show single product, options/variants
+    return render_template('product_detail.html')
+
+# --- (Optional, for managing variants in admin) ---
+@app.route('/edit_variant/<int:variant_id>', methods=['GET', 'POST'])
+def edit_variant(variant_id):
+    # Edit product variant (size/color/etc.)
+    return render_template('edit_variant.html')
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 
 @app.route("/admin-roles")
 @login_required
@@ -635,8 +1835,11 @@ def admin_roles_landing():
 def usd(value):
     return "${:,.2f}".format(value or 0.0)
 
+<<<<<<< HEAD
 from sqlalchemy import func
 from flask import request, render_template
+=======
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 # import Business, BusinessTransaction, UserTransaction as before
 
 @app.route("/")
@@ -3154,6 +4357,7 @@ def finance_dashboard():
     misc_services = operating_capital * 0.15
 
     # Silent Partners breakdown (with per-partner cap)
+<<<<<<< HEAD
     tito = min(silent_partners * 0.4525, 5000000)
     pedro = min(silent_partners * 0.1725, 1000000)
     paul_tara = min(silent_partners * 0.0875, 500000)
@@ -3172,6 +4376,37 @@ def finance_dashboard():
     ana_pepe = min(silent_partners * 0.01, 50000)
     karen = min(silent_partners * 0.01, 50000)
     raul = min(silent_partners * 0.01, 50000)
+=======
+    marjorie = min(silent_partners * 0.20, 20000000)
+    tito = min(silent_partners * 0.15, 10000000)
+    pedro = min(silent_partners * 0.12, 1000000)
+    paul_tara = min(silent_partners * 0.09, 500000)
+    james = min(silent_partners * 0.075, 250000)
+    angel = min(silent_partners * 0.025, 250000)
+    josh = min(silent_partners * 0.025, 250000)
+    diego = min(silent_partners * 0.02, 150000)
+    esther = min(silent_partners * 0.02, 150000)
+    reyna = min(silent_partners * 0.02, 150000)
+    ramico = min(silent_partners * 0.02, 150000)
+    michael = min(silent_partners * 0.02, 150000)
+    manuela = min(silent_partners * 0.02, 150000)
+    alex_s = min(silent_partners * 0.02, 150000)
+    victor_r = min(silent_partners * 0.02, 150000)
+    john_paul = min(silent_partners * 0.02, 150000)
+    ana_pepe = min(silent_partners * 0.015, 100000)
+    karen = min(silent_partners * 0.015, 100000)
+    raul = min(silent_partners * 0.015, 100000)
+    genesis = min(silent_partners * 0.01, 100000)
+    jen = min(silent_partners * 0.01, 100000)
+    jj = min(silent_partners * 0.01, 100000)
+    dominick = min(silent_partners * 0.01, 100000)
+    alex_m = min(silent_partners * 0.01, 100000)
+    jose = min(silent_partners * 0.01, 100000)
+    adela = min(silent_partners * 0.01, 100000)
+    loida = min(silent_partners * 0.01, 100000)
+    milvia = min(silent_partners * 0.01, 100000)
+    shelly = min(silent_partners * 0.01, 100000)
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
 
     summary = dict(
         total_ad_revenue=f"{total_ad_revenue:,.2f}",
@@ -3189,6 +4424,10 @@ def finance_dashboard():
         employees=f"{employees:,.2f}",
         webapp_fees=f"{webapp_fees:,.2f}",
         misc_services=f"{misc_services:,.2f}",
+<<<<<<< HEAD
+=======
+        marjorie=f"{marjorie:,.2f}",
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
         tito=f"{tito:,.2f}",
         pedro=f"{pedro:,.2f}",
         paul_tara=f"{paul_tara:,.2f}",
@@ -3201,12 +4440,29 @@ def finance_dashboard():
         ramico=f"{ramico:,.2f}",
         michael=f"{michael:,.2f}",
         manuela=f"{manuela:,.2f}",
+<<<<<<< HEAD
         alex=f"{alex:,.2f}",
+=======
+        alex_s=f"{alex_s:,.2f}",
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
         victor_r=f"{victor_r:,.2f}",
         john_paul=f"{john_paul:,.2f}",
         ana_pepe=f"{ana_pepe:,.2f}",
         karen=f"{karen:,.2f}",
         raul=f"{raul:,.2f}",
+<<<<<<< HEAD
+=======
+        genesis=f"{genesis:,.2f}",
+        jen=f"{jen:,.2f}",
+        jj=f"{jj:,.2f}",
+        dominick=f"{dominick:,.2f}",
+        alex_m=f"{alex_m:,.2f}",
+        jose=f"{jose:,.2f}",
+        adela=f"{adela:,.2f}",
+        loida=f"{loida:,.2f}",
+        milvia=f"{milvia:,.2f}",
+        shelly=f"{shelly:,.2f}",
+>>>>>>> 5e95a5701f54c47cfd23f65564158950bf3fa4b8
         period=period,
         year=year,
         month=month

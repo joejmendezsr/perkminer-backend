@@ -297,6 +297,11 @@
               Activate E-Commerce Store
             </a>
           {% endif %}
+        {% if biz.has_ecommerce_store %}
+          <a href="{{ url_for('store_admin') }}" class="btn btn-primary">Manage Storefront</a>
+        {% else %}
+          <a href="{{ url_for('store_terms') }}" class="btn btn-warning">Activate E-Commerce Store</a>
+        {% endif %}
       </div>
       <!-- Account Balance and Fund/Add Funds Button -->
       <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap">
