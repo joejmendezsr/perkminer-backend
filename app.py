@@ -3725,7 +3725,7 @@ def business_dashboard():
         form=form,
         profile_form=profile_form,
         invite_form=invite_form,
-        biz=biz,
+        business=biz,
         payment_alerts=payment_alerts,  # <-- This line passes to template
         form_data=form_data,
         sponsor=sponsor,
