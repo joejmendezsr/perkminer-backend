@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request, redirect, url_for, render_template, flash, session, abort, jsonify, send_from_directory, Response
+from flask import Flask, request, redirect, url_for, render_template, flash, session, abort, jsonify, send_from_directory, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message as MailMessage
 from flask_bcrypt import Bcrypt
@@ -914,12 +914,7 @@ def store_payment_success():
 def store_builder():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
-    if not biz:
-        flash("Business not found.", "danger")
-        return redirect(url_for('business_dashboard'))
-
     themes = Theme.query.all()
-
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -927,43 +922,18 @@ def store_builder():
             db.session.commit()
             flash("Website changes saved!", "success")
         else:
-            flash("No HTML received.", "danger")
+            flash("No HTML received; website not updated.", "danger")
         return redirect(url_for('store_builder'))
 
-    saved_html = biz.grapesjs_html or ""
+    saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
+    # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
-
     return render_template(
         'store_builder.html',
-        business=biz,                      # ← Make sure this line exists (or add it)
+        business=biz,
         themes=themes,
         saved_html=saved_html,
-        theme_html_map=json.dumps(theme_html_map)
-    )
-
-@app.route('/store_preview')
-@business_login_required
-def store_preview():
-    biz_id = session.get('business_id')
-    biz = Business.query.get_or_404(biz_id)
-    
-    html_content = biz.grapesjs_html
-    
-    if not html_content or html_content.strip() == "":
-        html_content = """
-        <div style="padding:80px 20px; text-align:center; font-family:sans-serif; color:#555; background:#f8f9fa; min-height:100vh;">
-            <h2 style="color:#2c3e50;">No website content saved yet</h2>
-            <p style="font-size:1.1em; max-width:600px; margin:20px auto;">
-                Go back to the Store Builder, make your changes in GrapesJS, 
-                and click <strong>"Save Website"</strong>.
-            </p>
-            <p style="color:#7f8c8d;">Your real business data (name, photo, address, etc.) will appear automatically once saved.</p>
-        </div>
-        """
-    
-    return render_template_string(
-        html_content,
-        business=biz   # ← this lets {{ business.business_name }}, {{ business.profile_photo }} etc. work inside the saved HTML
+        theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
     )
 
 @app.route('/stores/<store_slug>')
