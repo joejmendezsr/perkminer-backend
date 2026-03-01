@@ -941,6 +941,25 @@ def store_builder():
         theme_html_map=json.dumps(theme_html_map)
     )
 
+@app.route('/store_preview')
+@business_login_required
+def store_preview():
+    biz_id = session.get('business_id')
+    biz = Business.query.get_or_404(biz_id)
+    
+    # Use saved GrapesJS HTML if it exists, otherwise fallback to selected theme or empty
+    html_content = biz.grapesjs_html
+    
+    if not html_content:
+        # Optional: fallback to first theme or a default message
+        html_content = "<h1>No website content saved yet</h1><p>Edit in Store Builder and save.</p>"
+    
+    # IMPORTANT: Mark as safe so Jinja doesn't escape it
+    return render_template_string(
+        html_content,
+        business=biz  # pass business object so {{ business.business_name }} etc. still work
+    )
+
 @app.route('/stores/<store_slug>')
 def public_storefront(store_slug):
     biz = Business.query.filter_by(
