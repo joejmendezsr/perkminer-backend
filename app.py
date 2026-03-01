@@ -1,67 +1,32 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session, send_from_directory
+from flask import Flask, request, redirect, url_for, render_template, flash, session, abort, jsonify, send_from_directory, Response
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message as MailMessage
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_mail import Mail, Message
-from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField
+from flask_wtf import FlaskForm, CSRFProtect, RecaptchaField
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField, TextAreaField, Form
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from werkzeug.utils import secure_filename
 from functools import wraps
-from flask import abort
-from flask_login import current_user, login_required
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, Email, Optional
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, Length
-from flask_wtf import RecaptchaField
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from flask_wtf import FlaskForm
-from wtforms import SelectField, TextAreaField, DecimalField, SubmitField
-from wtforms.validators import DataRequired, NumberRange, Length
-from flask_mail import Message as MailMessage
+import os
+import stripe
+import logging
 from datetime import datetime
-from datetime import date, datetime
+import json
+from sqlalchemy import or_, and_, func, literal
+from flask_migrate import Migrate
 from datetime import datetime, date
-from functools import wraps
-from flask import session, flash, redirect, url_for, request
-from sqlalchemy import or_, and_
-from sqlalchemy import func, literal
-from flask import render_template
-from flask_login import current_user
-from flask import request, render_template
-from sqlalchemy import func
-from flask_mail import Message
-from flask_login import UserMixin
-from flask_login import login_required
-
-class ServiceRequestForm(FlaskForm):
-    service_type = SelectField(
-        "Type of Service Requested",
-        choices=[
-            ("handyman", "Handyman Service"),
-            ("contractor", "Contractor Services"),
-            ("cleaning", "Cleaning Services"),
-            ("lawn", "Lawn Care"),
-            # Add more as needed here
-        ],
-        validators=[DataRequired()]
-    )
-    details = TextAreaField("Service Details", validators=[DataRequired(), Length(max=1000)])
-    budget_low = DecimalField("Budget (Low End)", validators=[NumberRange(min=0)], default=0)
-    budget_high = DecimalField("Budget (High End)", validators=[NumberRange(min=0)], default=0)
-    submit = SubmitField("Submit Request")
-
-class TwoFactorForm(FlaskForm):
-    code = StringField('Enter the 6-digit code', validators=[DataRequired(), Length(min=6, max=6)])
-    submit = SubmitField('Verify')
-
-class EditUserForm(FlaskForm):
-    name = StringField('Name', validators=[Optional()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Save')
+import os, re, random, string, time, logging, csv, uuid, hmac, hashlib
+from io import StringIO, BytesIO
+import cloudinary
+import cloudinary.uploader
+import qrcode
+from flask import session, request, redirect, url_for, flash, render_template
+from wtforms import StringField, Form
+from wtforms.validators import DataRequired, Email
+from flask import Response, send_file, url_for
+from flask import request, jsonify
 
 # --- Cart Logic ---
 def get_cart():
@@ -124,6 +89,26 @@ def send_customer_receipt(buyer_email, product_name, amount, business_name):
         import logging
         logging.error("Customer receipt email failed: %s", e)
 
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not any(r.name == 'super_admin' for r in current_user.roles):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+def role_required(role_name):
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_role(role_name):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 def get_interaction_for_business_and_user(business_id, user_id):
     return Interaction.query.filter_by(
         business_id=business_id,
@@ -131,19 +116,14 @@ def get_interaction_for_business_and_user(business_id, user_id):
         status="active"
     ).first()
 
-import csv
-from io import StringIO, BytesIO
-from flask import Response, send_file, url_for
-import hmac
-import hashlib
-from flask import request, jsonify
-import os, re, random, string, time, logging
-import cloudinary
-import cloudinary.uploader
-import random
-import qrcode
-import uuid  # <-- only needs to be here once! Put with other imports
-import stripe
+def business_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('business_id'):
+            flash('Please log in as a business to access this page.', 'warning')
+            return redirect(url_for('business_login', next=request.path))
+        return f(*args, **kwargs)
+    return decorated_function
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -152,7 +132,6 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'perkminer_hardcoded_secret_2026'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'perkminer_hardcoded_secret_2026')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -169,20 +148,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-
+csrf = CSRFProtect(app)
 db = SQLAlchemy(app)
-from flask_migrate import Migrate
-migrate = Migrate(app, db)
-with app.app_context():
-    db.create_all()
-bcrypt = Bcrypt(app)
 mail = Mail(app)
+bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
-csrf = CSRFProtect(app)
-logging.basicConfig(level=logging.INFO)
-
 migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
@@ -195,10 +166,6 @@ logging.basicConfig(level=logging.INFO)
 
 SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
 MIN_PASSWORD_LENGTH = 8
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 # ----------------- WTForms (All Your Forms) -------------------
 class ServiceRequestForm(FlaskForm):
@@ -234,11 +201,6 @@ class BusinessEditForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[Optional()])
     address = StringField('Address', validators=[Optional()])
     submit = SubmitField('Save')
-
-EMAIL_REGEX = r'^[\w.-]+@[\w.-]+.\w{2,}$'
-def valid_email(email): return re.match(EMAIL_REGEX, email or "")
-def valid_password(pw): return pw and len(pw) >= MIN_PASSWORD_LENGTH
-def random_email_code(): return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
 class InviteForm(FlaskForm):
     invitee_email = StringField('Invitee Email', validators=[DataRequired(), Email()])
@@ -335,6 +297,10 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField('Reset Password')
 
+# ---------------------- Validators, Roles, and Utilities ----------------------
+
+EMAIL_REGEX = r'^[\w.-]+@[\w.-]+\.\w{2,}$'
+
 def valid_email(email):
     return re.match(EMAIL_REGEX, email or "")
 
@@ -364,14 +330,12 @@ def random_business_code(business_name):
     return code
 
 def send_email(to, subject, html_body):
-    msg = Message(subject, recipients=[to], html=html_body, sender=app.config['MAIL_USERNAME'])
     msg = MailMessage(
         subject=subject,
         recipients=[to],
         html=html_body,
         sender=app.config['MAIL_USERNAME']
     )
-
     try:
         mail.send(msg)
     except Exception as e:
@@ -567,6 +531,8 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ---------------------- Core Database Models ----------------------
+from flask_login import UserMixin
+from datetime import datetime
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -581,7 +547,6 @@ class User(db.Model, UserMixin):
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
-
     def has_role(self, role_name):
         return any(role.name == role_name for role in self.roles)
 
@@ -663,11 +628,6 @@ class Business(db.Model):
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
-    facebook_url = db.Column(db.String(255))
-    twitter_url = db.Column(db.String(255))
-    instagram_url = db.Column(db.String(255))
-    linkedin_url = db.Column(db.String(255))
-    
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -758,6 +718,7 @@ class Theme(db.Model):
     name = db.Column(db.String(30))
     css_url = db.Column(db.String(150))
     thumbnail_url = db.Column(db.String(200))
+    starter_html = db.Column(db.Text)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -868,8 +829,6 @@ def store_builder():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
-
-    # Handle save from the GrapesJS builder
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -880,48 +839,15 @@ def store_builder():
             flash("No HTML received; website not updated.", "danger")
         return redirect(url_for('store_builder'))
 
-    # ────────────────────────────────────────────────
-    # No starter_html, no automatic data filling anymore
-    # ────────────────────────────────────────────────
-    saved_html = biz.grapesjs_html or ""   # only what user has actually saved
-
-    # Keep business dict if your template still uses it for sidebar/info/etc.
-    # (remove fields you no longer need)
-    business = {
-        "profile_photo": biz.profile_photo or "https://via.placeholder.com/100?text=Logo",
-        "name": biz.business_name or "",
-        "about_us": biz.about_us or "",
-        "address": biz.address or "",
-        "phone": biz.phone_number or "",
-        "email": biz.business_email or "",
-        "website_url": biz.website_url or "",
-        "facebook_url": biz.facebook_url or "#",
-        "twitter_url": biz.twitter_url or "#",
-        "instagram_url": biz.instagram_url or "#",
-        "linkedin_url": biz.linkedin_url or "#",
-    }
-
-    # Services list – still generated if your template displays it separately
-    service_fields = [
-        biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5,
-        biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10
-    ]
-    services_list = [s for s in service_fields if s and s.strip()]
-    services_html = (
-        "<ul>" + "".join(f"<li>{s.strip()}</li>" for s in services_list) + "</ul>"
-        if services_list else
-        "<p>No services listed yet.</p>"
-    )
-
+    saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
+    # Build a dict: theme_id => starter_html
+    theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
     return render_template(
         'store_builder.html',
         biz=biz,
-        business=business,              # optional – remove if no longer used
-        services=services_html,         # optional – only if template still shows services
-        themes=themes,                  # if frontend still lets user browse themes
-        saved_html=saved_html,          # ← what GrapesJS loads/editing area shows
-        # filled_html is gone – preview should just use saved_html directly
-        theme_html_map=json.dumps({})   # empty if you no longer need theme preloads
+        themes=themes,
+        saved_html=saved_html,
+        theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
     )
 
 @app.route('/stores/<store_slug>')
@@ -1382,6 +1308,91 @@ def order_lookup():
         show_results = True
     return render_template('order_lookup.html', found_orders=found_orders, show_results=show_results)
 
+# ------------------- STUBS FOR ADMIN, PUBLIC STORE, ETC -----------------
+@app.route('/store_admin')
+@business_login_required
+def store_admin():
+    return render_template('store_admin.html')
+
+@app.route('/store_orders')
+@business_login_required
+def store_orders():
+    return render_template('store_orders.html')
+
+@app.route('/stores/<store_slug>')
+def public_storefront(store_slug):
+    biz = Business.query.filter_by(store_slug=store_slug, has_ecommerce_store=True, website_approved=True).first()
+    if not biz or not biz.grapesjs_html:
+        return render_template('storefront_coming_soon.html', biz=biz), 404
+    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
+    products = Product.query.filter_by(business_id=biz.id).all()
+    return render_template('public_storefront.html', biz=biz, theme=theme, products=products)
+
+# --------- PRODUCT MANAGEMENT & EDITING (ADMIN) ----------
+@app.route('/store_products', methods=['GET', 'POST'])
+@business_login_required
+def store_products():
+    biz_id = session.get('business_id')
+    biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found or not logged in!", "danger")
+        return redirect(url_for("business_login"))
+    products = Product.query.filter_by(business_id=biz.id).limit(50).all()
+    if request.method == 'POST':
+        name = request.form.get('name')
+        price = request.form.get('price')
+        description = request.form.get('description')
+        image_url = request.form.get('image_url')
+        stock = request.form.get('stock')
+        if name and price and len(products) < 50:
+            new_product = Product(
+                business_id=biz.id,
+                name=name,
+                price=float(price),
+                description=description,
+                image_url=image_url,
+                stock=int(stock) if stock else 0
+            )
+            db.session.add(new_product)
+            db.session.commit()
+            flash("Product added successfully!", "success")
+            return redirect(url_for('store_products'))
+        elif len(products) >= 50:
+            flash("Limit reached: 50 products max.", "danger")
+    return render_template('store_products.html', biz=biz, products=products)
+
+@app.route('/edit_product/<int:product_id>', methods=['GET', 'POST'])
+@business_login_required
+def edit_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    biz_id = session.get('business_id')
+    if product.business_id != biz_id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('store_products'))
+    if request.method == 'POST':
+        product.name = request.form.get('name')
+        product.price = float(request.form.get('price') or product.price)
+        product.description = request.form.get('description')
+        product.image_url = request.form.get('image_url')
+        product.stock = int(request.form.get('stock') or product.stock)
+        db.session.commit()
+        flash("Product updated!", "success")
+        return redirect(url_for('store_products'))
+    return render_template('edit_product.html', product=product)
+
+@app.route('/delete_product/<int:product_id>', methods=['POST'])
+@business_login_required
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    biz_id = session.get('business_id')
+    if product.business_id != biz_id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('store_products'))
+    db.session.delete(product)
+    db.session.commit()
+    flash("Product deleted.", "success")
+    return redirect(url_for('store_products'))
+
 # --------- ORDER FULFILLMENT (BUSINESS ONLY, STUB) ----------
 @app.route('/fulfill_order/<int:order_id>', methods=['POST'])
 @business_login_required
@@ -1442,17 +1453,6 @@ def product_detail(product_id):
 def edit_variant(variant_id):
     # Edit product variant (size/color/etc.)
     return render_template('edit_variant.html')
-
-@app.route("/admin-roles")
-@login_required
-def admin_roles_landing():
-    return render_template("admin_roles_landing.html")
-
-@app.template_filter('usd')
-def usd(value):
-    return "${:,.2f}".format(value or 0.0)
-
-# import Business, BusinessTransaction, UserTransaction as before
 
 @app.route("/")
 def home():
@@ -2604,6 +2604,8 @@ def payment_qr_redirect(ref):
             return "No active session found for this customer.", 404
     # This part runs if the QR was scanned by anyone who is NOT a logged-in business.
     return render_template("qr_user_landing.html", user=user)
+
+from datetime import datetime
 
 @app.route("/business/fund-account", methods=["GET", "POST"])
 @business_login_required
@@ -3985,35 +3987,6 @@ def finance_dashboard():
     ana_pepe = min(silent_partners * 0.01, 50000)
     karen = min(silent_partners * 0.01, 50000)
     raul = min(silent_partners * 0.01, 50000)
-    marjorie = min(silent_partners * 0.20, 20000000)
-    tito = min(silent_partners * 0.15, 10000000)
-    pedro = min(silent_partners * 0.12, 1000000)
-    paul_tara = min(silent_partners * 0.09, 500000)
-    james = min(silent_partners * 0.075, 250000)
-    angel = min(silent_partners * 0.025, 250000)
-    josh = min(silent_partners * 0.025, 250000)
-    diego = min(silent_partners * 0.02, 150000)
-    esther = min(silent_partners * 0.02, 150000)
-    reyna = min(silent_partners * 0.02, 150000)
-    ramico = min(silent_partners * 0.02, 150000)
-    michael = min(silent_partners * 0.02, 150000)
-    manuela = min(silent_partners * 0.02, 150000)
-    alex_s = min(silent_partners * 0.02, 150000)
-    victor_r = min(silent_partners * 0.02, 150000)
-    john_paul = min(silent_partners * 0.02, 150000)
-    ana_pepe = min(silent_partners * 0.015, 100000)
-    karen = min(silent_partners * 0.015, 100000)
-    raul = min(silent_partners * 0.015, 100000)
-    genesis = min(silent_partners * 0.01, 100000)
-    jen = min(silent_partners * 0.01, 100000)
-    jj = min(silent_partners * 0.01, 100000)
-    dominick = min(silent_partners * 0.01, 100000)
-    alex_m = min(silent_partners * 0.01, 100000)
-    jose = min(silent_partners * 0.01, 100000)
-    adela = min(silent_partners * 0.01, 100000)
-    loida = min(silent_partners * 0.01, 100000)
-    milvia = min(silent_partners * 0.01, 100000)
-    shelly = min(silent_partners * 0.01, 100000)
 
     summary = dict(
         total_ad_revenue=f"{total_ad_revenue:,.2f}",
@@ -4031,7 +4004,6 @@ def finance_dashboard():
         employees=f"{employees:,.2f}",
         webapp_fees=f"{webapp_fees:,.2f}",
         misc_services=f"{misc_services:,.2f}",
-        marjorie=f"{marjorie:,.2f}",
         tito=f"{tito:,.2f}",
         pedro=f"{pedro:,.2f}",
         paul_tara=f"{paul_tara:,.2f}",
@@ -4045,22 +4017,11 @@ def finance_dashboard():
         michael=f"{michael:,.2f}",
         manuela=f"{manuela:,.2f}",
         alex=f"{alex:,.2f}",
-        alex_s=f"{alex_s:,.2f}",
         victor_r=f"{victor_r:,.2f}",
         john_paul=f"{john_paul:,.2f}",
         ana_pepe=f"{ana_pepe:,.2f}",
         karen=f"{karen:,.2f}",
         raul=f"{raul:,.2f}",
-        genesis=f"{genesis:,.2f}",
-        jen=f"{jen:,.2f}",
-        jj=f"{jj:,.2f}",
-        dominick=f"{dominick:,.2f}",
-        alex_m=f"{alex_m:,.2f}",
-        jose=f"{jose:,.2f}",
-        adela=f"{adela:,.2f}",
-        loida=f"{loida:,.2f}",
-        milvia=f"{milvia:,.2f}",
-        shelly=f"{shelly:,.2f}",
         period=period,
         year=year,
         month=month
@@ -4332,6 +4293,8 @@ def admin_delete_business(business_id):
     db.session.commit()
     flash(f"Business {biz.business_name} deleted.")
     return redirect(url_for("admin_dashboard"))
+
+from flask_login import login_required
 
 @app.route("/listing/<int:biz_id>")
 def view_listing(biz_id):
