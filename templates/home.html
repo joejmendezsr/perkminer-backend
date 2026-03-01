@@ -91,79 +91,61 @@
       .biz-feature-img, .biz-feature-img-wrap { width: 130px; height: 130px; }
     }
     footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 2.3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea; }
+
+    /* ────────────────────────────────────────────────
+       Infinite scrolling marquee (added - pure CSS)
+    ──────────────────────────────────────────────── */
+    .marquee-container {
+      --speed: 40s;           /* adjust: lower = faster */
+      --gap: 4rem;            /* spacing between repeated sections */
+      width: 100%;
+      overflow: hidden;
+      background: var(--pm-primary);
+      color: white;
+      padding: 0.9rem 0;
+      margin: 0;
+      border-top: 2px solid var(--pm-accent);
+      border-bottom: 2px solid var(--pm-accent);
+      box-shadow: 0 2px 12px rgba(42,88,89,0.25);
+    }
+
+    .marquee {
+      display: flex;
+      white-space: nowrap;
+      animation: scroll var(--speed) linear infinite;
+    }
+
+    .marquee:hover {
+      animation-play-state: paused;
+      cursor: default;
+    }
+
+    .marquee-content {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--gap);
+      font-size: 1.35rem;
+      font-weight: 600;
+      padding: 0 2rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .marquee-content span.highlight {
+      color: var(--pm-accent);
+      font-weight: 700;
+    }
+
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(calc(-100% - var(--gap))); }
+    }
+
+    @media (max-width: 576px) {
+      .marquee-content { font-size: 1.1rem; }
+      .marquee-container { padding: 0.7rem 0; }
+    }
   </style>
-
-
-
-.marquee-container {
-  --speed: 35s;           /* lower = faster, higher = slower */
-  --gap: 3rem;            /* space between item groups */
-  --bg: #0f0f0f;          /* dark cyberpunk feel – change as you like */
-  --text: #00ffea;        /* neon cyan – super cool accent */
-  --text-shadow: 0 0 10px rgba(0, 255, 234, 0.7);
-
-  width: 100%;
-  overflow: hidden;
-  background: var(--bg);
-  padding: 1.2rem 0;
-  margin: 2rem 0;
-  border-top: 1px solid #333;
-  border-bottom: 1px solid #333;
-  box-shadow: 
-    inset 0 0 40px rgba(0, 255, 234, 0.08),
-    0 0 30px rgba(0, 0, 0, 0.6);
-}
-
-.marquee {
-  display: flex;
-  white-space: nowrap;
-  animation: scroll var(--speed) linear infinite;
-}
-
-.marquee:hover {
-  animation-play-state: paused;   /* ← the magic pause */
-  cursor: default;
-}
-
-.marquee-content {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--gap);
-  font-size: 2.1rem;
-  font-weight: 700;
-  color: var(--text);
-  text-shadow: var(--text-shadow);
-  padding: 0 1rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  animation: glow 3s ease-in-out infinite alternate; /* optional subtle pulse */
-}
-
-/* Optional: subtle neon glow pulse */
-@keyframes glow {
-  from { text-shadow: 0 0 10px rgba(0, 255, 234, 0.5); }
-  to   { text-shadow: 0 0 25px rgba(0, 255, 234, 1), 0 0 40px rgba(0, 255, 234, 0.6); }
-}
-
-/* The infinite scroll */
-@keyframes scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(calc(-100% - var(--gap)));
-  }
-}
-
-/* Optional: reverse direction (right → left feels more classic) */
-.marquee.reverse {
-  animation-direction: reverse;
-}
-
-
-
-
-
 </head>
 <body>
   <section class="hero-section">
@@ -226,6 +208,32 @@
       </div>
     </div>
   </section>
+
+  <!-- Scrolling marquee added here – right above the nav bar -->
+  <div class="marquee-container">
+    <div class="marquee">
+      <div class="marquee-content">
+        Earn <span class="highlight">Real Cash Back</span> • Shop Local & Save • 
+        <span class="highlight">Up to 25%</span> Back at Participating Businesses • 
+        Join Free Today • Support Small Businesses • 
+        PerkMiner Pays You • Discover Deals Near You • 
+        Cash Back on Everyday Purchases • 
+        <span class="highlight">No Credit Card Needed</span> • 
+        &nbsp;&nbsp;&nbsp;
+      </div>
+      <!-- Duplicate for seamless loop -->
+      <div class="marquee-content">
+        Earn <span class="highlight">Real Cash Back</span> • Shop Local & Save • 
+        <span class="highlight">Up to 25%</span> Back at Participating Businesses • 
+        Join Free Today • Support Small Businesses • 
+        PerkMiner Pays You • Discover Deals Near You • 
+        Cash Back on Everyday Purchases • 
+        <span class="highlight">No Credit Card Needed</span> • 
+        &nbsp;&nbsp;&nbsp;
+      </div>
+    </div>
+  </div>
+
   <nav class="navbar navbar-expand-lg navbar-light bg-light mb-0">
     <div class="container">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -241,28 +249,6 @@
       </div>
     </div>
   </nav>
-
-
-
-<div class="marquee-container">
-  <div class="marquee">
-    <div class="marquee-content">
-      <!-- Repeat your items or text here – duplicate the whole set for seamless loop -->
-      Welcome to the Future • 2026 Vibes 🚀 • Scroll & Explore • Dark Mode Forever 🌙 • 
-      Pixel Perfect Design • Infinite Creativity ♾️ • Hover to Pause • 
-      Built with Pure CSS • Let's Goooo! 🔥 &nbsp;&nbsp;&nbsp;
-    </div>
-    <!-- Duplicate is key for seamless infinite effect -->
-    <div class="marquee-content">
-      Welcome to the Future • 2026 Vibes 🚀 • Scroll & Explore • Dark Mode Forever 🌙 • 
-      Pixel Perfect Design • Infinite Creativity ♾️ • Hover to Pause • 
-      Built with Pure CSS • Let's Goooo! 🔥 &nbsp;&nbsp;&nbsp;
-    </div>
-  </div>
-</div>
-
-
-
 
   <main class="container my-5">
     <h2 class="mb-2 mt-3 mt-md-0 text-center">Browse by Popular Categories</h2>
