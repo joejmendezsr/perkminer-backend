@@ -4158,6 +4158,11 @@ def assign_roles():
                     user.roles.append(role)
             db.session.commit()
             flash("Roles updated!", "success")
+    return render_template(
+        "assign_roles.html",  # create this template if it doesn't exist
+        users=users,
+        roles=roles
+    )
 
 @app.route("/listing-disclaimer", methods=["GET", "POST"])
 @business_login_required
