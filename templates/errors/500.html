@@ -1,0 +1,16 @@
+{% extends "base.html" %}  <!-- assuming you have a base.html with header/footer -->
+
+{% block title %}Server Error - PerkMiner{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 text-danger">500</h1>
+            <h2>Oops! Something went wrong.</h2>
+            <p class="lead">{{ error_message }}</p>
+            <p>Our team has been notified. Please try again later or <a href="{{ url_for('home') }}">go back to homepage</a>.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -32,6 +32,10 @@ from flask import request, jsonify
 def get_cart():
     return session.get("cart", {})
 
+def get_valid_coupons():
+    # TODO: implement real coupon logic (db query, etc.)
+    return {'TEST10': 0.10, 'WELCOME20': 0.20}  # example dict {code: discount_pct}
+
 def save_cart(cart):
     session["cart"] = cart
     session.modified = True
@@ -132,7 +136,24 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'perkminer_hardcoded_secret_2026')
+
+# ────────────────────────────────────────────────
+# Flask SECRET_KEY – must come from env var (no hardcoded fallback!)
+# ────────────────────────────────────────────────
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    import logging
+    logging.critical(
+        "CRITICAL: SECRET_KEY is missing in environment variables! "
+        "This is a MAJOR security risk – sessions/CSRF are insecure. "
+        "Set a strong SECRET_KEY in Render → Environment immediately. "
+        "Generate one: python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
+    # Optional: fail fast in local dev (comment out in prod if you want app to limp along)
+    # if os.environ.get('FLASK_ENV') == 'development':
+    #     raise ValueError("SECRET_KEY not set in environment!")
+
+app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', "sqlite:///site.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -155,14 +176,79 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 migrate = Migrate(app, db)
-with app.app_context():
-    db.create_all()
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 stripe.api_key = os.environ.get("STRIPE_API_KEY")
 
+# ────────────────────────────────────────────────
+# Check Stripe key early – prevent silent failures
+# ────────────────────────────────────────────────
+if not stripe.api_key:
+    import logging
+    logging.error(
+        "CRITICAL: STRIPE_API_KEY is missing or empty in environment variables! "
+        "Stripe payments will fail. Set it in Render dashboard → Environment."
+    )
+    # Optional: in local dev, raise to fail fast (comment out in prod if preferred)
+    # if os.environ.get('FLASK_ENV') == 'development':
+    #     raise ValueError("STRIPE_API_KEY not set in environment!")
+
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
-YOUR_DOMAIN = "https://perkminer.com"
-logging.basicConfig(level=logging.INFO)
+
+# ────────────────────────────────────────────────
+# Check Stripe webhook secret early – prevent silent signature failures
+# ────────────────────────────────────────────────
+if not STRIPE_WEBHOOK_SECRET:
+    import logging
+    logging.error(
+        "CRITICAL: STRIPE_WEBHOOK_SECRET is missing or empty in environment variables! "
+        "Stripe webhook signature verification will fail. "
+        "Set it in Render dashboard → Environment. "
+        "You can generate one in Stripe Dashboard → Developers → Webhooks → Add endpoint → Signing secret."
+    )
+    # Optional: fail fast in local dev (comment out in prod if preferred)
+    # if os.environ.get('FLASK_ENV') == 'development':
+    #     raise ValueError("STRIPE_WEBHOOK_SECRET not set in environment!")
+
+YOUR_DOMAIN = os.environ.get('YOUR_DOMAIN', 'https://perkminer.com').rstrip('/')
+
+if not os.environ.get('YOUR_DOMAIN'):
+    import logging
+    logging.warning(
+        "YOUR_DOMAIN not set in environment variables — falling back to production domain: %s. "
+        "Set YOUR_DOMAIN in Render → Environment for preview/staging branches.",
+        YOUR_DOMAIN
+    )
+
+# ────────────────────────────────────────────────
+# Better global logging setup – nicer format + conditional level
+# ────────────────────────────────────────────────
+import logging
+import sys
+
+# Set level: DEBUG in local dev, INFO in production
+log_level = logging.DEBUG if os.environ.get('FLASK_ENV') == 'development' else logging.INFO
+
+# Create a formatter with timestamp, level, logger name, message
+formatter = logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# Console handler (Render captures stdout, so this is sufficient)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(formatter)
+
+# Root logger configuration
+root_logger = logging.getLogger()
+root_logger.setLevel(log_level)
+root_logger.addHandler(console_handler)
+
+# Optional: reduce noise from some libraries (e.g. werkzeug, sqlalchemy)
+logging.getLogger('werkzeug').setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
+
+# Test log to confirm setup
+logging.info("Logging initialized – level: %s", logging.getLevelName(log_level))
 
 SESSION_EMAIL_RESEND_KEY = "last_resend_email_time"
 MIN_PASSWORD_LENGTH = 8
@@ -1309,11 +1395,6 @@ def order_lookup():
     return render_template('order_lookup.html', found_orders=found_orders, show_results=show_results)
 
 # ------------------- STUBS FOR ADMIN, PUBLIC STORE, ETC -----------------
-@app.route('/store_admin')
-@business_login_required
-def store_admin():
-    return render_template('store_admin.html')
-
 @app.route('/store_orders')
 @business_login_required
 def store_orders():
@@ -1753,7 +1834,6 @@ def login():
                 return redirect(url_for("verify_email"))
             else:
                 # --- 2FA LOGIC ---
-                import random  # make sure this is also at the top of your file
                 code = str(random.randint(100000, 999999))
                 session['pending_2fa_code'] = code
                 session['pending_2fa_user_id'] = user.id
@@ -4813,38 +4893,6 @@ def export_commissions_paid_csv():
     return Response(output, mimetype="text/csv",
                     headers={"Content-Disposition": "attachment; filename=commissions_paid.csv"})
 
-PERKMINER_WEBHOOK_SECRET = "SuperSecretSharedKeyWithPartner"  # You will issue a unique one to each business-partner for real security
-
-@app.route('/api/report_purchase', methods=['POST'])
-def report_purchase():
-    data = request.json
-    session_id = data.get("perkminer_session")
-    user_referral_code = data.get("perkminer_user")
-    business_referral_code = data.get("perkminer_biz")
-    amount = float(data.get("amount", 0))
-    signature = data.get("signature")
-
-    # Simple HMAC signature validation (optional but highly recommended)
-    expected = hmac.new(
-        PERKMINER_WEBHOOK_SECRET.encode(),
-        f"{session_id}{user_referral_code}{business_referral_code}{amount}".encode(),
-        hashlib.sha256
-    ).hexdigest()
-    if signature != expected:
-        return jsonify({"status": "error", "message": "Signature validation failed"}), 403
-
-    interaction = Interaction.query.get(session_id)
-    user = User.query.filter_by(referral_code=user_referral_code).first()
-    business = Business.query.filter_by(referral_code=business_referral_code).first()
-    if not interaction or not user or not business:
-        return jsonify({"status": "error", "message": "Invalid purchase identifiers"}), 400
-
-    # --- Insert your full payout logic here as you do for QR and business finalization ---
-    # e.g. create UserTransaction, BusinessTransaction, deduct ad fees, assign commissions
-
-    # All done!
-    return jsonify({"status": "success", "message": "Transaction recorded and rewards credited."})
-
 @app.route("/seed_admins_once")
 def seed_admins_once():
     from app import db, User, Role, bcrypt
@@ -4919,8 +4967,24 @@ def seed_admins_once():
     response.append("Seeding complete!")
     return "<br>".join(response)
 
-for rule in app.url_map.iter_rules():
-    print(f"{rule.endpoint:25s} {rule.methods} {rule}")
+@app.errorhandler(500)
+def internal_server_error(error):
+    # Log the full error + traceback for debugging
+    import logging
+    import traceback
+    logging.exception("500 Internal Server Error occurred:")
+    # Optional: you can also print to console in dev
+    # traceback.print_exc()
+    
+    # Return a friendly message to the user
+    return render_template(
+        'errors/500.html',  # Create this template next
+        error_message="Something went wrong on our end. We've been notified and are looking into it."
+    ), 500
 
 if __name__ == "__main__":
+    # Optional: print all registered routes only in local dev
+    for rule in app.url_map.iter_rules():
+        print(f"{rule.endpoint:25s} {rule.methods} {rule}")
+    
     app.run(debug=True)
