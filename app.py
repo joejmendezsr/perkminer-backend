@@ -3746,6 +3746,11 @@ def business_logout():
     flash("Logged out as business.")
     return redirect(url_for("business_home"))
 
+@app.route('/admin/roles-landing')
+@admin_required  # or @role_required('super_admin')
+def admin_roles_landing():
+    return render_template('admin_roles_landing.html')  # create this template if needed
+
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     form = LoginForm()
