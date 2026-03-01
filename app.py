@@ -914,7 +914,12 @@ def store_payment_success():
 def store_builder():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
+    if not biz:
+        flash("Business not found.", "danger")
+        return redirect(url_for('business_dashboard'))
+
     themes = Theme.query.all()
+
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         if page_html:
@@ -922,18 +927,18 @@ def store_builder():
             db.session.commit()
             flash("Website changes saved!", "success")
         else:
-            flash("No HTML received; website not updated.", "danger")
+            flash("No HTML received.", "danger")
         return redirect(url_for('store_builder'))
 
-    saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
-    # Build a dict: theme_id => starter_html
+    saved_html = biz.grapesjs_html or ""
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+
     return render_template(
         'store_builder.html',
-        business=biz,
+        business=biz,                      # ← Make sure this line exists (or add it)
         themes=themes,
         saved_html=saved_html,
-        theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
+        theme_html_map=json.dumps(theme_html_map)
     )
 
 @app.route('/stores/<store_slug>')
