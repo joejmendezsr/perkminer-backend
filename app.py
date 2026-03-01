@@ -889,7 +889,7 @@ def store_admin():
         flash("Business not found or not logged in!", "danger")
         return redirect(url_for("business_login"))
     # You can add queries for products, orders, etc. as you build them.
-    return render_template('store_admin.html', biz=biz)
+    return render_template('store_admin.html', business=biz)
 
 @app.route('/store_payment_success')
 @business_login_required
@@ -930,7 +930,7 @@ def store_builder():
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
     return render_template(
         'store_builder.html',
-        biz=biz,
+        business=biz,
         themes=themes,
         saved_html=saved_html,
         theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
@@ -944,10 +944,10 @@ def public_storefront(store_slug):
         website_approved=True  # Only show if approved!
     ).first()
     if not biz or not biz.grapesjs_html:
-        return render_template('storefront_coming_soon.html', biz=biz), 404
+        return render_template('storefront_coming_soon.html', business=biz), 404
     theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
     products = Product.query.filter_by(business_id=biz.id).all()
-    return render_template('public_storefront.html', biz=biz, theme=theme, products=products)
+    return render_template('public_storefront.html', business=biz, theme=theme, products=products)
 
 @app.route('/store_products', methods=['GET', 'POST'])
 @business_login_required
@@ -982,7 +982,7 @@ def store_products():
             return redirect(url_for('store_products'))
         elif len(products) >= 50:
             flash("Limit reached: 50 products max.", "danger")
-    return render_template('store_products.html', biz=biz, products=products)
+    return render_template('store_products.html', business=biz, products=products)
 
 @app.route('/edit_product/<int:product_id>', methods=['GET', 'POST'])
 @business_login_required
@@ -2844,7 +2844,7 @@ def service_request(biz_id):
         # 3. Redirect user to their dashboard of active sessions
         return redirect(url_for('user_biz_interactions'))
 
-    return render_template("service_request.html", form=form, biz=biz)
+    return render_template("service_request.html", form=form, business=biz)
 
 @app.route("/user/interactions")
 @login_required
@@ -4171,7 +4171,7 @@ def listing_disclaimer():
                 "listing_disclaimer.html",
                 listing_id=listing_id,
                 referral_code=referral_code,
-                biz=biz
+                business=biz
             )
         return redirect(url_for('send_for_review'))
 
@@ -4183,7 +4183,7 @@ def listing_disclaimer():
         "listing_disclaimer.html",
         listing_id=listing_id,
         referral_code=referral_code,
-        biz=biz
+        business=biz
     )
 
 @app.route("/send-for-review", methods=["POST"])
@@ -4208,7 +4208,7 @@ def send_for_review():
             "listing_disclaimer.html",
             listing_id=listing_id,
             referral_code=referral_code,
-            biz=biz
+            business=biz
         )
 
     # Only require/upload a doc if it hasn't been uploaded yet (first submission)
@@ -4220,7 +4220,7 @@ def send_for_review():
                 "listing_disclaimer.html",
                 listing_id=listing_id,
                 referral_code=referral_code,
-                biz=biz
+                business=biz
             )
         # Save the file securely
         filename = secure_filename(file.filename)
@@ -4270,7 +4270,7 @@ def admin_edit_business(business_id):
         db.session.commit()
         flash("Business updated.")
         return redirect(url_for("admin_dashboard"))
-    return render_template("admin_edit_business.html", biz=biz, form=form)
+    return render_template("admin_edit_business.html", business=biz, form=form)
 
 @app.route("/admin/business/<int:business_id>/suspend", methods=["POST"])
 @admin_required
@@ -4303,7 +4303,7 @@ def view_listing(biz_id):
     distance_mi = request.args.get("distance_mi")
     biz = Business.query.get_or_404(biz_id)
     biz.distance_mi = float(distance_mi) if distance_mi else None
-    return render_template("large_listing.html", biz=biz)
+    return render_template("large_listing.html", business=biz)
     
 @app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
