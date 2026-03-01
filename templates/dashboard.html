@@ -164,8 +164,8 @@
    or current_user.has_role('customer_support')
    or current_user.has_role('super_admin') %}
   <div class="container mb-3">
-    <a href="{{ url_for('admin_roles_landing') }}" class="btn btn-warning btn-lg w-100 mb-3">
-      <i class="bi bi-shield-lock-fill me-1"></i> Go to Admin Area
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-warning btn-lg w-100 mb-3">
+      <i class="bi bi-shield-lock-fill me-1"></i> Go to Admin Dashboard
     </a>
   </div>
 {% endif %}
