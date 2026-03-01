@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ biz.business_name }} - Details</title>
+    <title>{{ business.business_name }} - Details</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -146,21 +146,21 @@
 <div class="container">
   <div class="main-card">
     <div class="listing-pic-wrap">
-      {% if biz.profile_photo %}
-        <img src="{{ biz.profile_photo }}" alt="Logo" class="large-profile-pic">
+      {% if business.profile_photo %}
+        <img src="{{ business.profile_photo }}" alt="Logo" class="large-profile-pic">
       {% else %}
         <div class="large-profile-pic d-flex align-items-center justify-content-center bg-light border">
           <i class="bi bi-buildings" style="font-size:4em; color:#bbb;"></i>
         </div>
       {% endif %}
-      {% if biz.distance_mi is defined and biz.distance_mi is not none %}
+      {% if business.distance_mi is defined and business.distance_mi is not none %}
         <span class="badge bg-light text-dark distance-badge" style="font-size:1.1em;">
           <i class="bi bi-geo-alt" style="color:#2a5859;"></i>
-          {{ biz.distance_mi|round(2) }} mi away
+          {{ business.distance_mi|round(2) }} mi away
         </span>
       {% endif %}
-      <h2 class="listing-title">{{ biz.business_name }}</h2>
-      <span class="biz-category-badge mb-2">{{ biz.category }}</span>
+      <h2 class="listing-title">{{ business.business_name }}</h2>
+      <span class="biz-category-badge mb-2">{{ business.category }}</span>
     </div>
     <!-- BUTTONS AT THE TOP -->
 <div class="listing-btn-row mb-0">
@@ -179,42 +179,42 @@
   &larr; Back to results
 </a>
   {% endif %}
-  <a href="{{ url_for('start_purchase', biz_id=biz.id) }}" class="btn btn-success btn-action btn-set-top">
+  <a href="{{ url_for('start_purchase', biz_id=business.id) }}" class="btn btn-success btn-action btn-set-top">
     Show My QR
   </a>
-  <a href="{{ url_for('service_request', biz_id=biz.id) }}" class="btn btn-primary btn-action btn-set-top">
+  <a href="{{ url_for('service_request', biz_id=business.id) }}" class="btn btn-primary btn-action btn-set-top">
     Request Service
   </a>
 </div>
     <div class="main-info mt-2">
       <div class="main-info-row">
         <i class="bi bi-pin-map"></i>
-        <span><strong>Address:</strong> {{ biz.address or '-' }}</span>
+        <span><strong>Address:</strong> {{ business.address or '-' }}</span>
       </div>
       <div class="main-info-row">
         <i class="bi bi-telephone"></i>
-        <span><strong>Phone:</strong> {{ biz.phone_number or '-' }}</span>
+        <span><strong>Phone:</strong> {{ business.phone_number or '-' }}</span>
       </div>
       <div class="main-info-row">
         <i class="bi bi-envelope"></i>
-        <span><strong>Email:</strong> {{ biz.business_email or '-' }}</span>
+        <span><strong>Email:</strong> {{ business.business_email or '-' }}</span>
       </div>
       <div class="main-info-row">
         <i class="bi bi-globe"></i>
         <strong>Website:</strong>&nbsp;
-        {% if biz.website_url %}
-          <a href="{{ biz.website_url }}" target="_blank" rel="noopener">{{ biz.website_url }}</a>
+        {% if business.website_url %}
+          <a href="{{ business.website_url }}" target="_blank" rel="noopener">{{ business.website_url }}</a>
         {% else %} - {% endif %}
       </div>
     </div>
     <div class="about-block">
       <strong>About Us:</strong><br>
-      {{ biz.about_us or '—' }}
+      {{ business.about_us or '—' }}
     </div>
     <div>
       <div class="service-list-label">Products or Services Offered:</div>
       <ul class="service-list">
-        {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
+        {% set services = [business.service_1, business.service_2, business.service_3, business.service_4, business.service_5, business.service_6, business.service_7, business.service_8, business.service_9, business.service_10] %}
         {% set shown = false %}
         {% for s in services %}{% if s %}
           <li>{{ s }}</li>
@@ -227,21 +227,21 @@
     </div>
     <div>
       <strong>Location Map:</strong>
-      {% if biz.latitude and biz.longitude %}
+      {% if business.latitude and business.longitude %}
         <div class="map-wrap">
           <iframe
                 width="100%" height="100%" style="border:0"
                 loading="lazy" allowfullscreen
                 referrerpolicy="no-referrer-when-downgrade"
                 src="https://www.google.com/maps/embed/v1/place?key=AIzaSyDo-AojTUQUwwvvywrSiDRcF-oVpw9m_w4
-                &q={{ biz.latitude }},{{ biz.longitude }}">
+                &q={{ business.latitude }},{{ business.longitude }}">
           </iframe>
         </div>
         <div class="mt-2 mb-3">
           <a id="directions-link"
              class="btn btn-outline-primary map-link-btn"
              target="_blank"
-             href="https://www.google.com/maps/dir/?api=1&destination={{ biz.latitude }},{{ biz.longitude }}">
+             href="https://www.google.com/maps/dir/?api=1&destination={{ business.latitude }},{{ business.longitude }}">
             Driving directions
           </a>
         </div>
