@@ -15,88 +15,119 @@
       }
       body { background: var(--pm-bg); color: var(--pm-text);}
       .navbar { box-shadow: 0 2px 8px #f0f2f3;}
-      /* Modern small listing card */
+
+      /* Modern listing card - image on top */
       .small-listing-modern {
         border: 1px solid #d9ece7;
         border-radius: 14px;
         background: #fafefe;
         box-shadow: 0 1px 5px #e6f9f4;
-        margin-bottom: 1.2rem;
-        padding: 10px 12px 10px 0;
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
-        max-width: 420px;
-        min-width: 230px;
+        margin-bottom: 1.4rem;
+        overflow: hidden;
         cursor: pointer;
         transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+        text-align: center;
       }
       .small-listing-modern:hover {
         background: var(--pm-hover);
         box-shadow: 0 4px 18px #b4dad9;
-        transform: scale(1.03);
+        transform: translateY(-3px);
       }
-      .small-listing-modern-img {
-        width: 88px;
-        height: 88px;
-        object-fit: cover;                /* Change to 'contain' if you prefer no cropping */
-        border-radius: 10px;
-        box-shadow: 0 2px 8px #ddebe8;
-        margin-left: 4px;
+
+      .listing-image-container {
+        width: 100%;
+        height: 120px;
         background: #f7f7f7;
-        display: block;
-        margin: 0 auto;                   /* helps center when not stretched */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid #e5f0ee;
       }
-      @media (max-width:600px) {
-        .small-listing-modern { 
-          flex-direction: column; 
-          align-items: center;            /* changed to center on mobile */
-          text-align: center;
-          max-width: 99vw;
-          padding: 12px;
-        }
-        .small-listing-modern-img { 
-          width: 80px; 
-          height: 80px; 
-          margin-left: 0;
-          margin-bottom: 10px;
-        }
-        .small-listing-info { text-align: center; }
+
+      .small-listing-modern-img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;                /* use 'contain' if you prefer no cropping */
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background: #f7f7f7;
       }
-      .small-listing-info { font-size: 0.98em; width:100%; }
-      .small-listing-title { font-weight: 700; margin-bottom: 6px; font-size:1.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+      .small-listing-info {
+        padding: 12px 14px 16px;
+        font-size: 0.98em;
+      }
+
+      .small-listing-title {
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 1.12em;
+      }
+
       .small-listing-category-badge {
-        font-size:.95em;
-        font-weight:500;
-        border-radius:10px;
+        font-size: 0.95em;
+        font-weight: 500;
+        border-radius: 10px;
         background: #e6f6f5;
         color: #2a5859;
-        padding:4px 10px;
-        margin-bottom:4px;
-        display:inline-block;
+        padding: 4px 12px;
+        margin-bottom: 6px;
+        display: inline-block;
       }
+
       .small-listing-mile-badge {
-        font-size: .95em;
+        font-size: 0.95em;
         background: #eef8fa;
         color: #357;
         border-radius: 9px;
         padding: 2px 12px 2px 8px;
-        margin-bottom:4px;
-        margin-right:6px;
-        display:inline-block;
+        margin-bottom: 6px;
+        margin-left: 6px;
+        display: inline-block;
         white-space: nowrap;
-        border:1px solid #e5eef3;
-        opacity:.93;
+        border: 1px solid #e5eef3;
+        opacity: 0.93;
       }
+
       .small-listing-services {
         color: #345;
-        opacity: .93;
-        word-break: break-word;
-        font-size:.98em;
+        opacity: 0.93;
+        font-size: 0.96em;
+        margin-top: 8px;
+        line-height: 1.4;
       }
+
+      @media (max-width: 600px) {
+        .listing-image-container {
+          height: 110px;
+        }
+        .small-listing-modern-img {
+          width: 100px;
+          height: 100px;
+        }
+        .small-listing-info {
+          padding: 10px 12px 14px;
+        }
+        .small-listing-title {
+          font-size: 1.05em;
+        }
+      }
+
       /* Misc */
-      footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea;}
-      .breadcrumb { background: none; padding-left: 0.5rem; margin-bottom: 1.5rem;}
+      footer { 
+        background: #f8fafb; 
+        color: #999; 
+        padding: 1.5rem 0; 
+        margin-top: 3rem; 
+        text-align: center; 
+        font-size: 1em; 
+        border-top: 1px solid #e1e7ea;
+      }
+      .breadcrumb { 
+        background: none; 
+        padding-left: 0.5rem; 
+        margin-bottom: 1.5rem;
+      }
     </style>
 </head>
 <body>
@@ -105,6 +136,7 @@
         <a class="navbar-brand" href="/">PerkMiner</a>
     </div>
 </nav>
+
 <main class="container">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -128,18 +160,21 @@
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="biz-results" aria-busy="false">
         {% for biz in results %}
           <div class="col">
-            <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi, q=request.args.get('q',''), distance=request.args.get('distance',''), lat=request.args.get('lat',''), lng=request.args.get('lng','')) }}" style="text-decoration:none;">
+            <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi, q=request.args.get('q',''), distance=request.args.get('distance',''), lat=request.args.get('lat',''), lng=request.args.get('lng','')) }}" style="text-decoration:none; color: inherit;">
               <div class="small-listing-modern">
-                {% if biz.profile_photo %}
-                  <img src="{{ biz.profile_photo }}" class="small-listing-modern-img" alt="{{ biz.business_name }} logo">
-                {% else %}
-                  <div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border">
-                    <i class="bi bi-shop" style="font-size:1.6em; color:#2a5859;"></i>
-                  </div>
-                {% endif %}
+                <div class="listing-image-container">
+                  {% if biz.profile_photo %}
+                    <img src="{{ biz.profile_photo }}" class="small-listing-modern-img" alt="{{ biz.business_name }} logo">
+                  {% else %}
+                    <div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border">
+                      <i class="bi bi-shop" style="font-size:2em; color:#2a5859;"></i>
+                    </div>
+                  {% endif %}
+                </div>
+
                 <div class="small-listing-info">
                   <div class="small-listing-title">{{ biz.business_name }}</div>
-                  <div>
+                  <div class="mb-2">
                     <span class="small-listing-category-badge">{{ biz.category }}</span>
                     {% if biz.distance_mi is defined and biz.distance_mi is not none %}
                       <span class="small-listing-mile-badge">
@@ -148,14 +183,16 @@
                       </span>
                     {% endif %}
                   </div>
+
                   {% if biz.address %}
-                    <div style="font-size:.97em;">
+                    <div style="font-size:0.95em; margin-bottom: 8px;">
                       <i class="bi bi-geo-alt" style="color:var(--pm-primary);"></i>
-                      <span> {{ biz.address }}</span>
+                      {{ biz.address }}
                     </div>
                   {% endif %}
-                  <div class="small-listing-services mt-1">
-                    <b>Services:</b>
+
+                  <div class="small-listing-services">
+                    <b>Services:</b> 
                     {% set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
                     {{ services|select|reject('equalto','')|join(', ') if services|select|reject('equalto','')|list else 'N/A' }}
                   </div>
@@ -188,10 +225,11 @@
       </div>
     {% endif %}
 </main>
+
 <footer>
   <div>
     <div class="mb-2">
-      <a href="/" style="color:var(--pm-primary);font-weight:600;text-decoration:none;">PerkMiner</a> &copy; 2026
+      <a href="/" style="color:var(--pm-primary);font-weight:600;text-decoration:none;">PerkMiner</a> © 2026
     </div>
     <div>
       <small>Need help? <a href="mailto:support@perkminer.com" style="color:var(--pm-primary);">Contact Support</a></small>
@@ -202,6 +240,7 @@
     </div>
   </div>
 </footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   var form = document.querySelector('form[action="{{ url_for("search") }}"]');
