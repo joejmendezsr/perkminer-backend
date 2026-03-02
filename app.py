@@ -3954,7 +3954,7 @@ def finance_dashboard():
 
     # Charitable Contributions
     charitable_contribution_1 = total_ad_revenue * 0.10
-    charitable_contribution_2 = total_ad_revenue * 0.05
+    charitable_contribution_2 = total_ad_revenue * 0.005
 
     # Net Gross
     net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves + charitable_contribution_1 + charitable_contribution_2)
