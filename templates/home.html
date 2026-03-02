@@ -6,7 +6,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
   <style>
-    :root { --pm-primary: #2a5859; --pm-accent: #ffd66b; --pm-bg: #fff; --pm-text: #222; --pm-hover: #e6f6f5;}
+    :root { 
+      --pm-primary: #2a5859; 
+      --pm-accent: #ffd66b; 
+      --pm-bg: #fff; 
+      --pm-text: #222; 
+      --pm-hover: #e6f6f5;
+      --pm-shadow: 0 8px 32px rgba(42,88,89,0.18);
+      --pm-transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
     body { background: var(--pm-bg); color: var(--pm-text);}
     .navbar-brand img.nav-logo { height: 90px; width: auto; max-width: 140px;}
     .hero-logo { height: 90px; max-width: 280px; width: auto; display: block; margin: 0 auto 18px auto; object-fit: contain;}
@@ -24,42 +32,169 @@
     .totals-value-mini.text-info { color: #1097bb !important; }
     .search-form .input-group { border-radius: 18px; box-shadow: 0 2px 10px #f2f5f5; background: #fff; overflow: hidden;}
     .search-form .form-control, .search-form .btn { border-radius: 18px !important; font-size: 1.1em;}
-    .categories-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-left: -2vw; margin-right: -2vw; padding-bottom: 10px; position: relative;}
-    .categories-row { display: flex; flex-wrap: nowrap; gap: 12px; padding-left: 2vw; padding-right: 18vw; min-width: 280px;}
-    .category-card { border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 3px 10px #d1e7e0; cursor: pointer; background: #fff; min-width: 40vw; max-width: 120px; min-height: 110px; padding: 0 0 4px 0; opacity: 0.98; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;}
-    @media (max-width: 600px) { .category-card { min-width: 49vw; max-width: 49vw; } }
-    @media (min-width: 992px){ 
-      .categories-scroll-wrap, .categories-row { display: block !important; overflow-x: unset !important; gap: 0 !important; } 
-      .categories-row { display: grid !important; grid-template-columns: repeat(6,1fr); padding: 0; min-width: 0;} 
-      .category-card { min-width: 0; max-width: none; margin-right: 0;} 
-      .categories-swiper-label { display: none !important; }
-    }
-    .categories-swiper-label { display: none;}
-    @media (max-width: 991px) { .categories-swiper-label { display: block; color: #3c5373;font-weight:500;font-size:0.99em;letter-spacing:0.01em;margin-bottom:7px;} }
-    .category-image { width: 100%; height: 67px; max-height:40vw; object-fit: cover; display:block; border-top-left-radius: 12px; border-top-right-radius: 12px; margin-bottom: 5px; background: #fff;}
-    .category-label { font-size: 0.98em; color: var(--pm-primary); font-weight: 500; text-align: center; margin-bottom: 8px; margin-top: 2px; white-space: normal;}
-    .categories-scroll-fade { display: none; }
     
-    /* NEW: Hidden categories & More button styling */
-    .hidden-categories { display: none; }
-    .more-btn-container { text-align: center; margin: 1.5rem 0; }
+    /* Enhanced Categories Section */
+    .categories-section { padding: 3rem 0 4rem; }
+    .categories-title { 
+      font-size: 2.1rem; 
+      font-weight: 700; 
+      color: var(--pm-primary); 
+      text-align: center; 
+      margin-bottom: 2.2rem; 
+      position: relative; 
+    }
+    .categories-title:after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--pm-accent);
+      border-radius: 2px;
+    }
+
+    .categories-scroll-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 0 5vw;
+      margin: 0 -5vw;
+    }
+    .categories-scroll-wrap::-webkit-scrollbar { display: none; }
+
+    .categories-row {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 1.1rem;
+      padding: 1rem 0;
+    }
+
+    .category-card-wrapper {
+      scroll-snap-align: start;
+      flex: 0 0 72vw;
+      max-width: 240px;
+      transition: var(--pm-transition);
+    }
+
+    .category-card {
+      border-radius: 16px;
+      overflow: hidden;
+      background: white;
+      box-shadow: var(--pm-shadow);
+      transition: var(--pm-transition);
+      height: 100%;
+      position: relative;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .category-card:hover {
+      transform: translateY(-12px) scale(1.04) rotate(1.2deg);
+      box-shadow: 0 22px 48px rgba(42,88,89,0.26);
+    }
+
+    .category-image-wrap {
+      position: relative;
+      height: 140px;
+      overflow: hidden;
+    }
+
+    .category-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .category-card:hover .category-image {
+      transform: scale(1.14);
+    }
+
+    .category-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(42,88,89,0.38) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .category-card:hover .category-overlay {
+      opacity: 1;
+    }
+
+    .category-label {
+      padding: 1.1rem 0.9rem 1.3rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--pm-primary);
+      text-align: center;
+      line-height: 1.28;
+      background: linear-gradient(145deg, #ffffff, #f8fbfc);
+    }
+
+    /* Desktop grid */
+    @media (min-width: 992px) {
+      .categories-scroll-wrap, .categories-row {
+        overflow-x: hidden !important;
+        padding: 0;
+        margin: 0;
+      }
+      .categories-row {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1.6rem 1.8rem;
+      }
+      .category-card-wrapper {
+        flex: 1 1 auto;
+        max-width: none;
+        scroll-snap-align: none;
+      }
+      .category-card {
+        border-radius: 20px;
+      }
+      .category-image-wrap {
+        height: 160px;
+      }
+      .category-label {
+        font-size: 1.12rem;
+        padding: 1.3rem 1.1rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .category-card-wrapper { flex: 0 0 78vw; max-width: 260px; }
+      .category-image-wrap { height: 130px; }
+      .categories-title { font-size: 1.75rem; }
+    }
+
+    /* More button styling */
+    .more-btn-container { 
+      text-align: center; 
+      margin: 2rem 0 1rem; 
+    }
     .more-btn { 
       background: var(--pm-primary); 
       color: white; 
       border: none; 
-      padding: 0.65rem 1.8rem; 
-      font-size: 1.05rem; 
+      padding: 0.75rem 2rem; 
+      font-size: 1.1rem; 
       font-weight: 600; 
       border-radius: 50px; 
-      box-shadow: 0 4px 12px rgba(42,88,89,0.25); 
-      transition: all 0.25s ease; 
+      box-shadow: 0 6px 20px rgba(42,88,89,0.3); 
+      transition: var(--pm-transition); 
+      cursor: pointer;
     }
     .more-btn:hover { 
-      background: #1f4344; 
-      transform: translateY(-2px); 
-      box-shadow: 0 8px 20px rgba(42,88,89,0.35); 
+      transform: translateY(-4px) scale(1.05); 
+      box-shadow: 0 12px 30px rgba(42,88,89,0.4); 
+      background: #1f4344;
     }
-    .more-btn:active { transform: translateY(0); }
 
     .business-listing-modern {
       border: none;
@@ -123,7 +258,7 @@
     }
     footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 2.3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea; }
 
-    /* Infinite scrolling marquee */
+    /* Marquee */
     .marquee-container {
       --speed: 15s;
       --gap: 4rem;
@@ -255,148 +390,221 @@
   </nav>
 
   <main class="container my-5">
-    <h2 class="mb-2 mt-3 mt-md-0 text-center">Browse by Popular Categories</h2>
-    <div class="d-md-none categories-swiper-label text-center mb-2">
-      <span>↔ Swipe categories for more</span>
-    </div>
+    <section class="categories-section">
+      <h2 class="categories-title">Browse by Popular Categories</h2>
 
-    <div class="categories-scroll-wrap position-relative mb-4">
-      <div class="categories-row visible-categories">
-        <!-- First 4 categories – always visible -->
-        <a href="/category/Contractor" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Handyman_ig9cin.jpg?auto=format&fit=crop&w=300&q=40" alt="Handyman-Contractor" class="category-image">
-            <div class="category-label">Handyman-Contractor</div>
-          </div>
-        </a>
-        <a href="/category/Restaurant" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Restaurant_d1ioep.jpg?auto=format&fit=crop&w=300&q=40" alt="Restaurant" class="category-image">
-            <div class="category-label">Restaurant and Food</div>
-          </div>
-        </a>
-        <a href="/category/Auto" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Auto-Service_iamnu3.jpg?auto=format&fit=crop&w=300&q=40" alt="Auto Parts & Service" class="category-image">
-            <div class="category-label">Auto Service-Repair-Parts</div>
-          </div>
-        </a>
-        <a href="/category/Home" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Home-Garden_lhssqa.jpg?auto=format&fit=crop&w=300&q=40" alt="Home and Garden" class="category-image">
-            <div class="category-label">Home and Garden</div>
-          </div>
-        </a>
+      <div class="d-md-none text-center mb-3" style="color:#555; font-style:italic; font-size:0.98rem;">
+        ↔ Swipe to explore more categories
       </div>
 
-      <!-- Hidden categories – shown when clicking More -->
-      <div class="categories-row hidden-categories" id="more-categories">
-        <a href="/category/Retail" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Retail_h510gq.jpg?auto=format&fit=crop&w=300&q=40" alt="Retail Outlet" class="category-image">
-            <div class="category-label">Shopping and Retail</div>
+      <div class="categories-scroll-wrap">
+        <!-- Initial 4 categories -->
+        <div class="categories-row" id="initial-categories">
+          <div class="category-card-wrapper">
+            <a href="/category/Contractor" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Handyman_ig9cin.jpg?auto=format&fit=crop&w=300&q=40" alt="Handyman-Contractor" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Handyman-Contractor</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Beauty" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443067/health-and-beauty_pql4ha.jpg?auto=format&fit=crop&w=300&q=40" alt="Professional Services" class="category-image">
-            <div class="category-label">Health and Beauty</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Restaurant" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Restaurant_d1ioep.jpg?auto=format&fit=crop&w=300&q=40" alt="Restaurant" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Restaurant and Food</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Sports" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772447451/sports_paavlw.jpg?auto=format&fit=crop&w=300&q=40" alt="Sports and Recreation" class="category-image">
-            <div class="category-label">Sports and Recreation</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Auto" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Auto-Service_iamnu3.jpg?auto=format&fit=crop&w=300&q=40" alt="Auto Parts & Service" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Auto Service-Repair-Parts</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/RE" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/real-estate_g40mrz.jpg?auto=format&fit=crop&w=300&q=40" alt="Real Estate" class="category-image">
-            <div class="category-label">Real Estate</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Home" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Home-Garden_lhssqa.jpg?auto=format&fit=crop&w=300&q=40" alt="Home and Garden" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Home and Garden</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Pet" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/pet-services_j2h4pq.jpg?auto=format&fit=crop&w=300&q=40" alt="Pet Service and Supplies" class="category-image">
-            <div class="category-label">Pet Service and Supplies</div>
+        </div>
+
+        <!-- Hidden remaining categories -->
+        <div class="categories-row" id="more-categories" style="display: none;">
+          <div class="category-card-wrapper">
+            <a href="/category/Retail" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Retail_h510gq.jpg?auto=format&fit=crop&w=300&q=40" alt="Retail Outlet" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Shopping and Retail</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Travel" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/travel_m7izuq.jpg?auto=format&fit=crop&w=300&q=40" alt="Travel-Lodging-Tourism" class="category-image">
-            <div class="category-label">Travel-Lodging-Tourism</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Beauty" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443067/health-and-beauty_pql4ha.jpg?auto=format&fit=crop&w=300&q=40" alt="Health and Beauty" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Health and Beauty</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Gaming" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772483687/gaming_ymfsap.jpg?auto=format&fit=crop&w=300&q=40" alt="Gaming" class="category-image">
-            <div class="category-label">Gaming</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Sports" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772447451/sports_paavlw.jpg?auto=format&fit=crop&w=300&q=40" alt="Sports and Recreation" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Sports and Recreation</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Financial" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/financial-services_hwhybm.jpg?auto=format&fit=crop&w=300&q=40" alt="Financial Services" class="category-image">
-            <div class="category-label">Financial Services</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/RE" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/real-estate_g40mrz.jpg?auto=format&fit=crop&w=300&q=40" alt="Real Estate" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Real Estate</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Events" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/entertainment_ubdbpn.jpg?auto=format&fit=crop&w=300&q=40" alt="Events and Entertainment" class="category-image">
-            <div class="category-label">Events and Entertainment</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Pet" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/pet-services_j2h4pq.jpg?auto=format&fit=crop&w=300&q=40" alt="Pet Service and Supplies" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Pet Service and Supplies</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Education" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/education_k14lj9.jpg?auto=format&fit=crop&w=300&q=40" alt="Education and Training" class="category-image">
-            <div class="category-label">Education and Training</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Travel" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/travel_m7izuq.jpg?auto=format&fit=crop&w=300&q=40" alt="Travel-Lodging-Tourism" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Travel-Lodging-Tourism</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Wedding" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/wedding_otioqm.jpg?auto=format&fit=crop&w=300&q=40" alt="Wedding Services" class="category-image">
-            <div class="category-label">Wedding Services</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Gaming" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772483687/gaming_ymfsap.jpg?auto=format&fit=crop&w=300&q=40" alt="Gaming" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Gaming</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Transportation" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/transportation_himjmb.jpg?auto=format&fit=crop&w=300&q=40" alt="Transportation Services" class="category-image">
-            <div class="category-label">Transportation Services</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Financial" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/financial-services_hwhybm.jpg?auto=format&fit=crop&w=300&q=40" alt="Financial Services" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Financial Services</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Legal" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/legal_rqbeqb.jpg?auto=format&fit=crop&w=300&q=40" alt="Legal Services" class="category-image">
-            <div class="category-label">Legal Services</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Events" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/entertainment_ubdbpn.jpg?auto=format&fit=crop&w=300&q=40" alt="Events and Entertainment" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Events and Entertainment</div>
+            </a>
           </div>
-        </a>
-        <a href="/category/Rentals" class="text-decoration-none">
-          <div class="category-card text-center">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772447452/rentals_mllbe2.jpg?auto=format&fit=crop&w=300&q=40" alt="All Rentals" class="category-image">
-            <div class="category-label">All Rentals</div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Education" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/education_k14lj9.jpg?auto=format&fit=crop&w=300&q=40" alt="Education and Training" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Education and Training</div>
+            </a>
           </div>
-        </a>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Wedding" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/wedding_otioqm.jpg?auto=format&fit=crop&w=300&q=40" alt="Wedding Services" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Wedding Services</div>
+            </a>
+          </div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Transportation" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/transportation_himjmb.jpg?auto=format&fit=crop&w=300&q=40" alt="Transportation Services" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Transportation Services</div>
+            </a>
+          </div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Legal" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/legal_rqbeqb.jpg?auto=format&fit=crop&w=300&q=40" alt="Legal Services" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Legal Services</div>
+            </a>
+          </div>
+
+          <div class="category-card-wrapper">
+            <a href="/category/Rentals" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772447452/rentals_mllbe2.jpg?auto=format&fit=crop&w=300&q=40" alt="All Rentals" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">All Rentals</div>
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- More Categories Button -->
-    <div class="more-btn-container">
-      <button class="more-btn" id="show-more-categories">More Categories</button>
-    </div>
+      <!-- More Categories Button -->
+      <div class="more-btn-container">
+        <button class="more-btn" id="show-more-btn">More Categories</button>
+      </div>
+    </section>
 
-    <!-- DYNAMIC FEATURED BUSINESSES -->
+    <!-- Featured Businesses – unchanged -->
     <h3 class="mt-5 mb-3 text-start">Featured Businesses Near You</h3>
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-4">
       {% for biz in featured_listings %}
       <div class="col">
-            <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi, from_featured=1) }}" style="text-decoration:none;">
-              <div class="small-listing-modern">
-                {% if biz.profile_photo %}
-                  <img src="{{ biz.profile_photo }}" class="small-listing-modern-img" alt="{{ biz.business_name }} logo">
-                {% else %}
-                  <div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border">
-                    <i class="bi bi-shop" style="font-size:1.6em; color:#2a5859;"></i>
-                  </div>
-                {% endif %}
+        <a href="{{ url_for('view_listing', biz_id=biz.id, distance_mi=biz.distance_mi, from_featured=1) }}" style="text-decoration:none;">
+          <div class="small-listing-modern">
+            {% if biz.profile_photo %}
+              <img src="{{ biz.profile_photo }}" class="small-listing-modern-img" alt="{{ biz.business_name }} logo">
+            {% else %}
+              <div class="small-listing-modern-img d-flex align-items-center justify-content-center bg-light border">
+                <i class="bi bi-shop" style="font-size:1.6em; color:#2a5859;"></i>
+              </div>
+            {% endif %}
 
             <div class="card-body text-center px-3">
               <h5 class="card-title mb-2">{{ biz.business_name }}</h5>
@@ -455,13 +663,21 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Show more categories on button click
-    document.getElementById('show-more-categories').addEventListener('click', function() {
-      document.getElementById('more-categories').style.display = 'flex';
-      this.parentElement.style.display = 'none'; // hide button after click
+    // Toggle more categories
+    document.getElementById('show-more-btn').addEventListener('click', function() {
+      const moreRow = document.getElementById('more-categories');
+      if (moreRow.style.display === 'none' || moreRow.style.display === '') {
+        moreRow.style.display = 'flex';
+        this.textContent = 'Show Fewer Categories';
+        this.style.background = '#1f4344';
+      } else {
+        moreRow.style.display = 'none';
+        this.textContent = 'More Categories';
+        this.style.background = 'var(--pm-primary)';
+      }
     });
 
-    // Geolocation scripts (unchanged)
+    // Geolocation (unchanged)
     window.addEventListener('DOMContentLoaded', function() {
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
