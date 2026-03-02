@@ -469,10 +469,11 @@
         <label class="form-label">Listing Type <span class="text-danger">*</span></label>
         <select class="form-select" name="listing_type" required>
           <option value="">Select listing type...</option>
-          <option value="Seller" {% if form_data.listing_type == 'Seller' %}selected{% endif %}>Seller</option>
+          <option value="Seller Storefront" {% if form_data.listing_type == 'Seller Storefront' %}selected{% endif %}>Seller Storefront</option>
           <option value="Service Provider" {% if form_data.listing_type == 'Service Provider' %}selected{% endif %}>Service Provider</option>
-          <option value="Lead Generation" {% if form_data.listing_type == 'Lead Generation' %}selected{% endif %}>Lead Generation</option>
           <option value="Seller and Service Provider" {% if form_data.listing_type == 'Seller and Service Provider' %}selected{% endif %}>Seller and Service Provider</option>
+          <option value="Seller E-Commerce" {% if form_data.listing_type == 'Seller E-Commerce' %}selected{% endif %}>Seller E-Commerce</option>
+          <option value="Lead Generation" {% if form_data.listing_type == 'Lead Generation' %}selected{% endif %}>Lead Generation</option>
         </select>
       </div>
       <div class="col-12 mb-3">
@@ -480,12 +481,20 @@
         <select class="form-select" name="category" id="business_category" required>
           <option value="">Select category...</option>
           <option value="Handyman-Contractor" {% if form_data.category == 'Handyman-Contractor' %}selected{% endif %}>Handyman-Contractor</option>
-          <option value="Auto Parts & Service" {% if form_data.category == 'Auto Parts & Service' %}selected{% endif %}>Auto Parts & Service</option>
+          <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant and Food</option>
+          <option value="Auto Parts and Service" {% if form_data.category == 'Auto Parts and Service' %}selected{% endif %}>Auto Service, Repair and Parts</option>
           <option value="Home and Garden" {% if form_data.category == 'Home and Garden' %}selected{% endif %}>Home and Garden</option>
-          <option value="Retail Outlet" {% if form_data.category == 'Retail Outlet' %}selected{% endif %}>Retail Outlet</option>
-          <option value="Professional Services" {% if form_data.category == 'Professional Services' %}selected{% endif %}>Professional Services</option>
-          <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant</option>
+          <option value="Shopping and Retail" {% if form_data.category == 'Shopping and Retail' %}selected{% endif %}>Shopping and Retail</option>
+          <option value="Health and Beauty" {% if form_data.category == 'Health and Beauty' %}selected{% endif %}>Health and Beauty</option>
           <option value="Real Estate" {% if form_data.category == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+          <option value="Pet Service and Supplies" {% if form_data.category == 'Pet Service and Supplies' %}selected{% endif %}>Pet Service and Supplies</option>
+          <option value="Travel and Tourism" {% if form_data.category == 'Travel and Tourism' %}selected{% endif %}>Travel and Tourism</option>
+          <option value="Financial Services" {% if form_data.category == 'Financial Services' %}selected{% endif %}>Financial Services</option>
+          <option value="Events and Entertainment" {% if form_data.category == 'Events and Entertainment' %}selected{% endif %}>Events and Entertainment</option>
+          <option value="Education and Training" {% if form_data.category == 'Education and Training' %}selected{% endif %}>Education and Training</option>
+          <option value="Wedding Services" {% if form_data.category == 'Wedding Services' %}selected{% endif %}>Wedding Services</option>
+          <option value="Transportation Services" {% if form_data.category == 'Transportation Services' %}selected{% endif %}>Transportation Services</option>
+          <option value="Legal Services" {% if form_data.category == 'Legal Services' %}selected{% endif %}>Legal Services</option>
           <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
         </select>
       </div>
