@@ -20,23 +20,31 @@
     .video-title {
       font-size: 1.4em; font-weight: bold; margin-bottom: 16px; color: #23223f;
     }
-    video { width: 100%; max-width: 390px; border-radius: 8px; margin-bottom: 12px;}
+    video { width: 100%; max-width: 390px; border-radius: 8px; margin-bottom: 20px;}
+    
+    /* Button styles */
     .join-btn {
       background: #6366f1; color: white;
-      font-size: 1.12em; padding: 16px 48px;
-      border: none; border-radius: 8px; margin: 38px auto 0 auto;
+      font-size: 1.12em; padding: 14px 42px;
+      border: none; border-radius: 8px;
       cursor: pointer; font-weight: bold;
       text-decoration: none; display: inline-block;
-      transition: background .15s;
+      transition: background .15s, transform .1s;
+      margin-top: 20px;
     }
-    .join-btn:hover { background: #4f46e5; }
+    .join-btn:hover { background: #4f46e5; transform: translateY(-2px); }
+    .join-btn.biz {
+      background: #10b981; /* emerald green for business */
+    }
+    .join-btn.biz:hover { background: #059669; }
+
     @media (max-width: 900px) {
       .videos-row { flex-direction: column; align-items: center; padding-top:26px;}
-      .video-card { margin-bottom: 28px; min-width: 80vw; }
+      .video-card { margin-bottom: 40px; min-width: 80vw; }
     }
     @media (max-width: 600px) {
       .header img { max-width: 170px; }
-      .join-btn { width: 100%; font-size:1.05em; padding: 13px 0 13px 0; }
+      .join-btn { width: 100%; font-size:1.05em; padding: 13px 0; }
       .video-title { font-size: 1.08em; }
       .video-card { padding: 17px 7px 24px 7px; }
     }
@@ -47,9 +55,10 @@
   <div class="header">
     <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1769980535/PerkMiner_Logo_o2qgfy.jpg" alt="PerkMiner Logo">
   </div>
+
   <!-- SIDE-BY-SIDE VIDEO WINDOWS -->
   <div class="videos-row">
-    <!-- USER VIDEO CARD -->
+    <!-- USER / MEMBER VIDEO CARD -->
     <div class="video-card">
       <div class="video-title">For Savvy Shoppers</div>
       <video
@@ -61,7 +70,11 @@
         <source src="https://res.cloudinary.com/dmrntlcfd/video/upload/v1769913409/Perkminer_-_Cashback_pro_vlefos.mp4" type="video/mp4">
         Sorry, your browser doesn't support embedded videos.
       </video>
+
+      <!-- Member Join Button -->
+      <a id="member-join-btn" class="join-btn" href="/register">Join as a Member</a>
     </div>
+
     <!-- BUSINESS VIDEO CARD -->
     <div class="video-card">
       <div class="video-title">For Business Owners</div>
@@ -74,22 +87,35 @@
         <source src="https://res.cloudinary.com/dmrntlcfd/video/upload/v1769913409/Perkminer_-_Cashback_pro_vlefos.mp4" type="video/mp4">
         Sorry, your browser doesn't support embedded videos.
       </video>
+
+      <!-- Business Join Button -->
+      <a id="business-join-btn" class="join-btn biz" href="/business/register">Join as a Business</a>
     </div>
   </div>
-  <!-- JOIN BUTTON BELOW BOTH VIDEOS -->
-  <div class="px-2">
-    <a id="join-btn" class="join-btn" href="#">Join PerkMiner</a>
-  </div>
-  <script>
-    // Pass referral code through to the Join button
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    const joinBtn = document.getElementById('join-btn');
-    let joinUrl = '/register';
-    if (ref) joinUrl += '?ref=' + encodeURIComponent(ref);
-    joinBtn.href = joinUrl;
 
-    // Restrict right-click and downloads for both videos
+  <script>
+    // Handle referral parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');    // member referral
+    const biz = urlParams.get('biz');    // business referral
+
+    // Member button: passes ?ref=...
+    const memberBtn = document.getElementById('member-join-btn');
+    let memberUrl = '/register';
+    if (ref) {
+      memberUrl += '?ref=' + encodeURIComponent(ref);
+    }
+    memberBtn.href = memberUrl;
+
+    // Business button: passes ?biz=...
+    const businessBtn = document.getElementById('business-join-btn');
+    let businessUrl = '/business/register';
+    if (biz) {
+      businessUrl += '?biz=' + encodeURIComponent(biz);
+    }
+    businessBtn.href = businessUrl;
+
+    // Video protection (right-click, save prevention)
     function protectVideo(id) {
       const video = document.getElementById(id);
       video.addEventListener('contextmenu', (e) => e.preventDefault());
