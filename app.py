@@ -4031,7 +4031,7 @@ def finance_dashboard():
         ramico=f"{ramico:,.2f}",
         michael=f"{michael:,.2f}",
         manuela=f"{manuela:,.2f}",
-        alex_s=f"{alex:,.2f}",
+        alex_s=f"{alex_s:,.2f}",
         victor_r=f"{victor_r:,.2f}",
         john_paul=f"{john_paul:,.2f}",
         ana_pepe=f"{ana_pepe:,.2f}",
