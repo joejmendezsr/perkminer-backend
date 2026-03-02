@@ -3953,7 +3953,8 @@ def finance_dashboard():
             capital_reserves += t.tier5_commission
 
     # Charitable Contributions
-    charitable_contribution = total_ad_revenue * 0.105
+    charitable_contribution_1 = total_ad_revenue * 0.10
+    charitable_contribution_2 = total_ad_revenue * 0.05
 
     # Net Gross
     net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves + charitable_contribution)
@@ -4010,7 +4011,8 @@ def finance_dashboard():
         net_gross=f"{net_gross:,.2f}",
         capital_reserves=f"{capital_reserves:,.2f}",
         operating_capital=f"{operating_capital:,.2f}",
-        charitable_contribution=f"{charitable_contribution:,.2f}",
+        charitable_contribution_1=f"{charitable_contribution_1:,.2f}",
+        charitable_contribution_2=f"{charitable_contribution_2:,.2f}",
         silent_partners=f"{silent_partners:,.2f}",
         legal_services=f"{legal_services:,.2f}",
         miscellaneous=f"{miscellaneous:,.2f}",
