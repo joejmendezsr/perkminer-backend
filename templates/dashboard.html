@@ -152,8 +152,8 @@
         if (numBiz < 1) numBiz = 1;
         document.getElementById('biz_referrals').value = numBiz;
 
-        let invoiceAmount = parseFloat(document.getElementById('biz_invoice_amount').value) || 250;
-        if (invoiceAmount < 0) invoiceAmount = 0;
+        let invoiceAmount = parseFloat(document.getElementById('biz_invoice_amount').value) || 0;
+        if (invoiceAmount > 2500) invoiceAmount = 2500;
         document.getElementById('biz_invoice_amount').value = invoiceAmount.toFixed(2);
 
         // Number of businesses per tier — geometric progression with base = numBiz
@@ -407,11 +407,11 @@
       If you invite 
       <input id="biz_referrals" type="number" class="form-control d-inline-block w-auto" min="1" value="3" style="width:80px;" />
       businesses to join, and each business you invited also invited the same number of new businesses (same as you) to become advertisers, AND each business generates one paid invoice in the amount of $ 
-      <input id="biz_invoice_amount" type="number" class="form-control d-inline-block w-auto" min="0" step="0.01" value="250" style="width:110px;" />,
+      <input id="biz_invoice_amount" type="number" class="form-control d-inline-block w-auto" min="0" max="2500" step="0.01" value="250" style="width:110px;" />,
       you would earn (even if you don't make any purchases from any of these businesses):
     </label>
-    <small class="text-muted d-block">This shows your estimated commissions earnings from your business network (purchases are from any member, including those not in your network).</small></br>
-    <small class="text-muted d-block">* If you make a purchase from any business in your network, you would earn cash back for your purchases, plus the regular business commissions earnings.</small>
+    <small class="text-muted d-block">This shows your estimated commissions earnings from your business network (purchases are from any member, including those not in your network).</small>
+    <small class="text-muted d-block"><b>Note:</b> If you make a purchase from any business in your network, you would earn cash back for your purchases, plus the regular business commissions earnings.</small>
   </div>
   <button class="btn btn-info mb-3" type="button" onclick="calculateBusinessReferralEarnings()">Calculate Commissions</button>
 
