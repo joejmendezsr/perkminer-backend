@@ -377,7 +377,7 @@
 </div>
 
 <div class="card p-4 mb-4">
-  <h4>Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
+  <h4>Member Referral Network Cashback Calculator (one purchase from everyone in your network during the month)</h4>
   <div class="mb-2">
     <label>If you and everyone in your network refers 
       <input id="network_people" type="number" class="form-control d-inline-block w-auto" min="1" value="3" style="width:80px;" />
@@ -409,24 +409,24 @@
     <label class="form-label d-block">
       If you invite 
       <input id="biz_referrals" type="number" class="form-control d-inline-block w-auto" min="1" value="3" style="width:80px;" />
-      businesses to join, and each business you (and every business in your network) invites also brings in 3 new businesses each month, and each business generates $ 
-      <input id="biz_invoice_amount" type="number" class="form-control d-inline-block w-auto" min="0" step="0.01" value="100" style="width:110px;" />
-      in monthly paid invoice volume:
+      businesses to join, and each business you invited also invited the same number of new businesses as you to become advertisers, AND each business generates one paid invoice in the amount of $ 
+      <input id="biz_invoice_amount" type="number" class="form-control d-inline-block w-auto" min="0" step="0.01" value="100" style="width:110px;" />,
+      you would earn (even if you don't make any purchases from any of these businesses):
     </label>
-    <small class="text-muted d-block">This shows your estimated monthly commission earnings from the network.</small>
+    <small class="text-muted d-block">This shows your estimated commissions earnings from your business network (purchases are from any member, including those not in your network).</small>
   </div>
   <button class="btn btn-info mb-3" type="button" onclick="calculateBusinessReferralEarnings()">Calculate Commissions</button>
 
   <div id="biz_results" style="display:none;">
     <ul class="mb-2 list-unstyled">
       <li><strong>Tier 1</strong> (businesses you invited): <span id="biz_t1"></span></li>
-      <li><strong>Tier 2</strong> (businesses invited by your Tier 1): <span id="biz_t2"></span></li>
-      <li><strong>Tier 3</strong> (businesses invited by your Tier 2): <span id="biz_t3"></span></li>
-      <li><strong>Tier 4</strong> (businesses invited by your Tier 3): <span id="biz_t4"></span></li>
-      <li><strong>Tier 5</strong> (businesses invited by your Tier 4): <span id="biz_t5"></span></li>
+      <li><strong>Tier 2</strong> (businesses invited by your Tier 1 businesses): <span id="biz_t2"></span></li>
+      <li><strong>Tier 3</strong> (businesses invited by your Tier 2 businesses): <span id="biz_t3"></span></li>
+      <li><strong>Tier 4</strong> (businesses invited by your Tier 3 businesses): <span id="biz_t4"></span></li>
+      <li><strong>Tier 5</strong> (businesses invited by your Tier 4 businesses): <span id="biz_t5"></span></li>
     </ul>
     <div class="alert alert-success mt-3">
-      <strong>Grand Total monthly commissions: $<span id="biz_total"></span></strong>
+      <strong>Grand Total business commissions earned: $<span id="biz_total"></span></strong>
     </div>
   </div>
 </div>
