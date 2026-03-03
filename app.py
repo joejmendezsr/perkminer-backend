@@ -2616,19 +2616,58 @@ from datetime import datetime
 def fund_account():
     biz_id = session.get('business_id')
     if not biz_id:
+        flash("Please log in as a business.", "danger")
         return redirect(url_for('business_login'))
+
     biz = Business.query.get_or_404(biz_id)
     account_balance = biz.account_balance or 0.0
 
-    # Temporary demo funding logic
     if request.method == "POST":
-        amount = float(request.form.get("amount", 0))
-        if amount > 0:
-            biz.account_balance += amount
-            db.session.commit()
-            flash(f"Account funded: ${amount:.2f} added.", "success")
-            return redirect(url_for('business_dashboard'))
+        try:
+            amount_str = request.form.get("amount", "0")
+            amount_dollars = float(amount_str)
 
+            # Enforce minimum and maximum
+            if amount_dollars < 25:
+                flash("Minimum funding amount is $25.", "warning")
+                return redirect(url_for("fund_account"))
+
+            if amount_dollars > 2500:
+                amount_dollars = 2500  # cap at $2,500
+
+            # Quantity = dollars (since your Price is $1 per unit)
+            quantity = int(amount_dollars)
+
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                mode='payment',  # one-time
+                line_items=[{
+                    'price': os.environ.get('STRIPE_FUNDING_PRICE_ID'),
+                    'quantity': quantity,
+                }],
+                customer_email=biz.business_email,
+                metadata={
+                    'business_id': str(biz.id),
+                    'funding_amount_dollars': str(amount_dollars)
+                },
+                success_url=YOUR_DOMAIN + '/business/fund-account-success?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=YOUR_DOMAIN + '/business/fund-account',
+            )
+
+            return redirect(checkout_session.url, code=303)
+
+        except ValueError:
+            flash("Please enter a valid amount.", "danger")
+        except stripe.error.StripeError as e:
+            flash(f"Payment setup failed: {str(e.user_message or 'Unknown error')}", "danger")
+        except Exception as e:
+            import logging
+            logging.error(f"Fund account error: {e}")
+            flash("An unexpected error occurred. Please try again or contact support.", "danger")
+
+        return redirect(url_for("fund_account"))
+
+    # GET: show form
     return render_template("fund_account.html", account_balance=account_balance)
 
 @app.route("/business/fund-account-success")
