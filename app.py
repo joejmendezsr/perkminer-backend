@@ -499,10 +499,11 @@ def build_invite_email(inviter_name, join_url, video_url):
                 Watch our intro video
                 </a>
 
-            <p style="margin:0 0 28px;">Free to join for both members and businesses (no start up fees for business advertisers).</p>
+            <p style="margin:0 0 28px;">Free to join for both members and businesses (no start up or setup fees for business advertisers).</p>
             <p style="margin:0 0 28px;"><b>Both members and business advertisers earn cash back and commissions.</b></p>
             <p style="margin:0 0 28px;">Advertisers only pay after they've made a sale or closed a deal (900% or higher Marketing Return On Investment).</p>
-            <p style="margin:0 0 28px;">Perk Miner pays all Cash Back and Commissions from the ad revenue received (<b>up to 85%</b> of the ad fee <b>from every transaction</b> is paid out to members and advertisers).</p>
+            <p style="margin:0 0 28px;"><b>No Sale or Closed Deal = Zero Fees</b></p>
+            <p style="margin:0 0 28px;"><b>Perk Miner pays all Cash Back and Commissions</b> from the ad revenue received (<b>up to 85%</b> of the ad fee <b>from every transaction</b> is paid out to members and advertisers).</p>
         </td>
     </tr>
 
