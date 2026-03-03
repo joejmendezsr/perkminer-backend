@@ -2635,15 +2635,15 @@ def fund_account():
             if amount_dollars > 2500:
                 amount_dollars = 2500  # cap at $2,500
 
-            # Quantity = dollars (since your Price is $1 per unit)
-            quantity = int(amount_dollars)
-
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
-                mode='payment',  # one-time
+                mode='payment',  # one-time charge
                 line_items=[{
                     'price': os.environ.get('STRIPE_FUNDING_PRICE_ID'),
-                    'quantity': quantity,
+                    'quantity': 1,  # MUST be 1 for custom_unit_amount prices
+                    'custom_unit_amount': {
+                        'amount': int(amount_dollars * 100),  # dollars → cents
+                    },
                 }],
                 customer_email=biz.business_email,
                 metadata={
@@ -2667,7 +2667,7 @@ def fund_account():
 
         return redirect(url_for("fund_account"))
 
-    # GET: show form
+    # GET: show the form
     return render_template("fund_account.html", account_balance=account_balance)
 
 @app.route("/business/fund-account-success")
