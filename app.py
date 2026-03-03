@@ -475,7 +475,7 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Join Button -->
     <tr>
         <td align="center" style="padding: 0 40px 50px;">
-            <a href="{join_url}" class="button" target="_blank" style="font-size:20px; padding:18px 48px;">
+            <a href="{join_url}" class="button" target="_blank" style=" font-size:20px; padding:18px 48px;">
             Join PerkMiner Now
             </a>
         </td>
@@ -493,13 +493,17 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Intro Text + Watch Video Button -->
     <tr>
         <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; color: #374151; line-height: 1.6; text-align:center;">
-            <p style="margin:0 0 24px;">Discover how you earn cashback with PerkMiner.  Don't just settle for pennies, CashBack like a pro on products and services you're looking for!</p>
+            <p style="margin:0 0 24px;">Discover how you earn cashback and commissions with PerkMiner.  CashBack like a pro on products and services you're looking for with the ability to earn more than what you spend!</p>
 
                 <a href="{video_url}" class="button" target="_blank" style="margin: 12px 0 32px;">
                 Watch our intro video
                 </a>
 
-            <p style="margin:0 0 12px;">It only takes 60 seconds to see how thousands are already earning perks every day.</p>
+            <p style="margin:0 0 12px;">Watch the videos (member video and business video), which will everything you need to know.</p>
+            <p style="margin:0 0 12px;">For members:  Free to join and always free.  You pay our advertisers directly for all purchases of products or for services rendered and simply finalize the transaction with the advertiser to get paid.</p>
+            <p style="margin:0 0 12px;">For business owners:  No start up costs and you only pay after you make the sale or close the deal (it's a pay-per-sale-per-close model) and it's a starting marketing return of investment of 900% ... guaranteed.</p>
+            <p style="margin:0 0 12px;">Business owners only pay 10% of the total sale or transaction (max of $250 from every guaranteed sale).  Perk Miner pays it's members and business advertisers the cash back and commissions from the advertising revenue.</p>
+            <p style="margin:0 0 12px;">Up to 85% of the advertising revenue paid by our advertisers ($85 out of every $100) is paid back to members and businesses in the form of cash back or commissions from every completed transaction.</p>
         </td>
     </tr>
 
