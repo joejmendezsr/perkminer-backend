@@ -156,16 +156,16 @@
         if (invoiceAmount < 0) invoiceAmount = 0;
         document.getElementById('biz_invoice_amount').value = invoiceAmount.toFixed(2);
 
-        // Number of businesses per tier — each level invites the same number as the member
+        // Number of businesses per tier — geometric progression with base = numBiz
         const tierCounts = [
-          numBiz,                     // Tier 1: businesses you invited
-          numBiz * numBiz,            // Tier 2
-          numBiz * Math.pow(numBiz, 2), // Tier 3
-          numBiz * Math.pow(numBiz, 3), // Tier 4
-          numBiz * Math.pow(numBiz, 4)  // Tier 5
+          numBiz,                       // Tier 1
+          numBiz * numBiz,              // Tier 2 = numBiz²
+          numBiz * Math.pow(numBiz, 2), // Tier 3 = numBiz³
+          numBiz * Math.pow(numBiz, 3), // Tier 4 = numBiz⁴
+          numBiz * Math.pow(numBiz, 4)  // Tier 5 = numBiz⁵
         ];
 
-        // Commission rates per tier (as specified)
+        // Commission rates per tier
         const rates = [0.01, 0.0025, 0.0025, 0.0025, 0.01]; // 1%, 0.25%, 0.25%, 0.25%, 1%
 
         let earnings = [];
@@ -400,9 +400,6 @@
   </div>
 </div>
 
-<!-- ──────────────────────────────────────────────── -->
-<!-- NEW: Business Referral Network Commissions Calculator -->
-<!-- ──────────────────────────────────────────────── -->
 <div class="card p-4 mb-4">
   <h4>Business Referral Network Commissions Calculator</h4>
   <div class="mb-3">
@@ -431,7 +428,6 @@
     </div>
   </div>
 </div>
-<!-- End new business calculator -->
 
 <div class="card p-4 mb-4">
   <h4>My Network</h4>
