@@ -138,7 +138,7 @@
       background: linear-gradient(145deg, #ffffff, #f8fbfc);
     }
 
-    /* Desktop grid */
+    /* Desktop grid behavior */
     @media (min-width: 992px) {
       .categories-scroll-wrap, .categories-row {
         overflow-x: hidden !important;
@@ -171,6 +171,16 @@
       .category-card-wrapper { flex: 0 0 78vw; max-width: 260px; }
       .category-image-wrap { height: 130px; }
       .categories-title { font-size: 1.75rem; }
+    }
+
+    /* Force full visibility on mobile */
+    @media (max-width: 991.98px) {
+      #hidden-categories {
+        display: block !important;
+      }
+      .more-btn-container {
+        display: none !important;
+      }
     }
 
     /* More button */
@@ -397,7 +407,7 @@
       <h2 class="categories-title">Browse by Popular Categories</h2>
 
       <div class="d-md-none text-center mb-3" style="color:#555; font-style:italic; font-size:0.98rem;">
-        ↔ Swipe to explore more categories
+        ↔ Swipe to explore all categories
       </div>
 
       <div class="categories-container">
@@ -446,8 +456,8 @@
           </div>
         </div>
 
-        <!-- Hidden part (remaining 14 categories) -->
-        <div class="categories-scroll-wrap hidden-part" id="hidden-categories" style="display: none;">
+        <!-- Hidden part on desktop (remaining 14 categories) -->
+        <div class="categories-scroll-wrap" id="hidden-categories" style="display: none;">
           <div class="categories-row">
             <div class="category-card-wrapper">
               <a href="/category/Retail" class="category-card">
@@ -592,7 +602,7 @@
         </div>
       </div>
 
-      <!-- More Categories Button -->
+      <!-- More Categories Button (only visible on desktop) -->
       <div class="more-btn-container">
         <button class="more-btn" id="toggle-more">More Categories</button>
       </div>
@@ -670,23 +680,26 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Toggle more categories
+    // Toggle more categories - only active on desktop
     const toggleBtn = document.getElementById('toggle-more');
     const hiddenPart = document.getElementById('hidden-categories');
 
-    toggleBtn.addEventListener('click', () => {
-      if (hiddenPart.style.display === 'none' || hiddenPart.style.display === '') {
-        hiddenPart.style.display = 'block';
-        toggleBtn.textContent = 'Show Fewer Categories';
-        toggleBtn.classList.add('expanded');
-      } else {
-        hiddenPart.style.display = 'none';
-        toggleBtn.textContent = 'More Categories';
-        toggleBtn.classList.remove('expanded');
-      }
-    });
+    // Only attach listener if elements exist and we're on desktop-sized screen
+    if (toggleBtn && hiddenPart && window.innerWidth >= 992) {
+      toggleBtn.addEventListener('click', () => {
+        if (hiddenPart.style.display === 'none' || hiddenPart.style.display === '') {
+          hiddenPart.style.display = 'block';
+          toggleBtn.textContent = 'Show Fewer Categories';
+          toggleBtn.classList.add('expanded');
+        } else {
+          hiddenPart.style.display = 'none';
+          toggleBtn.textContent = 'More Categories';
+          toggleBtn.classList.remove('expanded');
+        }
+      });
+    }
 
-    // Geolocation scripts (unchanged)
+    // Geolocation scripts
     window.addEventListener('DOMContentLoaded', function() {
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
