@@ -2635,14 +2635,17 @@ def fund_account():
             if amount_dollars > 2500:
                 amount_dollars = 2500  # cap at $2,500
 
+            # Convert to cents for Stripe
+            amount_cents = int(amount_dollars * 100)
+
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 mode='payment',  # one-time charge
                 line_items=[{
                     'price': os.environ.get('STRIPE_FUNDING_PRICE_ID'),
-                    'quantity': 1,  # MUST be 1 for custom_unit_amount prices
+                    'quantity': 1,  # Always 1 for "Customer chooses" / custom unit amount prices
                     'custom_unit_amount': {
-                        'amount': int(amount_dollars * 100),  # dollars → cents
+                        'amount': amount_cents,  # the actual amount the customer pays (in cents)
                     },
                 }],
                 customer_email=biz.business_email,
@@ -2658,11 +2661,13 @@ def fund_account():
 
         except ValueError:
             flash("Please enter a valid amount.", "danger")
+        except stripe.error.InvalidRequestError as e:
+            flash(f"Payment setup failed: {str(e.user_message or e)}", "danger")
         except stripe.error.StripeError as e:
-            flash(f"Payment setup failed: {str(e.user_message or 'Unknown error')}", "danger")
+            flash(f"Payment setup failed: {str(e.user_message or 'Unknown Stripe error')}", "danger")
         except Exception as e:
             import logging
-            logging.error(f"Fund account error: {e}")
+            logging.error(f"Fund account error: {str(e)}")
             flash("An unexpected error occurred. Please try again or contact support.", "danger")
 
         return redirect(url_for("fund_account"))
