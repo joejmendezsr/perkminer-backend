@@ -493,14 +493,14 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Intro Text + Watch Video Button -->
     <tr>
         <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 28px; color: #374151; line-height: 1.6; text-align:center;">
-            <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b> (Members and business advertisers have the ability to earn more than what they spend on products or services!)</p>
+            <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b></p>
 
                 <a href="{video_url}" class="button" target="_blank" style="margin: 12px 0 32px;">
                 Watch our intro video
                 </a>
 
             <p style="margin:0 0 28px;">Free to join for both members and businesses (no start up or setup fees for business advertisers).</p>
-            <p style="margin:0 0 28px;"><b>Both members and business advertisers earn cash back and commissions.</b></p>
+            <p style="margin:0 0 28px;"><b>Both members and business advertisers earn cash back and commissions.</b>  (Members and business advertisers have the ability to earn more than what they spend on products or services!)</p>
             <p style="margin:0 0 28px;">Advertisers only pay after they've made a sale or closed a deal (900% or higher Marketing Return On Investment).</p>
             <p style="margin:0 0 28px;"><font color="#FF0000"><b>No Sale or Closed Deal = Zero Fees</b></font></p>
             <p style="margin:0 0 28px;"><b>Perk Miner pays all Cash Back and Commissions</b> from the ad revenue received (<b>up to 85%</b> of the ad fee <b>from every transaction</b> is paid out to members and advertisers).</p>
