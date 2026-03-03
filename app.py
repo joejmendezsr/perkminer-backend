@@ -493,14 +493,14 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Intro Text + Watch Video Button -->
     <tr>
         <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 28px; color: #374151; line-height: 1.6; text-align:center;">
-            <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b></p>
+            <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b> (Members and business advertisers have the ability to earn more than what they spend on products or services!)</p>
 
                 <a href="{video_url}" class="button" target="_blank" style="margin: 12px 0 32px;">
                 Watch our intro video
                 </a>
 
             <p style="margin:0 0 28px;">Free to join for both members and businesses (no start up or setup fees for business advertisers).</p>
-            <p style="margin:0 0 28px;"><b>Both members and business advertisers earn cash back and commissions.</b>  (Both have the ability to earn more than what they spend on products or services!)</p>
+            <p style="margin:0 0 28px;"><b>Both members and business advertisers earn cash back and commissions.</b></p>
             <p style="margin:0 0 28px;">Advertisers only pay after they've made a sale or closed a deal (900% or higher Marketing Return On Investment).</p>
             <p style="margin:0 0 28px;"><font color="#FF0000"><b>No Sale or Closed Deal = Zero Fees</b></font></p>
             <p style="margin:0 0 28px;"><b>Perk Miner pays all Cash Back and Commissions</b> from the ad revenue received (<b>up to 85%</b> of the ad fee <b>from every transaction</b> is paid out to members and advertisers).</p>
@@ -2616,114 +2616,20 @@ from datetime import datetime
 def fund_account():
     biz_id = session.get('business_id')
     if not biz_id:
-        flash("Please log in as a business.", "danger")
         return redirect(url_for('business_login'))
-
     biz = Business.query.get_or_404(biz_id)
     account_balance = biz.account_balance or 0.0
 
+    # Temporary demo funding logic
     if request.method == "POST":
-        try:
-            amount_str = request.form.get("amount", "0")
-            amount_dollars = float(amount_str)
+        amount = float(request.form.get("amount", 0))
+        if amount > 0:
+            biz.account_balance += amount
+            db.session.commit()
+            flash(f"Account funded: ${amount:.2f} added.", "success")
+            return redirect(url_for('business_dashboard'))
 
-            # Enforce minimum and maximum
-            if amount_dollars < 25:
-                flash("Minimum funding amount is $25.", "warning")
-                return redirect(url_for("fund_account"))
-
-            if amount_dollars > 2500:
-                amount_dollars = 2500  # cap at $2,500
-
-            # Convert to cents for Stripe
-            amount_cents = int(amount_dollars * 100)
-
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                mode='payment',  # one-time charge
-                line_items=[{
-                    'price': os.environ.get('STRIPE_FUNDING_PRICE_ID'),
-                    'quantity': 1,  # Always 1 for "Customer chooses" / custom unit amount prices
-                    'custom_unit_amount': {
-                        'amount': amount_cents,  # the actual amount the customer pays (in cents)
-                    },
-                }],
-                customer_email=biz.business_email,
-                metadata={
-                    'business_id': str(biz.id),
-                    'funding_amount_dollars': str(amount_dollars)
-                },
-                success_url=YOUR_DOMAIN + '/business/fund-account-success?session_id={CHECKOUT_SESSION_ID}',
-                cancel_url=YOUR_DOMAIN + '/business/fund-account',
-            )
-
-            return redirect(checkout_session.url, code=303)
-
-        except ValueError:
-            flash("Please enter a valid amount.", "danger")
-        except stripe.error.InvalidRequestError as e:
-            flash(f"Payment setup failed: {str(e.user_message or e)}", "danger")
-        except stripe.error.StripeError as e:
-            flash(f"Payment setup failed: {str(e.user_message or 'Unknown Stripe error')}", "danger")
-        except Exception as e:
-            import logging
-            logging.error(f"Fund account error: {str(e)}")
-            flash("An unexpected error occurred. Please try again or contact support.", "danger")
-
-        return redirect(url_for("fund_account"))
-
-    # GET: show the form
     return render_template("fund_account.html", account_balance=account_balance)
-
-@app.route("/business/fund-account-success")
-@business_login_required
-def fund_account_success():
-    session_id = request.args.get('session_id')
-    if not session_id:
-        flash("Invalid or missing session ID.", "danger")
-        return redirect(url_for("fund_account"))
-
-    try:
-        # Retrieve the session to confirm payment and get metadata
-        checkout_session = stripe.checkout.Session.retrieve(session_id)
-
-        if checkout_session.payment_status != 'paid':
-            flash("Payment was not completed successfully.", "warning")
-            return redirect(url_for("fund_account"))
-
-        # Get metadata we stored earlier
-        biz_id_str = checkout_session.metadata.get('business_id')
-        amount_dollars_str = checkout_session.metadata.get('funding_amount_dollars')
-
-        if not biz_id_str or not amount_dollars_str:
-            flash("Invalid payment data. Contact support.", "danger")
-            return redirect(url_for("fund_account"))
-
-        biz_id = int(biz_id_str)
-        amount_dollars = float(amount_dollars_str)
-
-        # Security: make sure this matches the logged-in business
-        logged_in_biz_id = session.get('business_id')
-        if logged_in_biz_id != biz_id:
-            flash("Session mismatch. Please log in again.", "danger")
-            return redirect(url_for("business_dashboard"))
-
-        biz = Business.query.get_or_404(biz_id)
-
-        # Credit the account
-        biz.account_balance = (biz.account_balance or 0.0) + amount_dollars
-        db.session.commit()
-
-        flash(f"Success! ${amount_dollars:.2f} has been added to your account balance.", "success")
-
-    except stripe.error.StripeError as e:
-        flash(f"Payment confirmation failed: {str(e.user_message or 'Unknown error')}", "danger")
-    except Exception as e:
-        import logging
-        logging.error(f"Fund account success error: {e}")
-        flash("There was a problem confirming your payment. Please contact support.", "danger")
-
-    return redirect(url_for("fund_account"))
 
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required
