@@ -1267,6 +1267,7 @@ def start_cart_checkout():
 
 # -------------- STRIPE WEBHOOK (Order, Stock, Emails) --------------
 @app.route('/stripe_webhook', methods=['POST'])
+@csrf.exempt  # Important for Stripe POSTs
 def stripe_webhook():
     payload = request.get_data(as_text=True)
     sig_header = request.headers.get('Stripe-Signature')
@@ -1283,20 +1284,29 @@ def stripe_webhook():
 
     if event['type'] == 'checkout.session.completed':
         session_obj = event['data']['object']
-        buyer_email = session_obj.get('customer_email')
+        customer_email = session_obj.get('customer_email')
         amount = (session_obj.get('amount_total') or 0) / 100.0
         stripe_checkout_id = session_obj.get('id')
-        product_id = None
-        business_id = None
+        metadata = session_obj.get('metadata', {})
 
-        if session_obj.get('metadata'):
-            product_id = session_obj['metadata'].get('product_id')
-            business_id = session_obj['metadata'].get('business_id')
+        # ---- FUND BUSINESS ACCOUNT LOGIC ----
+        if metadata.get('purpose') == 'fund_account':
+            biz = Business.query.filter_by(business_email=customer_email).first()
+            if biz:
+                biz.account_balance += amount
+                db.session.commit()
+                import logging
+                logging.info(f"Business {biz.business_email} funded ${amount:,.2f} via Stripe.")
+            return '', 200
+
+        # ---- EXISTING CART/ORDER LOGIC ----
+        product_id = metadata.get('product_id')
+        business_id = metadata.get('business_id')
 
         cart_items = []
-        if session_obj.get('metadata') and session_obj['metadata'].get('cart_items'):
-            cart_items = [int(pid) for pid in session_obj['metadata']['cart_items'].split(',') if pid]
-            business_id = session_obj['metadata'].get('business_id')
+        if 'cart_items' in metadata:
+            cart_items = [int(pid) for pid in metadata['cart_items'].split(',') if pid]
+            business_id = metadata.get('business_id')
 
         existing = Order.query.filter_by(stripe_checkout_id=stripe_checkout_id).first()
         if not existing:
@@ -1304,7 +1314,7 @@ def stripe_webhook():
                 order = Order(
                     business_id=business_id,
                     product_id=product_id,
-                    buyer_email=buyer_email,
+                    buyer_email=customer_email,
                     amount=amount,
                     stripe_checkout_id=stripe_checkout_id,
                     status='paid'
@@ -1322,10 +1332,10 @@ def stripe_webhook():
                             business.business_email,
                             product.name,
                             amount,
-                            buyer_email
+                            customer_email
                         )
                         send_customer_receipt(
-                            buyer_email,
+                            customer_email,
                             product.name,
                             amount,
                             business.business_name
@@ -1342,7 +1352,7 @@ def stripe_webhook():
                         order = Order(
                             business_id=business_id,
                             product_id=pid,
-                            buyer_email=buyer_email,
+                            buyer_email=customer_email,
                             amount=float(share),
                             stripe_checkout_id=stripe_checkout_id,
                             status='paid'
@@ -1358,10 +1368,10 @@ def stripe_webhook():
                             business.business_email,
                             "Multiple Products",
                             amount,
-                            buyer_email
+                            customer_email
                         )
                         send_customer_receipt(
-                            buyer_email,
+                            customer_email,
                             "Multiple Products",
                             amount,
                             business.business_name
@@ -2644,8 +2654,8 @@ def business_create_checkout_session():
     try:
         # Validate amount is a number and at least $1.00
         amount_float = float(amount)
-        if amount_float < 1.0:
-            return jsonify({'error': 'Minimum $1.00 required.'}), 400
+        if amount_float < 25.0:
+            return jsonify({'error': 'Minimum $25.00 required.'}), 400
     except (TypeError, ValueError):
         return jsonify({'error': 'Invalid amount.'}), 400
 
