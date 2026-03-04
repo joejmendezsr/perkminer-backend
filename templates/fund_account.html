@@ -13,16 +13,12 @@
         <div class="alert alert-info text-center">
             Current account balance: <b>${{ "{:,.2f}".format(account_balance or 0.0) }}</b>
         </div>
-        <form method="post" class="mt-2">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="mb-3">
-                <label class="form-label">Amount to Add ($)</label>
-                <input type="number" name="amount" min="1" step="0.01" required class="form-control" placeholder="Enter amount">
-            </div>
-            <button type="submit" class="btn btn-success w-100">Add Funds</button>
-        </form>
-        <button id="stripe-pay-btn" class="btn btn-warning w-100 mt-3">Pay With Card</button>
-        <div id="stripe-error" class="alert alert-danger mt-2 d-none"></div>
+    <div class="mb-3">
+        <label class="form-label">Amount to Add ($)</label>
+        <input type="number" name="amount" min="25" step="0.01" required class="form-control" placeholder="Enter amount">
+    </div>
+    <button id="stripe-pay-btn" class="btn btn-warning w-100 mt-3">Pay With Card</button>
+    <div id="stripe-error" class="alert alert-danger mt-2 d-none"></div>
         <a href="{{ url_for('business_dashboard') }}" class="btn btn-primary w-100 mt-2">Return to Dashboard</a>
     </div>
 </div>

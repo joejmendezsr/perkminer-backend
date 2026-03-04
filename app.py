@@ -2674,8 +2674,9 @@ def business_create_checkout_session():
                 'quantity': 1,
             }],
             customer_email=current_user.email if hasattr(current_user, 'email') else None,
-            success_url=YOUR_DOMAIN + '/business/fund-account?success=1',
+            success_url=YOUR_DOMAIN + '/business/dashboard?fund_success=1',
             cancel_url=YOUR_DOMAIN + '/business/fund-account?canceled=1',
+            metadata={'purpose': 'fund_account'}  # <-- THIS IS THE MISSING LINE!
         )
         return jsonify({'sessionId': session.id})
     except Exception as e:
@@ -3630,6 +3631,9 @@ def business_dashboard():
     if not biz or not biz.email_confirmed:
         flash("Please log in and confirm your business email to access the dashboard.")
         return redirect(url_for("business_login"))
+
+    if request.args.get("fund_success") == "1":
+        flash("Funds added to your account!", "success")
 
     editable_fields = [
         "business_name", "listing_type", "category", "phone_number", "address", "latitude", "longitude",
