@@ -683,37 +683,42 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body" id="listing-preview-content">
-            {% if business.status in ["not_submitted", "draft", "approved"] and (
-              business.draft_business_name or
-              business.draft_category or
-              business.draft_profile_photo or
-              business.draft_phone_number or
-              business.draft_address or
-              business.draft_latitude or
-              business.draft_longitude or
-              business.draft_hours_of_operation or
-              business.draft_website_url or
-              business.draft_about_us or
-              business.draft_service_1 or business.draft_service_2 or business.draft_service_3 or
-              business.draft_service_4 or business.draft_service_5 or business.draft_service_6 or
-              business.draft_service_7 or business.draft_service_8 or business.draft_service_9 or
-              business.draft_service_10 or business.draft_search_keywords
-            ) %}
+          {# -- START: Updated Submit for Review condition -- #}
+          {% if business.status == "not_submitted"
+                or business.status == "rejected"
+                or (business.status == "approved" and (
+                  business.draft_business_name or
+                  business.draft_category or
+                  business.draft_profile_photo or
+                  business.draft_phone_number or
+                  business.draft_address or
+                  business.draft_latitude or
+                  business.draft_longitude or
+                  business.draft_hours_of_operation or
+                  business.draft_website_url or
+                  business.draft_about_us or
+                  business.draft_service_1 or business.draft_service_2 or business.draft_service_3 or
+                  business.draft_service_4 or business.draft_service_5 or business.draft_service_6 or
+                  business.draft_service_7 or business.draft_service_8 or business.draft_service_9 or
+                  business.draft_service_10 or business.draft_search_keywords
+                ))
+          %}
             <form method="post" action="{{ url_for('listing_disclaimer') }}" class="mb-3 mt-2">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="listing_id" value="{{ business.id }}">
               <input type="hidden" name="referral_code" value="{{ business.referral_code }}">
               <button type="submit" class="btn btn-warning w-100 mb-2">
-                Submit for Review<br>$0 Account Balance Not Allowed
+                Submit for Review
               </button>
             </form>
-            {% if (business.account_balance is not none and business.account_balance|float <= 0.0) and business.status in ["not_submitted", "draft"] %}
+            {# -- If zero balance, show warning (optional)—keep this under the same condition -- #}
+            {% if (business.account_balance is not none and business.account_balance|float <= 0.0) and business.status == "not_submitted" %}
               <div class="text-danger fw-bold text-center mb-2" style="font-size:1.07em;">
                 You must add funds to your account prior to submitting for review.<br>
                 Your account balance is $0.
               </div>
             {% endif %}
-            {% endif %}
+          {% endif %}
             <!-- Your JS will fill in the rest of this div at runtime, below this form -->
           </div>
         </div>
