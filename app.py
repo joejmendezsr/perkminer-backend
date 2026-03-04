@@ -2635,6 +2635,7 @@ def fund_account():
         STRIPE_PUBLISHABLE=os.environ.get("STRIPE_PUBLISHABLE")
     )
 
+@csrf.exempt
 @app.route('/business/create-checkout-session', methods=['POST'])
 @business_login_required
 def business_create_checkout_session():
