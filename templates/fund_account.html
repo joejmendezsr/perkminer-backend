@@ -3,6 +3,7 @@
 <head>
     <title>Fund Your Account - PerkMiner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://js.stripe.com/v3/"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 </head>
 <body>
@@ -20,9 +21,8 @@
             </div>
             <button type="submit" class="btn btn-success w-100">Add Funds</button>
         </form>
-        <div class="alert alert-warning text-center mt-3">
-            <b>Payment portal integration coming soon!</b>
-        </div>
+        <button id="stripe-pay-btn" class="btn btn-warning w-100 mt-3">Pay With Card</button>
+        <div id="stripe-error" class="alert alert-danger mt-2 d-none"></div>
         <a href="{{ url_for('business_dashboard') }}" class="btn btn-primary w-100 mt-2">Return to Dashboard</a>
     </div>
 </div>
