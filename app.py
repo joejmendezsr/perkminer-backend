@@ -4220,7 +4220,7 @@ def listing_disclaimer():
                 "listing_disclaimer.html",
                 listing_id=listing_id,
                 referral_code=referral_code,
-                business=biz
+                business=biz,
                 biz=biz
             )
         return redirect(url_for('send_for_review'))
