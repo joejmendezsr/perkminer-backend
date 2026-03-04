@@ -2651,8 +2651,13 @@ def fund_account():
 def business_create_checkout_session():
     data = request.get_json()
     amount = data.get('amount')
+
+    # Get logged-in business info
+    biz_id = session.get('business_id')
+    biz = Business.query.get_or_404(biz_id)
+
     try:
-        # Validate amount is a number and at least $1.00
+        # Validate amount is a number and at least $25.00
         amount_float = float(amount)
         if amount_float < 25.0:
             return jsonify({'error': 'Minimum $25.00 required.'}), 400
@@ -2660,7 +2665,7 @@ def business_create_checkout_session():
         return jsonify({'error': 'Invalid amount.'}), 400
 
     try:
-        session = stripe.checkout.Session.create(
+        session_obj = stripe.checkout.Session.create(
             payment_method_types=['card'],
             mode='payment',
             line_items=[{
@@ -2669,16 +2674,16 @@ def business_create_checkout_session():
                     'product_data': {
                         'name': 'Fund Business Account',
                     },
-                    'unit_amount': int(float(amount) * 100),  # dollars to cents
+                    'unit_amount': int(amount_float * 100),  # dollars to cents
                 },
                 'quantity': 1,
             }],
-            customer_email=current_user.email if hasattr(current_user, 'email') else None,
+            customer_email=biz.business_email,  # always use the business's email
             success_url=YOUR_DOMAIN + '/business/dashboard?fund_success=1',
             cancel_url=YOUR_DOMAIN + '/business/fund-account?canceled=1',
-            metadata={'purpose': 'fund_account'}  # <-- THIS IS THE MISSING LINE!
+            metadata={'purpose': 'fund_account'}
         )
-        return jsonify({'sessionId': session.id})
+        return jsonify({'sessionId': session_obj.id})
     except Exception as e:
         import logging
         logging.error(f"Stripe Checkout creation error: {e}")
