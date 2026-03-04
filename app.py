@@ -2629,7 +2629,48 @@ def fund_account():
             flash(f"Account funded: ${amount:.2f} added.", "success")
             return redirect(url_for('business_dashboard'))
 
-    return render_template("fund_account.html", account_balance=account_balance)
+    return render_template(
+        "fund_account.html",
+        account_balance=account_balance,
+        STRIPE_PUBLISHABLE=os.environ.get("STRIPE_PUBLISHABLE")
+    )
+
+@app.route('/business/create-checkout-session', methods=['POST'])
+@business_login_required
+def business_create_checkout_session():
+    data = request.get_json()
+    amount = data.get('amount')
+    try:
+        # Validate amount is a number and at least $1.00
+        amount_float = float(amount)
+        if amount_float < 1.0:
+            return jsonify({'error': 'Minimum $1.00 required.'}), 400
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid amount.'}), 400
+
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='payment',
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': 'Fund Business Account',
+                    },
+                    'unit_amount': int(float(amount) * 100),  # dollars to cents
+                },
+                'quantity': 1,
+            }],
+            customer_email=current_user.email if hasattr(current_user, 'email') else None,
+            success_url=YOUR_DOMAIN + '/business/fund-account?success=1',
+            cancel_url=YOUR_DOMAIN + '/business/fund-account?canceled=1',
+        )
+        return jsonify({'sessionId': session.id})
+    except Exception as e:
+        import logging
+        logging.error(f"Stripe Checkout creation error: {e}")
+        return jsonify({'error': 'Checkout session failed.'}), 500
 
 @app.route("/business/finalize-transaction/<int:interaction_id>", methods=["GET", "POST"])
 @business_login_required

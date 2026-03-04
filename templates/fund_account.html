@@ -26,5 +26,30 @@
         <a href="{{ url_for('business_dashboard') }}" class="btn btn-primary w-100 mt-2">Return to Dashboard</a>
     </div>
 </div>
+<script>
+const stripe = Stripe("{{ STRIPE_PUBLISHABLE|safe }}"); // Flask template will fill this in
+
+document.getElementById("stripe-pay-btn").onclick = function() {
+    const amount = document.querySelector('input[name="amount"]').value;
+    fetch("/business/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.sessionId) {
+            stripe.redirectToCheckout({ sessionId: data.sessionId });
+        } else {
+            document.getElementById("stripe-error").textContent = data.error || "Could not start checkout.";
+            document.getElementById("stripe-error").classList.remove("d-none");
+        }
+    })
+    .catch(() => {
+        document.getElementById("stripe-error").textContent = "Error connecting to payment system.";
+        document.getElementById("stripe-error").classList.remove("d-none");
+    });
+};
+</script>
 </body>
 </html>
