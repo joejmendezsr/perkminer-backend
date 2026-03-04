@@ -1291,12 +1291,15 @@ def stripe_webhook():
 
         # ---- FUND BUSINESS ACCOUNT LOGIC ----
         if metadata.get('purpose') == 'fund_account':
+            logging.info(f"[FUND HOOK] Called! customer_email={customer_email}, amount={amount}, metadata={metadata}")
             biz = Business.query.filter_by(business_email=customer_email).first()
             if biz:
+                old_balance = biz.account_balance
                 biz.account_balance += amount
                 db.session.commit()
-                import logging
-                logging.info(f"Business {biz.business_email} funded ${amount:,.2f} via Stripe.")
+                logging.info(f"Updated account_balance for {customer_email}: {old_balance} --> {biz.account_balance}")
+            else:
+                logging.warning(f"No matching business for email: {customer_email}")
             return '', 200
 
         # ---- EXISTING CART/ORDER LOGIC ----
