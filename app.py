@@ -136,7 +136,6 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "5d5b8eceb21ecedf505e4b43f5715401d619214a11c00b4a4d3133e3f0b85c30"
 
 # ────────────────────────────────────────────────
 # Flask SECRET_KEY – must come from env var (no hardcoded fallback!)
