@@ -947,10 +947,11 @@ def store_builder():
 def save_homepage():
     data = request.get_json()
     homepage_html = data.get('homepage_html', '')
-    # Find the current business for this user (update as needed for your setup)
+    homepage_css = data.get('homepage_css', '')
     business = Business.query.filter_by(user_id=current_user.id).first()
     if business:
         business.homepage_html = homepage_html
+        business.homepage_css = homepage_css
         db.session.commit()
         return jsonify({'success': True}), 200
     return jsonify({'success': False, 'error': 'Business not found'}), 404

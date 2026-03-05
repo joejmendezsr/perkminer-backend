@@ -315,13 +315,14 @@ editor.on('component:update', () => {
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
     const html = editor.getHtml();
+    const css = editor.getCss();
     fetch('/save_homepage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value,
       },
-      body: JSON.stringify({ homepage_html: html })
+      body: JSON.stringify({ homepage_html: html, homepage_css: css })
     })
     .then(res => res.ok ? console.log("Auto-saved!") : console.error("Save failed"))
     .catch(err => console.error("Error:", err));
