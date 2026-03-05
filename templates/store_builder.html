@@ -242,8 +242,7 @@
   " title="Add/Edit Link" type="button" style="color:#4478dd;">&#128279;</button>
 
 </div>
-
-<script src="https://unpkg.com/grapesjs"></script>
+<script src="{{ url_for('static', filename='grapesjs/grapes.min.js') }}"></script>
 <script src="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.js"></script>
 <script>
   document.getElementById('themeToggle').addEventListener('click', function() {
@@ -891,6 +890,5 @@ initDraggableBlock('block-map-large', `
 
   loadPage('home');
 </script>
-<script src="{{ url_for('static', filename='grapesjs/grapes.min.js') }}"></script>
 </body>
 </html>
