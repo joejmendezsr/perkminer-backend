@@ -136,6 +136,7 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "5d5b8eceb21ecedf505e4b43f5715401d619214a11c00b4a4d3133e3f0b85c30"
 
 # ────────────────────────────────────────────────
 # Flask SECRET_KEY – must come from env var (no hardcoded fallback!)
@@ -718,6 +719,7 @@ class Business(db.Model):
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
+    homepage_html = db.Column(db.Text, nullable=True)
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
