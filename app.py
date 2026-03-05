@@ -974,6 +974,20 @@ def public_store(biz_id):
     # get products as before
     return render_template('public_store.html', biz=biz, products=products, theme=theme)
 
+@app.route('/contact/<int:business_id>')
+def contact_page(business_id):
+    # Get this business and its theme
+    business = Business.query.get_or_404(business_id)
+    # If your business has a foreign key to Theme, use business.theme.contact_html
+    # Or manually look up a theme if not linked
+    theme = Theme.query.get(business.theme_id) if hasattr(business, 'theme_id') else None
+    contact_html = theme.contact_html if theme and theme.contact_html else "<p>Contact page template missing.</p>"
+    return render_template(
+        'contact_page.html',
+        business=business,
+        contact_html=contact_html
+    )
+
 @app.route('/store_products', methods=['GET', 'POST'])
 @business_login_required
 def store_products():
