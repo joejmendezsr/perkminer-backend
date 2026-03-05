@@ -5,7 +5,7 @@
   <title>Store Website Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='grapesjs/grapes.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/tokens.css') }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.css">
@@ -29,7 +29,7 @@
     .block-list { list-style:none; margin:0; padding:0;}
     .block-list li { margin-bottom: 1.05rem; }
     .block-btn { display:flex; align-items:center; gap:7px; background:#111821; border:1.6px solid #5693e0; border-radius:7px; padding:5.5px 8px; font-size:0.98em; color:#ace0fa; cursor:move; box-shadow:0 2px 7px #163a66ad; transition: background .13s, color .13s, border .13s;}
-    .block-btn:hover { background:#2659cf; color:#ffedbd; border:1.7px solid #e4adf7;}
+    .blo  ck-btn:hover { background:#2659cf; color:#ffedbd; border:1.7px solid #e4adf7;}
     .block-btn .bi { font-size:1.12em;}
     .theme-gallery-wrap {background:#181b24; border-radius:15px; box-shadow:0 2px 14px #0a112084; max-width:1220px; margin:10px auto 3rem auto; padding:22px 18px;}
     .theme-gallery-title { color:#5bddff;font-size:1.3em;font-weight:700;}
@@ -891,5 +891,6 @@ initDraggableBlock('block-map-large', `
 
   loadPage('home');
 </script>
+<script src="{{ url_for('static', filename='grapesjs/grapes.min.js') }}"></script>
 </body>
 </html>
