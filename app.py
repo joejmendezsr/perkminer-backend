@@ -490,7 +490,7 @@ def build_invite_email(inviter_name, join_url, video_url):
         </td>
     </tr>
 
-        <!-- Intro Text + Watch Video Button -->
+        <!-- Introduction Text + Watch Video Button -->
     <tr>
         <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 28px; color: #374151; line-height: 1.6; text-align:center;">
             <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b> (Members and business advertisers have the ability to earn more than what they spend on products or services!)</p>
