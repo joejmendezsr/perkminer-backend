@@ -810,6 +810,7 @@ class Theme(db.Model):
     css_url = db.Column(db.String(150))
     thumbnail_url = db.Column(db.String(200))
     starter_html = db.Column(db.Text)
+    contact_html = db.Column(db.Text, nullable=True)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -941,6 +942,19 @@ def store_builder():
         theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
     )
 
+@app.route('/save_homepage', methods=['POST'])
+@login_required
+def save_homepage():
+    data = request.get_json()
+    homepage_html = data.get('homepage_html', '')
+    # Find the current business for this user (update as needed for your setup)
+    business = Business.query.filter_by(user_id=current_user.id).first()
+    if business:
+        business.homepage_html = homepage_html
+        db.session.commit()
+        return jsonify({'success': True}), 200
+    return jsonify({'success': False, 'error': 'Business not found'}), 404
+
 @app.route('/stores/<store_slug>')
 def public_storefront(store_slug):
     biz = Business.query.filter_by(
@@ -953,6 +967,12 @@ def public_storefront(store_slug):
     theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
     products = Product.query.filter_by(business_id=biz.id).all()
     return render_template('public_storefront.html', business=biz, theme=theme, products=products)
+
+@app.route('/public_store/<int:biz_id>')
+def public_store(biz_id):
+    biz = Business.query.get_or_404(biz_id)
+    # get products as before
+    return render_template('public_store.html', biz=biz, products=products, theme=theme)
 
 @app.route('/store_products', methods=['GET', 'POST'])
 @business_login_required

@@ -310,6 +310,38 @@
     style: '',
   });
 
+let saveTimeout;
+editor.on('component:update', () => {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    const html = editor.getHtml();
+    fetch('/save_homepage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value,
+      },
+      body: JSON.stringify({ homepage_html: html })
+    })
+    .then(res => res.ok ? console.log("Auto-saved!") : console.error("Save failed"))
+    .catch(err => console.error("Error:", err));
+  }, 2000);
+});
+
+// Theme toggle logic with localStorage
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('colorScheme');
+
+if (savedTheme) {
+  document.body.setAttribute('data-theme', savedTheme);
+}
+
+themeToggle.addEventListener('click', function() {
+  let nextTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('colorScheme', nextTheme);
+});
+
 // Swiper auto-initializer for both .mySwiper and .myCarousel blocks AND dropdown support
 function addBlock(html) {
   editor.addComponents(html);
