@@ -318,18 +318,6 @@
     pages[currentPageKey] = themeHtmlMap[themeId] || '';
   }
 
-  let defaultHTML = `<section style="padding:44px 0;text-align:center;background:#f8faff;"><h2>Welcome!</h2><p>Drag blocks from the left into your site.</p></section>`;
-  const editor = grapesjs.init({
-    container: '#gjs',
-    fromElement: false,
-    height: '540px',
-    width: 'auto',
-    storageManager: false,
-    plugins: [],
-    components: pages['home'] || defaultHTML,
-    style: '',
-  });
-
 let saveTimeout;
 editor.on('component:update', () => {
   clearTimeout(saveTimeout);
@@ -426,6 +414,7 @@ function addBlock(html) {
     storageManager: false,
     plugins: [],
     components: pages['home'] || defaultHTML,
+    style: '',
   });
 
   // Debounced auto-save for HTML and CSS
