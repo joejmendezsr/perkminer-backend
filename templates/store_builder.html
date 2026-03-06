@@ -81,10 +81,20 @@
 <body>
 <div class="builder-toolbar">
   <span class="builder-title"><i class="bi bi-cpu me-1"></i> Store Website Builder</span>
+
+
+
+
   <div class="page-bar">
     <button class="page-btn active" data-page="home">Home Page</button>
-    <button class="page-btn" data-page="products">Products</button>
-    <button class="page-btn" data-page="contact">Contact</button>
+<a href="/public_store/{{ business.id }}">Store</a>
+<a href="/public_store/{{ business.id }}?page=products">Products</a>
+<a href="/contact/{{ business.id }}">Contact</a>
+
+
+
+
+
   </div>
   <button class="theme-toggle" id="themeToggle"><i class="bi bi-lightbulb"></i> Switch Color Scheme</button>
 </div>
@@ -256,14 +266,48 @@
 
 </div>
 
+
+
+
+
+
+
+
 <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='swiper/swiper-bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='grapesjs/grapes.min.js') }}"></script>
+
+
+
+
+
+
+
+
 <script>
-  document.getElementById('themeToggle').addEventListener('click', function() {
-    document.body.classList.toggle('dark-theme');
-    this.classList.toggle('active');
-  });
+
+
+
+
+// Theme toggle logic with localStorage
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('colorScheme');
+
+if (savedTheme) {
+  document.body.setAttribute('data-theme', savedTheme);
+}
+
+themeToggle.addEventListener('click', function() {
+  let nextTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('colorScheme', nextTheme);
+});
+
+
+
+
+
+
 
   // Sidebar submenu toggle
   [
@@ -287,9 +331,43 @@
     });
   });
 
+
+
+
+
   // Multi-page logic and save
   const pages = { home: `{{ saved_html | safe }}`, products: '', contact: '' };
   let currentPageKey = 'home';
+
+
+
+
+
+let saveTimeout;
+editor.on('component:update', () => {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    const html = editor.getHtml();
+    const css = editor.getCss();
+    fetch('/save_homepage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value,
+      },
+      body: JSON.stringify({
+        homepage_html: html,
+        homepage_css: css,
+      })
+    })
+    .then(res => res.ok ? console.log("Auto-saved!") : console.error("Save failed"))
+    .catch(err => console.error("Error:", err));
+  }, 2000);
+});
+
+
+
+
   
   function loadPage(pageKey) {
     currentPageKey = pageKey;
