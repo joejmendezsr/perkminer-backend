@@ -45,10 +45,6 @@
     .block-btn { display:flex; align-items:center; gap:7px; background:#111821; border:1.6px solid #5693e0; border-radius:7px; padding:5.5px 8px; font-size:0.98em; color:#ace0fa; cursor:move; box-shadow:0 2px 7px #163a66ad; transition: background .13s, color .13s, border .13s;}
     .blo  ck-btn:hover { background:#2659cf; color:#ffedbd; border:1.7px solid #e4adf7;}
     .block-btn .bi { font-size:1.12em;}
-    body { background: var(--color-bg); color: var(--color-text); min-height: 100vh; font-family: var(--font-main); }
-    .builder-toolbar { background: #21253b; box-shadow: 0 4px 18px #002f5988; border-radius: 13px; max-width:1350px; margin:24px auto 10px auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:0.6em 2em;}
-    .builder-title { font-size: 1.7em; font-weight: bold; background: linear-gradient(93deg, #6afadc, #db8abf, #50cdc1, #5b8dfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;}
-    .theme-toggle { background:#1a293c; color:#89c5ff; border-radius:5px; border:2px solid #2f81d8; padding:5px 17px; font-size:1em; cursor:pointer;}
     .theme-gallery-wrap {background:#181b24; border-radius:15px; box-shadow:0 2px 14px #0a112084; max-width:1220px; margin:10px auto 3rem auto; padding:22px 18px;}
     .theme-gallery-title { color:#5bddff;font-size:1.3em;font-weight:700;}
     .theme-gallery-row {display:flex;gap:1.1em;flex-wrap:wrap;justify-content:center;}
@@ -294,8 +290,6 @@
   });
 
   // Multi-page logic and save
-  const pages = { home: `{{ saved_html | safe }}`, products: '', contact: '' };
-  let currentPageKey = 'home';
   
   function loadPage(pageKey) {
     currentPageKey = pageKey;
@@ -318,25 +312,6 @@
     pages[currentPageKey] = themeHtmlMap[themeId] || '';
   }
 
-let saveTimeout;
-editor.on('component:update', () => {
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
-    const html = editor.getHtml();
-    const css = editor.getCss();
-    fetch('/save_homepage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value,
-      },
-      body: JSON.stringify({ homepage_html: html, homepage_css: css })
-    })
-    .then(res => res.ok ? console.log("Auto-saved!") : console.error("Save failed"))
-    .catch(err => console.error("Error:", err));
-  }, 2000);
-});
-
 // Theme toggle logic with localStorage
   const themeToggle = document.getElementById('themeToggle');
   const savedTheme = localStorage.getItem('colorScheme');
@@ -346,12 +321,6 @@ editor.on('component:update', () => {
     document.body.setAttribute('data-theme', nextTheme);
     localStorage.setItem('colorScheme', nextTheme);
   });
-
-themeToggle.addEventListener('click', function() {
-  let nextTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  document.body.setAttribute('data-theme', nextTheme);
-  localStorage.setItem('colorScheme', nextTheme);
-});
 
 // Swiper auto-initializer for both .mySwiper and .myCarousel blocks AND dropdown support
 function addBlock(html) {
