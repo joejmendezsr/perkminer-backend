@@ -812,6 +812,7 @@ class Theme(db.Model):
     thumbnail_url = db.Column(db.String(200))
     starter_html = db.Column(db.Text)
     contact_html = db.Column(db.Text, nullable=True)
+    homepage_css = db.Column(db.Text)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
