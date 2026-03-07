@@ -656,6 +656,7 @@ class Business(db.Model):
     theme_id = db.Column(db.Integer, db.ForeignKey('theme.id'))
     custom_html = db.Column(db.Text)
     grapesjs_html = db.Column(db.Text)
+    grapesjs_css = db.Column(db.Text)
     stripe_account_id = db.Column(db.String(100))
     has_ecommerce_store = db.Column(db.Boolean, default=False)
     listing_type = db.Column(db.String(50))
@@ -923,8 +924,10 @@ def store_builder():
     themes = Theme.query.all()
     if request.method == 'POST':
         page_html = request.form.get('page_html')
+        page_css = request.form.get('page_css')
         if page_html:
             biz.grapesjs_html = page_html
+            biz.grapesjs_css = page_css or ""  # Save CSS (even if blank)
             db.session.commit()
             flash("Website changes saved!", "success")
         else:
@@ -932,6 +935,7 @@ def store_builder():
         return redirect(url_for('store_builder'))
 
     saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
+    saved_css = biz.grapesjs_css if biz and biz.grapesjs_css else ""
     # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
     return render_template(
@@ -939,6 +943,7 @@ def store_builder():
         business=biz,
         themes=themes,
         saved_html=saved_html,
+        saved_css=saved_css,
         theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
     )
 

@@ -199,6 +199,7 @@
 <form id="save-html-form" method="POST" action="">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="page_html" id="page_html">
+  <input type="hidden" name="page_css" id="page_css">
   <input type="hidden" name="page" id="current_page">
   <button type="submit" class="btn btn-success mt-3 ms-1">Save Website</button>
   <a href="{{ url_for('store_admin') }}" class="btn btn-secondary mt-3 ms-2">Back to Store Admin</a>
@@ -245,98 +246,103 @@
 
 </div>
 
-
-
-
-
-
-
-
 <script src="https://unpkg.com/grapesjs"></script>
 <script src="https://unpkg.com/swiper@11.1.4/swiper-bundle.min.js"></script>
 <script>
 
-
-
-
-
-
-
-
-
-// Theme toggle logic with localStorage
+// ----- Theme toggle logic with localStorage -----
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('colorScheme');
-
 if (savedTheme) {
   document.body.setAttribute('data-theme', savedTheme);
 }
-
-themeToggle.addEventListener('click', function() {
+themeToggle.addEventListener('click', function () {
   let nextTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('data-theme', nextTheme);
   localStorage.setItem('colorScheme', nextTheme);
 });
 
-  // Sidebar submenu toggle
-  [
-    ['btn-image-menu', 'sub-image'],
-    ['btn-layout-menu', 'sub-layout'],
-    ['btn-multilayer-menu', 'sub-multilayer'],
-    ['btn-products-menu', 'sub-products'],
-    ['btn-text-menu', 'sub-text'],
-    ['btn-menu-menu', 'sub-menu'],
-    ['btn-custom-menu', 'sub-custom'],
-    ['btn-contact-menu', 'sub-contact'],
-    ['btn-map-menu', 'sub-map'],
-    ['btn-header-footer-menu', 'sub-header-footer']
-  ].forEach(pair => {
-    const [btnId, subId] = pair;
-    const btn = document.getElementById(btnId);
-    const sub = document.getElementById(subId);
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.sub-list').forEach(lst => { if (lst !== sub) lst.style.display = 'none'; });
-      sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
-    });
+// ----- Sidebar submenu toggle -----
+[
+  ['btn-image-menu', 'sub-image'],
+  ['btn-layout-menu', 'sub-layout'],
+  ['btn-multilayer-menu', 'sub-multilayer'],
+  ['btn-products-menu', 'sub-products'],
+  ['btn-text-menu', 'sub-text'],
+  ['btn-menu-menu', 'sub-menu'],
+  ['btn-custom-menu', 'sub-custom'],
+  ['btn-contact-menu', 'sub-contact'],
+  ['btn-map-menu', 'sub-map'],
+  ['btn-header-footer-menu', 'sub-header-footer']
+].forEach(pair => {
+  const [btnId, subId] = pair;
+  const btn = document.getElementById(btnId);
+  const sub = document.getElementById(subId);
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sub-list').forEach(lst => { if (lst !== sub) lst.style.display = 'none'; });
+    sub.style.display = (sub.style.display === 'none') ? 'block' : 'none';
   });
+});
 
-  // Multi-page logic and save
-  const pages = { home: `{{ saved_html | safe }}`, products: '', contact: '' };
-  let currentPageKey = 'home';
-  
-  function loadPage(pageKey) {
-    currentPageKey = pageKey;
-    editor.setComponents(pages[pageKey] || '');
-    document.getElementById('current_page').value = currentPageKey;
-    document.querySelectorAll('.page-btn').forEach(btn =>
-      btn.classList.toggle('active', btn.dataset.page === pageKey)
-    );
-  }
-  document.querySelectorAll('.page-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      pages[currentPageKey] = editor.getHtml();
-      loadPage(btn.dataset.page);
-    });
+// ----- Initial content and GrapesJS setup -----
+
+let defaultHTML = `<section style="padding:44px 0;text-align:center;background:#f8faff;"><h2>Welcome!</h2><p>Drag blocks from the left into your site.</p></section>`;
+const initialHTML = `{{ saved_html | safe }}`;
+const initialCSS = `{{ saved_css | safe }}`;
+const themeHtmlMap = {{ theme_html_map | safe }};
+
+const editor = grapesjs.init({
+  container: '#gjs',
+  fromElement: false,
+  height: '540px',
+  width: 'auto',
+  storageManager: false,
+  plugins: [],
+  components: initialHTML || defaultHTML,
+  style: initialCSS || '',
+});
+
+// ----- Multi-page HTML+CSS management -----
+const pages = {
+  home: { html: initialHTML, css: initialCSS },
+  products: { html: '', css: '' },
+  contact: { html: '', css: '' }
+};
+
+let currentPageKey = 'home';
+
+function loadPage(pageKey) {
+  currentPageKey = pageKey;
+  const { html, css } = pages[pageKey] || { html: '', css: '' };
+  editor.setComponents(html || '');
+  editor.setStyle(css || '');
+  document.getElementById('current_page').value = currentPageKey;
+  document.querySelectorAll('.page-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.page === pageKey)
+  );
+}
+
+document.querySelectorAll('.page-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    pages[currentPageKey] = {
+      html: editor.getHtml(),
+      css: editor.getCss()
+    };
+    loadPage(btn.dataset.page);
   });
+});
 
-  const themeHtmlMap = {{ theme_html_map | safe }};
-  function loadBuilderTheme(themeId) {
-    editor.setComponents(themeHtmlMap[themeId] || '');
-    pages[currentPageKey] = themeHtmlMap[themeId] || '';
-  }
+// ----- Theme loading (just HTML for now, but could do CSS if you want) -----
+const themeHtmlMap = {{ theme_html_map | safe }};
+function loadBuilderTheme(themeId) {
+  const html = themeHtmlMap[themeId] || '';
+  editor.setComponents(html);
+  // Optional: clear CSS when theme is loaded, or set predefined CSS if you want!
+  editor.setStyle('');
+  pages[currentPageKey] = { html: html, css: '' };
+}
 
-  let defaultHTML = `<section style="padding:44px 0;text-align:center;background:#f8faff;"><h2>Welcome!</h2><p>Drag blocks from the left into your site.</p></section>`;
-  const editor = grapesjs.init({
-    container: '#gjs',
-    fromElement: false,
-    height: '540px',
-    width: 'auto',
-    storageManager: false,
-    plugins: [],
-    components: pages['home'] || defaultHTML,
-    style: '',
-  });
-
+// ----- Autosave logic -----
 let saveTimeout;
 editor.on('component:update', () => {
   clearTimeout(saveTimeout);
@@ -899,11 +905,15 @@ initDraggableBlock('block-map-large', `
   </div>
 `);
 
-  document.getElementById('save-html-form').addEventListener('submit', function(e){
-    pages[currentPageKey] = editor.getHtml();
-    document.getElementById('page_html').value = pages[currentPageKey];
-    document.getElementById('current_page').value = currentPageKey;
-  });
+document.getElementById('save-html-form').addEventListener('submit', function(e){
+  pages[currentPageKey] = {
+    html: editor.getHtml(),
+    css: editor.getCss()
+  };
+  document.getElementById('page_html').value = pages[currentPageKey].html;
+  document.getElementById('page_css').value = pages[currentPageKey].css;
+  document.getElementById('current_page').value = currentPageKey;
+});
 
   loadPage('home');
 </script>
