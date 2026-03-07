@@ -720,7 +720,10 @@ class Business(db.Model):
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
     homepage_html = db.Column(db.Text, nullable=True)
-    
+    contact_html = db.Column(db.Text, nullable=True)
+    contact_css = db.Column(db.Text, nullable=True)
+    products_html = db.Column(db.Text, nullable=True)
+    products_css = db.Column(db.Text, nullable=True)
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -814,6 +817,10 @@ class Theme(db.Model):
     starter_html = db.Column(db.Text)
     contact_html = db.Column(db.Text, nullable=True)
     homepage_css = db.Column(db.Text)
+    contact_html = db.Column(db.Text, nullable=True)
+    contact_css = db.Column(db.Text, nullable=True)
+    products_html = db.Column(db.Text, nullable=True)
+    products_css = db.Column(db.Text, nullable=True)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -924,31 +931,64 @@ def store_builder():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
+
     if request.method == 'POST':
         page_html = request.form.get('page_html')
         page_css = request.form.get('page_css')
-        if page_html:
-            biz.grapesjs_html = page_html
-            biz.grapesjs_css = page_css or ""  # Save CSS (even if blank)
-            db.session.commit()
-            flash("Website changes saved!", "success")
-        else:
+        page = request.form.get('page') or 'home'
+
+        if not page_html:
             flash("No HTML received; website not updated.", "danger")
+            return redirect(url_for('store_builder'))
+
+        if page == 'home':
+            biz.grapesjs_html = page_html
+            biz.grapesjs_css = page_css or ""
+        elif page == 'products':
+            biz.products_html = page_html
+            biz.products_css = page_css or ""
+        elif page == 'contact':
+            biz.contact_html = page_html
+            biz.contact_css = page_css or ""
+        db.session.commit()
+        flash(f"{page.capitalize()} page changes saved!", "success")
         return redirect(url_for('store_builder'))
 
-    saved_html = biz.grapesjs_html if biz and biz.grapesjs_html else ""
-    saved_css = biz.grapesjs_css if biz and biz.grapesjs_css else ""
-    # Build a dict: theme_id => starter_html
+    # Prepare saved page data for the builder
+    saved_pages = {
+        "home": {
+            "html": biz.grapesjs_html or "",
+            "css": biz.grapesjs_css or ""
+        },
+        "products": {
+            "html": biz.products_html or "",
+            "css": biz.products_css or ""
+        },
+        "contact": {
+            "html": biz.contact_html or "",
+            "css": biz.contact_css or ""
+        }
+    }
+
+    # Theme starter maps for all pages
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
     theme_css_map = {str(theme.id): theme.homepage_css or "" for theme in themes}
+    theme_products_html_map = {str(theme.id): theme.products_html or "" for theme in themes}
+    theme_products_css_map = {str(theme.id): theme.products_css or "" for theme in themes}
+    theme_contact_html_map = {str(theme.id): theme.contact_html or "" for theme in themes}
+    theme_contact_css_map = {str(theme.id): theme.contact_css or "" for theme in themes}
+
     return render_template(
         'store_builder.html',
         business=biz,
         themes=themes,
-        saved_html=saved_html,
-        saved_css=saved_css,
-        theme_html_map=json.dumps(theme_html_map),  # convert dict to json string
+        saved_pages=json.dumps(saved_pages),
+        theme_html_map=json.dumps(theme_html_map),
         theme_css_map=json.dumps(theme_css_map),
+        theme_products_html_map=json.dumps(theme_products_html_map),
+        theme_products_css_map=json.dumps(theme_products_css_map),
+        theme_contact_html_map=json.dumps(theme_contact_html_map),
+        theme_contact_css_map=json.dumps(theme_contact_css_map),
     )
 
 @app.route('/save_homepage', methods=['POST'])
