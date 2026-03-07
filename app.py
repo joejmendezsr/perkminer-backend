@@ -938,6 +938,7 @@ def store_builder():
     saved_css = biz.grapesjs_css if biz and biz.grapesjs_css else ""
     # Build a dict: theme_id => starter_html
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
+    theme_css_map = {str(theme.id): theme.homepage_css or "" for theme in themes}
     return render_template(
         'store_builder.html',
         business=biz,
@@ -945,6 +946,7 @@ def store_builder():
         saved_html=saved_html,
         saved_css=saved_css,
         theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
+        theme_css_map=json.dumps(theme_css_map),
     )
 
 @app.route('/save_homepage', methods=['POST'])

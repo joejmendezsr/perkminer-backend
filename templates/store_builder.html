@@ -290,6 +290,7 @@ let defaultHTML = `<section style="padding:44px 0;text-align:center;background:#
 const initialHTML = `{{ saved_html | safe }}`;
 const initialCSS = `{{ saved_css | safe }}`;
 const themeHtmlMap = {{ theme_html_map | safe }};
+const themeCssMap = {{ theme_css_map | safe }};
 
 const editor = grapesjs.init({
   container: '#gjs',
@@ -335,6 +336,7 @@ document.querySelectorAll('.page-btn').forEach(btn => {
 // ----- Theme loading (just HTML for now, but could do CSS if you want) -----
 function loadBuilderTheme(themeId) {
   const html = themeHtmlMap[themeId] || '';
+  const css = themeCssMap[themeId] || '';
   editor.setComponents(html);
   // Optional: clear CSS when theme is loaded, or set predefined CSS if you want!
   editor.setStyle('');
