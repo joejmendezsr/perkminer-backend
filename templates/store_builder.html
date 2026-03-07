@@ -339,8 +339,8 @@ function loadBuilderTheme(themeId) {
   const css = themeCssMap[themeId] || '';
   editor.setComponents(html);
   // Optional: clear CSS when theme is loaded, or set predefined CSS if you want!
-  editor.setStyle('');
-  pages[currentPageKey] = { html: html, css: '' };
+  editor.setStyle(css);
+  pages[currentPageKey] = { html: html, css: css };
 }
 
 // ----- Autosave logic -----
