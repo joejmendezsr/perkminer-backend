@@ -328,7 +328,7 @@ document.querySelectorAll('.r-link').forEach(link => {
   link.addEventListener('click', function(e) {
     e.preventDefault();
     const pageKey = link.dataset.page;
-    if (pageKey) {
+    if (pageKey && typeof loadPage === "function") {
       loadPage(pageKey);
     }
   });
