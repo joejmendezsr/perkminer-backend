@@ -720,6 +720,7 @@ class Business(db.Model):
     is_suspended = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), nullable=False, default='not_submitted')
     homepage_html = db.Column(db.Text, nullable=True)
+    
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)

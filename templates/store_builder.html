@@ -323,6 +323,17 @@ function loadPage(pageKey) {
   );
 }
 
+// Allow in-template nav links to switch builder pages
+document.querySelectorAll('.r-link').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    const pageKey = link.dataset.page;
+    if (pageKey) {
+      loadPage(pageKey);
+    }
+  });
+});
+
 document.querySelectorAll('.page-btn').forEach(btn => {
   btn.addEventListener('click', function () {
     pages[currentPageKey] = {
