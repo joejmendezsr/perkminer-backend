@@ -945,7 +945,7 @@ def store_builder():
         themes=themes,
         saved_html=saved_html,
         saved_css=saved_css,
-        theme_html_map=json.dumps(theme_html_map)  # convert dict to json string
+        theme_html_map=json.dumps(theme_html_map),  # convert dict to json string
         theme_css_map=json.dumps(theme_css_map),
     )
 
