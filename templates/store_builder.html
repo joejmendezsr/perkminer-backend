@@ -333,7 +333,6 @@ document.querySelectorAll('.page-btn').forEach(btn => {
 });
 
 // ----- Theme loading (just HTML for now, but could do CSS if you want) -----
-const themeHtmlMap = {{ theme_html_map | safe }};
 function loadBuilderTheme(themeId) {
   const html = themeHtmlMap[themeId] || '';
   editor.setComponents(html);
@@ -368,7 +367,10 @@ editor.on('component:update', () => {
 // Swiper auto-initializer for both .mySwiper and .myCarousel blocks AND dropdown support
 function addBlock(html) {
   editor.addComponents(html);
-  pages[currentPageKey] = editor.getHtml();
+    pages[currentPageKey] = {
+        html: editor.getHtml(),
+        css: editor.getCss()
+      };
   setTimeout(() => {
     // Swiper init
     document.querySelectorAll('.mySwiper, .myCarousel').forEach(el => {
