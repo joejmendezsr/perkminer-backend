@@ -321,14 +321,13 @@ const editor = grapesjs.init({
   components: pages[currentPageKey].html || '',
   style: pages[currentPageKey].css || ''
 });
-// Optionally, if using a GrapesJS JS plugin
 if (editor.setJs && pages[currentPageKey].js) {
   editor.setJs(pages[currentPageKey].js);
 }
 
-// ----- Navigation: Save current page draft before switching -----
+// ----- Page switch/Sync -----
 function loadPage(pageKey) {
-  // Save current before switching (if builder loaded)
+  // Save current page before switching away
   if (editor && typeof editor.getHtml === 'function') {
     pages[currentPageKey] = {
       html: editor.getHtml(),
@@ -344,14 +343,19 @@ function loadPage(pageKey) {
     editor.setJs(js);
   }
   document.getElementById('current_page').value = currentPageKey;
+
+  // Only one .page-btn should be active!
   document.querySelectorAll('.page-btn').forEach(btn =>
-    btn.classList.remove('active');
+    btn.classList.remove('active')
   );
+  const activeBtn = document.querySelector('.page-btn[data-page="' + pageKey + '"]');
+  if (activeBtn) activeBtn.classList.add('active');
+
   attachNavSwitching();
 }
 
 // Menu bar buttons (top right) to switch pages
-document.querySelector('.page-btn[data-page="' + pageKey + '"]').classList.add('active');
+document.querySelectorAll('.page-btn').forEach(btn => {
   btn.addEventListener('click', function () {
     loadPage(btn.dataset.page);
   });
@@ -371,6 +375,7 @@ attachNavSwitching();
 
 // ----- Theme loading: Sets ALL 3 pages with a theme at once -----
 function loadBuilderTheme(themeId) {
+  // Update all three pages with the selected theme
   pages.home = {
     html: themeHtmlMap[themeId] || '',
     css: themeCssMap[themeId] || '',
@@ -386,14 +391,8 @@ function loadBuilderTheme(themeId) {
     css: themeContactCssMap[themeId] || '',
     js: themeContactJsMap[themeId] || ''
   };
-  // Reload current/active page
-  const { html, css, js } = pages[currentPageKey];
-  editor.setComponents(html || '');
-  editor.setStyle(css || '');
-  if (js && editor.setJs) {
-    editor.setJs(js);
-  }
-  attachNavSwitching();
+  // Reload the currently active page into the builder
+  loadPage(currentPageKey);
 }
 
 // ----- Manual Save form handler: Saves ALL 3 pages at once -----
