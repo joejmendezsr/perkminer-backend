@@ -345,13 +345,13 @@ function loadPage(pageKey) {
   }
   document.getElementById('current_page').value = currentPageKey;
   document.querySelectorAll('.page-btn').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.page === pageKey)
+    btn.classList.remove('active');
   );
   attachNavSwitching();
 }
 
 // Menu bar buttons (top right) to switch pages
-document.querySelectorAll('.page-btn').forEach(btn => {
+document.querySelector('.page-btn[data-page="' + pageKey + '"]').classList.add('active');
   btn.addEventListener('click', function () {
     loadPage(btn.dataset.page);
   });
