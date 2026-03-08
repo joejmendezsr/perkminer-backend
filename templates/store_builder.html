@@ -293,9 +293,9 @@ themeToggle.addEventListener('click', function () {
 // ----- Load all saved page content and theme maps -----
 const savedPages = {{ saved_pages | safe }};
 const pages = {
-  home: { html: savedPages.home.html, css: savedPages.home.css },
-  products: { html: savedPages.products.html, css: savedPages.products.css },
-  contact: { html: savedPages.contact.html, css: savedPages.contact.css }
+  home: { html: savedPages.home.html, css: savedPages.home.css, js: savedPages.home.js },
+  products: { html: savedPages.products.html, css: savedPages.products.css, js: savedPages.products.js },
+  contact: { html: savedPages.contact.html, css: savedPages.contact.css, js: savedPages.contact.js }
 };
 let currentPageKey = 'home';
 
@@ -318,16 +318,31 @@ const editor = grapesjs.init({
   width: 'auto',
   storageManager: false,
   plugins: [],
-  components: pages[currentPageKey].html,
-  style: pages[currentPageKey].css
+  components: pages[currentPageKey].html || '',
+  style: pages[currentPageKey].css || ''
 });
+// Optionally, if using a GrapesJS JS plugin
+if (editor.setJs && pages[currentPageKey].js) {
+  editor.setJs(pages[currentPageKey].js);
+}
 
-// ----- Switch builder pages -----
+// ----- Navigation: Save current page draft before switching -----
 function loadPage(pageKey) {
+  // Save current before switching (if builder loaded)
+  if (editor && typeof editor.getHtml === 'function') {
+    pages[currentPageKey] = {
+      html: editor.getHtml(),
+      css: editor.getCss(),
+      js: editor.getJs ? editor.getJs() : (pages[currentPageKey]?.js || "")
+    };
+  }
   currentPageKey = pageKey;
-  const { html, css } = pages[pageKey] || { html: '', css: '' };
+  const { html, css, js } = pages[pageKey] || { html: '', css: '', js: '' };
   editor.setComponents(html || '');
   editor.setStyle(css || '');
+  if (js && editor.setJs) {
+    editor.setJs(js);
+  }
   document.getElementById('current_page').value = currentPageKey;
   document.querySelectorAll('.page-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.page === pageKey)
@@ -335,7 +350,14 @@ function loadPage(pageKey) {
   attachNavSwitching();
 }
 
-// ----- Internal nav menu switching (in-template anchor links) -----
+// Menu bar buttons (top right) to switch pages
+document.querySelectorAll('.page-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    loadPage(btn.dataset.page);
+  });
+});
+
+// Sidebar/in-template menu links navigation
 function attachNavSwitching() {
   document.querySelectorAll('.r-link').forEach(link => {
     link.onclick = function(e) {
@@ -347,20 +369,8 @@ function attachNavSwitching() {
 }
 attachNavSwitching();
 
-// ----- Top-of-page "Home/Products/Contact" button switching -----
-document.querySelectorAll('.page-btn').forEach(btn => {
-  btn.addEventListener('click', function () {
-    pages[currentPageKey] = {
-      html: editor.getHtml(),
-      css: editor.getCss()
-    };
-    loadPage(btn.dataset.page);
-  });
-});
-
-// ----- Theme loading per current page -----
+// ----- Theme loading: Sets ALL 3 pages with a theme at once -----
 function loadBuilderTheme(themeId) {
-  // Load all three pages at once
   pages.home = {
     html: themeHtmlMap[themeId] || '',
     css: themeCssMap[themeId] || '',
@@ -376,24 +386,25 @@ function loadBuilderTheme(themeId) {
     css: themeContactCssMap[themeId] || '',
     js: themeContactJsMap[themeId] || ''
   };
-
-  // Now set the currently active page
-  const { html, css } = pages[currentPageKey];
+  // Reload current/active page
+  const { html, css, js } = pages[currentPageKey];
   editor.setComponents(html || '');
   editor.setStyle(css || '');
-  attachNavSwitching && attachNavSwitching();
+  if (js && editor.setJs) {
+    editor.setJs(js);
+  }
+  attachNavSwitching();
 }
 
-// ----- Manual Save form handler (saves only current page) -----
+// ----- Manual Save form handler: Saves ALL 3 pages at once -----
 document.getElementById('save-html-form').addEventListener('submit', function(e) {
-  // Always capture latest changes from the current page.
+  // Always capture latest changes from the current page before saving all
   pages[currentPageKey] = {
     html: editor.getHtml(),
     css: editor.getCss(),
-    js: editor.getJs()
+    js: editor.getJs ? editor.getJs() : (pages[currentPageKey]?.js || "")
   };
-
-  // Now put all page data into hidden fields (create these as needed)
+  // Populate hidden fields for all pages
   document.getElementById('home_html').value = pages.home.html;
   document.getElementById('home_css').value = pages.home.css;
   document.getElementById('home_js').value = pages.home.js;

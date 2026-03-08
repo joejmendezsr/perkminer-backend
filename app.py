@@ -946,7 +946,7 @@ def store_builder():
         biz.products_css = request.form.get('products_css', '') or ''
         biz.contact_html = request.form.get('contact_html', '') or ''
         biz.contact_css = request.form.get('contact_css', '') or ''
-        biz.grapesjs_js = request.form.get('grapesjs_js', '') or ''
+        biz.grapesjs_js = request.form.get('home_js', '') or ''
         biz.products_js = request.form.get('products_js', '') or ''
         biz.contact_js = request.form.get('contact_js', '') or ''
 
