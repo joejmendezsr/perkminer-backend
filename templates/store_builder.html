@@ -198,9 +198,12 @@
 
 <form id="save-html-form" method="POST" action="">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <input type="hidden" name="page_html" id="page_html">
-  <input type="hidden" name="page_css" id="page_css">
-  <input type="hidden" name="page" id="current_page">
+  <input type="hidden" name="home_html" id="home_html">
+  <input type="hidden" name="home_css" id="home_css">
+  <input type="hidden" name="products_html" id="products_html">
+  <input type="hidden" name="products_css" id="products_css">
+  <input type="hidden" name="contact_html" id="contact_html">
+  <input type="hidden" name="contact_css" id="contact_css">
   <button type="submit" class="btn btn-success mt-3 ms-1">Save Website</button>
   <a href="{{ url_for('store_admin') }}" class="btn btn-secondary mt-3 ms-2">Back to Store Admin</a>
 </form>
@@ -351,32 +354,42 @@ document.querySelectorAll('.page-btn').forEach(btn => {
 
 // ----- Theme loading per current page -----
 function loadBuilderTheme(themeId) {
-  let html = '', css = '';
-  if (currentPageKey === 'home') {
-    html = themeHtmlMap[themeId] || '';
-    css = themeCssMap[themeId] || '';
-  } else if (currentPageKey === 'products') {
-    html = themeProductsHtmlMap[themeId] || '';
-    css = themeProductsCssMap[themeId] || '';
-  } else if (currentPageKey === 'contact') {
-    html = themeContactHtmlMap[themeId] || '';
-    css = themeContactCssMap[themeId] || '';
-  }
-  editor.setComponents(html);
-  editor.setStyle(css);
-  pages[currentPageKey] = { html, css };
-  attachNavSwitching();
+  // Load all three pages at once
+  pages.home = {
+    html: themeHtmlMap[themeId] || '',
+    css: themeCssMap[themeId] || ''
+  };
+  pages.products = {
+    html: themeProductsHtmlMap[themeId] || '',
+    css: themeProductsCssMap[themeId] || ''
+  };
+  pages.contact = {
+    html: themeContactHtmlMap[themeId] || '',
+    css: themeContactCssMap[themeId] || ''
+  };
+
+  // Now set the currently active page
+  const { html, css } = pages[currentPageKey];
+  editor.setComponents(html || '');
+  editor.setStyle(css || '');
+  attachNavSwitching && attachNavSwitching();
 }
 
 // ----- Manual Save form handler (saves only current page) -----
 document.getElementById('save-html-form').addEventListener('submit', function(e) {
+  // Always capture latest changes from the current page.
   pages[currentPageKey] = {
     html: editor.getHtml(),
     css: editor.getCss()
   };
-  document.getElementById('page_html').value = pages[currentPageKey].html;
-  document.getElementById('page_css').value = pages[currentPageKey].css;
-  document.getElementById('current_page').value = currentPageKey;
+
+  // Now put all page data into hidden fields (create these as needed)
+  document.getElementById('home_html').value = pages.home.html;
+  document.getElementById('home_css').value = pages.home.css;
+  document.getElementById('products_html').value = pages.products.html;
+  document.getElementById('products_css').value = pages.products.css;
+  document.getElementById('contact_html').value = pages.contact.html;
+  document.getElementById('contact_css').value = pages.contact.css;
 });
 
 // ----- Autosave logic -----

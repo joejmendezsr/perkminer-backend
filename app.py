@@ -933,25 +933,15 @@ def store_builder():
     themes = Theme.query.all()
 
     if request.method == 'POST':
-        page_html = request.form.get('page_html')
-        page_css = request.form.get('page_css')
-        page = request.form.get('page') or 'home'
-
-        if not page_html:
-            flash("No HTML received; website not updated.", "danger")
-            return redirect(url_for('store_builder'))
-
-        if page == 'home':
-            biz.grapesjs_html = page_html
-            biz.grapesjs_css = page_css or ""
-        elif page == 'products':
-            biz.products_html = page_html
-            biz.products_css = page_css or ""
-        elif page == 'contact':
-            biz.contact_html = page_html
-            biz.contact_css = page_css or ""
+        # Pull all fields at once for true multipage saving
+        biz.grapesjs_html = request.form.get('home_html', '') or ''
+        biz.grapesjs_css = request.form.get('home_css', '') or ''
+        biz.products_html = request.form.get('products_html', '') or ''
+        biz.products_css = request.form.get('products_css', '') or ''
+        biz.contact_html = request.form.get('contact_html', '') or ''
+        biz.contact_css = request.form.get('contact_css', '') or ''
         db.session.commit()
-        flash(f"{page.capitalize()} page changes saved!", "success")
+        flash("All pages saved!", "success")
         return redirect(url_for('store_builder'))
 
     # Prepare saved page data for the builder
