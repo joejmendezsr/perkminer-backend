@@ -200,10 +200,13 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="home_html" id="home_html">
   <input type="hidden" name="home_css" id="home_css">
+  <input type="hidden" name="home_js" id="home_js">
   <input type="hidden" name="products_html" id="products_html">
   <input type="hidden" name="products_css" id="products_css">
+  <input type="hidden" name="products_js" id="products_js">
   <input type="hidden" name="contact_html" id="contact_html">
   <input type="hidden" name="contact_css" id="contact_css">
+  <input type="hidden" name="contact_js" id="contact_js">
   <button type="submit" class="btn btn-success mt-3 ms-1">Save Website</button>
   <a href="{{ url_for('store_admin') }}" class="btn btn-secondary mt-3 ms-2">Back to Store Admin</a>
 </form>
@@ -299,10 +302,13 @@ let currentPageKey = 'home';
 // Theme maps for each page
 const themeHtmlMap = {{ theme_html_map | safe }};
 const themeCssMap = {{ theme_css_map | safe }};
+const themeJsMap = {{ theme_js_map | safe }};
 const themeProductsHtmlMap = {{ theme_products_html_map | safe }};
 const themeProductsCssMap = {{ theme_products_css_map | safe }};
+const themeProductsJsMap = {{ theme_products_js_map | safe }};
 const themeContactHtmlMap = {{ theme_contact_html_map | safe }};
 const themeContactCssMap = {{ theme_contact_css_map | safe }};
+const themeContactJsMap = {{ theme_contact_js_map | safe }};
 
 // ----- GrapesJS init, loads current page -----
 const editor = grapesjs.init({
@@ -357,15 +363,18 @@ function loadBuilderTheme(themeId) {
   // Load all three pages at once
   pages.home = {
     html: themeHtmlMap[themeId] || '',
-    css: themeCssMap[themeId] || ''
+    css: themeCssMap[themeId] || '',
+    js: themeJsMap[themeId] || ''
   };
   pages.products = {
     html: themeProductsHtmlMap[themeId] || '',
-    css: themeProductsCssMap[themeId] || ''
+    css: themeProductsCssMap[themeId] || '',
+    js: themeProductsJsMap[themeId] || ''
   };
   pages.contact = {
     html: themeContactHtmlMap[themeId] || '',
-    css: themeContactCssMap[themeId] || ''
+    css: themeContactCssMap[themeId] || '',
+    js: themeContactJsMap[themeId] || ''
   };
 
   // Now set the currently active page
@@ -380,16 +389,20 @@ document.getElementById('save-html-form').addEventListener('submit', function(e)
   // Always capture latest changes from the current page.
   pages[currentPageKey] = {
     html: editor.getHtml(),
-    css: editor.getCss()
+    css: editor.getCss(),
+    js: editor.getJs()
   };
 
   // Now put all page data into hidden fields (create these as needed)
   document.getElementById('home_html').value = pages.home.html;
   document.getElementById('home_css').value = pages.home.css;
+  document.getElementById('home_js').value = pages.home.js;
   document.getElementById('products_html').value = pages.products.html;
   document.getElementById('products_css').value = pages.products.css;
+  document.getElementById('products_js').value = pages.products.js;
   document.getElementById('contact_html').value = pages.contact.html;
   document.getElementById('contact_css').value = pages.contact.css;
+  document.getElementById('contact_js').value = pages.contact.js;
 });
 
 // ----- Autosave logic -----
@@ -408,6 +421,7 @@ editor.on('component:update', () => {
       body: JSON.stringify({
         homepage_html: html,
         homepage_css: css,
+        homepage_js: js,
       })
     })
     .then(res => res.ok ? console.log("Auto-saved!") : console.error("Save failed"))
@@ -420,7 +434,8 @@ function addBlock(html) {
   editor.addComponents(html);
     pages[currentPageKey] = {
         html: editor.getHtml(),
-        css: editor.getCss()
+        css: editor.getCss(),
+        js: editor.getJs()
       };
   setTimeout(() => {
     // Swiper init
