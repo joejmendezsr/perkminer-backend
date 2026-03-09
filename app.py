@@ -1,10 +1,18 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session, abort, jsonify, send_from_directory, Response
+from flask import (
+    Flask, request, redirect, url_for, render_template, flash, session, abort,
+    jsonify, send_from_directory, Response, send_file
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message as MailMessage
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import (
+    LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+)
 from flask_wtf import FlaskForm, CSRFProtect, RecaptchaField
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField, TextAreaField, Form
+from wtforms import (
+    StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField,
+    TextAreaField, Form
+)
 from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -12,21 +20,22 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import os
 import stripe
 import logging
-from datetime import datetime
+from datetime import datetime, date
 import json
 from sqlalchemy import or_, and_, func, literal
 from flask_migrate import Migrate
-from datetime import datetime, date
-import os, re, random, string, time, logging, csv, uuid, hmac, hashlib
+import re
+import random
+import string
+import time
+import csv
+import uuid
+import hmac
+import hashlib
 from io import StringIO, BytesIO
 import cloudinary
 import cloudinary.uploader
 import qrcode
-from flask import session, request, redirect, url_for, flash, render_template
-from wtforms import StringField, Form
-from wtforms.validators import DataRequired, Email
-from flask import Response, send_file, url_for
-from flask import request, jsonify
 
 # --- Cart Logic ---
 def get_cart():
@@ -1048,6 +1057,18 @@ def contact_page(business_id):
         contact_html=contact_html
     )
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+MAX_FILE_SIZE_MB = 4
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def file_size_okay(file):
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    return size <= MAX_FILE_SIZE_MB * 1024 * 1024
+
 @app.route('/store_products', methods=['GET', 'POST'])
 @business_login_required
 def store_products():
@@ -1056,7 +1077,7 @@ def store_products():
     if not biz:
         flash("Business not found or not logged in!", "danger")
         return redirect(url_for("business_login"))
-    # Only allow up to 50 products per business
+
     products = Product.query.filter_by(business_id=biz.id).limit(50).all()
 
     if request.method == 'POST':
@@ -1066,22 +1087,32 @@ def store_products():
         image_file = request.files.get('image_file')
         stock = request.form.get('stock')
         featured = request.form.get('featured') == 'yes'
-
         image_path = None
 
-        def allowed_file(filename):
-            return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
-
-        if image_file and allowed_file(image_file.filename):
-            from werkzeug.utils import secure_filename
-            import os
-            UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            filename = secure_filename(image_file.filename)
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            image_file.save(file_path)
-            # For DB, save: 'uploads/filename'
-            image_path = os.path.join('uploads', filename)
+        # Validate and upload image to Cloudinary if provided
+        if image_file and image_file.filename:
+            if not allowed_file(image_file.filename):
+                flash("Invalid image type! Allowed: png, jpg, jpeg, gif", "danger")
+                return redirect(url_for('store_products'))
+            if not file_size_okay(image_file):
+                flash(f"Image file too large! Max size is {MAX_FILE_SIZE_MB}MB.", "danger")
+                return redirect(url_for('store_products'))
+            # Upload to Cloudinary
+            try:
+                # Cloudinary auto-detects file type and secures filename
+                result = cloudinary.uploader.upload(
+                    image_file,
+                    folder="perkminer_uploads",
+                    resource_type="image",
+                    allowed_formats=list(ALLOWED_EXTENSIONS),
+                    transformation=[
+                        {"width": 800, "height": 800, "crop": "limit"}
+                    ]
+                )
+                image_path = result.get('secure_url')
+            except Exception as e:
+                flash(f"Cloudinary upload failed: {e}", "danger")
+                return redirect(url_for('store_products'))
 
         if name and price and len(products) < 50:
             new_product = Product(
