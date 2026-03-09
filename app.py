@@ -1059,7 +1059,6 @@ def store_products():
     # Only allow up to 50 products per business
     products = Product.query.filter_by(business_id=biz.id).limit(50).all()
 
-    # Simple add product logic
     if request.method == 'POST':
         name = request.form.get('name')
         price = request.form.get('price')
@@ -1069,6 +1068,7 @@ def store_products():
         featured = request.form.get('featured') == 'yes'
 
         image_path = None
+
         def allowed_file(filename):
             return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
