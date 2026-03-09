@@ -834,8 +834,9 @@ class Product(db.Model):
     name = db.Column(db.String(100))
     price = db.Column(db.Float)
     description = db.Column(db.Text)
-    image_url = db.Column(db.String(200))
+    image_path = db.Column(db.String(200))
     stock = db.Column(db.Integer)
+    featured = db.Column(db.Boolean, default=False)
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1063,16 +1064,34 @@ def store_products():
         name = request.form.get('name')
         price = request.form.get('price')
         description = request.form.get('description')
-        image_url = request.form.get('image_url')
+        image_file = request.files.get('image_file')
         stock = request.form.get('stock')
+        featured = request.form.get('featured') == 'yes'
+
+        image_path = None
+        def allowed_file(filename):
+            return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+
+        if image_file and allowed_file(image_file.filename):
+            from werkzeug.utils import secure_filename
+            import os
+            UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            filename = secure_filename(image_file.filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            image_file.save(file_path)
+            # For DB, save: 'uploads/filename'
+            image_path = os.path.join('uploads', filename)
+
         if name and price and len(products) < 50:
             new_product = Product(
                 business_id=biz.id,
                 name=name,
                 price=float(price),
                 description=description,
-                image_url=image_url,
-                stock=int(stock) if stock else 0
+                image_path=image_path,
+                stock=int(stock) if stock else 0,
+                featured=featured
             )
             db.session.add(new_product)
             db.session.commit()
