@@ -1,5 +1,3 @@
-I added JS fields to the business_table (grapesjs_js, products_js and contact_js) and I also added JS to the theme_table (homepage_js, contact_js and products_js).  I updated the store_builder.html file and I want to make sure everything is correct.  Scan it and make sure I have it correct.  Also, the menu buttons at the top of the store_builder.html page are no longer working and I need to fix that.  I will send you the store_builder route after we do this so that I can have you check that as well.  Here's the store_builder.html code:
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -334,20 +332,18 @@ function loadPage(pageKey) {
   document.querySelectorAll('.page-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.page === pageKey)
   );
-  attachNavSwitching();
 }
 
 // ----- Internal nav menu switching (in-template anchor links) -----
 function attachNavSwitching() {
   document.querySelectorAll('.r-link').forEach(link => {
-    link.onclick = function(e) {
+    link.addEventListener('click', function(e) {
       e.preventDefault();
       const pageKey = link.dataset.page;
       if (pageKey) loadPage(pageKey);
     };
   });
 }
-attachNavSwitching();
 
 // ----- Top-of-page "Home/Products/Contact" button switching -----
 document.querySelectorAll('.page-btn').forEach(btn => {
