@@ -958,8 +958,6 @@ def store_builder():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
-    products = Product.query.filter_by(business_id=biz_id).all()
-    featured_products = [p for p in products if getattr(p, 'featured', False)]
 
     if request.method == 'POST':
         # Save content for all pages on POST
@@ -1025,8 +1023,6 @@ def store_builder():
     return render_template(
         'store_builder.html',
         business=biz,
-        products=products,
-        featured_products=featured_products,
         themes=themes,
         saved_pages=json.dumps(saved_pages),
         theme_html_map=json.dumps(theme_html_map),
