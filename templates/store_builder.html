@@ -332,18 +332,20 @@ function loadPage(pageKey) {
   document.querySelectorAll('.page-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.page === pageKey)
   );
+  attachNavSwitching();
 }
 
 // ----- Internal nav menu switching (in-template anchor links) -----
 function attachNavSwitching() {
   document.querySelectorAll('.r-link').forEach(link => {
-    link.addEventListener('click', function(e) {
+    link.onclick = function(e) {
       e.preventDefault();
       const pageKey = link.dataset.page;
       if (pageKey) loadPage(pageKey);
     };
   });
 }
+attachNavSwitching();
 
 // ----- Top-of-page "Home/Products/Contact" button switching -----
 document.querySelectorAll('.page-btn').forEach(btn => {
