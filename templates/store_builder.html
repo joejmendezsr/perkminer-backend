@@ -198,6 +198,7 @@
 
 <form id="save-html-form" method="POST" action="">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="current_page" id="current_page">
   <input type="hidden" name="home_html" id="home_html">
   <input type="hidden" name="home_css" id="home_css">
   <input type="hidden" name="home_js" id="home_js">
@@ -328,8 +329,11 @@ function loadPage(pageKey) {
   const { html, css } = pages[pageKey] || { html: '', css: '' };
   editor.setComponents(html || '');
   editor.setStyle(css || '');
-  document.getElementById('current_page').value = currentPageKey;
-  document.querySelectorAll('.page-btn').forEach(btn =>
+  const currentPageInput = document.getElementById('current_page');
+  if (currentPageInput) {
+    currentPageInput.value = currentPageKey;
+  }  
+    document.querySelectorAll('.page-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.page === pageKey)
   );
   attachNavSwitching();
