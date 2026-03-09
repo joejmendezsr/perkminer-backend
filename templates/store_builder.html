@@ -269,6 +269,8 @@
   // Gives JS access to all preview fields for each theme
   const previewThemes = {{ preview_themes|safe }};
 </script>
+
+
 <script>
 
 // ----- Theme toggle logic with localStorage -----
@@ -1003,5 +1005,58 @@ document.getElementById('save-html-form').addEventListener('submit', function(e)
 
   loadPage('home');
 </script>
-</body>
-</html>
+<script>
+function openThemePreview(themeId) {
+  const data = previewThemes[themeId];
+  if (!data) {
+    alert('No preview available.');
+    return;
+  }
+  const previewWin = window.open('', '_blank', 'width=900,height=800');
+  const html = `
+    <html>
+      <head>
+        <title>Theme Preview</title>
+        <style id="active-css">${data.home_css}</style>
+      </head>
+      <body style="margin:0; font-family:sans-serif; background:#f9f9fb;">
+        <nav style="margin-bottom:1em;background:#eee;padding:.5em;">
+          <button onclick="setPage('home')">Home</button>
+          <button onclick="setPage('products')">Products</button>
+          <button onclick="setPage('contact')">Contact</button>
+        </nav>
+        <div id="active-page" style="padding:1em;">${data.home}</div>
+        <script>
+          const pages = {
+            home: {html: \`${data.home}\`, css: \`${data.home_css}\`, js: \`${data.home_js}\`},
+            products: {html: \`${data.products}\`, css: \`${data.products_css}\`, js: \`${data.products_js}\`},
+            contact: {html: \`${data.contact}\`, css: \`${data.contact_css}\`, js: \`${data.contact_js}\`}
+          };
+          function setPage(page) {
+            document.getElementById('active-page').innerHTML = pages[page].html;
+            document.getElementById('active-css').textContent = pages[page].css;
+            // Remove previous scripts
+            document.querySelectorAll('.theme-js').forEach(s => s.remove());
+            if (pages[page].js) {
+               const script = document.createElement('script');
+               script.className = 'theme-js';
+               script.textContent = pages[page].js;
+               document.body.appendChild(script);
+            }
+          }
+          // Initial page: run JS if needed
+          if (pages.home.js) {
+             const script = document.createElement('script');
+             script.className = 'theme-js';
+             script.textContent = pages.home.js;
+             document.body.appendChild(script);
+          }
+        <\/script>
+      </body>
+    </html>
+  `;
+  previewWin.document.open();
+  previewWin.document.write(html);
+  previewWin.document.close();
+}
+</script>
