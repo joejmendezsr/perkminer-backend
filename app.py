@@ -836,6 +836,15 @@ class Theme(db.Model):
     homepage_js = db.Column(db.Text, nullable=True)
     contact_js = db.Column(db.Text, nullable=True)
     products_js = db.Column(db.Text, nullable=True)
+    preview_home = db.Column(db.Text, nullable=True)
+    preview_home_css = db.Column(db.Text, nullable=True)
+    preview_home_js = db.Column(db.Text, nullable=True)
+    preview_products = db.Column(db.Text, nullable=True)
+    preview_products_css = db.Column(db.Text, nullable=True)
+    preview_products_js = db.Column(db.Text, nullable=True)
+    preview_contact = db.Column(db.Text, nullable=True)
+    preview_contact_css = db.Column(db.Text, nullable=True)
+    preview_contact_js = db.Column(db.Text, nullable=True)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -944,12 +953,14 @@ def store_payment_success():
 @app.route('/store_builder', methods=['GET', 'POST'])
 @business_login_required
 def store_builder():
+    import json  # Optional if already at the top
+
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
 
     if request.method == 'POST':
-        # Pull all fields at once for true multipage saving
+        # Save content for all pages on POST
         biz.grapesjs_html = request.form.get('home_html', '') or ''
         biz.grapesjs_css = request.form.get('home_css', '') or ''
         biz.products_html = request.form.get('products_html', '') or ''
@@ -959,12 +970,11 @@ def store_builder():
         biz.grapesjs_js = request.form.get('home_js', '') or ''
         biz.products_js = request.form.get('products_js', '') or ''
         biz.contact_js = request.form.get('contact_js', '') or ''
-
         db.session.commit()
         flash("All pages saved!", "success")
         return redirect(url_for('store_builder'))
 
-    # Prepare saved page data for the builder
+    # Prepare current saved page data for this business
     saved_pages = {
         "home": {
             "html": biz.grapesjs_html or "",
@@ -983,7 +993,7 @@ def store_builder():
         }
     }
 
-    # Theme starter maps for all pages
+    # Starter maps for current themes (optional, used elsewhere)
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
     theme_css_map = {str(theme.id): theme.homepage_css or "" for theme in themes}
     theme_js_map = {str(theme.id): theme.homepage_js or "" for theme in themes}
@@ -993,6 +1003,22 @@ def store_builder():
     theme_contact_html_map = {str(theme.id): theme.contact_html or "" for theme in themes}
     theme_contact_css_map = {str(theme.id): theme.contact_css or "" for theme in themes}
     theme_contact_js_map = {str(theme.id): theme.contact_js or "" for theme in themes}
+
+    # All preview fields for themes
+    preview_themes = {
+        str(theme.id): {
+            "home": theme.preview_home or "",
+            "home_css": theme.preview_home_css or "",
+            "home_js": theme.preview_home_js or "",
+            "products": theme.preview_products or "",
+            "products_css": theme.preview_products_css or "",
+            "products_js": theme.preview_products_js or "",
+            "contact": theme.preview_contact or "",
+            "contact_css": theme.preview_contact_css or "",
+            "contact_js": theme.preview_contact_js or "",
+        }
+        for theme in themes
+    }
 
     return render_template(
         'store_builder.html',
@@ -1008,6 +1034,7 @@ def store_builder():
         theme_contact_html_map=json.dumps(theme_contact_html_map),
         theme_contact_css_map=json.dumps(theme_contact_css_map),
         theme_contact_js_map=json.dumps(theme_contact_js_map),
+        preview_themes=json.dumps(preview_themes),
     )
 
 @app.route('/save_homepage', methods=['POST'])
