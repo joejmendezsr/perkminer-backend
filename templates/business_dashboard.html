@@ -355,7 +355,33 @@
             {% endif %}
           </strong>
         </div>
-      {% endif %}
+        {% endif %}
+
+        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
+            <i class="bi bi-person-plus"></i> Add Staff Member
+        </a>
+        <a href="{{ url_for('staff_login') }}" class="btn btn-outline-primary w-100 mb-2">
+            <i class="bi bi-box-arrow-in-right"></i> Staff Login
+        </a>
+
+        <div class="mt-4">
+          <h5>Current Staff</h5>
+          <ul>
+            {% for staff in business.staff_members %}
+              <li>
+                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
+              </li>
+            {% else %}
+              <li>No staff added yet.</li>
+            {% endfor %}
+          </ul>
+
+          <!-- Finalized Transactions Report Button -->
+          <a href="{{ url_for('finalized_report') }}" class="btn btn-info w-100 mt-3">
+            <i class="bi bi-list-check"></i> Finalized Transactions Report
+          </a>
+        </div>
+
       <!-- Invite Modal stays unchanged... -->
       <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
         <div class="modal-dialog">

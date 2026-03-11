@@ -13,7 +13,9 @@ from wtforms import (
     StringField, PasswordField, SubmitField, DecimalField, SelectField, FileField,
     TextAreaField, Form
 )
-from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
+from wtforms.validators import (
+    DataRequired, Email, Length, Optional, NumberRange
+)
 from werkzeug.utils import secure_filename
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -36,6 +38,9 @@ from io import StringIO, BytesIO
 import cloudinary
 import cloudinary.uploader
 import qrcode
+import pyotp
+import base64
+from flask_simple_captcha import CAPTCHA
 
 # --- Cart Logic ---
 def get_cart():
@@ -624,6 +629,18 @@ def business_login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def log_finalization(staff_id, business_id, tx_id, source, amount):
+    log = FinalizedTransaction(
+        staff_id=staff_id,
+        business_id=business_id,
+        tx_id=tx_id,
+        source=source,
+        amount=amount,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(log)
+    db.session.commit()
+
 # ---------------------- Flask-Login User Loader ----------------------
 @login_manager.user_loader
 def load_user(user_id):
@@ -877,6 +894,47 @@ class Invite(db.Model):
     status = db.Column(db.String(16), nullable=False, default='pending')
     accepted_id = db.Column(db.Integer, nullable=True)
     accepted_at = db.Column(db.DateTime)
+
+class Staff(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
+    email = db.Column(db.String(200), nullable=False)
+    hashed_password = db.Column(db.String(128), nullable=False)
+    role = db.Column(db.String(20), default="staff")  # Future roles possible
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    otp_secret = db.Column(db.String(32), nullable=True)  # For TOTP 2FA
+
+    # Relationships
+    business = db.relationship("Business", backref="staff_members")
+
+    __table_args__ = (
+        db.UniqueConstraint("business_id", "email", name="uniq_staff_per_biz"),
+    )
+
+class StaffRegisterForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    name = StringField("Name", validators=[DataRequired()])
+    submit = SubmitField("Add Staff")
+
+class StaffLoginForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Log In")
+
+class Staff2FAForm(FlaskForm):
+    code = StringField("Authenticator Code", validators=[DataRequired()])
+    captcha = CAPTCHA()
+    submit = SubmitField("Verify")
+
+class FinalizedTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tx_id = db.Column(db.String(48), nullable=False, index=True)
+    staff_id = db.Column(db.Integer, db.ForeignKey('staff.id'))
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'))
+    source = db.Column(db.String(20)) # "barcode" or "message"
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Float)
 
 # Add others (interaction, message, etc.) as needed here
 
@@ -5030,6 +5088,205 @@ def export_commissions_paid_csv():
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
                     headers={"Content-Disposition": "attachment; filename=commissions_paid.csv"})
+
+@app.route("/staff/new", methods=["GET", "POST"])
+@business_login_required
+def staff_new():
+    form = StaffRegisterForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        name = form.name.data.strip()
+        temp_password = secrets.token_urlsafe(10)
+        hashed_pw = bcrypt.generate_password_hash(temp_password).decode('utf-8')
+        staff = Staff(
+            business_id=session["business_id"],
+            email=email,
+            hashed_password=hashed_pw,
+            role="staff",
+            is_active=True,
+        )
+        db.session.add(staff)
+        db.session.commit()
+        print(f"Temp password for {email}: {temp_password}")  # For now, shown in console
+        flash("Staff member created! Share the password directly.")
+        return redirect(url_for("business_dashboard"))
+    return render_template("your_staff_form.html", form=form)
+
+@app.route("/staff/login", methods=["GET", "POST"])
+def staff_login():
+    form = StaffLoginForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        password = form.password.data
+        staff = Staff.query.filter_by(email=email, is_active=True).first()
+        if staff and bcrypt.check_password_hash(staff.hashed_password, password):
+            if not staff.otp_secret:
+                # First-time 2FA setup
+                staff.otp_secret = pyotp.random_base32()
+                db.session.commit()
+            # Generate QR for app-based 2FA
+            totp_uri = pyotp.totp.TOTP(staff.otp_secret).provisioning_uri(
+                name=staff.email, issuer_name="PerkMiner Staff"
+            )
+            qr = qrcode.make(totp_uri)
+            buf = io.BytesIO()
+            qr.save(buf, format="PNG")
+            qr_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            # Store staff id for 2FA check-in step
+            session['pending_staff_id'] = staff.id
+            return render_template("staff_2fa_setup.html", qr_b64=qr_b64)
+        else:
+            # Staff exists: direct to code entry step
+            session['pending_staff_id'] = staff.id
+            return redirect(url_for("staff_2fa_auth"))
+    return render_template("staff_login.html", form=form)
+
+@app.route("/staff/2fa", methods=["GET", "POST"])
+def staff_2fa_auth():
+    staff_id = session.get("pending_staff_id")
+    if not staff_id:
+        flash("Session expired. Please log in again.", "danger")
+        return redirect(url_for("staff_login"))
+    staff = Staff.query.get(staff_id)
+    form = Staff2FAForm()
+    if form.validate_on_submit():
+        totp = pyotp.TOTP(staff.otp_secret)
+        if totp.verify(form.code.data.strip()):
+            session.clear()
+            session['staff_id'] = staff.id
+            flash("2FA successful! Welcome, staff.")
+            return redirect(url_for("staff_dashboard"))
+        else:
+            flash("Invalid code. Please try again.", "danger")
+    return render_template("staff_2fa_auth.html", form=form)
+
+@app.route("/staff/dashboard")
+def staff_dashboard():
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        return redirect(url_for("staff_login"))
+    staff = Staff.query.get(staff_id)
+    # Get sessions for this staff's business
+    interactions = Interaction.query.filter_by(business_id=staff.business_id, status="active").order_by(Interaction.created_at.desc()).all()
+    return render_template("staff_dashboard.html", staff=staff, interactions=interactions)
+
+@app.route("/staff/logout")
+def staff_logout():
+    session.pop('staff_id', None)
+    flash("Logged out as staff.")
+    return redirect(url_for("business_home"))
+
+@app.route("/staff/session/<int:interaction_id>", methods=["GET", "POST"])
+def staff_active_session(interaction_id):
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        flash("Please log in as staff.")
+        return redirect(url_for("staff_login"))
+    staff = Staff.query.get(staff_id)
+    interaction = Interaction.query.filter_by(id=interaction_id, business_id=staff.business_id).first_or_404()
+
+    # Messaging logic
+    if request.method == "POST" and "message_text" in request.form:
+        text = request.form.get("message_text", "").strip()
+        uploaded_file = request.files.get("message_file")
+        file_url = None
+        file_name = None
+        if uploaded_file and uploaded_file.filename:
+            filename = secure_filename(uploaded_file.filename)
+            upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(upload_path)
+            file_url = url_for('uploaded_file', filename=filename)
+            file_name = uploaded_file.filename
+        if text or file_url:
+            msg = Message(
+                interaction_id=interaction.id,
+                sender_type="staff",
+                sender_id=staff_id,
+                text=text,
+                file_url=file_url,
+                file_name=file_name
+            )
+            db.session.add(msg)
+            db.session.commit()
+            return redirect(url_for('staff_active_session', interaction_id=interaction.id))
+
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    return render_template("staff_active_session.html",
+                           interaction=interaction,
+                           staff=staff,
+                           messages=messages)
+
+@app.route("/staff/finalize/<int:interaction_id>", methods=["GET", "POST"])
+def staff_finalize_transaction(interaction_id):
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        flash("Please log in as staff.")
+        return redirect(url_for("staff_login"))
+    staff = Staff.query.get(staff_id)
+    interaction = Interaction.query.filter_by(id=interaction_id, business_id=staff.business_id).first_or_404()
+
+    # Your business’s full finalize logic here, but log staff_id!
+    if request.method == "POST":
+        # (use your existing logic, but)
+        # After successful transaction, create a FinalizedTransaction record:
+        finalized = FinalizedTransaction(
+            tx_id=...,  # transaction unique id
+            staff_id=staff.id,
+            source="barcode" if ... else "message",  # determine this from flow
+            timestamp=datetime.utcnow(),
+            business_id=staff.business_id
+        )
+        db.session.add(finalized)
+        db.session.commit()
+        flash("Transaction finalized and logged!", "success")
+        return redirect(url_for("staff_active_session", interaction_id=interaction.id))
+    # For GET, just render your finalize template.
+    return render_template("finalize_transaction.html", interaction=interaction)
+
+@app.route("/staff/session/<int:interaction_id>/quote", methods=["GET", "POST"])
+def staff_create_quote(interaction_id):
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        flash("Please log in as staff.")
+        return redirect(url_for("staff_login"))
+    staff = Staff.query.get(staff_id)
+    interaction = Interaction.query.filter_by(id=interaction_id, business_id=staff.business_id).first_or_404()
+
+    quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    if request.method == "POST":
+        amount = request.form.get("amount")
+        details = request.form.get("details")
+        if not amount or not details:
+            flash("Amount and quote details are required.", "danger")
+        else:
+            if quote:
+                quote.amount = amount
+                quote.details = details
+            else:
+                quote = Quote(
+                    interaction_id=interaction.id,
+                    amount=amount,
+                    details=details
+                )
+                db.session.add(quote)
+            db.session.commit()
+            flash("Quote sent to user!" if not quote else "Quote was updated!", "success")
+            return redirect(url_for('staff_active_session', interaction_id=interaction.id))
+    return render_template(
+        "quote.html",
+        interaction=interaction,
+        quote=quote,
+        is_staff=True
+    )
+
+@app.route("/owner/reports/finalized")
+@business_login_required
+def finalized_report():
+    biz_id = session.get("business_id")
+    # Optionally add date filters
+    logs = FinalizedTransaction.query.filter_by(business_id=biz_id).order_by(FinalizedTransaction.timestamp.desc()).all()
+    staff_lookup = {s.id: s for s in Staff.query.filter_by(business_id=biz_id)}
+    return render_template("finalized_report.html", logs=logs, staff_lookup=staff_lookup)
 
 @app.route("/seed_admins_once")
 def seed_admins_once():
