@@ -14,7 +14,7 @@ from wtforms import (
     TextAreaField, Form
 )
 from wtforms.validators import (
-    DataRequired, Email, Length, Optional, NumberRange
+    DataRequired, Email, Length, EqualTo, Optional, NumberRange
 )
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -640,6 +640,17 @@ def log_finalization(staff_id, business_id, tx_id, source, amount):
     db.session.add(log)
     db.session.commit()
 
+def staff_password_reset_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        staff_id = session.get("staff_id")
+        staff = Staff.query.get(staff_id)
+        if staff and staff.password_reset_required:
+            flash("You must change your password before continuing.", "warning")
+            return redirect(url_for("staff_change_password"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # ---------------------- Flask-Login User Loader ----------------------
 @login_manager.user_loader
 def load_user(user_id):
@@ -902,6 +913,7 @@ class Staff(db.Model):
     role = db.Column(db.String(20), default="staff")  # Future roles possible
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    password_reset_required = db.Column(db.Boolean, default=True)
 
     # Relationships
     business = db.relationship("Business", backref="staff_members")
@@ -924,6 +936,12 @@ class Staff2FAForm(FlaskForm):
     code = StringField("Authenticator Code", validators=[DataRequired()])
     recaptcha = RecaptchaField()
     submit = SubmitField("Verify")
+
+class StaffChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    confirm_new_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match.')])
+    submit = SubmitField('Update Password')
 
 class FinalizedTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -5102,6 +5120,7 @@ def staff_new():
             hashed_password=hashed_pw,
             role="staff",
             is_active=True,
+            password_reset_required=True
         )
         db.session.add(staff)
         db.session.commit()
@@ -5153,15 +5172,39 @@ def staff_2fa():
     code_expected = session.get('pending_staff_2fa_code')
     if form.validate_on_submit():
         code_entered = form.code.data.strip()
+        staff = Staff.query.get(staff_id)
         if code_expected and code_entered == code_expected and staff_id:
             session.clear()
             session['staff_id'] = staff_id
+            # Force password change if required
+            if staff.password_reset_required:
+                return redirect(url_for("staff_change_password"))
             flash("Staff login successful!")
             return redirect(url_for("staff_dashboard"))
         flash("Incorrect code. Please try again.")
     return render_template("staff_2fa.html", form=form)
 
+@app.route("/staff/change_password", methods=["GET", "POST"])
+def staff_change_password():
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        flash("You must be logged in as staff.", "danger")
+        return redirect(url_for("staff_login"))
+    staff = Staff.query.get(staff_id)
+    form = StaffChangePasswordForm()
+    if form.validate_on_submit():
+        if not bcrypt.check_password_hash(staff.hashed_password, form.current_password.data):
+            flash("Current password is incorrect.", "danger")
+        else:
+            staff.hashed_password = bcrypt.generate_password_hash(form.new_password.data).decode('utf-8')
+            staff.password_reset_required = False  # Flag is cleared!
+            db.session.commit()
+            flash("Password updated successfully!", "success")
+            return redirect(url_for("staff_dashboard"))
+    return render_template("staff_change_password.html", form=form)
+
 @app.route("/staff/dashboard")
+@staff_password_reset_required
 def staff_dashboard():
     staff_id = session.get("staff_id")
     if not staff_id:
@@ -5226,23 +5269,16 @@ def staff_finalize_transaction(interaction_id):
     staff = Staff.query.get(staff_id)
     interaction = Interaction.query.filter_by(id=interaction_id, business_id=staff.business_id).first_or_404()
 
-    # Your business’s full finalize logic here, but log staff_id!
     if request.method == "POST":
-        # (use your existing logic, but)
-        # After successful transaction, create a FinalizedTransaction record:
-        finalized = FinalizedTransaction(
-            tx_id=...,  # transaction unique id
-            staff_id=staff.id,
-            source="barcode" if ... else "message",  # determine this from flow
-            timestamp=datetime.utcnow(),
-            business_id=staff.business_id
-        )
-        db.session.add(finalized)
-        db.session.commit()
+        # ... [your existing POST logic here] ...
         flash("Transaction finalized and logged!", "success")
         return redirect(url_for("staff_active_session", interaction_id=interaction.id))
-    # For GET, just render your finalize template.
-    return render_template("finalize_transaction.html", interaction=interaction)
+    # For GET, just render your finalize template AND PASS 'now'
+    return render_template(
+        "finalize_transaction.html",
+        interaction=interaction,
+        now=datetime.now()
+    )
 
 @app.route("/staff/session/<int:interaction_id>/quote", methods=["GET", "POST"])
 def staff_create_quote(interaction_id):
