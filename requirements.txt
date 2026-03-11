@@ -27,3 +27,5 @@ cloudinary
 qrcode[pil]
 pillow
 stripe
+pyotp
+flask_simple_captcha
