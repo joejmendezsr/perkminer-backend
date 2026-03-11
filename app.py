@@ -40,7 +40,6 @@ import cloudinary.uploader
 import qrcode
 import pyotp
 import base64
-from flask_simple_captcha import CAPTCHA, CAPTCHAField
 
 # --- Cart Logic ---
 def get_cart():
@@ -924,10 +923,10 @@ class StaffLoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Log In")
 
-class Staff2FAForm(FlaskForm):
-    code = StringField("Authenticator Code", validators=[DataRequired()])
-    captcha = CAPTCHAField()
-    submit = SubmitField("Verify")
+  class Staff2FAForm(FlaskForm):
+      code = StringField("Authenticator Code", validators=[DataRequired()])
+      recaptcha = RecaptchaField()
+      submit = SubmitField("Verify")
 
 class FinalizedTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
