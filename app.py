@@ -5107,8 +5107,22 @@ def staff_new():
         )
         db.session.add(staff)
         db.session.commit()
-        print(f"Temp password for {email}: {temp_password}")  # For now, shown in console
-        flash("Staff member created! Share the password directly.")
+
+        # Email temp password to staff
+        send_email(
+            staff.email,
+            "Your PerkMiner Staff Login",
+            f"""
+            <h3>Welcome to PerkMiner!</h3>
+            <p>Your staff account has been created.</p>
+            <b>Temporary password:</b> {temp_password}<br>
+            <b>Login here:</b> <a href="https://www.perkminer.com/staff/login">Staff Login</a><br>
+            <br>
+            Please change your password after you first log in.
+            """
+        )
+
+        flash("Staff member created! Login instructions were emailed to the staff member.", "success")
         return redirect(url_for("business_dashboard"))
     return render_template("your_staff_form.html", form=form)
 
