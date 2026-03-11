@@ -38,7 +38,6 @@ from io import StringIO, BytesIO
 import cloudinary
 import cloudinary.uploader
 import qrcode
-import pyotp
 import base64
 import secrets
 
@@ -903,7 +902,6 @@ class Staff(db.Model):
     role = db.Column(db.String(20), default="staff")  # Future roles possible
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    otp_secret = db.Column(db.String(32), nullable=True)  # For TOTP 2FA
 
     # Relationships
     business = db.relationship("Business", backref="staff_members")
@@ -5134,45 +5132,34 @@ def staff_login():
         password = form.password.data
         staff = Staff.query.filter_by(email=email, is_active=True).first()
         if staff and bcrypt.check_password_hash(staff.hashed_password, password):
-            if not staff.otp_secret:
-                # First-time 2FA setup
-                staff.otp_secret = pyotp.random_base32()
-                db.session.commit()
-            # Generate QR for app-based 2FA
-            totp_uri = pyotp.totp.TOTP(staff.otp_secret).provisioning_uri(
-                name=staff.email, issuer_name="PerkMiner Staff"
+            code = str(random.randint(100000, 999999))
+            session['pending_staff_2fa_code'] = code
+            session['pending_staff_id'] = staff.id
+            send_email(
+                staff.email,
+                "Your PerkMiner Staff Login Code",
+                f"<p>Your staff login code is: <b>{code}</b></p>"
             )
-            qr = qrcode.make(totp_uri)
-            buf = io.BytesIO()
-            qr.save(buf, format="PNG")
-            qr_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-            # Store staff id for 2FA check-in step
-            session['pending_staff_id'] = staff.id
-            return render_template("staff_2fa_setup.html", qr_b64=qr_b64)
+            flash("A login code has been sent to your email.")
+            return redirect(url_for("staff_2fa"))
         else:
-            # Staff exists: direct to code entry step
-            session['pending_staff_id'] = staff.id
-            return redirect(url_for("staff_2fa_auth"))
+            flash("Invalid email or password.", "danger")
     return render_template("staff_login.html", form=form)
 
 @app.route("/staff/2fa", methods=["GET", "POST"])
-def staff_2fa_auth():
-    staff_id = session.get("pending_staff_id")
-    if not staff_id:
-        flash("Session expired. Please log in again.", "danger")
-        return redirect(url_for("staff_login"))
-    staff = Staff.query.get(staff_id)
+def staff_2fa():
     form = Staff2FAForm()
+    staff_id = session.get('pending_staff_id')
+    code_expected = session.get('pending_staff_2fa_code')
     if form.validate_on_submit():
-        totp = pyotp.TOTP(staff.otp_secret)
-        if totp.verify(form.code.data.strip()):
+        code_entered = form.code.data.strip()
+        if code_expected and code_entered == code_expected and staff_id:
             session.clear()
-            session['staff_id'] = staff.id
-            flash("2FA successful! Welcome, staff.")
+            session['staff_id'] = staff_id
+            flash("Staff login successful!")
             return redirect(url_for("staff_dashboard"))
-        else:
-            flash("Invalid code. Please try again.", "danger")
-    return render_template("staff_2fa_auth.html", form=form)
+        flash("Incorrect code. Please try again.")
+    return render_template("staff_2fa.html", form=form)
 
 @app.route("/staff/dashboard")
 def staff_dashboard():
