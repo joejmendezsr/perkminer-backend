@@ -40,6 +40,7 @@ import cloudinary.uploader
 import qrcode
 import pyotp
 import base64
+import secrets
 
 # --- Cart Logic ---
 def get_cart():
