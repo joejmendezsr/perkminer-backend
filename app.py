@@ -2937,18 +2937,20 @@ def create_quote(interaction_id):
 @app.route("/session/<int:interaction_id>/end", methods=["POST"])
 def end_session(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
-    # Allow both business and user to end the session
+    # Allow user, business, or staff to end the session
     is_user = current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id
     is_biz = session.get('business_id') == interaction.business_id
-    if not (is_user or is_biz):
+    is_staff = session.get('staff_id') is not None and interaction.business_id == Staff.query.get(session.get('staff_id')).business_id
+    if not (is_user or is_biz or is_staff):
         abort(403)
-    # End the session and hide from both dashboards
     interaction.status = "ended"
     db.session.commit()
     flash("Session ended.", "success")
-    # Redirect to their respective dashboard
+    # Redirect to appropriate dashboard
     if is_biz:
         return redirect(url_for('biz_user_interactions'))
+    elif is_staff:
+        return redirect(url_for('staff_dashboard'))
     else:
         return redirect(url_for('user_biz_interactions'))
 
@@ -5128,6 +5130,8 @@ def export_commissions_paid_csv():
     return Response(output, mimetype="text/csv",
                     headers={"Content-Disposition": "attachment; filename=commissions_paid.csv"})
 
+# ---------------- STAFF ROUTES ----------------
+
 @app.route("/staff/new", methods=["GET", "POST"])
 @business_login_required
 def staff_new():
@@ -5381,26 +5385,6 @@ def staff_create_quote(interaction_id):
         error_message=error_message,
         is_finalized=is_finalized  # pass this to hide the quote button in your template
     )
-
-@app.route("/session/<int:interaction_id>/end", methods=["POST"])
-def end_session(interaction_id):
-    interaction = Interaction.query.get_or_404(interaction_id)
-    # Allow user, business, or staff to end the session
-    is_user = current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id
-    is_biz = session.get('business_id') == interaction.business_id
-    is_staff = session.get('staff_id') is not None and interaction.business_id == Staff.query.get(session.get('staff_id')).business_id
-    if not (is_user or is_biz or is_staff):
-        abort(403)
-    interaction.status = "ended"
-    db.session.commit()
-    flash("Session ended.", "success")
-    # Redirect to appropriate dashboard
-    if is_biz:
-        return redirect(url_for('biz_user_interactions'))
-    elif is_staff:
-        return redirect(url_for('staff_dashboard'))
-    else:
-        return redirect(url_for('user_biz_interactions'))
 
 @app.route("/owner/reports/finalized")
 @business_login_required
