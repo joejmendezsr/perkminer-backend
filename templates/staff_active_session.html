@@ -11,24 +11,22 @@
     <div class="card p-4 shadow">
       <h4>Staff Session #{{ interaction.id }}</h4>
 
-      {% if show_end_session %}
-        <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
-          <button type="submit" class="btn btn-danger w-100 mb-2">
-            <i class="bi bi-x-circle"></i> End Session
-          </button>
-        </form>
-      {% else %}
-        <div class="mb-3">
-          <a href="{{ url_for('staff_finalize_transaction', interaction_id=interaction.id) }}"
-            class="btn btn-success w-100 mb-2">
-            <i class="bi bi-check2-circle"></i> Finalize Transaction
-          </a>
-          <a href="{{ url_for('staff_create_quote', interaction_id=interaction.id) }}"
-            class="btn btn-primary w-100 mb-2">
-            <i class="bi bi-file-earmark-text"></i> Send or Edit Quote
-          </a>
-        </div>
-      {% endif %}
+      <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
+        <input type="hidden" name="tab" value="businesses">
+        <button type="submit" class="btn btn-danger w-100 mb-2">
+          <i class="bi bi-x-circle"></i> End Session
+        </button>
+      </form>
+      <div class="mb-3">
+        <a href="{{ url_for('staff_finalize_transaction', interaction_id=interaction.id) }}"
+          class="btn btn-success w-100 mb-2">
+          <i class="bi bi-check2-circle"></i> Finalize Transaction
+        </a>
+        <a href="{{ url_for('staff_create_quote', interaction_id=interaction.id) }}"
+          class="btn btn-primary w-100 mb-2">
+          <i class="bi bi-file-earmark-text"></i> Send or Edit Quote
+        </a>
+      </div>
 
       <hr>
       <h5>Messages</h5>
