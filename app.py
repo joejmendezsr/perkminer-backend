@@ -2957,6 +2957,8 @@ def payment_qr_redirect(ref):
     user = User.query.filter_by(referral_code=ref).first()
     if not user:
         return "Invalid QR code.", 404
+
+    # Determine the relevant session for this business and user
     if 'business_id' in session:
         interaction = get_interaction_for_business_and_user(
             business_id=session['business_id'],
@@ -2966,10 +2968,23 @@ def payment_qr_redirect(ref):
             return redirect(url_for('finalize_transaction', interaction_id=interaction.id))
         else:
             return "No active session found for this customer.", 404
-    # This part runs if the QR was scanned by anyone who is NOT a logged-in business.
+    elif 'staff_id' in session:
+        staff = Staff.query.get(session['staff_id'])
+        if not staff:
+            flash("Invalid staff session.", "danger")
+            return redirect(url_for("staff_login"))
+        # Staff can only see interactions for their business
+        interaction = Interaction.query.filter_by(
+            business_id=staff.business_id,
+            user_id=user.id,
+            status="active"
+        ).first()
+        if interaction:
+            return redirect(url_for('staff_finalize_transaction', interaction_id=interaction.id))
+        else:
+            return "No active session found for this customer.", 404
+    # If not logged in as business or staff, show generic landing
     return render_template("qr_user_landing.html", user=user)
-
-from datetime import datetime
 
 @app.route("/business/fund-account", methods=["GET", "POST"])
 @business_login_required
