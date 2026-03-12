@@ -5302,6 +5302,7 @@ def staff_finalize_transaction(interaction_id):
     interaction = Interaction.query.filter_by(id=interaction_id, business_id=staff.business_id).first_or_404()
     now = datetime.now()
     summary = None
+    error_message = None
 
     if request.method == "POST":
         amount = float(request.form.get("amount"))
@@ -5311,19 +5312,19 @@ def staff_finalize_transaction(interaction_id):
                 staff.business,
                 amount,
                 staff_id=staff.id,
-                source="barcode"
+                source="barcode"  # or "message" if needed
             )
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
+            return redirect(url_for("staff_active_session", interaction_id=interaction.id))
         except Exception as e:
-            flash(str(e), "danger")
-        return redirect(url_for("staff_active_session", interaction_id=interaction.id))
+            error_message = str(e)
 
-    # Always return something for GET (the finalize form page)
     return render_template(
         "finalize_transaction.html",
         interaction=interaction,
         now=now,
-        summary=summary
+        summary=summary,
+        error_message=error_message  # Add this to display staff fund errors, if any
     )
 
 @app.route("/staff/session/<int:interaction_id>/quote", methods=["GET", "POST"])
@@ -5335,32 +5336,71 @@ def staff_create_quote(interaction_id):
     staff = Staff.query.get(staff_id)
     interaction = Interaction.query.filter_by(id=interaction_id, business_id=staff.business_id).first_or_404()
 
+    # Determine if transaction is finalized (so we can disable quote)
+    is_finalized = BusinessTransaction.query.filter_by(interaction_id=interaction.id).first() is not None
+
     quote = Quote.query.filter_by(interaction_id=interaction.id).first()
+    error_message = None
+
+    if is_finalized:
+        flash("This session has been finalized. No further quotes may be sent.", "warning")
+        # Optionally, redirect or just show the view/read-only version
+        return redirect(url_for('staff_active_session', interaction_id=interaction.id))
+
     if request.method == "POST":
         amount = request.form.get("amount")
         details = request.form.get("details")
         if not amount or not details:
-            flash("Amount and quote details are required.", "danger")
+            error_message = "Amount and quote details are required."
+            flash(error_message, "danger")
         else:
-            if quote:
-                quote.amount = amount
-                quote.details = details
-            else:
-                quote = Quote(
-                    interaction_id=interaction.id,
-                    amount=amount,
-                    details=details
-                )
-                db.session.add(quote)
-            db.session.commit()
-            flash("Quote sent to user!" if not quote else "Quote was updated!", "success")
-            return redirect(url_for('staff_active_session', interaction_id=interaction.id))
+            try:
+                if quote:
+                    quote.amount = amount
+                    quote.details = details
+                else:
+                    quote = Quote(
+                        interaction_id=interaction.id,
+                        amount=amount,
+                        details=details
+                    )
+                    db.session.add(quote)
+                db.session.commit()
+                flash("Quote sent to user!" if not quote else "Quote was updated!", "success")
+                return redirect(url_for('staff_active_session', interaction_id=interaction.id))
+            except Exception as e:
+                error_message = "Failed to save quote: " + str(e)
+                flash(error_message, "danger")
+                db.session.rollback()  # Always rollback on error
+
     return render_template(
         "quote.html",
         interaction=interaction,
         quote=quote,
-        is_staff=True
+        is_staff=True,
+        error_message=error_message,
+        is_finalized=is_finalized  # pass this to hide the quote button in your template
     )
+
+@app.route("/session/<int:interaction_id>/end", methods=["POST"])
+def end_session(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    # Allow user, business, or staff to end the session
+    is_user = current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id
+    is_biz = session.get('business_id') == interaction.business_id
+    is_staff = session.get('staff_id') is not None and interaction.business_id == Staff.query.get(session.get('staff_id')).business_id
+    if not (is_user or is_biz or is_staff):
+        abort(403)
+    interaction.status = "ended"
+    db.session.commit()
+    flash("Session ended.", "success")
+    # Redirect to appropriate dashboard
+    if is_biz:
+        return redirect(url_for('biz_user_interactions'))
+    elif is_staff:
+        return redirect(url_for('staff_dashboard'))
+    else:
+        return redirect(url_for('user_biz_interactions'))
 
 @app.route("/owner/reports/finalized")
 @business_login_required
