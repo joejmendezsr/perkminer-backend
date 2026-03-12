@@ -5311,12 +5311,20 @@ def staff_finalize_transaction(interaction_id):
                 staff.business,
                 amount,
                 staff_id=staff.id,
-                source="barcode"  # or "message", if needed for logging
+                source="barcode"
             )
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
         except Exception as e:
             flash(str(e), "danger")
         return redirect(url_for("staff_active_session", interaction_id=interaction.id))
+
+    # Always return something for GET (the finalize form page)
+    return render_template(
+        "finalize_transaction.html",
+        interaction=interaction,
+        now=now,
+        summary=summary
+    )
 
 @app.route("/staff/session/<int:interaction_id>/quote", methods=["GET", "POST"])
 def staff_create_quote(interaction_id):
