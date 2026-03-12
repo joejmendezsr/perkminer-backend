@@ -5304,38 +5304,19 @@ def staff_finalize_transaction(interaction_id):
     summary = None
 
     if request.method == "POST":
-        # Validate barcode/amount as in business flow
         amount = float(request.form.get("amount"))
-        # Parse scanned barcode if you require it:
-        barcode_value = request.form.get("barcode")  # Or any input your scan UI uses
-        if not barcode_value:
-            flash("You must scan a barcode to finalize the transaction.", "danger")
-            return render_template(
-                "finalize_transaction.html",
-                interaction=interaction,
-                now=now,
-                summary=None
-            )
         try:
             summary = finalize_interaction(
                 interaction,
                 staff.business,
                 amount,
                 staff_id=staff.id,
-                source="barcode"  # or "message" if you use messages too
+                source="barcode"  # or "message", if needed for logging
             )
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
         except Exception as e:
             flash(str(e), "danger")
         return redirect(url_for("staff_active_session", interaction_id=interaction.id))
-
-    # For GET, show the scan page just like for the business owner
-    return render_template(
-        "finalize_transaction.html",
-        interaction=interaction,
-        now=now,
-        summary=summary
-    )
 
 @app.route("/staff/session/<int:interaction_id>/quote", methods=["GET", "POST"])
 def staff_create_quote(interaction_id):
