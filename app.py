@@ -5268,6 +5268,15 @@ def staff_active_session(interaction_id):
                            staff=staff,
                            messages=messages)
 
+@app.route("/staff/scan-qr/<int:interaction_id>")
+def staff_scan_qr(interaction_id):
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        flash("Please log in as staff.")
+        return redirect(url_for("staff_login"))
+    # Optionally check if staff can access this interaction
+    return render_template("staff_scan_qr.html", interaction_id=interaction_id)
+
 @app.route("/staff/finalize/<int:interaction_id>", methods=["GET", "POST"])
 def staff_finalize_transaction(interaction_id):
     staff_id = session.get("staff_id")
@@ -5280,19 +5289,32 @@ def staff_finalize_transaction(interaction_id):
     summary = None
 
     if request.method == "POST":
+        # Validate barcode/amount as in business flow
         amount = float(request.form.get("amount"))
+        # Parse scanned barcode if you require it:
+        barcode_value = request.form.get("barcode")  # Or any input your scan UI uses
+        if not barcode_value:
+            flash("You must scan a barcode to finalize the transaction.", "danger")
+            return render_template(
+                "finalize_transaction.html",
+                interaction=interaction,
+                now=now,
+                summary=None
+            )
         try:
             summary = finalize_interaction(
                 interaction,
                 staff.business,
                 amount,
                 staff_id=staff.id,
-                source="barcode"  # or "message" if needed
+                source="barcode"  # or "message" if you use messages too
             )
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
         except Exception as e:
             flash(str(e), "danger")
         return redirect(url_for("staff_active_session", interaction_id=interaction.id))
+
+    # For GET, show the scan page just like for the business owner
     return render_template(
         "finalize_transaction.html",
         interaction=interaction,
