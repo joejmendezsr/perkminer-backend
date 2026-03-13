@@ -237,5 +237,35 @@
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Parse current URL parameters
+  function getParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+  }
+  var latParam = getParam("lat");
+  var lngParam = getParam("lng");
+  var distanceParam = getParam("distance");
+
+  // Only run geolocation if lat/lng are not already present
+  if (!latParam || !lngParam) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        var category = "{{ category|urlencode }}";
+        // Keep or override distance param as needed; default to 10
+        var distance = distanceParam ? distanceParam : 10;
+        // Rebuild the URL
+        var url = "/category/" + category + "?lat=" + lat + "&lng=" + lng + "&distance=" + distance;
+        window.location.replace(url);
+      }, function(error) {
+        // Optionally show a message if user blocks or denies location
+        // alert('Unable to fetch your location, showing all results.');
+      });
+    }
+  }
+});
+</script>
 </body>
 </html>
