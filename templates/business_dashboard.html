@@ -360,10 +360,6 @@
         <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
             <i class="bi bi-person-plus"></i> Add Staff Member
         </a>
-        <a href="{{ url_for('staff_login') }}" class="btn btn-outline-primary w-100 mb-2">
-            <i class="bi bi-box-arrow-in-right"></i> Staff Login
-        </a>
-
         <div class="mt-4">
           <h5>Current Staff</h5>
           <ul>
@@ -498,7 +494,6 @@
           <option value="Seller Storefront" {% if form_data.listing_type == 'Seller Storefront' %}selected{% endif %}>Seller Storefront</option>
           <option value="Service Provider" {% if form_data.listing_type == 'Service Provider' %}selected{% endif %}>Service Provider</option>
           <option value="Seller and Service Provider" {% if form_data.listing_type == 'Seller and Service Provider' %}selected{% endif %}>Seller and Service Provider</option>
-          <option value="Seller E-Commerce" {% if form_data.listing_type == 'Seller E-Commerce' %}selected{% endif %}>Seller E-Commerce</option>
           <option value="Lead Generation" {% if form_data.listing_type == 'Lead Generation' %}selected{% endif %}>Lead Generation</option>
         </select>
       </div>
@@ -507,15 +502,16 @@
         <select class="form-select" name="category" id="business_category" required>
           <option value="">Select category...</option>
           <option value="Contractor" {% if form_data.category == 'Contractor' %}selected{% endif %}>Handyman-Contractor</option>
-          <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant and Food</option>
+          <option value="Restaurant" {% if form_data.category == 'Restaurant' %}selected{% endif %}>Restaurant/Food/Drink</option>
           <option value="Auto" {% if form_data.category == 'Auto' %}selected{% endif %}>Auto Service-Repair-Parts</option>
           <option value="Home" {% if form_data.category == 'Home' %}selected{% endif %}>Home and Garden</option>
           <option value="Retail" {% if form_data.category == 'Retail' %}selected{% endif %}>Shopping and Retail</option>
           <option value="Beauty" {% if form_data.category == 'Beauty' %}selected{% endif %}>Health and Beauty</option>
           <option value="RE" {% if form_data.category == 'RE' %}selected{% endif %}>Real Estate</option>
           <option value="Pet" {% if form_data.category == 'Pet' %}selected{% endif %}>Pet Service and Supplies</option>
-          <option value="Travel" {% if form_data.category == 'Travel' %}selected{% endif %}>Travel-Lodgin-Tourism</option>
+          <option value="Travel" {% if form_data.category == 'Travel' %}selected{% endif %}>Travel-Lodging-Tourism</option>
           <option value="Financial" {% if form_data.category == 'Financial' %}selected{% endif %}>Financial Services</option>
+          <option value="Professional" {% if form_data.category == 'Professional' %}selected{% endif %}>Professional Services</option>
           <option value="Events" {% if form_data.category == 'Events' %}selected{% endif %}>Events and Entertainment</option>
           <option value="Education" {% if form_data.category == 'Education' %}selected{% endif %}>Education and Training</option>
           <option value="Wedding" {% if form_data.category == 'Wedding' %}selected{% endif %}>Wedding Services</option>
@@ -524,6 +520,10 @@
           <option value="Rentals" {% if form_data.category == 'Rentals' %}selected{% endif %}>All Rentals</option>
           <option value="Gaming" {% if form_data.category == 'Gaming' %}selected{% endif %}>Gaming</option>
           <option value="Sports" {% if form_data.category == 'Sports' %}selected{% endif %}>Sports and Recreation</option>
+          <option value="Cleaning" {% if form_data.category == 'Cleaning' %}selected{% endif %}>Cleaning Services</option>
+          <option value="Moving" {% if form_data.category == 'Moving' %}selected{% endif %}>Moving and Delivery</option>
+          <option value="Security" {% if form_data.category == 'Security' %}selected{% endif %}>Security and Protection</option>
+          <option value="Industrial" {% if form_data.category == 'Industrial' %}selected{% endif %}>Industrial Services</option>
           <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
         </select>
       </div>
