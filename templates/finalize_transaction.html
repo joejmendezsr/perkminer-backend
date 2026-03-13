@@ -23,7 +23,7 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="mb-3">
               <label class="form-label">Transaction Amount ($)</label>
-              <input type="number" name="amount" class="form-control" min="0" step="0.01" placeholder="Enter sale amount" required value="{{ request.form.amount or '' }}">
+              <input type="number" name="amount" class="form-control" min="0" step="0.01" placeholder="Enter sale amount" required value="{{ request.form.amount or '' }}" data-balance="{{ account_balance }}">
           </div>
           <div class="mb-3">
               <label class="form-label">Date & Time</label>
