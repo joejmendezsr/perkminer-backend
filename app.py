@@ -5328,7 +5328,7 @@ def staff_finalize_transaction(interaction_id):
         interaction=interaction,
         now=now,
         summary=summary,
-        error_message=error_message  # Add this to display staff fund errors, if any
+        error_message=error_message,  # Add this to display staff fund errors, if any
         account_balance=staff.business.account_balance
     )
 
