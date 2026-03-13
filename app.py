@@ -5329,6 +5329,7 @@ def staff_finalize_transaction(interaction_id):
         now=now,
         summary=summary,
         error_message=error_message  # Add this to display staff fund errors, if any
+        account_balance=staff.business.account_balance
     )
 
 @app.route("/staff/session/<int:interaction_id>/quote", methods=["GET", "POST"])
