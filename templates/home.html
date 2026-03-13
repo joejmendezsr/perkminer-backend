@@ -418,8 +418,6 @@
               <div class="category-label">Handyman-Contractor</div>
             </a>
           </div>
-        <input type="hidden" name="lat" id="search-lat">
-        <input type="hidden" name="lng" id="search-lng">
 
           <!-- 2 -->
           <div class="category-card-wrapper">
@@ -434,7 +432,7 @@
 
           <!-- 3 -->
           <div class="category-card-wrapper">
-            <a href="/category/Auto" class="category-card">
+            <a href="{{ url_for('category_browse', name='Auto', lat=user_lat, lng=user_lng, distance=10) }}">
               <div class="category-image-wrap">
                 <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771634200/Auto-Service_iamnu3.jpg?auto=format&fit=crop&w=300&q=40" alt="Auto Parts & Service" class="category-image">
                 <div class="category-overlay"></div>
@@ -442,8 +440,6 @@
               <div class="category-label">Auto Service-Repair-Parts</div>
             </a>
           </div>
-        <input type="hidden" name="lat" id="search-lat">
-        <input type="hidden" name="lng" id="search-lng">
 
           <!-- 4 -->
           <div class="category-card-wrapper">
@@ -535,6 +531,17 @@
 
           <!-- 12 -->
           <div class="category-card-wrapper">
+            <a href="/category/Professional" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/financial-services_hwhybm.jpg?auto=format&fit=crop&w=300&q=40" alt="Financial Services" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Professional Services</div>
+            </a>
+          </div>
+
+          <!-- 13 -->
+          <div class="category-card-wrapper">
             <a href="/category/Financial" class="category-card">
               <div class="category-image-wrap">
                 <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/financial-services_hwhybm.jpg?auto=format&fit=crop&w=300&q=40" alt="Financial Services" class="category-image">
@@ -544,7 +551,7 @@
             </a>
           </div>
 
-          <!-- 13 -->
+          <!-- 14 -->
           <div class="category-card-wrapper">
             <a href="/category/Events" class="category-card">
               <div class="category-image-wrap">
@@ -555,7 +562,7 @@
             </a>
           </div>
 
-          <!-- 14 -->
+          <!-- 15 -->
           <div class="category-card-wrapper">
             <a href="/category/Education" class="category-card">
               <div class="category-image-wrap">
@@ -566,7 +573,7 @@
             </a>
           </div>
 
-          <!-- 15 -->
+          <!-- 16 -->
           <div class="category-card-wrapper">
             <a href="/category/Wedding" class="category-card">
               <div class="category-image-wrap">
@@ -577,7 +584,7 @@
             </a>
           </div>
 
-          <!-- 16 -->
+          <!-- 17 -->
           <div class="category-card-wrapper">
             <a href="/category/Transportation" class="category-card">
               <div class="category-image-wrap">
@@ -588,7 +595,7 @@
             </a>
           </div>
 
-          <!-- 17 -->
+          <!-- 18 -->
           <div class="category-card-wrapper">
             <a href="/category/Legal" class="category-card">
               <div class="category-image-wrap">
@@ -599,7 +606,7 @@
             </a>
           </div>
 
-          <!-- 18 -->
+          <!-- 19 -->
           <div class="category-card-wrapper">
             <a href="/category/Rentals" class="category-card">
               <div class="category-image-wrap">
@@ -612,9 +619,17 @@
         </div>
       </div>
 
-      <div class="more-btn-container">
-        <button class="more-btn" id="toggle-more">More Categories</button>
-      </div>
+          <!-- 12 -->
+          <div class="category-card-wrapper">
+            <a href="/category/Other" class="category-card">
+              <div class="category-image-wrap">
+                <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1772443066/financial-services_hwhybm.jpg?auto=format&fit=crop&w=300&q=40" alt="Financial Services" class="category-image">
+                <div class="category-overlay"></div>
+              </div>
+              <div class="category-label">Other</div>
+            </a>
+          </div>
+
     </section>
 
     <h3 class="mt-5 mb-3 text-start">Featured Businesses Near You</h3>
