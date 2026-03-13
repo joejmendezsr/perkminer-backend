@@ -60,5 +60,38 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const amountInput = document.querySelector('input[name="amount"]');
+  const balance = parseFloat(amountInput.getAttribute('data-balance')) || 0;
+
+  // Create an alert container after amount input
+  let alertDiv = null;
+
+  amountInput.addEventListener('input', function() {
+    const amount = parseFloat(amountInput.value);
+    const fee = Math.round((amount * 0.10 + Number.EPSILON) * 100) / 100; // Round to 2 decimals
+
+    // Remove any previous alert
+    if (alertDiv) {
+      alertDiv.remove();
+      alertDiv = null;
+    }
+
+    // Defensive check: valid, positive number only
+    if (!isNaN(amount) && amount > 0 && fee > balance) {
+      const needToDeposit = Math.round((fee - balance + Number.EPSILON) * 100) / 100;
+      alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger mt-2';
+      alertDiv.innerHTML = `
+        There is not enough funds to finalize this transaction.  
+        Contact the business owner immediately so they can add funds to their account.<br>
+        The business owner needs to deposit at least <b>$${needToDeposit.toFixed(2)}</b> to finalize this transaction.
+      `;
+      amountInput.parentNode.appendChild(alertDiv);
+    }
+  });
+});
+</script>
 </body>
 </html>
