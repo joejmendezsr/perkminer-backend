@@ -1989,8 +1989,62 @@ def search():
 
 @app.route("/category/<name>")
 def category_browse(name):
-    results = Business.query.filter_by(category=name, status="approved").all()  # filter by approved!
-    return render_template("category_results.html", results=results, category=name)
+    # Get user location from query params if provided
+    lat = request.args.get("lat", type=float)
+    lng = request.args.get("lng", type=float)
+    distance = request.args.get("distance", "").strip()
+
+    # Base query: only approved businesses in this category
+    query = Business.query.filter_by(category=name, status="approved")
+
+    use_location = lat is not None and lng is not None
+
+    if use_location:
+        from sqlalchemy import func  # at top of file if not already imported
+
+        haversine = (
+            3959 * func.acos(
+                func.least(
+                    1.0,
+                    func.cos(func.radians(lat)) *
+                    func.cos(func.radians(Business.latitude)) *
+                    func.cos(func.radians(Business.longitude) - func.radians(lng)) +
+                    func.sin(func.radians(lat)) *
+                    func.sin(func.radians(Business.latitude))
+                )
+            )
+        ).label("distance_mi")
+
+        query = query.add_columns(haversine)
+        query = query.filter(Business.latitude.isnot(None), Business.longitude.isnot(None))
+
+        # If a max distance is set, limit results
+        if distance and distance != "all":
+            try:
+                dist_num = float(distance)
+                query = query.filter(haversine <= dist_num)
+            except ValueError:
+                pass
+
+        # Sort by nearest
+        query = query.order_by(haversine)
+        results = query.all()
+        listings = []
+        for biz, d in results:
+            biz.distance_mi = round(d, 2) if d is not None else None
+            listings.append(biz)
+    else:
+        # No lat/lng: just show all in this category
+        listings = query.all()
+
+    return render_template(
+        "category_results.html",
+        results=listings,
+        category=name,
+        lat=lat,
+        lng=lng,
+        selected_distance=distance
+    )
 
 @app.route("/intro")
 def intro():
