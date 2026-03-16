@@ -874,13 +874,6 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     business.account_balance = (business.account_balance or 0.0) - ad_fee
     db.session.commit()
 
-    sponsoree = Business.query.filter_by(sponsor_id=business.id).first()
-    sponsoree_mutual_referral_id = None
-    sponsoree_mutual_commission = 0
-    if sponsoree:
-        sponsoree_mutual_referral_id = sponsoree.referral_code
-        sponsoree_mutual_commission = round(amount * 0.0025, 2)
-
     business_trans = BusinessTransaction(
         transaction_id=transaction_id,
         interaction_id=interaction.id,
@@ -895,9 +888,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         tier4_business_referral_id=tier4_business_referral_id,
         tier4_commission=tier4_commission_biz,
         tier5_business_referral_id=tier5_business_referral_id,
-        tier5_commission=tier5_commission_biz,
-        sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
-        sponsoree_mutual_commission=sponsoree_mutual_commission
+        tier5_commission=tier5_commission_biz
     )
     db.session.add(business_trans)
     db.session.commit()
@@ -1085,9 +1076,6 @@ class BusinessTransaction(db.Model):
     tier5_business_referral_id = db.Column(db.String(32), nullable=False)
     tier5_commission = db.Column(db.Float, nullable=False)
     ad_fee = db.Column(db.Float)
-    # The business who was sponsored (sponsoree) earns 0.25% whenever their sponsor generates a paid invoice
-    sponsoree_mutual_referral_id = db.Column(db.String(32))
-    sponsoree_mutual_commission = db.Column(db.Float, default=0)
 
 class Interaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -3504,10 +3492,7 @@ def business_earnings():
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
     tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
     tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
-    sponsoree_mutual_earnings = sum(
-        t.sponsoree_mutual_commission or 0 for t in transactions if hasattr(t, "sponsoree_mutual_referral_id") and t.sponsoree_mutual_referral_id == ref_code
-    )
-    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings + sponsoree_mutual_earnings
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
 
     summary = dict(
         gross_earnings=f"{gross_earnings:,.2f}",
@@ -3520,7 +3505,6 @@ def business_earnings():
         tier3_earnings=f"{tier3_earnings:,.2f}",
         tier4_earnings=f"{tier4_earnings:,.2f}",
         tier5_earnings=f"{tier5_earnings:,.2f}",
-        sponsoree_mutual_earnings=f"{sponsoree_mutual_earnings:,.2f}",  # <- add this
         total_cash_back=f"{total_cash_back:,.2f}",
         period=period,
         year=year,
@@ -3571,7 +3555,6 @@ def export_business_combined_detail_report_csv():
 
     transactions = bq.all()
     business_lookup = {b.referral_code: b for b in Business.query.all()}
-    business_by_id = {b.id: b for b in Business.query.all()}
     if business_email:
         transactions = [t for t in transactions if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email]
 
@@ -3639,19 +3622,11 @@ def export_business_earnings_csv():
             earned = True
         if t.tier5_business_referral_id == ref_code and t.tier5_commission > 0:
             earned = True
-        # NEW: Earned by sponsor (use sponsor logic)
-        # See the calc/map logic below.
-
         if earned:
             filtered.append(t)
     transactions = filtered
 
-    # All businesses loaded for mapping
-    all_businesses = Business.query.all()
-    business_lookup = {b.referral_code: b for b in all_businesses}
-    business_by_id = {b.id: b for b in all_businesses}
-
-    # Summary section calculations
+    # Prepare summary just like in your page (using only the filtered txns)
     tier1_txns = [txn for txn in transactions if txn.business_referral_id == ref_code]
     gross_earnings = sum(txn.amount for txn in tier1_txns)
     ad_fee = sum(txn.ad_fee or 0 for txn in tier1_txns)
@@ -3664,21 +3639,8 @@ def export_business_earnings_csv():
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
     tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
     tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
 
-    # NEW: Mutual Sponsor Earnings (for you as a sponsor)
-    sponsoree_mutual_earnings = 0
-    for t in transactions:
-        if hasattr(t, "sponsoree_mutual_commission") and t.sponsoree_mutual_commission:
-            # Find the business on this transaction
-            txn_biz = None
-            if hasattr(t, "business_referral_id") and t.business_referral_id in business_lookup:
-                txn_biz = business_lookup[t.business_referral_id]
-            if txn_biz and txn_biz.sponsor_id == business.id:
-                sponsoree_mutual_earnings += t.sponsoree_mutual_commission
-
-    total_cash_back = (tier1_earnings + tier2_earnings + tier3_earnings +
-                       tier4_earnings + tier5_earnings + sponsoree_mutual_earnings)
-    
     # --- Prepare CSV ---
     import csv
     from io import StringIO
@@ -3699,12 +3661,11 @@ def export_business_earnings_csv():
     writer.writerow([f"Tier 3 (B2B Commission):", f"${tier3_earnings:,.2f}"])
     writer.writerow([f"Tier 4 (B2B Commission):", f"${tier4_earnings:,.2f}"])
     writer.writerow([f"Tier 5 (B2B Commission):", f"${tier5_earnings:,.2f}"])
-    writer.writerow([f"Sponsoree Mutual Commission (0.25%):", f"${sponsoree_mutual_earnings:,.2f}"])
     writer.writerow([])
     writer.writerow([f"Total Cash Back (All Tiers):", f"${total_cash_back:,.2f}"])
     writer.writerow([])
 
-    # Add detail table headers, with new mutual column
+    # Add detail table headers
     writer.writerow([
         "Date/Time",
         "Interaction ID",
@@ -3718,22 +3679,13 @@ def export_business_earnings_csv():
         "Tier 3 (B2B Commission)",
         "Tier 4 (B2B Commission)",
         "Tier 5 (B2B Commission)",
-        "Sponsoree Mutual Commission (0.25%)"
     ])
 
+    # Add details as in the HTML
     for txn in transactions:
         net_gross_row = txn.amount - (txn.ad_fee or 0)
         roi_row = (net_gross_row / (txn.ad_fee or 1)) * 100 if txn.ad_fee else 0
         ratio_row = (net_gross_row + (txn.ad_fee or 0)) / (txn.ad_fee or 1) if txn.ad_fee else 0
-
-        # NEW: Put value only if this business (the sponsor) should get it
-        mutual_comm_val = ""
-        txn_biz = None
-        if hasattr(txn, "business_referral_id") and txn.business_referral_id in business_lookup:
-            txn_biz = business_lookup[txn.business_referral_id]
-        if txn_biz and txn_biz.sponsor_id == business.id:
-            mutual_comm_val = f"{txn.sponsoree_mutual_commission:,.2f}"
-
         writer.writerow([
             txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
             txn.interaction_id,
@@ -3747,7 +3699,6 @@ def export_business_earnings_csv():
             f"{txn.tier3_commission:,.2f}" if txn.tier3_business_referral_id == business.referral_code else "",
             f"{txn.tier4_commission:,.2f}" if txn.tier4_business_referral_id == business.referral_code else "",
             f"{txn.tier5_commission:,.2f}" if txn.tier5_business_referral_id == business.referral_code else "",
-            mutual_comm_val
         ])
 
     output = si.getvalue()
@@ -4862,8 +4813,6 @@ def combined_detailed_report():
 
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
-    business_id_by_referral = {b.referral_code: b.id for b in Business.query.all()}
-    business_by_id = {b.id: b for b in Business.query.all()}
 
     # User email filter: only user transactions
     if user_email:
@@ -4877,15 +4826,15 @@ def combined_detailed_report():
         utrans = uq.all()
         btrans = bq.all()
 
-    # Grand/summaries
+    # Grand/summaries (from business table only)
     grand_total = sum(t.amount for t in btrans)
     total_ad_fee = sum(min(t.amount * 0.10, 250) for t in btrans)
     total_user_cash_back = sum(t.cash_back for t in utrans)
     total_user_commission = sum(
-        (t.tier2_commission or 0) + (t.tier3_commission or 0) +
-        (t.tier4_commission or 0) + (t.tier5_commission or 0)
+        (t.tier2_commission or 0) + (t.tier3_commission or 0) + (t.tier4_commission or 0) + (t.tier5_commission or 0)
         for t in utrans
     )
+    # User-Business commissions summary (new field!)
     total_user_business_commission = sum(
         (t.tier1_business_user_commission or 0) +
         (t.tier2_business_user_commission or 0) +
@@ -4895,50 +4844,10 @@ def combined_detailed_report():
         for t in utrans
     )
     total_biz_cash_back = sum(
-        t.cash_back + (t.tier2_commission or 0) + (t.tier3_commission or 0) +
-        (t.tier4_commission or 0) + (t.tier5_commission or 0)
+        t.cash_back + (t.tier2_commission or 0) + (t.tier3_commission or 0) + (t.tier4_commission or 0) + (t.tier5_commission or 0)
         for t in btrans
     )
-
-    # --------- THIS IS THE KEY SECTION for correct sponsor earnings ---------
-    # For each transaction, attribute sponsoree mutual commission to the SPONSOR (not sponsoree)
-    # (The business whose id == sponsor_id of the transaction's business)
-    sponsoree_mutual_earnings_by_referral = {}
-
-    for t in btrans:
-        if hasattr(t, "sponsoree_mutual_commission") and t.sponsoree_mutual_commission:
-            # Find the "base" business for this transaction
-            business = None
-            if hasattr(t, "business_referral_id") and t.business_referral_id in business_lookup:
-                business = business_lookup[t.business_referral_id]
-            if business and business.sponsor_id:
-                sponsor = business_by_id.get(business.sponsor_id)
-                if sponsor and sponsor.referral_code:
-                    ref_code = sponsor.referral_code
-                    sponsoree_mutual_earnings_by_referral[ref_code] = sponsoree_mutual_earnings_by_referral.get(ref_code, 0) + t.sponsoree_mutual_commission
-
-    # To get the global total across all sponsors:
-    total_sponsoree_mutual_earnings = sum(sponsoree_mutual_earnings_by_referral.values())
-
-    total_paid_all = (
-        total_user_cash_back
-        + total_user_commission
-        + total_user_business_commission
-        + total_biz_cash_back
-        + total_sponsoree_mutual_earnings
-    )
-
-    # Optionally, build summary for your template as before
-    summary = dict(
-        total_sponsoree_mutual_earnings=f"{total_sponsoree_mutual_earnings:,.2f}",
-        grand_total=f"{grand_total:,.2f}",
-        total_ad_fee=f"{total_ad_fee:,.2f}",
-        total_user_cash_back=f"{total_user_cash_back:,.2f}",
-        total_user_commission=f"{total_user_commission:,.2f}",
-        total_user_business_commission=f"{total_user_business_commission:,.2f}",
-        total_biz_cash_back=f"{total_biz_cash_back:,.2f}",
-        total_paid_all=f"{total_paid_all:,.2f}"
-    )
+    total_paid_all = total_user_cash_back + total_user_commission + total_user_business_commission + total_biz_cash_back
 
     return render_template(
         "combined_detailed_report.html",
@@ -4952,7 +4861,6 @@ def combined_detailed_report():
         total_user_commission=total_user_commission,
         total_user_business_commission=total_user_business_commission,
         total_biz_cash_back=total_biz_cash_back,
-        total_sponsoree_mutual_earnings=total_sponsoree_mutual_earnings,
         total_paid_all=total_paid_all,
         period=period,
         year=year,
@@ -4961,8 +4869,7 @@ def combined_detailed_report():
         user_email=user_email,
         business_email=business_email,
         months=[(f"{i}", datetime(2026, i, 1).strftime('%B')) for i in range(1, 13)],
-        years=[str(y) for y in range(2026, 2051)],
-        summary=summary  # pass to template!
+        years=[str(y) for y in range(2026, 2051)]
     )
 
 @app.route('/finance/combined-detailed-report/export/csv')
