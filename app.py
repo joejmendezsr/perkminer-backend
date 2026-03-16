@@ -277,13 +277,19 @@ class ServiceRequestForm(FlaskForm):
             ("agricultural", "Agricultural Services"),
             ("art", "Art Services"),
             ("assisted", "Assisted Living Services"),
+            ("ATV", "ATV Services"),
             ("automotive", "Automotive Services"),
+            ("bar", "Bar Services"),
             ("boating", "Boating Services"),
             ("bookkeeping", "Bookkeeping Services"),
             ("brewery", "Brewery Services"),
+            ("butler", "Butler Services"),
+            ("callcenter", "Call Center Services"),
             ("catering", "Catering Services"),
+            ("cellphone", "Cellphone Services"),
             ("childcare", "Childcare services"),
             ("cleaning", "Cleaning Services"),
+            ("club", "Club Services"),
             ("computer", "Computer Services"),
             ("concierge", "Concierge Services"),
             ("consulting", "Consulting Services"),
@@ -293,6 +299,7 @@ class ServiceRequestForm(FlaskForm):
             ("design", "Design Services"),
             ("drink", "Drink Services"),
             ("education", "Education Services"),
+            ("electronics", "Electronics Services"),
             ("engineering", "Engineering Services"),
             ("equipment", "Equipment Services"),
             ("entertainment", "Entertainment Services"),
@@ -334,6 +341,7 @@ class ServiceRequestForm(FlaskForm):
             ("personal", "Personal Services"),
             ("pest", "Pest Control Services"),
             ("pet", "Pet Services"),
+            ("phone", "Phone Services"),
             ("photography", "Photography Services"),
             ("planning", "Planning Services"),
             ("public", "Public Relations Services"),
@@ -345,8 +353,10 @@ class ServiceRequestForm(FlaskForm):
             ("rentalequipment", "Rental Equipment Services"),
             ("recreation", "Recreation Services"),
             ("research", "Research Services"),
+            ("restaurant", "Restaurant Services"),
             ("restoration", "Restoration Services"),
             ("retirement", "Retirement Services"),
+            ("rv", "RV Services"),
             ("secretarial", "Secretarial Services"),
             ("security", "Security-Protection Services"),
             ("software", "Software Services"),
@@ -864,6 +874,13 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     business.account_balance = (business.account_balance or 0.0) - ad_fee
     db.session.commit()
 
+    sponsoree = Business.query.filter_by(sponsor_id=business.id).first()
+    sponsoree_mutual_referral_id = None
+    sponsoree_mutual_commission = 0
+    if sponsoree:
+        sponsoree_mutual_referral_id = sponsoree.referral_code
+        sponsoree_mutual_commission = round(amount * 0.0025, 2)
+
     business_trans = BusinessTransaction(
         transaction_id=transaction_id,
         interaction_id=interaction.id,
@@ -878,7 +895,9 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         tier4_business_referral_id=tier4_business_referral_id,
         tier4_commission=tier4_commission_biz,
         tier5_business_referral_id=tier5_business_referral_id,
-        tier5_commission=tier5_commission_biz
+        tier5_commission=tier5_commission_biz,
+        sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
+        sponsoree_mutual_commission=sponsoree_mutual_commission
     )
     db.session.add(business_trans)
     db.session.commit()
@@ -1066,6 +1085,9 @@ class BusinessTransaction(db.Model):
     tier5_business_referral_id = db.Column(db.String(32), nullable=False)
     tier5_commission = db.Column(db.Float, nullable=False)
     ad_fee = db.Column(db.Float)
+    # The business who was sponsored (sponsoree) earns 0.25% whenever their sponsor generates a paid invoice
+    sponsoree_mutual_referral_id = db.Column(db.String(32))
+    sponsoree_mutual_commission = db.Column(db.Float, default=0)
 
 class Interaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -3482,7 +3504,10 @@ def business_earnings():
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
     tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
     tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
-    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+    sponsoree_mutual_earnings = sum(
+        t.sponsoree_mutual_commission or 0 for t in transactions if hasattr(t, "sponsoree_mutual_referral_id") and t.sponsoree_mutual_referral_id == ref_code
+    )
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings + sponsoree_mutual_earnings
 
     summary = dict(
         gross_earnings=f"{gross_earnings:,.2f}",
@@ -3495,6 +3520,7 @@ def business_earnings():
         tier3_earnings=f"{tier3_earnings:,.2f}",
         tier4_earnings=f"{tier4_earnings:,.2f}",
         tier5_earnings=f"{tier5_earnings:,.2f}",
+        sponsoree_mutual_earnings=f"{sponsoree_mutual_earnings:,.2f}",  # <- add this
         total_cash_back=f"{total_cash_back:,.2f}",
         period=period,
         year=year,
@@ -3629,7 +3655,7 @@ def export_business_earnings_csv():
     tier3_earnings = sum(t.tier3_commission for t in transactions if t.tier3_business_referral_id == ref_code)
     tier4_earnings = sum(t.tier4_commission for t in transactions if t.tier4_business_referral_id == ref_code)
     tier5_earnings = sum(t.tier5_commission for t in transactions if t.tier5_business_referral_id == ref_code)
-    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings
+    total_cash_back = tier1_earnings + tier2_earnings + tier3_earnings + tier4_earnings + tier5_earnings + sponsoree_mutual_earnings
 
     # --- Prepare CSV ---
     import csv
@@ -3651,6 +3677,7 @@ def export_business_earnings_csv():
     writer.writerow([f"Tier 3 (B2B Commission):", f"${tier3_earnings:,.2f}"])
     writer.writerow([f"Tier 4 (B2B Commission):", f"${tier4_earnings:,.2f}"])
     writer.writerow([f"Tier 5 (B2B Commission):", f"${tier5_earnings:,.2f}"])
+    writer.writerow([f"Sponsoree Mutual Commission (0.25%):", f"${sponsoree_mutual_earnings:,.2f}"])
     writer.writerow([])
     writer.writerow([f"Total Cash Back (All Tiers):", f"${total_cash_back:,.2f}"])
     writer.writerow([])
@@ -3689,6 +3716,8 @@ def export_business_earnings_csv():
             f"{txn.tier3_commission:,.2f}" if txn.tier3_business_referral_id == business.referral_code else "",
             f"{txn.tier4_commission:,.2f}" if txn.tier4_business_referral_id == business.referral_code else "",
             f"{txn.tier5_commission:,.2f}" if txn.tier5_business_referral_id == business.referral_code else "",
+            # In the writer.writerow() loop, after tier5 or at the end:
+            f"{txn.sponsoree_mutual_commission:,.2f}" if hasattr(txn, "sponsoree_mutual_commission") and txn.sponsoree_mutual_referral_id == business.referral_code else "",
         ])
 
     output = si.getvalue()

@@ -63,10 +63,11 @@
         <tr>
           <th>Date/Time</th>
           <th>Tier 1 (1% Cash Back)</th>
-          <th>Tier 2 (B2B Commission)</th>
-          <th>Tier 3 (B2B Commission)</th>
-          <th>Tier 4 (B2B Commission)</th>
-          <th>Tier 5 (B2B Commission)</th>
+          <th>Tier 2 (B2B Cash Back Commission)</th>
+          <th>Tier 3 (B2B Cash Back Commission)</th>
+          <th>Tier 4 (B2B Cash Back Commission)</th>
+          <th>Tier 5 (B2B Cash Back Commission)</th>
+          <th>Mutual Sponsoree Commission (B2B Commission)</th>
           <th>From Business Ad Fee</th>
           <th>From Business Net Gross</th>
           <th>From Biz</th>
@@ -99,6 +100,11 @@
           <td>
             {% if txn.tier5_business_referral_id == business.referral_code %}
                 ${{ "{:,.2f}".format(txn.tier5_commission) }}
+            {% endif %}
+          </td>
+          <td>
+            {% if txn.sponsoree_mutual_referral_id == business.referral_code %}
+              ${{ "{:,.2f}".format(txn.sponsoree_mutual_commission) }}
             {% endif %}
           </td>
           <td>${{ "{:,.2f}".format(txn.ad_fee or 0) }}</td>
