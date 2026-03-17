@@ -129,7 +129,13 @@
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
-          <td>${{ "{:,.2f}".format(t.sponsoree_mutual_earnings) }}</td>
+          <td>
+              {% if t.sponsoree_mutual_commission is defined and t.sponsoree_mutual_commission %}
+                  ${{ "{:,.2f}".format(t.sponsoree_mutual_commission) }}
+              {% else %}
+                  $0.00
+              {% endif %}
+          </td>
           <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
