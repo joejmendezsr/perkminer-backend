@@ -3248,7 +3248,7 @@ def finalize_transaction(interaction_id):
         interaction=interaction,
         now=now,
         summary=summary,
-        error_message=error_message
+        error_message=error_message,
         account_balance=staff.business.account_balance
     )
 
