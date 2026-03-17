@@ -3233,6 +3233,7 @@ def finalize_transaction(interaction_id):
     business = interaction.business
     now = datetime.now()
     summary = None
+    error_message = None
 
     if request.method == "POST":
         amount = float(request.form.get("amount", 0))
@@ -3247,7 +3248,7 @@ def finalize_transaction(interaction_id):
         interaction=interaction,
         now=now,
         summary=summary,
-        error_message=error_message,
+        error_message=error_message
         account_balance=staff.business.account_balance
     )
 

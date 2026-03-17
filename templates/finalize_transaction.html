@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
       alertDiv = document.createElement('div');
       alertDiv.className = 'alert alert-danger mt-2';
       alertDiv.innerHTML = `
-        There is not enough funds to finalize this transaction.  
-        Contact the business owner immediately so they can add funds to their account.<br>
+        Not enough funds in business account balance to finalize this transaction.  
+        If you are a staff member, contact the business owner immediately so they can add funds to their account.<br>
         The business owner needs to deposit at least <b>$${needToDeposit.toFixed(2)}</b> to finalize this transaction.
       `;
       amountInput.parentNode.appendChild(alertDiv);
