@@ -34,14 +34,29 @@
     {% endif %}
 
     {% if summary %}
+      {% set amt = summary.amount|float %}
+      {% set user_cash_back = amt * 0.02 %}
+      {% set ad_fee = amt * 0.10 %}
+      {% set business_cash_back = amt * 0.01 %}
+      {% set net_gross = amt - ad_fee %}
+      {% set marketing_roi = (net_gross / ad_fee * 100) if ad_fee else 0 %}
+      {% set marketing_ratio = (amt / ad_fee) if ad_fee else 0 %}
+
       <div class="transaction-summary mt-4">
-        <div><b>Total Transaction:</b> ${{ summary.amount }}</div>
-        <div class="text-success"><b>User Earned (2%):</b> ${{ summary.user_cash_back }}</div>
-        <div class="text-info"><b>Business Earned (1%):</b> ${{ summary.business_cash_back }}</div>
+        <div><b>Total Transaction:</b> ${{ '%.2f' % amt }}</div>
+        <div class="text-success"><b>User Earned (2% Cashback):</b> ${{ '%.2f' % user_cash_back }}</div>
+        <div class="text-info"><b>Business Earned (1% Cashback):</b> ${{ '%.2f' % business_cash_back }}</div>
+        <div><b>Ad Fee Paid (10%, capped $250):</b> ${{ '%.2f' % ad_fee }}</div>
+        <div><b>Net Gross (Sale - Ad Fee):</b> ${{ '%.2f' % net_gross }}</div>
+        <div><b>Marketing ROI:</b> {{ marketing_roi|round(0) }}%</div>
+        <div><b>Marketing ROI Ratio:</b> {{ marketing_ratio|round(2) }}:1</div>
       </div>
       <div class="alert alert-success text-center">
         Transaction recorded! Rewards credited.
       </div>
+      <form action="{{ url_for('end_session', interaction_id=interaction.id) }}" method="post" style="margin-top:18px;">
+        <button type="submit" class="btn btn-danger w-100">End Session</button>
+      </form>
     {% endif %}
 
     {% with messages = get_flashed_messages() %}

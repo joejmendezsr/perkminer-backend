@@ -3241,7 +3241,7 @@ def finalize_transaction(interaction_id):
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
         except Exception as e:
             flash(str(e), "danger")
-        return redirect(url_for("biz_active_session", interaction_id=interaction.id))
+
     return render_template(
         "finalize_transaction.html",
         interaction=interaction,

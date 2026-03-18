@@ -35,8 +35,8 @@
 
     {% if summary %}
       <div class="transaction-summary mt-4">
-        <div><b>Total Transaction:</b> ${{ summary.amount }}</div>
-        <div class="text-success"><b>Your Cash Back (2%):</b> ${{ summary.user_cash_back }}</div>
+        <div><b>Total Transaction:</b> ${{ '%.2f' % summary.amount }}</div>
+        <div class="text-success"><b>Your Cash Back (2%):</b> ${{ '%.2f' % summary.user_cash_back }}</div>
         <hr>
         <div><b>Tier 2 (Direct Referral) Commission:</b> ${{ summary.tier2_user_commission }}</div>
         <div><b>Tier 3 Commission:</b> ${{ summary.tier3_user_commission }}</div>
