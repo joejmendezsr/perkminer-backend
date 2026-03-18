@@ -104,7 +104,13 @@
             {% endif %}
           </td>
 
-          <td>{{ '{:,.2f}'.format(txn.sponsoree_mutual_earnings or 0) if txn.sponsoree_mutual_referral_id == business.referral_code else '' }}</td>
+          <td>
+            {% if txn.sponsoree_mutual_referral_id == business.referral_code %}
+              {{ '{:,.2f}'.format(txn.sponsoree_mutual_commission or 0) }}
+            {% else %}
+              $0.00
+            {% endif %}
+          </td>
 
           <td>${{ "{:,.2f}".format(txn.ad_fee or 0) }}</td>
           {% set net_gross = txn.amount - (txn.ad_fee or 0) %}

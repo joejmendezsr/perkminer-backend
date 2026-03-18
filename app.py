@@ -3488,6 +3488,8 @@ def business_earnings():
             earned = True
         if t.tier5_business_referral_id == ref_code and t.tier5_commission > 0:
             earned = True
+        if hasattr(t, "sponsoree_mutual_referral_id") and t.sponsoree_mutual_referral_id == ref_code and (t.sponsoree_mutual_commission or 0) > 0:
+            earned = True
         if earned:
             filtered.append(t)
     transactions = filtered
