@@ -19,14 +19,18 @@
   <div class="card shadow-sm p-4 receipt-card">
     <h4 class="mb-4 text-center">Transaction Receipt</h4>
     <div class="receipt-summary">
-      <div><b>Date/Time:</b> {{ transaction.date_time.strftime('%Y-%m-%d %I:%M %p') }}</div>
+      <div>
+        <b>Date/Time:</b>
+        <span id="local-receipt-time" data-utc="{{ transaction.date_time.strftime('%Y-%m-%dT%H:%M:%S') }}Z"></span>
+      </div>
       <div><b>Business:</b> {{ interaction.business.business_name }}</div>
-      <div><b>Total Paid:</b> ${{ transaction.amount }}</div>
+      <div><b>Total Paid:</b> ${{ '%.2f' % transaction.amount }}</div>
       <div class="text-success fw-bold mt-2">
-        <b>Your Cashback (2% cap $50):</b> ${{ transaction.cash_back }}
+        <b>Your Cashback (2% cap $50):</b> ${{ '%.2f' % transaction.cash_back }}
         {% if transaction.cash_back|float >= 49.99 %}
           <span class="badge bg-warning text-dark ms-1">Max Reached</span>
         {% endif %}
+      </div>
     <div class="alert alert-success text-center">
       Thank you for your purchase! Your cashback has been credited.
     </div>
@@ -38,5 +42,20 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var elem = document.getElementById('local-receipt-time');
+  if (elem && elem.dataset.utc) {
+    // Parse the UTC time and format for user's locale
+    var utc = elem.dataset.utc;
+    var dt = new Date(utc);
+    if (!isNaN(dt)) {
+      var opts = { year: 'numeric', month: 'short', day: 'numeric',
+                   hour: '2-digit', minute: '2-digit', hour12: true };
+      elem.textContent = dt.toLocaleString(undefined, opts);
+    }
+  }
+});
+</script>
 </body>
 </html>
