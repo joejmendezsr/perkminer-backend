@@ -4427,7 +4427,7 @@ def finance_dashboard():
         else:
             capital_reserves += t.tier5_commission
     # Add mutual commission as paid to businesses
-    total_paid_businesses += 0
+    total_paid_businesses += total_sponsoree_mutual_commission
 
     charitable_contribution_1 = total_ad_revenue * 0.10
     charitable_contribution_2 = total_ad_revenue * 0.005
