@@ -56,10 +56,10 @@
     <b>Total Advertising Fee:</b> ${{ "{:,.2f}".format(total_ad_fee) }}<br>
     <b>Total Paid to Users: Cashback (Tier 1):</b> ${{ "{:,.2f}".format(total_user_cash_back) }}<br>
     <b>Total Paid to Users: Commissions (Tiers 2-5):</b> ${{ "{:,.2f}".format(total_user_commission) }}<br>
-    <b>Mutual Sponsoree Commission:</b> ${{ summary.total_sponsoree_mutual_earnings or "0.00" }}<br>
+    <b>Mutual Sponsoree Commission:</b> ${{ summary.sponsoree_mutual_earnings or "0.00" }}<br>
     <b>Total Paid to Users: User-Business Commission (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_user_business_commission) }}<br>
     <b>Total Paid to Businesses (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_biz_cash_back) }}<br>
-    <b>Grand Total Paid Out:</b> ${{ "{:,.2f}".format(total_paid_all) }}
+    <b>Grand Total Paid Out:</b> ${{ summary.total_paid_all or "0.00" }}
   </div>
   <div class="table-responsive">
     <table class="table table-bordered align-middle" id="details-table">
@@ -117,7 +117,8 @@
           <td></td>
           <td></td>
           <td></td>
-          <td>$0.00</td>
+          <td></td>
+          <td></td>
           <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}

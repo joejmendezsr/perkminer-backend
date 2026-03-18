@@ -4430,8 +4430,7 @@ def finance_dashboard():
     charitable_contribution_1 = total_ad_revenue * 0.10
     charitable_contribution_2 = total_ad_revenue * 0.005
 
-    net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves
-                                    + charitable_contribution_1 + charitable_contribution_2)
+    net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves + charitable_contribution_1 + charitable_contribution_2)
 
     operating_capital = net_gross * 0.60
     silent_partners = net_gross * 0.30
@@ -4481,7 +4480,7 @@ def finance_dashboard():
         total_transactions=total_transactions,
         total_paid_members=f"{total_paid_members:,.2f}",
         total_paid_businesses=f"{total_paid_businesses:,.2f}",
-        total_sponsoree_mutual_commission=f"{total_sponsoree_mutual_commission:,.2f}",
+        sponsoree_mutual_earnings=f"{total_sponsoree_mutual_commission:,.2f}",
         net_gross=f"{net_gross:,.2f}",
         capital_reserves=f"{capital_reserves:,.2f}",
         operating_capital=f"{operating_capital:,.2f}",
@@ -4908,6 +4907,7 @@ def combined_detailed_report():
         total_user_commission=f"{total_user_commission:,.2f}",
         total_user_business_commission=f"{total_user_business_commission:,.2f}",
         total_biz_cash_back=f"{total_biz_cash_back:,.2f}",
+        sponsoree_mutual_earnings=f"{total_sponsoree_mutual_commission:,.2f}",
         total_paid_all=f"{total_paid_all:,.2f}"
     )
 
