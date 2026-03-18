@@ -56,7 +56,7 @@
     <b>Total Advertising Fee:</b> ${{ "{:,.2f}".format(total_ad_fee) }}<br>
     <b>Total Paid to Users: Cashback (Tier 1):</b> ${{ "{:,.2f}".format(total_user_cash_back) }}<br>
     <b>Total Paid to Users: Commissions (Tiers 2-5):</b> ${{ "{:,.2f}".format(total_user_commission) }}<br>
-    <b>Mutual Sponsoree Commission (0.25%):</b> ${{ summary.sponsoree_mutual_earnings }}<br>
+    <b>Mutual Sponsoree Commission:</b> ${{ summary.sponsoree_mutual_earnings or "0.00" }}<br>
     <b>Total Paid to Users: User-Business Commission (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_user_business_commission) }}<br>
     <b>Total Paid to Businesses (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_biz_cash_back) }}<br>
     <b>Grand Total Paid Out:</b> ${{ "{:,.2f}".format(total_paid_all) }}
@@ -110,6 +110,7 @@
           <td>${{ "{:,.2f}".format(t.tier3_business_user_commission or 0) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_business_user_commission or 0) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_business_user_commission or 0) }}</td>
+          <td>{{ '{:,.2f}'.format(txn.sponsoree_mutual_commission or 0) if txn.sponsoree_mutual_referral_id == business.referral_code else '' }}</td>
           <td></td><td></td><td></td>
           <td></td><td></td><td></td><td></td><td></td>
           <td>{{ t.transaction_id }}</td>

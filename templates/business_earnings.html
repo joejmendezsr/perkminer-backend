@@ -54,7 +54,7 @@
     <b>Tier 3 (B2B Commission):</b> ${{ summary.tier3_earnings }}<br>
     <b>Tier 4 (B2B Commission):</b> ${{ summary.tier4_earnings }}<br>
     <b>Tier 5 (B2B Commission):</b> ${{ summary.tier5_earnings }}<br>
-    <b>Mutual Earnings (B2B Commission):</b> ${{ summary.mutual_earnings_commission }}<br>
+    <b>Mutual Earnings (B2B Commission):</b> ${{ summary.sponsoree_mutual_earnings or "0.00" }}<br>
     <hr>
     <b>Total Cash Back (All Tiers):</b> ${{ summary.total_cash_back }}
   </div>
@@ -103,11 +103,9 @@
                 ${{ "{:,.2f}".format(txn.tier5_commission) }}
             {% endif %}
           </td>
-          <td>
-            {% if txn.sponsoree_mutual_referral_id == business.referral_code %}
-              ${{ "{:,.2f}".format(txn.sponsoree_mutual_commission) }}
-            {% endif %}
-          </td>
+
+          <td>{{ '{:,.2f}'.format(txn.sponsoree_mutual_commission or 0) if txn.sponsoree_mutual_referral_id == business.referral_code else '' }}</td>
+
           <td>${{ "{:,.2f}".format(txn.ad_fee or 0) }}</td>
           {% set net_gross = txn.amount - (txn.ad_fee or 0) %}
           <td>${{ "{:,.2f}".format(net_gross) }}</td>
