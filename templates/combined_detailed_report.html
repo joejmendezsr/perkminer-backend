@@ -110,9 +110,14 @@
           <td>${{ "{:,.2f}".format(t.tier3_business_user_commission or 0) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_business_user_commission or 0) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_business_user_commission or 0) }}</td>
-          <td>{{ '{:,.2f}'.format(txn.total_sponsoree_mutual_commission or 0) if txn.sponsoree_mutual_referral_id == business.referral_code else '' }}</td>
-          <td></td><td></td><td></td>
-          <td></td><td></td><td></td><td></td><td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>$0.00</td>
           <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
@@ -120,8 +125,19 @@
         <tr>
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ t.interaction_id }}</td>
-          <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-          <td></td><td></td><td></td><td></td><td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
           <td>{{ t.business_referral_id }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
@@ -130,13 +146,7 @@
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
-          <td>
-              {% if t.sponsoree_mutual_commission is defined and t.sponsoree_mutual_commission %}
-                  ${{ "{:,.2f}".format(t.total_sponsoree_mutual_commission) }}
-              {% else %}
-                  $0.00
-              {% endif %}
-          </td>
+          <td>${{ "{:,.2f}".format(t.sponsoree_mutual_commission or 0) }}</td>
           <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
