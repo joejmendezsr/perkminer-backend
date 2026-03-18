@@ -879,7 +879,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     sponsoree_mutual_commission = 0
     if sponsoree:
         sponsoree_mutual_referral_id = sponsoree.referral_code
-        sponsoree_mutual_commission = round(amount * 0.0025, 2)
+        sponsoree_mutual_commission = round(min(amount * 0.0025, 6.25), 2)
 
     business_trans = BusinessTransaction(
         transaction_id=transaction_id,
