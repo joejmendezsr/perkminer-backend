@@ -3234,6 +3234,9 @@ def finalize_transaction(interaction_id):
     now = datetime.now()
     summary = None
 
+    # Detect if staff is logged in, so you can branch logic in the template
+    is_staff = session.get('staff_id') is not None
+
     if request.method == "POST":
         amount = float(request.form.get("amount", 0))
         try:
@@ -3241,13 +3244,15 @@ def finalize_transaction(interaction_id):
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
         except Exception as e:
             flash(str(e), "danger")
+        # Do not redirect—let the page re-render so the summary shows.
 
     return render_template(
         "finalize_transaction.html",
         interaction=interaction,
         now=now,
         summary=summary,
-        account_balance=business.account_balance
+        account_balance=business.account_balance,
+        is_staff=is_staff  # <---- Here is the key item for template logic!
     )
 
 @app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])
