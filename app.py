@@ -2008,6 +2008,14 @@ def home():
     total_member_paid = total_user_tier1 + total_user_commission + total_user_biz_commission
 
     business_transactions = BusinessTransaction.query.all()
+
+    # --- Mutual sponsoree commission ---
+    total_biz_mutual_commission = sum(
+        (t.sponsoree_mutual_commission or 0)
+        for t in business_transactions
+        if hasattr(t, "sponsoree_mutual_commission") and t.sponsoree_mutual_commission
+    )
+
     total_biz_paid = sum(
         (t.cash_back or 0) +
         (t.tier2_commission or 0) +
@@ -2016,6 +2024,9 @@ def home():
         (t.tier5_commission or 0)
         for t in business_transactions
     )
+    # Add mutual commission to business total
+    total_biz_paid += total_biz_mutual_commission
+
     total_gross_sales = sum(t.amount or 0 for t in business_transactions)
     total_ad_fees = sum((t.ad_fee or 0) for t in business_transactions)
     total_paid_out = total_member_paid + total_biz_paid
@@ -2027,8 +2038,10 @@ def home():
         featured_listings=featured_listings,
         total_member_paid=total_member_paid,
         total_biz_paid=total_biz_paid,
+        total_biz_mutual_commission=total_biz_mutual_commission,  # <== pass if you want to display it separately
         total_gross_sales=total_gross_sales,
         total_ad_fees=total_ad_fees,
+        total_paid_out=total_paid_out,
         percent_fees_paid=percent_fees_paid
     )
 
