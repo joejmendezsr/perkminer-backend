@@ -5726,6 +5726,10 @@ def seed_admins_once():
     response.append("Seeding complete!")
     return "<br>".join(response)
 
+@app.route("/how-it-works")
+def how_it_works():
+    return render_template("how_it_works.html")
+
 @app.errorhandler(500)
 def internal_server_error(error):
     # Log the full error + traceback for debugging
