@@ -46,7 +46,7 @@
     <table class="table table-bordered align-middle" id="receipts-table">
       <thead class="table-light">
         <tr>
-          <th>Date/Time</th>
+          <th>Date/Time (UTC)</th>
           <th>Interaction ID</th>
           <th>Business</th>
           <th>Amount</th>
@@ -54,6 +54,7 @@
           <th>Receipt</th>
         </tr>
       </thead>
+      *** NOTE: Date/Time is UTC time.  To view the local date/time of when the purchase was made, view the receipt.
       <tbody>
         {% for txn in transactions %}
         <tr>
