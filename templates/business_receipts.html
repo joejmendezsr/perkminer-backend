@@ -59,7 +59,9 @@
       <tbody>
         {% for txn in transactions %}
         <tr>
-          <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>
+            {{ txn.local_date_time if txn.local_date_time else txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}
+          </td>
           <td>{{ txn.interaction_id }}</td>
           <td>${{ "{:,.2f}".format(txn.amount) }}</td>
           <td>

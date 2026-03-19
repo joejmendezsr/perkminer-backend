@@ -29,8 +29,29 @@
               <label class="form-label">Date & Time</label>
               <input type="text" class="form-control" readonly value="{{ now.strftime('%Y-%m-%d %I:%M %p') }}">
           </div>
+          <input type="hidden" name="local_datetime" id="local-datetime">
           <button type="submit" class="btn btn-success w-100">Finalize My Purchase</button>
       </form>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var form = document.querySelector('form[method="post"]');
+        var localInput = document.getElementById('local-datetime');
+        if (form && localInput) {
+          form.addEventListener('submit', function() {
+            var now = new Date();
+            // Example: 2026-04-07 18:34:00
+            var dt = now.getFullYear()
+                    + '-' + String(now.getMonth()+1).padStart(2, '0')
+                    + '-' + String(now.getDate()).padStart(2, '0')
+                    + ' ' + String(now.getHours()).padStart(2, '0')
+                    + ':' + String(now.getMinutes()).padStart(2, '0')
+                    + ':' + String(now.getSeconds()).padStart(2, '0');
+            localInput.value = dt;
+          });
+        }
+      });
+      </script>
+
     {% endif %}
 
     {% if summary %}

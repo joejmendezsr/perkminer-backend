@@ -752,7 +752,7 @@ def staff_password_reset_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def finalize_interaction(interaction, business, amount, staff_id=None, source=None):
+def finalize_interaction(interaction, business, amount, staff_id=None, source=None, local_date_time=None):
     import uuid
     from datetime import datetime
 
@@ -885,6 +885,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         transaction_id=transaction_id,
         interaction_id=interaction.id,
         amount=amount,
+        date_time=datetime.utcnow(),
+        local_date_time=local_date_time,
         ad_fee=ad_fee,
         business_referral_id=business_referral_id,
         cash_back=business_cash_back,
@@ -1045,6 +1047,7 @@ class UserTransaction(db.Model):
     transaction_id = db.Column(db.String(48), nullable=False, index=True)
     interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
+    local_date_time = db.Column(db.String(32))
     amount = db.Column(db.Float, nullable=False)
     user_referral_id = db.Column(db.String(32), nullable=False)
     cash_back = db.Column(db.Float, nullable=False)
@@ -1073,6 +1076,7 @@ class BusinessTransaction(db.Model):
     transaction_id = db.Column(db.String(48), nullable=False, index=True)
     interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False)
     date_time = db.Column(db.DateTime, default=datetime.utcnow)
+    local_date_time = db.Column(db.String(32))
     amount = db.Column(db.Float, nullable=False)
     business_referral_id = db.Column(db.String(32), nullable=False)
     cash_back = db.Column(db.Float, nullable=False)
@@ -3007,6 +3011,7 @@ def finalize_transaction_user(interaction_id):
         transaction_id = str(uuid.uuid4())
         data = request.form
         amount = float(data.get("amount", 0))
+        local_dt_str = request.form.get("local_datetime")
 
         # USER-TO-USER COMMISSION LOGIC
         user_referral_id = current_user.referral_code
@@ -3034,6 +3039,8 @@ def finalize_transaction_user(interaction_id):
             transaction_id=transaction_id,
             interaction_id=interaction.id,
             amount=amount,
+            date_time=datetime.utcnow(),
+            local_date_time=local_dt_str,
             business_referral_id=None,
             user_referral_id=user_referral_id,
             cash_back=user_cash_back,
@@ -3246,18 +3253,24 @@ def finalize_transaction(interaction_id):
     business = interaction.business
     now = datetime.now()
     summary = None
-
-    # Detect if staff is logged in, so you can branch logic in the template
     is_staff = session.get('staff_id') is not None
 
     if request.method == "POST":
+        local_dt_str = request.form.get("local_datetime")
         amount = float(request.form.get("amount", 0))
         try:
-            summary = finalize_interaction(interaction, business, amount)
+            summary = finalize_interaction(
+                interaction,
+                business,
+                amount,
+                staff_id=session.get('staff_id'),
+                source=None,
+                local_date_time=local_dt_str  # <-- pass the value!
+            )
             flash("Transaction finalized and all rewards/commissions assigned!", "success")
         except Exception as e:
             flash(str(e), "danger")
-        # Do not redirect—let the page re-render so the summary shows.
+        # No need to instantiate BusinessTransaction here; that's done in finalize_interaction.
 
     return render_template(
         "finalize_transaction.html",
@@ -3265,7 +3278,7 @@ def finalize_transaction(interaction_id):
         now=now,
         summary=summary,
         account_balance=business.account_balance,
-        is_staff=is_staff  # <---- Here is the key item for template logic!
+        is_staff=is_staff
     )
 
 @app.route("/service-request/<int:biz_id>", methods=["GET", "POST"])

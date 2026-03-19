@@ -47,7 +47,7 @@
     <b>2% Cash Back (Self/Tier 1):</b> ${{ summary.tier1_earnings }}<br>
     <b>Total Commission (Tiers 2-5):</b> ${{ summary.commissions_total }}<br>
     {% if has_invited_business %}
-      <b>Total User-Business Commission (Tiers 1-5):</b> ${{ summary.total_user_business_commission }}<br>
+      <b>Total User-Business Commission (UBC Tiers 1-5):</b> ${{ summary.total_user_business_commission }}<br>
     {% endif %}
     <hr>
     <b>Tier 2 (Commission):</b> ${{ summary.tier2_earnings }}<br>
@@ -56,11 +56,11 @@
     <b>Tier 5 (Commission):</b> ${{ summary.tier5_earnings }}<br>
     {% if has_invited_business %}
       <hr>
-      <b>Tier 1 User-Business Commission:</b> ${{ summary.tier1_user_business_earnings }}<br>
-      <b>Tier 2 User-Business Commission:</b> ${{ summary.tier2_user_business_earnings }}<br>
-      <b>Tier 3 User-Business Commission:</b> ${{ summary.tier3_user_business_earnings }}<br>
-      <b>Tier 4 User-Business Commission:</b> ${{ summary.tier4_user_business_earnings }}<br>
-      <b>Tier 5 User-Business Commission:</b> ${{ summary.tier5_user_business_earnings }}<br>
+      <b>Tier 1 UBC (Businesses referred by you):</b> ${{ summary.tier1_user_business_earnings }}<br>
+      <b>Tier 2 UBC (Referred by T1 Businesses:</b> ${{ summary.tier2_user_business_earnings }}<br>
+      <b>Tier 3 UBC (Referred by T2 Businesses:</b> ${{ summary.tier3_user_business_earnings }}<br>
+      <b>Tier 4 UBC (Referred by T3 Businesses:</b> ${{ summary.tier4_user_business_earnings }}<br>
+      <b>Tier 5 UBC (Referred by T4 Businesses:</b> ${{ summary.tier5_user_business_earnings }}<br>
     {% endif %}
   </div>
 <div class="table-responsive">
@@ -74,11 +74,11 @@
         <th>Tier 4<br>(Commission)</th>
         <th>Tier 5<br>(Commission)</th>
         {% if has_invited_business %}
-          <th>Tier 1<br>User-Business Commission</th>
-          <th>Tier 2<br>User-Business Commission</th>
-          <th>Tier 3<br>User-Business Commission</th>
-          <th>Tier 4<br>User-Business Commission</th>
-          <th>Tier 5<br>User-Business Commission</th>
+          <th>Tier 1<br>UBC</th>
+          <th>Tier 2<br>UBC</th>
+          <th>Tier 3<br>UBC</th>
+          <th>Tier 4<br>UBC</th>
+          <th>Tier 5<br>UBC</th>
         {% endif %}
         <th>From Business</th>
       </tr>
@@ -86,7 +86,7 @@
     <tbody>
       {% for txn in transactions %}
       <tr>
-        <td>{{ txn.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+        <td><span id="local-receipt-time" data-utc="{{ transaction.date_time.strftime('%Y-%m-%dT%H:%M:%S') }}Z"></td></span>
         <td>
           {% if txn.user_referral_id == current_user.referral_code and txn.cash_back > 0 %}
               ${{ "{:,.2f}".format(txn.cash_back) }}
@@ -172,6 +172,21 @@ document.getElementById('filter-form').addEventListener('input', function() {
 
         row.style.display = show ? "" : "none";
     });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var elem = document.getElementById('local-receipt-time');
+  if (elem && elem.dataset.utc) {
+    // Parse the UTC time and format for user's locale
+    var utc = elem.dataset.utc;
+    var dt = new Date(utc);
+    if (!isNaN(dt)) {
+      var opts = { year: 'numeric', month: 'short', day: 'numeric',
+                   hour: '2-digit', minute: '2-digit', hour12: true };
+      elem.textContent = dt.toLocaleString(undefined, opts);
+    }
+  }
 });
 </script>
 </body>
