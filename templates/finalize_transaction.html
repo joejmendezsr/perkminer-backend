@@ -27,7 +27,7 @@
           </div>
           <div class="mb-3">
               <label class="form-label">Date & Time</label>
-              <input type="text" class="form-control" readonly value="{{ now.strftime('%Y-%m-%d %I:%M %p') }}">
+              <input type="text" class="form-control" readonly id="local-time-input">
           </div>
           <input type="hidden" name="local_datetime" id="local-datetime">
           <button type="submit" class="btn btn-success w-100">Finalize Transaction</button>
@@ -143,6 +143,23 @@ document.addEventListener('DOMContentLoaded', function() {
       amountInput.parentNode.appendChild(alertDiv);
     }
   });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Set the browser’s local date/time in the finalize form
+  var localTimeInput = document.getElementById('local-time-input');
+  if (localTimeInput) {
+    var now = new Date();
+    // Format as YYYY-MM-DD HH:MM (24-hour, adjust as needed)
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var nice = `${y}-${m}-${d} ${h}:${min}`;
+    localTimeInput.value = nice;
+  }
 });
 </script>
 </body>
