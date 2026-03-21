@@ -3386,8 +3386,37 @@ def active_session(interaction_id):
             db.session.commit()
             return redirect(url_for('active_session', interaction_id=interaction_id))
 
+    # FETCH all messages after handling POSTs
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
-    return render_template("active_session.html", interaction=interaction, is_user=is_user, is_biz=is_biz, messages=messages)
+
+    # ADD sender_label to each message
+    messages_with_labels = []
+    for msg in messages:
+        label = ""
+        if msg.sender_type == "user":
+            label = interaction.user.name or interaction.user.email
+        elif msg.sender_type == "business":
+            # Check if this is a staff member
+            staff = Staff.query.filter_by(business_id=interaction.business_id, id=msg.sender_id).first()
+            if staff:
+                label = f"{interaction.business.name} Staff"
+            else:
+                label = interaction.business.name
+        messages_with_labels.append({
+            "text": msg.text,
+            "timestamp": msg.timestamp,
+            "sender_label": label,
+            "file_url": msg.file_url,
+            "file_name": msg.file_name,
+        })
+
+    return render_template(
+        "active_session.html",
+        interaction=interaction,
+        is_user=is_user,
+        is_biz=is_biz,
+        messages=messages_with_labels
+    )
 
 @app.route("/session/<int:interaction_id>/messages")
 def session_messages(interaction_id):

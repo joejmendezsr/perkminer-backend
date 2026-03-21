@@ -100,15 +100,11 @@
 
         <div id="messages-box">
           {% for msg in messages %}
-            <div class="row {% if msg.sender_type == 'user' and is_user or msg.sender_type == 'business' and is_biz %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
+            <div class="row {% if msg.sender_label == (interaction.user.name or interaction.user.email) and is_user or msg.sender_label == interaction.business.business_name and is_biz %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
               <div class="col-auto">
-                <div class="{% if msg.sender_type == 'user' %}msg-bubble-user{% else %}msg-bubble-biz{% endif %}">
-                  <span class="fw-bold small {% if msg.sender_type == 'user' %}text-primary{% else %}text-success{% endif %}">
-                    {% if msg.sender_type == "user" %}
-                      {{ interaction.user.name or interaction.user.email }}
-                    {% elif msg.sender_type == "business" %}
-                      {{ interaction.business.business_name }}
-                    {% endif %}
+                <div class="{% if msg.sender_label == (interaction.user.name or interaction.user.email) %}msg-bubble-user{% else %}msg-bubble-biz{% endif %}">
+                  <span class="fw-bold small {% if msg.sender_label == (interaction.user.name or interaction.user.email) %}text-primary{% else %}text-success{% endif %}">
+                    {{ msg.sender_label }}
                   </span>
                   <span class="msg-time">{{ msg.timestamp.strftime('%Y-%m-%d %I:%M%p') }}</span>
                   <div>{{ msg.text | e }}</div>

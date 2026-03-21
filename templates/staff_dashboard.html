@@ -37,7 +37,7 @@
           <div>
             <b>Session #{{ ia.id }}</b>
             <span class="text-muted d-block" style="font-size:0.95em;">
-              User: {{ ia.user.email }}
+              User: {{ ia.user.name or ia.user.email }}
             </span>
           </div>
           <div class="mt-2 mt-md-0 d-flex gap-2 flex-wrap">
