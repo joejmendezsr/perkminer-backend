@@ -3399,9 +3399,9 @@ def active_session(interaction_id):
             # Check if this is a staff member
             staff = Staff.query.filter_by(business_id=interaction.business_id, id=msg.sender_id).first()
             if staff:
-                label = f"{interaction.business.name} Staff"
+                label = f"{interaction.business.business_name} Staff"
             else:
-                label = interaction.business.name
+                label = interaction.business.business_name
         messages_with_labels.append({
             "text": msg.text,
             "timestamp": msg.timestamp,
