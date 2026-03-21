@@ -33,7 +33,9 @@
       <div class="mb-3" style="max-height:270px;overflow:auto;">
         {% for msg in messages %}
           <div class="mb-2">
-            <span class="fw-bold">{{ msg.sender_type|capitalize }}</span>
+            <span class="fw-bold small {% if msg.sender_label == (interaction.user.name or interaction.user.email) %}text-primary{% else %}text-success{% endif %}">
+              {{ msg.sender_label }}
+            </span>
             <small class="text-muted">{{ msg.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
             <div>{{ msg.text }}</div>
             {% if msg.file_url %}
@@ -56,7 +58,7 @@
 <script>
 setInterval(function() {
   location.reload();
-}, 15000);
+}, 30000);
 </script>
 </body>
 </html>
