@@ -30,6 +30,38 @@
           max-height: 767px;
         }
       }
+      /* How It Works overlay */
+      .how-it-works-section {
+        position: relative;
+        margin: 40px 0 0 0;
+        padding: 0;
+      }
+      .how-it-works-bg {
+        width: 100%;
+        min-height: 260px;
+        max-height: 360px;
+        object-fit: cover;
+        filter: brightness(0.72);
+        border-radius: 15px;
+      }
+      .how-it-works-btn-outer {
+        position: absolute;
+        left: 0; top: 0; right: 0; bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+      }
+      .how-it-works-btn-inner {
+        background: rgba(255,255,255,0.84);
+        border-radius: 2rem;
+        padding: 1.3rem 2.5rem;
+        box-shadow: 0 3px 24px rgba(40,40,40,0.1);
+      }
+      @media (max-width: 575px) {
+        .how-it-works-bg { min-height: 150px; max-height: 170px; }
+        .how-it-works-btn-inner { padding: .7rem 1.2rem; font-size: 1.09em;}
+      }
     </style>
 </head>
 <body>
@@ -52,10 +84,12 @@
     <main class="container pb-5">
         <!-- Centered Title & Tagline -->
         <div class="text-center mb-4">
-            <h1 class="display-5 fw-bold mb-2">Grow Your Business with PerkMiner</h1>
+            <h1 class="display-5 fw-bold mb-2">Grow Your Business</br>With PerkMiner Today!</h1>
             <div class="lead mb-2">
                 <b>Pay-per-Sale / Pay-per-Close model</b>
-                </br><style="font-size:1.2em;color:#218838;">(No Sale or No Closed Deal = $0 Fees)</style>
+            </div>
+            <div style="font-size:1.2em;color:#218838;">
+                (No Sale or No Closed Deal = $0 Fees)
             </div>
         </div>
         <!-- Split Row -->
@@ -88,18 +122,20 @@
                 </div>
             </div>
         </div>
-        <div>
-            <!-- How It Works organizational chart here! -->
-        <div class="text-center mb-3">
-            <div class="row justify-content-center g-2">
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <a class="btn btn-primary btn-lg w-100" href="{{ url_for('how_it_works') }}">How It Works</a>
+
+        <!-- How It Works section with image and overlay button -->
+        <div class="how-it-works-section">
+            <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?fit=crop&w=900&q=80"
+                 alt="How It Works" class="how-it-works-bg">
+            <div class="how-it-works-btn-outer">
+                <div class="how-it-works-btn-inner">
+                    <a href="{{ url_for('how_it_works') }}" class="btn btn-primary btn-xl fs-4 shadow-lg px-4 py-2">
+                        <i class="bi bi-info-circle"></i> How It Works
+                    </a>
                 </div>
             </div>
         </div>
-        <div>
-            <!-- Additional illustrations here! -->
-        </div>
+        <!-- /Additional Illustrations Here -->
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
