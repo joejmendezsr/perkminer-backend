@@ -3124,21 +3124,25 @@ def create_quote(interaction_id):
 @app.route("/session/<int:interaction_id>/end", methods=["POST"])
 def end_session(interaction_id):
     interaction = Interaction.query.get_or_404(interaction_id)
-    # Allow user, business, or staff to end the session
+    # Check who is ending session
     is_user = current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id
     is_biz = session.get('business_id') == interaction.business_id
     is_staff = session.get('staff_id') is not None and interaction.business_id == Staff.query.get(session.get('staff_id')).business_id
+
     if not (is_user or is_biz or is_staff):
         abort(403)
+
+    # Mark as ended for everyone
     interaction.status = "ended"
     db.session.commit()
     flash("Session ended.", "success")
-    # Redirect to appropriate dashboard
-    if is_biz:
-        return redirect(url_for('biz_user_interactions'))
-    elif is_staff:
+
+    # Redirect accordingly
+    if is_staff:
         return redirect(url_for('staff_dashboard'))
-    else:
+    elif is_biz:
+        return redirect(url_for('biz_user_interactions'))
+    else:  # user
         return redirect(url_for('user_biz_interactions'))
 
 @app.route("/payment/<ref>")
@@ -5592,6 +5596,39 @@ def staff_active_session(interaction_id):
                            interaction=interaction,
                            staff=staff,
                            messages=messages_with_labels)
+
+@app.route("/staff/session/<int:interaction_id>/messages")
+def staff_session_messages(interaction_id):
+    staff_id = session.get("staff_id")
+    if not staff_id:
+        return "", 403
+    interaction = Interaction.query.filter_by(id=interaction_id, business_id=Staff.query.get(staff_id).business_id).first_or_404()
+
+    # Build labeled messages
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    messages_with_labels = []
+    for msg in messages:
+        label = ""
+        if msg.sender_type == "user":
+            label = interaction.user.name or interaction.user.email
+        elif msg.sender_type == "business":
+            if msg.sender_id == interaction.business.id:
+                label = interaction.business.business_name
+            else:
+                label = f"{interaction.business.business_name} Staff"
+        messages_with_labels.append({
+            "text": msg.text,
+            "timestamp": msg.timestamp,
+            "sender_label": label,
+            "file_url": msg.file_url,
+            "file_name": msg.file_name,
+        })
+
+    return render_template(
+        "partials/_staff_messages.html",
+        interaction=interaction,
+        messages=messages_with_labels
+    )
 
 @app.route("/staff/scan-qr/<int:interaction_id>")
 def staff_scan_qr(interaction_id):
