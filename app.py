@@ -4501,8 +4501,8 @@ def finance_dashboard():
 
     net_gross = total_ad_revenue - (total_paid_members + total_paid_businesses + capital_reserves + charitable_contribution_1 + charitable_contribution_2)
 
-    operating_capital = net_gross * 0.60
-    silent_partners = net_gross * 0.30
+    operating_capital = net_gross * 0.45
+    silent_partners = net_gross * 0.45
     legal_services = net_gross * 0.07
     miscellaneous = net_gross * 0.03
 
@@ -4514,12 +4514,11 @@ def finance_dashboard():
 
     # Silent Partners breakdown (with per-partner cap)
     marjorie = min(silent_partners * 0.15, 10000000)
-    tito = min(silent_partners * 0.125, 5000000)
     pedro = min(silent_partners * 0.12, 1000000)
     paul_tara = min(silent_partners * 0.06, 500000)
-    james = min(silent_partners * 0.0425, 350000)
+    james = min(silent_partners * 0.04, 350000)
+    josh = min(silent_partners * 0.035, 300000)
     angel = min(silent_partners * 0.025, 200000)
-    josh = min(silent_partners * 0.0375, 300000)
     diego = min(silent_partners * 0.025, 200000)
     esther = min(silent_partners * 0.025, 200000)
     reyna = min(silent_partners * 0.025, 200000)
@@ -4532,17 +4531,18 @@ def finance_dashboard():
     ana_pepe = min(silent_partners * 0.02, 150000)
     karen = min(silent_partners * 0.02, 150000)
     raul = min(silent_partners * 0.02, 150000)
-    genesis = min(silent_partners * 0.0175, 250000)
-    jen = min(silent_partners * 0.0175, 250000)
-    jj = min(silent_partners * 0.0175, 250000)
-    dominick = min(silent_partners * 0.0175, 250000)
-    alex_m = min(silent_partners * 0.0175, 250000)
-    jose = min(silent_partners * 0.0175, 250000)
-    loida = min(silent_partners * 0.01, 150000)
-    milvia = min(silent_partners * 0.01, 150000)
-    adela = min(silent_partners * 0.01, 150000)
-    shelly = min(silent_partners * 0.01, 150000)
-    nana = min(silent_partners * 0.01, 150000)
+    genesis = min(silent_partners * 0.03, 500000)
+    jen = min(silent_partners * 0.03, 500000)
+    jj = min(silent_partners * 0.03, 500000)
+    dominick = min(silent_partners * 0.03, 500000)
+    alex_m = min(silent_partners * 0.03, 500000)
+    jose = min(silent_partners * 0.03, 500000)
+    tito = min(silent_partners * 0.03, 500000)
+    loida = min(silent_partners * 0.015, 250000)
+    milvia = min(silent_partners * 0.015, 250000)
+    adela = min(silent_partners * 0.015, 250000)
+    shelly = min(silent_partners * 0.015, 250000)
+    nana = min(silent_partners * 0.015, 250000)
 
     summary = dict(
         total_ad_revenue=f"{total_ad_revenue:,.2f}",
