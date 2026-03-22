@@ -86,7 +86,7 @@
     <tbody>
       {% for txn in transactions %}
       <tr>
-        <td><span id="local-receipt-time" data-utc="{{ transaction.date_time.strftime('%Y-%m-%dT%H:%M:%S') }}Z"></td></span>
+        <td><span class="local-receipt-time" data-utc="{{ txn.date_time.strftime('%Y-%m-%dT%H:%M:%S') }}Z"></span></td>
         <td>
           {% if txn.user_referral_id == current_user.referral_code and txn.cash_back > 0 %}
               ${{ "{:,.2f}".format(txn.cash_back) }}
@@ -176,17 +176,16 @@ document.getElementById('filter-form').addEventListener('input', function() {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var elem = document.getElementById('local-receipt-time');
-  if (elem && elem.dataset.utc) {
-    // Parse the UTC time and format for user's locale
-    var utc = elem.dataset.utc;
-    var dt = new Date(utc);
-    if (!isNaN(dt)) {
-      var opts = { year: 'numeric', month: 'short', day: 'numeric',
-                   hour: '2-digit', minute: '2-digit', hour12: true };
-      elem.textContent = dt.toLocaleString(undefined, opts);
+  document.querySelectorAll('.local-receipt-time').forEach(function(elem) {
+    if (elem.dataset.utc) {
+      var dt = new Date(elem.dataset.utc);
+      if (!isNaN(dt)) {
+        var opts = { year: 'numeric', month: 'short', day: 'numeric',
+                     hour: '2-digit', minute: '2-digit', hour12: true };
+        elem.textContent = dt.toLocaleString(undefined, opts);
+      }
     }
-  }
+  });
 });
 </script>
 </body>
