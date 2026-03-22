@@ -309,6 +309,42 @@
       .marquee-content { font-size: 1.1rem; }
       .marquee-container { padding: 0.7rem 0; }
     }
+
+    .how-it-works-section {
+      position: relative;
+      margin: 48px 0 0 0;
+      padding: 0;
+    }
+    .how-it-works-bg {
+      width: 100%;
+      min-height: 220px;
+      max-height: 360px;
+      object-fit: cover;
+      filter: brightness(0.74);
+      border-radius: 15px;
+      display: block;
+    }
+    .how-it-works-btn-outer {
+      position: absolute;
+      left: 0; top: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .how-it-works-btn-inner {
+      background: rgba(255,255,255,0.92);
+      border-radius: 2rem;
+      padding: 1.17rem 2.7rem;
+      box-shadow: 0 3px 24px rgba(40,40,40,0.12);
+      pointer-events: all;
+    }
+    @media (max-width: 575px) {
+      .how-it-works-bg { min-height: 120px; max-height: 150px; }
+      .how-it-works-btn-inner { padding: .7rem 1.15rem; font-size: 1.09em; }
+    }
+
   </style>
 </head>
 <body>
@@ -732,8 +768,20 @@
     </div>
   </main>
 
+        <!-- How It Works section with image and overlay button -->
 
-
+  <div class="how-it-works-section container mt-5 mb-4 px-0">
+    <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1774196020/purchase_ntjk5q.jpg?fit=crop&w=900&q=80"
+         alt="How It Works" class="how-it-works-bg">
+    <div class="how-it-works-btn-outer">
+      <div class="how-it-works-btn-inner">
+        <a href="{{ url_for('how_it_works') }}" class="btn btn-primary btn-xl fs-4 shadow-lg px-4 py-2"
+          style="font-weight:600;">
+          <i class="bi bi-info-circle"></i> How It Works
+        </a>
+      </div>
+    </div>
+  </div>
   <footer>
     <div>
       <div class="mb-2">
