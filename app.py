@@ -3370,10 +3370,13 @@ def active_session(interaction_id):
                 sender_id = current_user.id
             elif is_biz:
                 sender_type = "business"
-                sender_id = session['business_id']
+                # if staff is logged in, store their id; if owner, store business id
+                staff_id = session.get('staff_id')
+                sender_id = staff_id if staff_id else session['business_id']
             else:
                 flash("Invalid sender.")
                 return redirect(url_for('active_session', interaction_id=interaction_id))
+
             msg = Message(
                 interaction_id=interaction.id,
                 sender_type=sender_type,
@@ -3384,7 +3387,7 @@ def active_session(interaction_id):
             )
             db.session.add(msg)
             db.session.commit()
-            return redirect(url_for('active_session', interaction_id=interaction_id))
+            return redirect(url_for('active_session', interaction_id=interaction.id))
 
     # FETCH all messages after handling POSTs
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
@@ -3396,7 +3399,7 @@ def active_session(interaction_id):
         if msg.sender_type == "user":
             label = interaction.user.name or interaction.user.email
         elif msg.sender_type == "business":
-            # owner uses business_id, staff uses their own id as sender_id
+            # owner uses business_id, staff uses their own id
             if msg.sender_id == interaction.business.id:
                 label = interaction.business.business_name
             else:
@@ -5555,8 +5558,8 @@ def staff_active_session(interaction_id):
         if text or file_url:
             msg = Message(
                 interaction_id=interaction.id,
-                sender_type="staff",
-                sender_id=staff_id,
+                sender_type="business",  # <-- make sure this is "business", not "staff"
+                sender_id=staff_id,      # <-- staff's id, not business_id
                 text=text,
                 file_url=file_url,
                 file_name=file_name
@@ -5566,10 +5569,29 @@ def staff_active_session(interaction_id):
             return redirect(url_for('staff_active_session', interaction_id=interaction.id))
 
     messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    # Build labels just like in active_session
+    messages_with_labels = []
+    for msg in messages:
+        label = ""
+        if msg.sender_type == "user":
+            label = interaction.user.name or interaction.user.email
+        elif msg.sender_type == "business":
+            if msg.sender_id == interaction.business.id:
+                label = interaction.business.business_name
+            else:
+                label = f"{interaction.business.business_name} Staff"
+        messages_with_labels.append({
+            "text": msg.text,
+            "timestamp": msg.timestamp,
+            "sender_label": label,
+            "file_url": msg.file_url,
+            "file_name": msg.file_name,
+        })
+
     return render_template("staff_active_session.html",
                            interaction=interaction,
                            staff=staff,
-                           messages=messages)
+                           messages=messages_with_labels)
 
 @app.route("/staff/scan-qr/<int:interaction_id>")
 def staff_scan_qr(interaction_id):
