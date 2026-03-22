@@ -19,9 +19,6 @@
                     <a class="nav-link" href="{{ url_for('login') }}">User Login</a>
                     <a class="nav-link" href="{{ url_for('register') }}">User Register</a>
                     <a class="nav-link active" href="{{ url_for('business_home') }}">Advertise with Us</a>
-                    <a href="{{ url_for('staff_login') }}" class="btn btn-outline-primary mt-2">
-                        Staff Login
-                    </a>
                 </div>
             </div>
         </div>
@@ -42,6 +39,9 @@
                 <a class="btn btn-primary btn-lg me-sm-2 mb-2" href="{{ url_for('business_login') }}">Business Login</a>
                 <a class="btn btn-success btn-lg mb-2" href="{{ url_for('business_register') }}">Register Your Business</a>
             </div>
+            <a href="{{ url_for('staff_login') }}" class="btn btn-outline-primary mt-2">
+                Staff Login
+            </a>
         </div>
         <div>
             <!-- How It Works organizational chart here! -->
