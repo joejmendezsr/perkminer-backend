@@ -349,6 +349,17 @@
         <a href="{{ url_for('user_earnings') }}" class="btn btn-outline-success mb-2">
           <i class="bi bi-graph-up"></i> View My Earnings
         </a>
+        {% if not current_user.stripe_account_id %}
+          <a href="{{ url_for('onboard_stripe') }}" class="btn btn-primary">
+            Set Up Payouts (Bank Transfer)
+          </a>
+        {% endif %}
+        {% if current_user.earnings_balance >= 10 %}
+          <form action="{{ url_for('withdraw') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success">Withdraw to Bank</button>
+          </form>
+        {% endif %}
       </div>
     </div>
   

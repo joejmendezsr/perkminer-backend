@@ -558,6 +558,19 @@
         <a href="{{ url_for('business_earnings') }}" class="btn btn-outline-success mb-2">
           <i class="bi bi-graph-up"></i> View Earnings
         </a>
+        {% if not business.stripe_account_id %}
+          <a href="{{ url_for('onboard_business_stripe') }}" class="btn btn-primary">
+            Set Up Payouts (Bank Transfer)
+          </a>
+        {% endif %}
+        {% if business.earnings_balance >= 10 %}
+          <form action="{{ url_for('business_withdraw') }}" method="POST" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success">
+              Withdraw to Bank
+            </button>
+          </form>
+        {% endif %}
       </div>
     </div>
 

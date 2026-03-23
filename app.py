@@ -931,6 +931,8 @@ from datetime import datetime
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    stripe_account_id = db.Column(db.String(128))
+    earnings_balance = db.Column(db.Numeric(12,2), default=0)
     email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     name = db.Column(db.String(100))
@@ -963,6 +965,7 @@ class Business(db.Model):
     grapesjs_html = db.Column(db.Text)
     grapesjs_css = db.Column(db.Text)
     stripe_account_id = db.Column(db.String(100))
+    earnings_balance = db.Column(db.Numeric(12,2), default=0)
     has_ecommerce_store = db.Column(db.Boolean, default=False)
     listing_type = db.Column(db.String(50))
     category = db.Column(db.String(50), nullable=False, default="Other")
@@ -5816,6 +5819,133 @@ def seed_admins_once():
 @app.route("/how-it-works")
 def how_it_works():
     return render_template("how_it_works.html")
+
+@app.route('/onboard/stripe')
+@login_required
+def onboard_stripe():
+    # Check if user has a Stripe Connect account
+    if not current_user.stripe_account_id:
+        # Create a new Express account
+        account = stripe.Account.create(
+            type="express",
+            email=current_user.email,
+        )
+        current_user.stripe_account_id = account.id
+        db.session.commit()
+    # Create Stripe onboarding link
+    account_link = stripe.AccountLink.create(
+        account=current_user.stripe_account_id,
+        refresh_url=url_for('onboard_stripe', _external=True),
+        return_url=url_for('dashboard', _external=True),  # or any page you want after onboarding
+        type='account_onboarding'
+    )
+    return redirect(account_link.url)
+
+@app.route('/onboard/business/stripe')
+def onboard_business_stripe():
+    # Check business login (adjust logic if you use something else)
+    business_id = session.get('business_id')
+    if not business_id:
+        flash("Please log in as a business.")
+        return redirect(url_for('business_login'))
+
+    business = Business.query.get(business_id)
+    if not business:
+        flash("Business not found.")
+        return redirect(url_for('business_login'))
+
+    # Create Stripe Express account if not already created
+    if not business.stripe_account_id:
+        account = stripe.Account.create(
+            type="express",
+            email=business.email  # or use business's admin email
+        )
+        business.stripe_account_id = account.id
+        db.session.commit()
+
+    # Create onboarding link
+    account_link = stripe.AccountLink.create(
+        account=business.stripe_account_id,
+        refresh_url=url_for('onboard_business_stripe', _external=True),
+        return_url=url_for('business_dashboard', _external=True),  # Or wherever you want to redirect after onboarding
+        type='account_onboarding'
+    )
+    return redirect(account_link.url)
+
+@app.route('/withdraw', methods=['POST'])
+@login_required
+def withdraw():
+    MIN_PAYOUT = 10  # set your own minimum
+    user = current_user
+
+    # Check account and eligibility
+    if not user.stripe_account_id:
+        flash("Please set up your Stripe payouts first.")
+        return redirect(url_for('onboard_stripe'))
+    if user.earnings_balance is None or user.earnings_balance < MIN_PAYOUT:
+        flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
+        return redirect(url_for('dashboard'))
+
+    # Optional: calculate Stripe transfer fee (0.25% capped at $10)
+    fee = min(user.earnings_balance * 0.0025, 10)
+
+    try:
+        # Create the transfer to user's Stripe account
+        transfer = stripe.Transfer.create(
+            amount=int((user.earnings_balance - fee) * 100),  # in cents
+            currency="usd",
+            destination=user.stripe_account_id,
+            description="PerkMiner earnings withdrawal"
+        )
+        # Update user balance
+        user.earnings_balance = 0
+        db.session.commit()
+        flash(f"Withdrawal of ${user.earnings_balance - fee:.2f} initiated! " +
+              f"Stripe transfer fee of ${fee:.2f} deducted.", "success")
+    except Exception as e:
+        flash(f"Failed to withdraw: {e}", "danger")
+
+    return redirect(url_for('dashboard'))
+
+@app.route('/business/withdraw', methods=['POST'])
+def business_withdraw():
+    business_id = session.get('business_id')
+    if not business_id:
+        flash("Please log in as a business.")
+        return redirect(url_for('business_login'))
+
+    business = Business.query.get(business_id)
+    MIN_PAYOUT = 10  # Set your own minimum
+
+    if not business:
+        flash("Business not found.", "danger")
+        return redirect(url_for('business_login'))
+
+    if not business.stripe_account_id:
+        flash("Please set up your Stripe payouts first.", "warning")
+        return redirect(url_for('onboard_business_stripe'))
+
+    if business.earnings_balance is None or business.earnings_balance < MIN_PAYOUT:
+        flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
+        return redirect(url_for('business_dashboard'))
+
+    # Stripe fee: 0.25% of payout, capped at $10
+    fee = min(business.earnings_balance * 0.0025, 10)
+
+    try:
+        transfer = stripe.Transfer.create(
+            amount=int((business.earnings_balance - fee) * 100),  # payout in cents
+            currency='usd',
+            destination=business.stripe_account_id,
+            description='PerkMiner business earnings withdrawal'
+        )
+        business.earnings_balance = 0
+        db.session.commit()
+        flash(f"Withdrawal of ${business.earnings_balance - fee:.2f} initiated! Stripe fee: ${fee:.2f}", "success")
+    except Exception as e:
+        flash(f"Failed to withdraw: {e}", "danger")
+
+    return redirect(url_for('business_dashboard'))
 
 @app.errorhandler(500)
 def internal_server_error(error):
