@@ -2573,7 +2573,7 @@ def dashboard():
     user = current_user
 
     # --- Updated Earnings Calculation (ALWAYS up-to-date!) ---
-    user.grand_total_earnings = calculate_user_grand_total(user.id)
+    user.grand_total_earnings = calculate_user_grand_total(user)
     user.earnings_balance = user.grand_total_earnings - (user.withdrawn_total or Decimal(0))
     db.session.commit()
 
@@ -4219,7 +4219,7 @@ def business_dashboard():
         return redirect(url_for("business_login"))
 
     # ---- Update earnings at every dashboard load ----
-    biz.grand_total_earnings = calculate_business_grand_total(biz.id)
+    biz.grand_total_earnings = calculate_business_grand_total(business)
     biz.earnings_balance = biz.grand_total_earnings - (biz.withdrawn_total or Decimal(0))
     db.session.commit()
 
