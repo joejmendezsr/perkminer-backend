@@ -574,7 +574,7 @@
       </div>
     {% elif business.earnings_balance|float >= 10 %}
       {% set earnings = business.earnings_balance|float %}
-      {% set fee = [earnings * 0.0025, 10]|min %}
+      {% set fee = earnings * 0.0025 + 0.35 %}
       {% set net = earnings - fee %}
       <div class="col-12 col-sm-auto">
         <div class="text-muted mb-1" style="font-size:0.98em;">
