@@ -1236,114 +1236,52 @@ class FinalizedTransaction(db.Model):
     amount = db.Column(db.Float)
 
 def calculate_user_grand_total(user):
-    total = (
-        db.session.query(
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier1_business_user_referral_id == user.referral_code, UserTransaction.tier1_business_user_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier2_business_user_referral_id == user.referral_code, UserTransaction.tier2_business_user_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier3_business_user_referral_id == user.referral_code, UserTransaction.tier3_business_user_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier4_business_user_referral_id == user.referral_code, UserTransaction.tier4_business_user_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (UserTransaction.tier5_business_user_referral_id == user.referral_code, UserTransaction.tier5_business_user_commission),
-                    else_=0
-                )
-            ), 0)
-        )
-    ).scalar()
-    return Decimal(total or 0)
+    ref_code = user.referral_code
+    all_txns = UserTransaction.query.all()
+    total = Decimal(0)
+    for t in all_txns:
+        if t.user_referral_id == ref_code and (t.cash_back or 0) > 0:
+            total += Decimal(t.cash_back or 0)
+        if t.tier2_user_referral_id == ref_code and (t.tier2_commission or 0) > 0:
+            total += Decimal(t.tier2_commission or 0)
+        if t.tier3_user_referral_id == ref_code and (t.tier3_commission or 0) > 0:
+            total += Decimal(t.tier3_commission or 0)
+        if t.tier4_user_referral_id == ref_code and (t.tier4_commission or 0) > 0:
+            total += Decimal(t.tier4_commission or 0)
+        if t.tier5_user_referral_id == ref_code and (t.tier5_commission or 0) > 0:
+            total += Decimal(t.tier5_commission or 0)
+
+        # User-business commissions
+        if t.tier1_business_user_referral_id == ref_code and (t.tier1_business_user_commission or 0) > 0:
+            total += Decimal(t.tier1_business_user_commission or 0)
+        if t.tier2_business_user_referral_id == ref_code and (t.tier2_business_user_commission or 0) > 0:
+            total += Decimal(t.tier2_business_user_commission or 0)
+        if t.tier3_business_user_referral_id == ref_code and (t.tier3_business_user_commission or 0) > 0:
+            total += Decimal(t.tier3_business_user_commission or 0)
+        if t.tier4_business_user_referral_id == ref_code and (t.tier4_business_user_commission or 0) > 0:
+            total += Decimal(t.tier4_business_user_commission or 0)
+        if t.tier5_business_user_referral_id == ref_code and (t.tier5_business_user_commission or 0) > 0:
+            total += Decimal(t.tier5_business_user_commission or 0)
+    return total
 
 def calculate_business_grand_total(business):
-    total = (
-        db.session.query(
-            func.coalesce(func.sum(
-                case(
-                    (BusinessTransaction.business_referral_id == business.referral_code, BusinessTransaction.cash_back),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (BusinessTransaction.tier2_business_referral_id == business.referral_code, BusinessTransaction.tier2_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (BusinessTransaction.tier3_business_referral_id == business.referral_code, BusinessTransaction.tier3_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (BusinessTransaction.tier4_business_referral_id == business.referral_code, BusinessTransaction.tier4_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (BusinessTransaction.tier5_business_referral_id == business.referral_code, BusinessTransaction.tier5_commission),
-                    else_=0
-                )
-            ), 0) +
-            func.coalesce(func.sum(
-                case(
-                    (BusinessTransaction.sponsoree_mutual_referral_id == business.referral_code, BusinessTransaction.sponsoree_mutual_commission),
-                    else_=0
-                )
-            ), 0)
-        )
-    ).scalar()
-    return Decimal(total or 0)
+    ref_code = business.referral_code
+    all_txns = BusinessTransaction.query.all()
+    total = Decimal(0)
+    for t in all_txns:
+        if t.business_referral_id == ref_code and (t.cash_back or 0) > 0:
+            total += Decimal(t.cash_back or 0)
+        if t.tier2_business_referral_id == ref_code and (t.tier2_commission or 0) > 0:
+            total += Decimal(t.tier2_commission or 0)
+        if t.tier3_business_referral_id == ref_code and (t.tier3_commission or 0) > 0:
+            total += Decimal(t.tier3_commission or 0)
+        if t.tier4_business_referral_id == ref_code and (t.tier4_commission or 0) > 0:
+            total += Decimal(t.tier4_commission or 0)
+        if t.tier5_business_referral_id == ref_code and (t.tier5_commission or 0) > 0:
+            total += Decimal(t.tier5_commission or 0)
+        if hasattr(t, "sponsoree_mutual_referral_id") and t.sponsoree_mutual_referral_id == ref_code and (t.sponsoree_mutual_commission or 0) > 0:
+            total += Decimal(t.sponsoree_mutual_commission or 0)
+    return total
 
 # Add others (interaction, message, etc.) as needed here
 
