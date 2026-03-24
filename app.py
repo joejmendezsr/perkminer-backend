@@ -5540,6 +5540,7 @@ def staff_login():
             code = str(random.randint(100000, 999999))
             session['pending_staff_2fa_code'] = code
             session['pending_staff_id'] = staff.id
+            session['pending_staff_email'] = staff.email  # <-- ADD THIS
             send_email(
                 staff.email,
                 "Your PerkMiner Staff Login Code",
@@ -5572,18 +5573,20 @@ def staff_2fa():
 
 @app.route("/staff/resend-code")
 def staff_resend_code():
-    staff_email = session.get("staff_email")  # Or whatever you use to track the staff login in progress
+    staff_email = session.get("pending_staff_email")
     if not staff_email:
         flash("Start the login process first.", "warning")
         return redirect(url_for('staff_login'))
 
-    # (Re-)generate and send your 2FA code here
-    code = generate_2fa_code()  # Your own helper function
-    session['staff_2fa_code'] = code
-    send_staff_2fa_email(staff_email, code)  # Your email logic
-
+    code = str(random.randint(100000, 999999))
+    session['pending_staff_2fa_code'] = code
+    send_email(
+        staff_email,
+        "Your PerkMiner Staff Login Code",
+        f"<p>Your staff login code is: <b>{code}</b></p>"
+    )
     flash("A new login code has been sent to your email.", "success")
-    return redirect(url_for('staff_2fa'))  # Send them back to the 2FA entry page
+    return redirect(url_for('staff_2fa'))
 
 @app.route("/staff/change_password", methods=["GET", "POST"])
 def staff_change_password():
