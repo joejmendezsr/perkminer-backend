@@ -17,7 +17,7 @@ from wtforms.validators import (
     DataRequired, Email, Length, EqualTo, Optional, NumberRange
 )
 from werkzeug.utils import secure_filename
-from sqlalchemy import func
+from sqlalchemy import func, case
 from decimal import Decimal
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
