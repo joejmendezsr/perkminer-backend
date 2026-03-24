@@ -1236,30 +1236,40 @@ class FinalizedTransaction(db.Model):
     amount = db.Column(db.Float)
 
 def calculate_user_grand_total(user_id):
-    result = db.session.query(
-        func.coalesce(func.sum(UserTransaction.cash_back), 0) +
-        func.coalesce(func.sum(UserTransaction.tier2_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier3_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier4_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier5_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier1_business_user_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier2_business_user_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier3_business_user_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier4_business_user_commission), 0) +
-        func.coalesce(func.sum(UserTransaction.tier5_business_user_commission), 0)
-    ).filter(UserTransaction.user_id == user_id).scalar()
-    return Decimal(result or 0)
+    total = (
+        db.session.query(
+            func.coalesce(func.sum(UserTransaction.cash_back), 0) +
+            func.coalesce(func.sum(UserTransaction.tier2_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier3_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier4_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier5_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier1_business_user_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier2_business_user_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier3_business_user_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier4_business_user_commission), 0) +
+            func.coalesce(func.sum(UserTransaction.tier5_business_user_commission), 0)
+        )
+        .join(Interaction, UserTransaction.interaction_id == Interaction.id)
+        .filter(Interaction.user_id == user_id)
+        .scalar()
+    )
+    return Decimal(total or 0)
 
 def calculate_business_grand_total(business_id):
-    result = db.session.query(
-        func.coalesce(func.sum(BusinessTransaction.cash_back), 0) +
-        func.coalesce(func.sum(BusinessTransaction.tier2_commission), 0) +
-        func.coalesce(func.sum(BusinessTransaction.tier3_commission), 0) +
-        func.coalesce(func.sum(BusinessTransaction.tier4_commission), 0) +
-        func.coalesce(func.sum(BusinessTransaction.tier5_commission), 0) +
-        func.coalesce(func.sum(BusinessTransaction.sponsoree_mutual_commission), 0)
-    ).filter(BusinessTransaction.business_id == business_id).scalar()
-    return Decimal(result or 0)
+    total = (
+        db.session.query(
+            func.coalesce(func.sum(BusinessTransaction.cash_back), 0) +
+            func.coalesce(func.sum(BusinessTransaction.tier2_commission), 0) +
+            func.coalesce(func.sum(BusinessTransaction.tier3_commission), 0) +
+            func.coalesce(func.sum(BusinessTransaction.tier4_commission), 0) +
+            func.coalesce(func.sum(BusinessTransaction.tier5_commission), 0) +
+            func.coalesce(func.sum(BusinessTransaction.sponsoree_mutual_commission), 0)
+        )
+        .join(Interaction, BusinessTransaction.interaction_id == Interaction.id)
+        .filter(Interaction.business_id == business_id)
+        .scalar()
+    )
+    return Decimal(total or 0)
 
 # Add others (interaction, message, etc.) as needed here
 
