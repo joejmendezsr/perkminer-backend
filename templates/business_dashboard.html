@@ -578,7 +578,7 @@
       {% set net = earnings - fee %}
       <div class="col-12 col-sm-auto">
         <div class="text-muted mb-1" style="font-size:0.98em;">
-          Stripe transfer fee: ${{ '{:,.2f}'.format(fee) }} (0.25% up to $10)<br>
+          Stripe transfer fee: ${{ '{:,.2f}'.format(fee) }} (0.25% of payout plus $0.35)<br>
           You will receive: <b>${{ '{:,.2f}'.format(net) }}</b>
         </div>
         <form action="{{ url_for('business_withdraw') }}" method="POST" class="d-inline">

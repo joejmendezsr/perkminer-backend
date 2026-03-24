@@ -5950,19 +5950,23 @@ def withdraw():
         flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
         return redirect(url_for('dashboard'))
 
-    # Stripe fee: 0.25% of payout, capped at $10
-    fee = min(user.earnings_balance * Decimal("0.0025"), Decimal("10"))
-    payout_amount = user.earnings_balance - fee
+    balance_to_withdraw = user.earnings_balance
+    fee = balance_to_withdraw * Decimal("0.0025") + Decimal("0.35")
+    payout_amount = balance_to_withdraw - fee
+
+    if payout_amount <= 0:
+        flash("Insufficient balance after the transfer fee is deducted.", "warning")
+        return redirect(url_for('dashboard'))
 
     try:
         transfer = stripe.Transfer.create(
-            amount=int(payout_amount * 100),  # cents
+            amount=int(payout_amount * 100),  # in cents
             currency='usd',
             destination=user.stripe_account_id,
             description="PerkMiner earnings withdrawal"
         )
-        # Update totals after successful transfer!
-        user.withdrawn_total = (user.withdrawn_total or Decimal(0)) + payout_amount
+        # Mark FULL balance as withdrawn (including fee)
+        user.withdrawn_total = (user.withdrawn_total or Decimal(0)) + balance_to_withdraw
         user.earnings_balance = user.grand_total_earnings - user.withdrawn_total
         db.session.commit()
         flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
@@ -5993,18 +5997,23 @@ def business_withdraw():
         flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
         return redirect(url_for('business_dashboard'))
 
-    fee = min(biz.earnings_balance * Decimal("0.0025"), Decimal("10"))
-    payout_amount = biz.earnings_balance - fee
+    balance_to_withdraw = biz.earnings_balance
+    fee = balance_to_withdraw * Decimal("0.0025") + Decimal("0.35")
+    payout_amount = balance_to_withdraw - fee
+
+    if payout_amount <= 0:
+        flash("Insufficient balance after the transfer fee is deducted.", "warning")
+        return redirect(url_for('business_dashboard'))
 
     try:
         transfer = stripe.Transfer.create(
-            amount=int(payout_amount * 100),  # cents
+            amount=int(payout_amount * 100),  # in cents
             currency='usd',
             destination=biz.stripe_account_id,
             description="PerkMiner business earnings withdrawal"
         )
-        # Update totals after successful transfer!
-        biz.withdrawn_total = (biz.withdrawn_total or Decimal(0)) + payout_amount
+        # Mark FULL balance as withdrawn (including fee)
+        biz.withdrawn_total = (biz.withdrawn_total or Decimal(0)) + balance_to_withdraw
         biz.earnings_balance = biz.grand_total_earnings - biz.withdrawn_total
         db.session.commit()
         flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
