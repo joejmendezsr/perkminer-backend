@@ -4232,7 +4232,7 @@ def business_dashboard():
         return redirect(url_for("business_login"))
 
     # ---- Update earnings at every dashboard load ----
-    biz.grand_total_earnings = calculate_business_grand_total(business)
+    biz.grand_total_earnings = calculate_business_grand_total(biz)
     biz.earnings_balance = biz.grand_total_earnings - (biz.withdrawn_total or Decimal(0))
     db.session.commit()
 
