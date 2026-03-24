@@ -5570,6 +5570,21 @@ def staff_2fa():
         flash("Incorrect code. Please try again.")
     return render_template("staff_2fa.html", form=form)
 
+@app.route("/staff/resend-code")
+def staff_resend_code():
+    staff_email = session.get("staff_email")  # Or whatever you use to track the staff login in progress
+    if not staff_email:
+        flash("Start the login process first.", "warning")
+        return redirect(url_for('staff_login'))
+
+    # (Re-)generate and send your 2FA code here
+    code = generate_2fa_code()  # Your own helper function
+    session['staff_2fa_code'] = code
+    send_staff_2fa_email(staff_email, code)  # Your email logic
+
+    flash("A new login code has been sent to your email.", "success")
+    return redirect(url_for('staff_2fa'))  # Send them back to the 2FA entry page
+
 @app.route("/staff/change_password", methods=["GET", "POST"])
 def staff_change_password():
     staff_id = session.get("staff_id")
