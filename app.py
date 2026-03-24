@@ -17,6 +17,7 @@ from wtforms.validators import (
     DataRequired, Email, Length, EqualTo, Optional, NumberRange
 )
 from werkzeug.utils import secure_filename
+from decimal import Decimal
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import os
@@ -5858,7 +5859,7 @@ def onboard_business_stripe():
     if not business.stripe_account_id:
         account = stripe.Account.create(
             type="express",
-            email=business.email  # or use business's admin email
+            email=business.business_email  # or use business's admin email
         )
         business.stripe_account_id = account.id
         db.session.commit()
@@ -5887,7 +5888,7 @@ def withdraw():
         return redirect(url_for('dashboard'))
 
     # Optional: calculate Stripe transfer fee (0.25% capped at $10)
-    fee = min(user.earnings_balance * 0.0025, 10)
+    fee = min(user.earnings_balance * Decimal("0.0025"), Decimal("10"))
 
     try:
         # Create the transfer to user's Stripe account
@@ -5930,7 +5931,7 @@ def business_withdraw():
         return redirect(url_for('business_dashboard'))
 
     # Stripe fee: 0.25% of payout, capped at $10
-    fee = min(business.earnings_balance * 0.0025, 10)
+    fee = min(user.earnings_balance * Decimal("0.0025"), Decimal("10"))
 
     try:
         transfer = stripe.Transfer.create(
