@@ -6022,6 +6022,38 @@ def business_withdraw():
 
     return redirect(url_for('business_dashboard'))
 
+@app.route('/stripe/update-info')
+@login_required
+def stripe_update_info():
+    if not current_user.stripe_account_id:
+        flash("You haven't set up payouts yet.", "warning")
+        return redirect(url_for('onboard_stripe'))
+    account_link = stripe.AccountLink.create(
+        account=current_user.stripe_account_id,
+        refresh_url=url_for('stripe_update_info', _external=True),
+        return_url=url_for('dashboard', _external=True),
+        type='account_onboarding'  # Use onboarding; works for updates too!
+    )
+    return redirect(account_link.url)
+
+@app.route('/business/stripe/update-info')
+def business_stripe_update_info():
+    biz_id = session.get('business_id')
+    if not biz_id:
+        flash("Please log in as a business.")
+        return redirect(url_for('business_login'))
+    business = Business.query.get(biz_id)
+    if not business or not business.stripe_account_id:
+        flash("Business payouts not set up yet.", "warning")
+        return redirect(url_for('onboard_business_stripe'))
+    account_link = stripe.AccountLink.create(
+        account=business.stripe_account_id,
+        refresh_url=url_for('business_stripe_update_info', _external=True),
+        return_url=url_for('business_dashboard', _external=True),
+        type='account_onboarding'
+    )
+    return redirect(account_link.url)
+
 @app.errorhandler(500)
 def internal_server_error(error):
     # Log the full error + traceback for debugging

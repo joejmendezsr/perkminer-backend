@@ -572,22 +572,29 @@
           Set Up Payouts (Bank Transfer)
         </a>
       </div>
-    {% elif business.earnings_balance|float >= 10 %}
-      {% set earnings = business.earnings_balance|float %}
-      {% set fee = earnings * 0.0025 + 0.35 %}
-      {% set net = earnings - fee %}
+    {% else %}
       <div class="col-12 col-sm-auto">
-        <div class="text-muted mb-1" style="font-size:0.98em;">
-          Stripe transfer fee: ${{ '{:,.2f}'.format(fee) }} (0.25% of payout plus $0.35)<br>
-          You will receive: <b>${{ '{:,.2f}'.format(net) }}</b>
-        </div>
-        <form action="{{ url_for('business_withdraw') }}" method="POST" class="d-inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-success w-100">
-            Withdraw to Bank
-          </button>
-        </form>
+        <a href="{{ url_for('business_stripe_update_info') }}" class="btn btn-outline-primary w-100">
+          Update Payout/Banking Info
+        </a>
       </div>
+      {% set earnings = business.earnings_balance|float %}
+      {% if earnings >= 10 %}
+        {% set fee = earnings * 0.0025 + 0.35 %}
+        {% set net = earnings - fee %}
+        <div class="col-12 col-sm-auto">
+          <div class="text-muted mb-1" style="font-size:0.98em;">
+            Stripe transfer fee: ${{ '{:,.2f}'.format(fee) }} (0.25% + $0.35 per payout)<br>
+            You will receive: <b>${{ '{:,.2f}'.format(net) }}</b>
+          </div>
+          <form action="{{ url_for('business_withdraw') }}" method="POST" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success w-100">
+              Withdraw to Bank
+            </button>
+          </form>
+        </div>
+      {% endif %}
     {% endif %}
   </div>
 </div>
