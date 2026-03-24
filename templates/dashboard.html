@@ -343,26 +343,44 @@
     </div>
   </div>
     <div class="card p-4 mb-4">
-    <h4>Your Activity</h4>
-      <div>
-        <a href="{{ url_for('user_receipts') }}" class="btn btn-outline-secondary mb-2">View Receipts</a>
-        <a href="{{ url_for('user_earnings') }}" class="btn btn-outline-success mb-2">
-          <i class="bi bi-graph-up"></i> View My Earnings
+<h4>Your Activity</h4>
+<div class="mb-3">
+  <div class="mb-2">
+    <a href="{{ url_for('user_receipts') }}" class="btn btn-outline-secondary me-2 mb-2">View Receipts</a>
+    <a href="{{ url_for('user_earnings') }}" class="btn btn-outline-success mb-2">
+      <i class="bi bi-graph-up"></i> View My Earnings
+    </a>
+  </div>
+  <div class="mb-2 fs-5 fw-semibold text-primary">
+    Earnings Balance: ${{ "{:,.2f}".format(current_user.earnings_balance or 0) }}
+  </div>
+  <div class="row g-2 flex-wrap">
+    {% if not current_user.stripe_account_id %}
+      <div class="col-12 col-sm-auto">
+        <a href="{{ url_for('onboard_stripe') }}" class="btn btn-primary w-100">
+          Set Up Payouts (Bank Transfer)
         </a>
-        {% if not current_user.stripe_account_id %}
-          <a href="{{ url_for('onboard_stripe') }}" class="btn btn-primary">
-            Set Up Payouts (Bank Transfer)
-          </a>
-        {% endif %}
-        {% if current_user.earnings_balance >= 10 %}
-          <form action="{{ url_for('withdraw') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-success">Withdraw to Bank</button>
-          </form>
-        {% endif %}
       </div>
-    </div>
-  
+    {% endif %}
+    {% if current_user.earnings_balance >= 10 %}
+      {% set fee = [current_user.earnings_balance * 0.0025, 10]|min %}
+      {% set net = current_user.earnings_balance - fee %}
+      <div class="col-12 col-sm-auto">
+        <div class="text-muted mb-1" style="font-size:0.98em;">
+          Stripe transfer fee: ${{ '{:,.2f}'.format(fee) }} (0.25% up to $10)<br>
+          You will receive: <b>${{ '{:,.2f}'.format(net) }}</b>
+        </div>
+        <form action="{{ url_for('withdraw') }}" method="POST" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-success w-100">
+            Withdraw to Bank
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
 <div class="card p-4 mb-4">
   <h4>Estimate Your Rewards From One Single Purchase</h4>
   <div class="row g-3 mb-3">

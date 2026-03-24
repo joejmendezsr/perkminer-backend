@@ -17,6 +17,7 @@ from wtforms.validators import (
     DataRequired, Email, Length, EqualTo, Optional, NumberRange
 )
 from werkzeug.utils import secure_filename
+from sqlalchemy import func
 from decimal import Decimal
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -934,6 +935,8 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     stripe_account_id = db.Column(db.String(128))
     earnings_balance = db.Column(db.Numeric(12,2), default=0)
+    grand_total_earnings = db.Column(db.Numeric(12,2), default=0)
+    withdrawn_total = db.Column(db.Numeric(12,2), default=0)
     email = db.Column(db.String(200), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     name = db.Column(db.String(100))
@@ -967,6 +970,8 @@ class Business(db.Model):
     grapesjs_css = db.Column(db.Text)
     stripe_account_id = db.Column(db.String(100))
     earnings_balance = db.Column(db.Numeric(12,2), default=0)
+    grand_total_earnings = db.Column(db.Numeric(12,2), default=0)
+    withdrawn_total = db.Column(db.Numeric(12,2), default=0)
     has_ecommerce_store = db.Column(db.Boolean, default=False)
     listing_type = db.Column(db.String(50))
     category = db.Column(db.String(50), nullable=False, default="Other")
@@ -1229,6 +1234,32 @@ class FinalizedTransaction(db.Model):
     source = db.Column(db.String(20)) # "barcode" or "message"
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     amount = db.Column(db.Float)
+
+def calculate_user_grand_total(user_id):
+    result = db.session.query(
+        func.coalesce(func.sum(UserTransaction.cash_back), 0) +
+        func.coalesce(func.sum(UserTransaction.tier2_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier3_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier4_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier5_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier1_business_user_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier2_business_user_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier3_business_user_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier4_business_user_commission), 0) +
+        func.coalesce(func.sum(UserTransaction.tier5_business_user_commission), 0)
+    ).filter(UserTransaction.user_id == user_id).scalar()
+    return Decimal(result or 0)
+
+def calculate_business_grand_total(business_id):
+    result = db.session.query(
+        func.coalesce(func.sum(BusinessTransaction.cash_back), 0) +
+        func.coalesce(func.sum(BusinessTransaction.tier2_commission), 0) +
+        func.coalesce(func.sum(BusinessTransaction.tier3_commission), 0) +
+        func.coalesce(func.sum(BusinessTransaction.tier4_commission), 0) +
+        func.coalesce(func.sum(BusinessTransaction.tier5_commission), 0) +
+        func.coalesce(func.sum(BusinessTransaction.sponsoree_mutual_commission), 0)
+    ).filter(BusinessTransaction.business_id == business_id).scalar()
+    return Decimal(result or 0)
 
 # Add others (interaction, message, etc.) as needed here
 
@@ -2468,8 +2499,14 @@ def dashboard():
     form = RewardForm(request.form)
     profile_form = UserProfileForm()
     invite_form = InviteForm()
+    user = current_user
+
+    # --- Updated Earnings Calculation (ALWAYS up-to-date!) ---
+    user.grand_total_earnings = calculate_user_grand_total(user.id)
+    user.earnings_balance = user.grand_total_earnings - (user.withdrawn_total or Decimal(0))
+    db.session.commit()
+
     if request.method == "POST" and profile_form.submit.data and profile_form.validate():
-        user = current_user
         updated = False
         if profile_form.name.data and profile_form.name.data != user.name:
             user.name = profile_form.name.data
@@ -4109,6 +4146,11 @@ def business_dashboard():
     if not biz or not biz.email_confirmed:
         flash("Please log in and confirm your business email to access the dashboard.")
         return redirect(url_for("business_login"))
+
+    # ---- Update earnings at every dashboard load ----
+    biz.grand_total_earnings = calculate_business_grand_total(biz.id)
+    biz.earnings_balance = biz.grand_total_earnings - (biz.withdrawn_total or Decimal(0))
+    db.session.commit()
 
     if request.args.get("fund_success") == "1":
         flash("Funds added to your account!", "success")
@@ -5876,10 +5918,9 @@ def onboard_business_stripe():
 @app.route('/withdraw', methods=['POST'])
 @login_required
 def withdraw():
-    MIN_PAYOUT = 10  # set your own minimum
+    MIN_PAYOUT = Decimal("10")
     user = current_user
 
-    # Check account and eligibility
     if not user.stripe_account_id:
         flash("Please set up your Stripe payouts first.")
         return redirect(url_for('onboard_stripe'))
@@ -5887,22 +5928,22 @@ def withdraw():
         flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
         return redirect(url_for('dashboard'))
 
-    # Optional: calculate Stripe transfer fee (0.25% capped at $10)
+    # Stripe fee: 0.25% of payout, capped at $10
     fee = min(user.earnings_balance * Decimal("0.0025"), Decimal("10"))
+    payout_amount = user.earnings_balance - fee
 
     try:
-        # Create the transfer to user's Stripe account
         transfer = stripe.Transfer.create(
-            amount=int((user.earnings_balance - fee) * 100),  # in cents
-            currency="usd",
+            amount=int(payout_amount * 100),  # cents
+            currency='usd',
             destination=user.stripe_account_id,
             description="PerkMiner earnings withdrawal"
         )
-        # Update user balance
-        user.earnings_balance = 0
+        # Update totals after successful transfer!
+        user.withdrawn_total = (user.withdrawn_total or Decimal(0)) + payout_amount
+        user.earnings_balance = user.grand_total_earnings - user.withdrawn_total
         db.session.commit()
-        flash(f"Withdrawal of ${user.earnings_balance - fee:.2f} initiated! " +
-              f"Stripe transfer fee of ${fee:.2f} deducted.", "success")
+        flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Failed to withdraw: {e}", "danger")
 
@@ -5915,34 +5956,36 @@ def business_withdraw():
         flash("Please log in as a business.")
         return redirect(url_for('business_login'))
 
-    business = Business.query.get(business_id)
-    MIN_PAYOUT = 10  # Set your own minimum
+    biz = Business.query.get(business_id)
+    MIN_PAYOUT = Decimal("10")
 
-    if not business:
+    if not biz:
         flash("Business not found.", "danger")
         return redirect(url_for('business_login'))
 
-    if not business.stripe_account_id:
+    if not biz.stripe_account_id:
         flash("Please set up your Stripe payouts first.", "warning")
         return redirect(url_for('onboard_business_stripe'))
 
-    if business.earnings_balance is None or business.earnings_balance < MIN_PAYOUT:
+    if biz.earnings_balance is None or biz.earnings_balance < MIN_PAYOUT:
         flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
         return redirect(url_for('business_dashboard'))
 
-    # Stripe fee: 0.25% of payout, capped at $10
-    fee = min(user.earnings_balance * Decimal("0.0025"), Decimal("10"))
+    fee = min(biz.earnings_balance * Decimal("0.0025"), Decimal("10"))
+    payout_amount = biz.earnings_balance - fee
 
     try:
         transfer = stripe.Transfer.create(
-            amount=int((business.earnings_balance - fee) * 100),  # payout in cents
+            amount=int(payout_amount * 100),  # cents
             currency='usd',
-            destination=business.stripe_account_id,
-            description='PerkMiner business earnings withdrawal'
+            destination=biz.stripe_account_id,
+            description="PerkMiner business earnings withdrawal"
         )
-        business.earnings_balance = 0
+        # Update totals after successful transfer!
+        biz.withdrawn_total = (biz.withdrawn_total or Decimal(0)) + payout_amount
+        biz.earnings_balance = biz.grand_total_earnings - biz.withdrawn_total
         db.session.commit()
-        flash(f"Withdrawal of ${business.earnings_balance - fee:.2f} initiated! Stripe fee: ${fee:.2f}", "success")
+        flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Failed to withdraw: {e}", "danger")
 
