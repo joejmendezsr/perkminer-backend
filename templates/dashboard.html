@@ -361,9 +361,8 @@
           Set Up Payouts (Bank Transfer)
         </a>
       </div>
-    {% endif %}
-    {% set earnings = current_user.earnings_balance|float %}
-    {% if earnings >= 10 %}
+    {% elif current_user.earnings_balance|float >= 10 %}
+      {% set earnings = current_user.earnings_balance|float %}
       {% set fee = [earnings * 0.0025, 10]|min %}
       {% set net = earnings - fee %}
       <div class="col-12 col-sm-auto">
