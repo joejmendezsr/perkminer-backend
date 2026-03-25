@@ -21,6 +21,7 @@ from sqlalchemy import func, case
 from decimal import Decimal
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from flask import render_template_string
 import os
 import stripe
 import logging
@@ -1370,28 +1371,35 @@ def store_payment_success():
 @app.route('/store_builder', methods=['GET', 'POST'])
 @business_login_required
 def store_builder():
-    import json  # Optional if already at the top
+    import json
 
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
     themes = Theme.query.all()
 
     if request.method == 'POST':
-        # Save content for all pages on POST
-        biz.grapesjs_html = request.form.get('home_html', '') or ''
-        biz.grapesjs_css = request.form.get('home_css', '') or ''
-        biz.products_html = request.form.get('products_html', '') or ''
-        biz.products_css = request.form.get('products_css', '') or ''
-        biz.contact_html = request.form.get('contact_html', '') or ''
-        biz.contact_css = request.form.get('contact_css', '') or ''
-        biz.grapesjs_js = request.form.get('home_js', '') or ''
-        biz.products_js = request.form.get('products_js', '') or ''
-        biz.contact_js = request.form.get('contact_js', '') or ''
+        # CSRF protection (if using Flask-WTF, you could also use FlaskForm for the builder form)
+        csrf_token_form = request.form.get('csrf_token')
+        csrf_token_real = session.get('_csrf_token')
+        if csrf_token_form != csrf_token_real:
+            flash("Invalid CSRF token. Please reload the page and try again.", "danger")
+            return redirect(url_for('store_builder'))
+
+        # Save content for all builder pages on POST
+        biz.grapesjs_html    = request.form.get('home_html', '') or ''
+        biz.grapesjs_css     = request.form.get('home_css', '') or ''
+        biz.grapesjs_js      = request.form.get('home_js', '') or ''
+        biz.products_html    = request.form.get('products_html', '') or ''
+        biz.products_css     = request.form.get('products_css', '') or ''
+        biz.products_js      = request.form.get('products_js', '') or ''
+        biz.contact_html     = request.form.get('contact_html', '') or ''
+        biz.contact_css      = request.form.get('contact_css', '') or ''
+        biz.contact_js       = request.form.get('contact_js', '') or ''
         db.session.commit()
         flash("All pages saved!", "success")
         return redirect(url_for('store_builder'))
 
-    # Prepare current saved page data for this business
+    # Prepare current saved page data for this business for builder reloading
     saved_pages = {
         "home": {
             "html": biz.grapesjs_html or "",
@@ -1410,7 +1418,7 @@ def store_builder():
         }
     }
 
-    # Starter maps for current themes (optional, used elsewhere)
+    # Theme starter maps (for builder theme switching)
     theme_html_map = {str(theme.id): theme.starter_html or "" for theme in themes}
     theme_css_map = {str(theme.id): theme.homepage_css or "" for theme in themes}
     theme_js_map = {str(theme.id): theme.homepage_js or "" for theme in themes}
@@ -1421,7 +1429,7 @@ def store_builder():
     theme_contact_css_map = {str(theme.id): theme.contact_css or "" for theme in themes}
     theme_contact_js_map = {str(theme.id): theme.contact_js or "" for theme in themes}
 
-    # All preview fields for themes
+    # Preview values for theme gallery/quick preview
     preview_themes = {
         str(theme.id): {
             "home": theme.preview_home or "",
@@ -1436,6 +1444,16 @@ def store_builder():
         }
         for theme in themes
     }
+
+    # Generate a CSRF token for use in your builder form (if not using FlaskForm for the page)
+    def generate_csrf_token():
+        import secrets
+        token = secrets.token_hex(18)
+        session['_csrf_token'] = token
+        return token
+
+    if '_csrf_token' not in session:
+        generate_csrf_token()
 
     return render_template(
         'store_builder.html',
@@ -1452,6 +1470,7 @@ def store_builder():
         theme_contact_css_map=json.dumps(theme_contact_css_map),
         theme_contact_js_map=json.dumps(theme_contact_js_map),
         preview_themes=json.dumps(preview_themes),
+        csrf_token=session['_csrf_token'],
     )
 
 @app.route('/save_homepage', methods=['POST'])
@@ -1468,14 +1487,31 @@ def save_homepage():
         return jsonify({'success': True}), 200
     return jsonify({'success': False, 'error': 'Business not found'}), 404
 
+from flask import render_template_string
+
 @app.route('/stores/<store_slug>')
 def public_storefront(store_slug):
-    biz = Business.query.filter_by(store_slug=store_slug, has_ecommerce_store=True, website_approved=True).first()
+    biz = Business.query.filter_by(
+        store_slug=store_slug,
+        has_ecommerce_store=True,
+        website_approved=True
+    ).first()
     if not biz or not biz.grapesjs_html:
         return render_template('storefront_coming_soon.html', business=biz), 404
-    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
+
     products = Product.query.filter_by(business_id=biz.id).all()
-    return render_template('public_storefront.html', business=biz, theme=theme, products=products)
+    rendered_html = render_template_string(
+        biz.grapesjs_html or "",
+        business=biz,
+        products=products,
+        cart_count=get_cart_count(biz.id)  # define this function if you want live cart badge!
+    )
+    return render_template(
+        'public_storefront.html',
+        business=biz,
+        products=products,
+        builder_html=rendered_html
+    )
 
 @app.route('/stores/<store_slug>/products')
 def public_store_products(store_slug):
@@ -1484,29 +1520,46 @@ def public_store_products(store_slug):
         has_ecommerce_store=True,
         website_approved=True
     ).first()
-    if not biz:
+    if not biz or not biz.products_html:
         return render_template('storefront_coming_soon.html', business=biz), 404
+
     products = Product.query.filter_by(business_id=biz.id).all()
-    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
-    # Reuse your products section template
+    # Render the products HTML with real data
+    rendered_products_html = render_template_string(
+        biz.products_html,
+        business=biz,
+        products=products,
+        cart_count=get_cart_count(biz.id) if "get_cart_count" in globals() else 0  # define get_cart_count if needed
+    )
+
     return render_template(
-        'store_products_public.html',  # <- create this for products-only view
-        business=biz, theme=theme, products=products
+        'store_products_public.html',
+        business=biz,
+        products=products,
+        builder_html=rendered_products_html
     )
 
 @app.route('/stores/<store_slug>/contact')
 def public_store_contact(store_slug):
     biz = Business.query.filter_by(
-        store_slug=store_slug,
-        has_ecommerce_store=True,
+        store_slug=store_slug, 
+        has_ecommerce_store=True, 
         website_approved=True
     ).first()
-    if not biz:
+    if not biz or not biz.contact_html:
         return render_template('storefront_coming_soon.html', business=biz), 404
-    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
-    contact_html = biz.contact_html if biz.contact_html else (theme.contact_html if theme else "<p>Contact page coming soon.</p>")
-    return render_template('public_store_contact.html',
-        business=biz, theme=theme, contact_html=contact_html)
+
+    # Render contact HTML with dynamic context
+    rendered_contact_html = render_template_string(
+        biz.contact_html,
+        business=biz
+    )
+
+    return render_template(
+        'public_store_contact.html',
+        business=biz,
+        contact_html=rendered_contact_html
+    )
 
 @app.route('/stores/<store_slug>/checkout', methods=['GET', 'POST'])
 def public_store_checkout(store_slug):
