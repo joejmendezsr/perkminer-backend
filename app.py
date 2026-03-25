@@ -1326,15 +1326,27 @@ def store_payment():
         flash("There was a problem redirecting to payment. Please try again or contact support.", "danger")
         return redirect(url_for("store_terms"))
 
-@app.route('/store_admin')
+@app.route('/store_admin', methods=['GET', 'POST'])
 @business_login_required
 def store_admin():
     biz_id = session.get('business_id')
     biz = Business.query.get(biz_id)
-    if not biz:
-        flash("Business not found or not logged in!", "danger")
-        return redirect(url_for("business_login"))
-    # You can add queries for products, orders, etc. as you build them.
+    if request.method == 'POST':
+        slug = request.form.get('store_slug', '').lower().strip()
+        # Basic slug validation
+        if not slug or not re.match(r'^[a-z0-9-]{3,60}$', slug):
+            flash("Please use only lowercase letters, numbers, or dashes for your store URL.", "danger")
+            return redirect(url_for('store_admin'))
+        # Check uniqueness
+        exists = Business.query.filter(func.lower(Business.store_slug) == slug, Business.id != biz.id).first()
+        if exists:
+            flash("Sorry, that store URL is already taken. Please choose another.", "danger")
+        else:
+            biz.store_slug = slug
+            db.session.commit()
+            flash("Your store URL was saved!", "success")
+            return redirect(url_for('store_admin'))
+    # ...existing context...
     return render_template('store_admin.html', business=biz)
 
 @app.route('/store_payment_success')
@@ -1458,16 +1470,84 @@ def save_homepage():
 
 @app.route('/stores/<store_slug>')
 def public_storefront(store_slug):
-    biz = Business.query.filter_by(
-        store_slug=store_slug,
-        has_ecommerce_store=True,
-        website_approved=True  # Only show if approved!
-    ).first()
+    biz = Business.query.filter_by(store_slug=store_slug, has_ecommerce_store=True, website_approved=True).first()
     if not biz or not biz.grapesjs_html:
         return render_template('storefront_coming_soon.html', business=biz), 404
     theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
     products = Product.query.filter_by(business_id=biz.id).all()
     return render_template('public_storefront.html', business=biz, theme=theme, products=products)
+
+@app.route('/stores/<store_slug>/products')
+def public_store_products(store_slug):
+    biz = Business.query.filter_by(
+        store_slug=store_slug,
+        has_ecommerce_store=True,
+        website_approved=True
+    ).first()
+    if not biz:
+        return render_template('storefront_coming_soon.html', business=biz), 404
+    products = Product.query.filter_by(business_id=biz.id).all()
+    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
+    # Reuse your products section template
+    return render_template(
+        'store_products_public.html',  # <- create this for products-only view
+        business=biz, theme=theme, products=products
+    )
+
+@app.route('/stores/<store_slug>/contact')
+def public_store_contact(store_slug):
+    biz = Business.query.filter_by(
+        store_slug=store_slug,
+        has_ecommerce_store=True,
+        website_approved=True
+    ).first()
+    if not biz:
+        return render_template('storefront_coming_soon.html', business=biz), 404
+    theme = Theme.query.get(biz.theme_id) if biz.theme_id else None
+    contact_html = biz.contact_html if biz.contact_html else (theme.contact_html if theme else "<p>Contact page coming soon.</p>")
+    return render_template('public_store_contact.html',
+        business=biz, theme=theme, contact_html=contact_html)
+
+@app.route('/stores/<store_slug>/checkout', methods=['GET', 'POST'])
+def public_store_checkout(store_slug):
+    biz = Business.query.filter_by(
+        store_slug=store_slug,
+        has_ecommerce_store=True,
+        website_approved=True
+    ).first()
+    if not biz:
+        return render_template('storefront_coming_soon.html', business=biz), 404
+    # Filter cart and products for this biz as in your view_cart logic.
+    # (You may want to adjust or clone your existing checkout.html template.)
+    # Example:
+    cart = get_cart()
+    product_ids = [int(pid) for pid in cart.keys()]
+    products = Product.query.filter(Product.id.in_(product_ids), Product.business_id==biz.id).all()
+    cart_items = []
+    total = 0
+    for p in products:
+        qty = cart[str(p.id)]
+        line_total = qty * p.price
+        total += line_total
+        cart_items.append({"product": p, "quantity": qty, "line_total": line_total})
+    # ... Insert coupon logic, grand_total, form, Stripe, etc.
+    # If POST, process payment as in your global checkout, but only for products for this business.
+    return render_template('store_checkout.html', business=biz,
+        cart_items=cart_items, total=total, # add more as needed
+    )
+
+@app.route('/stores/<store_slug>/thank_you')
+def public_store_thank_you(store_slug):
+    biz = Business.query.filter_by(store_slug=store_slug).first()
+    return render_template('store_thank_you.html', business=biz)
+
+@app.route('/stores/<store_slug>/cart')
+def public_store_cart(store_slug):
+    biz = Business.query.filter_by(store_slug=store_slug).first()
+    # Filter cart for this business as in /view_cart
+    # Render as normal using store/branded template if needed
+    # ...
+    return render_template('store_cart.html', business=biz, # ... )
 
 @app.route('/public_store/<int:biz_id>')
 def public_store(biz_id):

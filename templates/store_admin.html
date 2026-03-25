@@ -35,6 +35,24 @@
           <div class="small text-muted">Pick a theme and build your homepage visually.</div>
         </div>
       </div>
+
+<form method="POST" class="mb-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label for="store_slug" class="form-label">Choose Your Store URL</label>
+    <div class="input-group">
+      <span class="input-group-text">{{ your_base_url or "https://perkminer.com/stores/" }}</span>
+      <input type="text" name="store_slug" id="store_slug" class="form-control" required
+        pattern="[a-z0-9-]{3,60}" maxlength="60"
+        placeholder="your-unique-store" value="{{ business.store_slug or '' }}">
+    </div>
+    <div class="form-text">
+      Your store’s public URL will be: <b>https://perkminer.com/stores/&lt;your-slug&gt;</b> (letters, numbers, dashes only)
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Save Store URL</button>
+</form>
+
       <!-- Product Management -->
       <div class="col-md-6 col-lg-4">
         <div class="dash-section-card">
