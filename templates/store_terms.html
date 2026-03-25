@@ -80,16 +80,16 @@
       <div id="theme-preview-container" class="mt-3"></div>
     </div>
 
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" id="agree_checkbox" name="agree_checkbox" required>
-      <label class="form-check-label" for="agree_checkbox">
-        I agree to the Terms and Subscription Fee
-      </label>
-    </div>
-    <button type="submit" class="btn btn-primary w-100 sticky-bottom-btn" id="agree_btn" disabled>
-      Agree & Continue to Payment
-    </button>
-  </form>
+<div class="form-check mb-3">
+  <input class="form-check-input" type="checkbox" id="agree_checkbox" name="agree_checkbox" required>
+  <label class="form-check-label" for="agree_checkbox">
+    I agree to the Terms and Subscription Fee
+  </label>
+</div>
+<button type="submit" class="btn btn-primary w-100 sticky-bottom-btn" id="agree_btn">
+  Agree & Continue to Payment
+</button>
+</form>
 </div>
 
 <script>
@@ -125,14 +125,16 @@
 
   // Sticky agree button and enable logic
   document.addEventListener('DOMContentLoaded', function() {
-    const agreeCheck = document.getElementById('agree_checkbox');
-    const agreeBtn = document.getElementById('agree_btn');
-    const enableBtn = () => { agreeBtn.disabled = !agreeCheck.checked; };
-    agreeCheck.addEventListener('change', enableBtn);
-    enableBtn();
-    // Show preview if loaded with a theme already selected
+    const check = document.getElementById('agree_checkbox');
+    const btn = document.getElementById('agree_btn');
+    btn.disabled = !check.checked;
+    check.addEventListener('change', function() {
+      btn.disabled = !check.checked;
+    });
+    // Optionally, show preview if loaded with a theme
     if(document.getElementById('theme_type').value) showThemePreview();
   });
 </script>
+
 </body>
 </html>
