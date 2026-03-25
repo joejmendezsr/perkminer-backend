@@ -1547,7 +1547,7 @@ def public_store_cart(store_slug):
     # Filter cart for this business as in /view_cart
     # Render as normal using store/branded template if needed
     # ...
-    return render_template('store_cart.html', business=biz, # ... )
+    return render_template('store_cart.html', business=biz)
 
 @app.route('/public_store/<int:biz_id>')
 def public_store(biz_id):
