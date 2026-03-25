@@ -1002,18 +1002,6 @@ def issue_store_sale_rewards(business, amount, buyer_email=None):
 
     db.session.commit()
 
-if business.business_email and product:
-    try:
-        send_order_alert(
-            business.business_email,
-            product.name if product else "Multiple Products",
-            amount,
-            buyer_email=buyer_email
-        )
-    except Exception as e:
-        import logging
-        logging.error(f"Order email failed: {e}")
-
 if buyer_email and product:
     try:
         send_customer_receipt(
@@ -2215,13 +2203,13 @@ def stripe_webhook():
         business = Business.query.get(business_id)
         if business and business.has_ecommerce_store:
             try:
-                # 1. Issue rewards and commissions for this store sale
+                # Rewards/cashback/commissions
                 issue_store_sale_rewards(business, amount, buyer_email=buyer_email)
             except Exception as e:
                 import logging
                 logging.error(f"[REWARD HOOK FAIL] {e}")
 
-            # 2. Record order(s) and adjust stock
+            # CREATE ORDERS: Cart or single-product
             products = []
             if 'cart_items' in metadata and metadata['cart_items']:
                 product_ids = [int(pid) for pid in metadata['cart_items'].split(',') if pid]
@@ -2232,10 +2220,19 @@ def stripe_webhook():
                     products = [product]
 
             for product in products:
-                qty = 1  # Extend to cart quantity logic if you store per-product qty
-                # Adjust stock if tracked
+                qty = 1  # Adjust if you store per-product qty in cart/order metadata!
+                # Reduce stock if tracked
                 if product.stock is not None:
                     product.stock = max(0, product.stock - qty)
+                # DIGITAL FULFILLMENT: Assign a download token if digital
+                fulfillment_token = None
+                download_url = None
+                is_digital = getattr(product, "is_digital", False)  # Add/adjust is_digital as you wish
+
+                if is_digital:
+                    fulfillment_token = secrets.token_urlsafe(32)
+                    download_url = url_for('download_product', order_token=fulfillment_token, _external=True)
+                
                 order = Order(
                     business_id=business.id,
                     product_id=product.id,
@@ -2243,11 +2240,12 @@ def stripe_webhook():
                     amount=product.price * qty,
                     stripe_checkout_id=session_obj.get('id'),
                     timestamp=datetime.utcnow(),
-                    status="paid"
+                    status="paid",
+                    fulfillment_token=fulfillment_token
                 )
                 db.session.add(order)
 
-                # 3. Send notification to business (per product for now)
+                # BUSINESS NOTIFICATION EMAIL
                 try:
                     send_order_alert(
                         business.business_email,
@@ -2259,21 +2257,20 @@ def stripe_webhook():
                     import logging
                     logging.error(f"Order email failed: {e}")
 
-                # 4. Send receipt to customer
+                # CUSTOMER RECEIPT AND DIGITAL DELIVERY EMAIL
                 try:
                     send_customer_receipt(
                         buyer_email,
                         product.name,
                         product.price * qty,
-                        business.business_name
+                        business.business_name,
+                        download_url=download_url
                     )
                 except Exception as e:
                     import logging
                     logging.error(f"Customer receipt email failed: {e}")
 
             db.session.commit()
-
-    # Add more Stripe event logic as needed here...
 
     return '', 200
 
