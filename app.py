@@ -88,25 +88,25 @@ def send_order_alert(business_email, product_name, amount, buyer_email=None):
         import logging
         logging.error("Order email failed: %s", e)
 
-def send_customer_receipt(buyer_email, product_name, amount, business_name):
-    if not buyer_email:
-        return
+def send_customer_receipt(buyer_email, product_name, amount, business_name, download_url=None):
+    html = (
+        f"<h3>Order Confirmation from {business_name}</h3>"
+        f"<p>Thank you for your order!</p>"
+        f"<b>Product:</b> {product_name}<br>"
+        f"<b>Amount Paid:</b> ${amount:.2f}<br>"
+    )
+    if download_url:
+        html += f'<p>Your download is ready: <a href="{download_url}">Download here</a></p>'
+    html += "<p>If you have any questions, please contact the business directly.</p>"
     msg = MailMessage(
-        subject="Your Order Receipt – " + business_name,
+        subject=f"Your Order Receipt – {business_name}",
         recipients=[buyer_email],
-        html=(
-            f"<h3>Order Confirmation from {business_name}</h3>"
-            f"<p>Thank you for your order!</p>"
-            f"<b>Product:</b> {product_name}<br>"
-            f"<b>Amount Paid:</b> ${amount:.2f}<br>"
-            f"<p>If you have any questions, please contact the business directly.</p>"
-        ),
+        html=html,
         sender="orders@perkminer.com"
     )
     try:
         mail.send(msg)
     except Exception as e:
-        import logging
         logging.error("Customer receipt email failed: %s", e)
 
 def admin_required(f):
@@ -923,6 +923,172 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     }
     return summary
 
+def issue_store_sale_rewards(business, amount, buyer_email=None):
+    """
+    Issues rewards and commissions for a store sale:
+      - Cashback to the buyer (if lookup by email works in your system)
+      - All user and business commissions, for up to 5 tiers
+    """
+    # Example: TIER SETUP (adjust if you change reward rates/caps)
+    user_cash_back = round(min(amount * 0.02, 50), 2)
+    tier2_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier3_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier4_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier5_commission = round(min(amount * 0.02, 50), 2)
+
+    # User sponsor/referrer lookups (adjust how you find users per your referral chain)
+    user = None
+    if buyer_email:
+        user = User.query.filter_by(email=buyer_email).first()
+    # Get the referral_code(s) for this buyer, and for each tier chain, as you normally do
+    # (Example logic; you may need to adapt it for cart, etc.)
+    # If user exists, walk up the sponsor chain
+    user_referral_code = user.referral_code if user else None
+    tier2_user = User.query.get(user.sponsor_id) if user and user.sponsor_id else None
+    tier2_referral_code = tier2_user.referral_code if tier2_user else None
+    tier3_user = User.query.get(tier2_user.sponsor_id) if tier2_user and tier2_user.sponsor_id else None
+    tier3_referral_code = tier3_user.referral_code if tier3_user else None
+    tier4_user = User.query.get(tier3_user.sponsor_id) if tier3_user and tier3_user.sponsor_id else None
+    tier4_referral_code = tier4_user.referral_code if tier4_user else None
+    tier5_user = User.query.get(tier4_user.sponsor_id) if tier4_user and tier4_user.sponsor_id else None
+    tier5_referral_code = tier5_user.referral_code if tier5_user else None
+
+    # Business network chain, if you pay business-user commissions
+    business_referral_code = business.referral_code
+    # (Repeat chain lookup for other business tiers as per your app...)
+
+    # Create a UserTransaction and BusinessTransaction to record rewards
+    user_txn = UserTransaction(
+        transaction_id=str(uuid.uuid4()),
+        interaction_id=None,  # For store orders, you may not have an Interaction, set None or create a dummy/tied one
+        date_time=datetime.utcnow(),
+        amount=amount,
+        user_referral_id=user_referral_code or "",
+        cash_back=user_cash_back if user else 0,
+        tier2_user_referral_id=tier2_referral_code or "",
+        tier2_commission=tier2_commission if tier2_user else 0,
+        tier3_user_referral_id=tier3_referral_code or "",
+        tier3_commission=tier3_commission if tier3_user else 0,
+        tier4_user_referral_id=tier4_referral_code or "",
+        tier4_commission=tier4_commission if tier4_user else 0,
+        tier5_user_referral_id=tier5_referral_code or "",
+        tier5_commission=tier5_commission if tier5_user else 0,
+        business_referral_id=business_referral_code or "",
+        # Fill business_user_commission fields as needed
+        # (Set to zero or real values per your advanced commission structure)
+        # ...
+    )
+    db.session.add(user_txn)
+
+    business_txn = BusinessTransaction(
+        transaction_id=user_txn.transaction_id,
+        interaction_id=None,
+        date_time=datetime.utcnow(),
+        amount=amount,
+        business_referral_id=business_referral_code,
+        cash_back=round(min(amount * 0.01, 25), 2),
+        # Similarly fill tier2-tiers, sponsor mutual, etc.
+        tier2_business_referral_id="", # Add logic for business referral tree
+        tier2_commission=0,
+        tier3_business_referral_id="",
+        tier3_commission=0,
+        tier4_business_referral_id="",
+        tier4_commission=0,
+        tier5_business_referral_id="",
+        tier5_commission=0,
+        ad_fee=round(amount * 0.10, 2)  # Store ad fee for record-keeping
+    )
+    db.session.add(business_txn)
+
+    db.session.commit()
+
+if business.business_email and product:
+    try:
+        send_order_alert(
+            business.business_email,
+            product.name if product else "Multiple Products",
+            amount,
+            buyer_email=buyer_email
+        )
+    except Exception as e:
+        import logging
+        logging.error(f"Order email failed: {e}")
+
+if buyer_email and product:
+    try:
+        send_customer_receipt(
+            buyer_email,
+            product.name if product else "Multiple Products",
+            amount,
+            business.business_name
+        )
+    except Exception as e:
+        import logging
+        logging.error(f"Customer receipt email failed: {e}")
+
+# ... inside for product in products loop ...
+if product.is_digital:  # Add an is_digital column/flag to Product model if needed
+    token = secrets.token_urlsafe(32)
+    order.fulfillment_token = token
+    db.session.commit()
+
+    # Digital product download link:
+    download_url = url_for('download_product', order_token=token, _external=True)
+
+    # Update/send email to customer with download link
+    try:
+        send_customer_receipt(
+            buyer_email,
+            product.name,
+            product.price * qty,
+            business.business_name,
+            download_url=download_url
+        )
+    except Exception as e:
+        logging.error(f"Digital delivery email failed: {e}")
+
+# Example assumes one business per session and uses metadata for product/cart info
+if 'cart_items' in metadata:
+    product_ids = [int(pid) for pid in metadata.get("cart_items", "").split(",") if pid]
+    products = Product.query.filter(Product.id.in_(product_ids)).all()
+    for p in products:
+        qty = 1  # or use quantity from cart/session if you pass it
+        # Reduce stock if tracked
+        if p.stock is not None:
+            p.stock = max(0, p.stock - qty)
+        # Create order record
+        order = Order(
+            business_id=business.id,
+            product_id=p.id,
+            buyer_email=buyer_email,
+            amount=p.price * qty,
+            stripe_checkout_id=session_obj.get('id'),
+            timestamp=datetime.utcnow(),
+            status="paid"
+        )
+        db.session.add(order)
+
+    db.session.commit()
+else:
+    # Fallback for single-product purchase by metadata['product_id']
+    product_id = metadata.get("product_id")
+    if product_id:
+        product = Product.query.get(int(product_id))
+        if product:
+            if product.stock is not None:
+                product.stock = max(0, product.stock - 1)
+            order = Order(
+                business_id=business.id,
+                product_id=product.id,
+                buyer_email=buyer_email,
+                amount=product.price,
+                stripe_checkout_id=session_obj.get('id'),
+                timestamp=datetime.utcnow(),
+                status="paid"
+            )
+            db.session.add(order)
+            db.session.commit()
+
 # ---------------------- Flask-Login User Loader ----------------------
 @login_manager.user_loader
 def load_user(user_id):
@@ -1042,6 +1208,7 @@ class Business(db.Model):
     grapesjs_js = db.Column(db.Text, nullable=True)
     products_js = db.Column(db.Text, nullable=True)
     contact_js = db.Column(db.Text, nullable=True)
+    theme_type = db.Column(db.String(50))
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1175,9 +1342,14 @@ class Order(db.Model):
     amount = db.Column(db.Float)
     stripe_checkout_id = db.Column(db.String(100))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(30), default="paid")
+    status = db.Column(db.String(30), default="paid")      # e.g., paid, fulfilled
+    fulfillment_token = db.Column(db.String(64), nullable=True)  # for digital delivery (optional)
+    # add other fields as needed (e.g., shipping address, download expiry...)
+
+# If your digital products need file URLs, add a product.download_url or similar.
 
 # Example for invites (included as you had in prior code)
+
 class Invite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     inviter_id = db.Column(db.Integer, nullable=True)
@@ -1291,13 +1463,28 @@ def calculate_business_grand_total(business):
 @app.route('/store_terms', methods=['GET', 'POST'])
 @business_login_required
 def store_terms():
+    themes = Theme.query.all()
+    biz_id = session.get('business_id')
+    business = Business.query.get(biz_id)
+
     if request.method == 'POST':
+        # Save theme_type and the agreement
+        selected_theme = request.form.get('theme_type', '')
+        if not selected_theme:
+            flash('Please select a store theme.', 'danger')
+            return render_template('store_terms.html', themes=themes, business=business)
+        business.theme_type = selected_theme
+        db.session.commit()
+
+        # Check the agreement too (your checkbox logic, already in your template)
         agreed = request.form.get('agree_checkbox')
         if agreed == "on":
             return redirect(url_for('store_payment'))
         else:
             flash('You must accept the terms and conditions to continue.', 'danger')
-    return render_template('store_terms.html')
+            return render_template('store_terms.html', themes=themes, business=business)
+
+    return render_template('store_terms.html', themes=themes, business=business)
 
 @app.route('/store_payment')
 @business_login_required
@@ -1359,8 +1546,29 @@ def store_payment_success():
         flash("Business not found or not logged in!", "danger")
         return redirect(url_for("business_login"))
 
+    # If the store has just been activated
     if not biz.has_ecommerce_store:
         biz.has_ecommerce_store = True
+
+        # Now copy theme code to builder fields if blank
+        if biz.theme_type:
+            theme = Theme.query.filter_by(name=biz.theme_type).first()
+            if theme:
+                if not biz.grapesjs_html:
+                    biz.grapesjs_html = theme.starter_html or ""
+                if not biz.grapesjs_css:
+                    biz.grapesjs_css = theme.homepage_css or ""
+                if not biz.products_html:
+                    biz.products_html = theme.products_html or ""
+                if not biz.products_css:
+                    biz.products_css = theme.products_css or ""
+                if not biz.contact_html:
+                    biz.contact_html = theme.contact_html or ""
+                if not biz.contact_css:
+                    biz.contact_css = theme.contact_css or ""
+        else:
+            flash("No theme selected — using default starter. You can change your theme and save any time.", "warning")
+
         db.session.commit()
         flash('Your online store is now active! You can set it up from your dashboard.', 'success')
     else:
@@ -1732,7 +1940,6 @@ def delete_product(product_id):
 @app.route('/buy_product/<int:product_id>')
 def buy_product(product_id):
     product = Product.query.get_or_404(product_id)
-    # Optional: check stock, only allow if in stock
     if product.stock is not None and product.stock <= 0:
         flash("Sorry, this product is out of stock.", "danger")
         return redirect(request.referrer or '/')
@@ -1741,8 +1948,10 @@ def buy_product(product_id):
         flash("This business cannot accept payment online yet.", "danger")
         return redirect(request.referrer or '/')
 
+    amount_usd = product.price
+    ad_fee = int(amount_usd * 100 * 0.10)  # 10% fee to platform, in cents
+
     import stripe
-    YOUR_DOMAIN = "https://perkminer.com"
     try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -1754,12 +1963,12 @@ def buy_product(product_id):
                         'name': product.name,
                         'description': product.description or '',
                     },
-                    'unit_amount': int(product.price * 100),  # Stripe expects cents
+                    'unit_amount': int(amount_usd * 100),  # in cents
                 },
                 'quantity': 1,
             }],
             payment_intent_data={
-                'application_fee_amount': int(product.price * 100 * 0.10),  # 10% fee to you
+                'application_fee_amount': ad_fee,
                 'transfer_data': {
                     'destination': biz.stripe_account_id,
                 },
@@ -1768,9 +1977,9 @@ def buy_product(product_id):
                 "product_id": str(product.id),
                 "business_id": str(biz.id),
             },
-            customer_email=request.args.get('buyer_email'),  # Pass buyer email if you have it
-            success_url=YOUR_DOMAIN + '/thank_you',
-            cancel_url=request.referrer or YOUR_DOMAIN,
+            customer_email=request.args.get('buyer_email'),
+            success_url=YOUR_DOMAIN + '/stores/' + biz.store_slug + '/thank_you',
+            cancel_url=request.referrer or (YOUR_DOMAIN + '/stores/' + biz.store_slug + '/products'),
         )
         return redirect(checkout_session.url)
     except Exception as e:
@@ -1923,6 +2132,7 @@ def start_cart_checkout():
     coupon_code = session.get('applied_coupon')
     discount_pct = valid_coupons.get(coupon_code, 0) if coupon_code else 0
 
+    # --- Prepare line_items and totals ---
     line_items = []
     subtotal = 0
     for p in products:
@@ -1944,7 +2154,7 @@ def start_cart_checkout():
 
     discount = subtotal * discount_pct
     grand_total = subtotal - discount
-    application_fee_amount = int(grand_total * 0.10 * 100)
+    ad_fee = int(grand_total * 0.10 * 100)   # 10% of cart total in cents
 
     metadata = {
         "cart_items": ",".join(str(p.id) for p in products),
@@ -1952,29 +2162,33 @@ def start_cart_checkout():
         "coupon_code": coupon_code or '',
     }
 
+    import stripe
     try:
+        # Create CHECKOUT session for everything in the cart from this business
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             mode='payment',
             line_items=line_items,
             payment_intent_data={
-                'application_fee_amount': application_fee_amount,
+                'application_fee_amount': ad_fee,         # 10% platform fee in cents
                 'transfer_data': {
                     'destination': biz.stripe_account_id,
                 },
             },
             metadata=metadata,
             customer_email=buyer_email,
-            success_url=YOUR_DOMAIN + '/thank_you',
-            cancel_url=YOUR_DOMAIN + '/cart',
+            success_url=YOUR_DOMAIN + '/stores/' + biz.store_slug + '/thank_you',
+            cancel_url=YOUR_DOMAIN + '/stores/' + biz.store_slug + '/cart',
         )
         return redirect(checkout_session.url)
     except Exception as e:
+        import logging
         logging.error(f"Stripe cart checkout session failed: {e}")
         flash("Could not start checkout. Please try again.", "danger")
         return redirect(url_for('checkout'))
 
 # -------------- STRIPE WEBHOOK (Order, Stock, Emails) --------------
+
 @app.route('/stripe_webhook', methods=['POST'])
 @csrf.exempt
 def stripe_webhook():
@@ -1993,48 +2207,73 @@ def stripe_webhook():
 
     if event['type'] == 'checkout.session.completed':
         session_obj = event['data']['object']
-        customer_email = session_obj.get('customer_email')
         amount = (session_obj.get('amount_total') or 0) / 100.0
-        metadata = session_obj.get('metadata', {})
+        metadata = session_obj.get('metadata', {}) or {}
+        business_id = metadata.get("business_id")
+        buyer_email = session_obj.get("customer_email", None)
 
-        # ---- CASE 1: FUND ACCOUNT LOGIC ----
-        if metadata.get('purpose') == 'fund_account':
-            biz = Business.query.filter_by(business_email=customer_email).first()
-            if biz:
-                old_balance = biz.account_balance
-                biz.account_balance += amount
-                db.session.commit()
-                import logging
-                logging.info(f"[FUND HOOK] Updated account_balance for {customer_email}: {old_balance} --> {biz.account_balance}")
-            return '', 200
-
-        # ---- CASE 2: STORE SUBSCRIPTION LOGIC ----
-        # fetch line_items to identify subscription purchase
-        if 'id' in session_obj:
+        business = Business.query.get(business_id)
+        if business and business.has_ecommerce_store:
             try:
-                checkout_session = stripe.checkout.Session.retrieve(
-                    session_obj['id'],
-                    expand=['line_items']
-                )
+                # 1. Issue rewards and commissions for this store sale
+                issue_store_sale_rewards(business, amount, buyer_email=buyer_email)
             except Exception as e:
                 import logging
-                logging.error(f"Failed to get line items: {e}")
-                return '', 200
+                logging.error(f"[REWARD HOOK FAIL] {e}")
 
-            line_items = checkout_session.line_items.data if checkout_session and hasattr(checkout_session, 'line_items') else []
-            for item in line_items:
-                if (item.price and item.price.id == "price_1T3hrXCLrqYII4jepU2edWdw"):  # replace with your actual price ID
-                    # This is a subscription payment - do your subscription logic here
-                    # For example:
-                    # - Set biz.has_ecommerce_store = True
-                    # - Biz or user lookup by email
-                    # - Save subscription, etc.
-                    logging.info(f"[SUBSCRIPTION HOOK] Store Sub Activated for {customer_email}.")
-                    # write your logic here
-                    break
+            # 2. Record order(s) and adjust stock
+            products = []
+            if 'cart_items' in metadata and metadata['cart_items']:
+                product_ids = [int(pid) for pid in metadata['cart_items'].split(',') if pid]
+                products = Product.query.filter(Product.id.in_(product_ids)).all()
+            elif 'product_id' in metadata and metadata['product_id']:
+                product = Product.query.get(int(metadata['product_id']))
+                if product:
+                    products = [product]
 
-        # ---- FALLBACK: HANDLE OTHER EVENTS (Cart, Products, etc.) ----
-        # ...your existing logic for cart, product orders, etc...
+            for product in products:
+                qty = 1  # Extend to cart quantity logic if you store per-product qty
+                # Adjust stock if tracked
+                if product.stock is not None:
+                    product.stock = max(0, product.stock - qty)
+                order = Order(
+                    business_id=business.id,
+                    product_id=product.id,
+                    buyer_email=buyer_email,
+                    amount=product.price * qty,
+                    stripe_checkout_id=session_obj.get('id'),
+                    timestamp=datetime.utcnow(),
+                    status="paid"
+                )
+                db.session.add(order)
+
+                # 3. Send notification to business (per product for now)
+                try:
+                    send_order_alert(
+                        business.business_email,
+                        product.name,
+                        amount=product.price * qty,
+                        buyer_email=buyer_email
+                    )
+                except Exception as e:
+                    import logging
+                    logging.error(f"Order email failed: {e}")
+
+                # 4. Send receipt to customer
+                try:
+                    send_customer_receipt(
+                        buyer_email,
+                        product.name,
+                        product.price * qty,
+                        business.business_name
+                    )
+                except Exception as e:
+                    import logging
+                    logging.error(f"Customer receipt email failed: {e}")
+
+            db.session.commit()
+
+    # Add more Stripe event logic as needed here...
 
     return '', 200
 
@@ -2066,18 +2305,35 @@ def order_lookup():
     return render_template('order_lookup.html', found_orders=found_orders, show_results=show_results)
 
 # --------- ORDER FULFILLMENT (BUSINESS ONLY, STUB) ----------
+
 @app.route('/fulfill_order/<int:order_id>', methods=['POST'])
 @business_login_required
 def fulfill_order(order_id):
-    # Mark an order as fulfilled in the database, send customer email
-    flash("Order marked as fulfilled (stub).", "info")
+    order = Order.query.get_or_404(order_id)
+    biz_id = session.get('business_id')
+    if order.business_id != biz_id:
+        flash("Unauthorized.", "danger")
+        return redirect(url_for('store_orders'))
+    order.status = "fulfilled"
+    # Optionally add tracking, notes, etc.
+    db.session.commit()
+    # Optionally: send another customer notification here.
+    flash("Order marked as fulfilled.", "success")
     return redirect(url_for('store_orders'))
 
 # --------- DIGITAL PRODUCT DOWNLOAD (Stub) ----------
+
 @app.route('/download/<order_token>')
 def download_product(order_token):
-    # Check validity of token/order before serving file
-    return render_template('download.html')
+    order = Order.query.filter_by(fulfillment_token=order_token).first()
+    if not order or order.status not in ['paid', 'fulfilled']:
+        flash("Invalid or expired download link.", "danger")
+        return redirect(url_for('customer_orders'))
+    product = Product.query.get(order.product_id)
+    if not product or not getattr(product, "download_url", None):
+        return render_template('download.html', file_url=None, expiration_text=None)  # Show failure
+    # Optionally: set download expiry, etc.
+    return render_template('download.html', file_url=product.download_url, expiration_text=None)
 
 # --------- ABANDONED CART REMINDER (STUB/ADMIN) ----------
 @app.route('/abandoned_cart_email/<email>')
