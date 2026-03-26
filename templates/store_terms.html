@@ -98,7 +98,7 @@
             </option>
           {% endfor %}
         </select>
-        <button type="button" class="btn btn-outline-info" id="preview-btn" onclick="showThemePreview()" style="min-width:110px;">
+        <button type="button" class="btn btn-outline-info" id="preview-btn" style="min-width:110px;">
           Preview
         </button>
       </div>
@@ -141,22 +141,25 @@
             </head>
             <body style="margin:0;padding:0;">${themePreviewData[selected].html || ""}</body>
           </html>
-        ' sandbox></iframe>
+        ' sandbox style="width:100%;min-height:240px;"></iframe>
       `;
     } else {
       previewDiv.innerHTML = '';
     }
   }
 
-  // Sticky agree button and enable logic
+  // Enable the "Agree" button only if checked, and wire up Preview button as well
   document.addEventListener('DOMContentLoaded', function() {
     const check = document.getElementById('agree_checkbox');
     const btn = document.getElementById('agree_btn');
+    const previewBtn = document.getElementById('preview-btn');
     btn.disabled = !check.checked;
     check.addEventListener('change', function() {
       btn.disabled = !check.checked;
     });
-    // Optionally, show preview if loaded with a theme
+    // Theme preview on Preview button click
+    if (previewBtn) previewBtn.addEventListener('click', showThemePreview);
+    // Optionally, show preview if loaded with a theme already selected
     if(document.getElementById('theme_type').value) showThemePreview();
   });
 </script>
