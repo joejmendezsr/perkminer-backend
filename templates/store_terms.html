@@ -108,7 +108,7 @@
 <div class="form-check mb-3">
   <input class="form-check-input" type="checkbox" id="agree_checkbox" name="agree_checkbox" required>
   <label class="form-check-label" for="agree_checkbox">
-    I agree to the Terms and Subscription Fee
+    <span style="color:#FFFFFF">..</span>I agree to the Terms and Subscription Fee
   </label>
 </div>
 <button type="submit" class="btn btn-primary w-100 sticky-bottom-btn" id="agree_btn">
@@ -119,14 +119,14 @@
 
 <script>
   // Pass Flask theme preview data into JS
-  const themePreviewData = {
-    {% for theme in themes %}
-      "{{ theme.name|e }}": {
-        "html": {{ theme.preview_home|tojson|safe if theme.preview_home else '""' }},
-        "css": {{ theme.preview_home_css|tojson|safe if theme.preview_home_css else '""' }}
-      },
-    {% endfor %}
-  };
+    const themePreviewData = {
+      {% for theme in themes %}
+        "{{ theme.name|e }}": {
+          "html": {{ theme.preview_home|tojson|safe }},
+          "css": {{ theme.preview_home_css|tojson|safe }}
+        },
+      {% endfor %}
+    };
 
   function showThemePreview() {
     const selected = document.getElementById('theme_type').value;
