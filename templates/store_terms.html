@@ -93,7 +93,7 @@
         <select name="theme_type" id="theme_type" class="form-select" required onchange="showThemePreview();">
           <option value="">Select a theme...</option>
           {% for theme in themes %}
-            <option value="{{ theme.name|e }}" {% if business.theme_type==theme.name %}selected{% endif %}>
+            <option value="{{ theme.name|lower|e }}" {% if business.theme_type and business.theme_type|lower == theme.name|lower %}selected{% endif %}>
               {{ theme.name }}
             </option>
           {% endfor %}
@@ -105,50 +105,43 @@
       <div id="theme-preview-container" class="mt-3"></div>
     </div>
 
-<div class="form-check mb-3">
-  <input class="form-check-input" type="checkbox" id="agree_checkbox" name="agree_checkbox" required>
-  <label class="form-check-label" for="agree_checkbox">
-    <span style="color:#FFFFFF">..</span>I agree to the Terms and Subscription Fee
-  </label>
-</div>
-<button type="submit" class="btn btn-primary w-100 sticky-bottom-btn" id="agree_btn">
-  Agree & Continue to Payment
-</button>
-</form>
+    <div class="form-check mb-3">
+      <input class="form-check-input" style="width:1.43em;height:1.43em;border:2.5px solid #21253b;" type="checkbox" id="agree_checkbox" name="agree_checkbox" required>
+      <label class="form-check-label" for="agree_checkbox" style="font-size:1.13em;letter-spacing:.01em;">
+        <span style="color:#FFFFFF">..</span>I agree to the Terms and Subscription Fee
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 sticky-bottom-btn" id="agree_btn">
+      Agree & Continue to Payment
+    </button>
+  </form>
 </div>
 
 <script>
-  // Pass Flask theme preview data into JS
-    const themePreviewData = {
-      {% for theme in themes %}
-        "{{ theme.name|e }}": {
-          "html": {{ theme.preview_home|tojson|safe }},
-          "css": {{ theme.preview_home_css|tojson|safe }}
-        },
-      {% endfor %}
-    };
+  // Build preview object with ALL keys forced to lowercase
+  const themePreviewData = {
+    {% for theme in themes %}
+      "{{ theme.name|lower|e }}": {
+        "html": {{ theme.preview_home|tojson|safe }},
+        "css": {{ theme.preview_home_css|tojson|safe }}
+      },
+    {% endfor %}
+  };
 
   function showThemePreview() {
-    const selected = document.getElementById('theme_type').value;
+    const selected = document.getElementById('theme_type').value.toLowerCase().trim();
     const previewDiv = document.getElementById('theme-preview-container');
     if (themePreviewData[selected]) {
       previewDiv.innerHTML = `
         <div class="mb-2"><b>Preview: ${selected}</b></div>
-        <iframe srcdoc='
-          <html>
-            <head>
-              <style>${themePreviewData[selected].css || ""}</style>
-            </head>
-            <body style="margin:0;padding:0;">${themePreviewData[selected].html || ""}</body>
-          </html>
-        ' sandbox style="width:100%;min-height:240px;"></iframe>
+        <iframe srcdoc='<html><head><style>${themePreviewData[selected].css || ""}</style></head><body style="margin:0;padding:0;">${themePreviewData[selected].html || ""}</body></html>' style="width:100%;min-height:240px;" sandbox></iframe>
       `;
     } else {
-      previewDiv.innerHTML = '';
+      previewDiv.innerHTML = '<div class="text-danger">No preview available for this theme.</div>';
     }
   }
 
-  // Enable the "Agree" button only if checked, and wire up Preview button as well
   document.addEventListener('DOMContentLoaded', function() {
     const check = document.getElementById('agree_checkbox');
     const btn = document.getElementById('agree_btn');
@@ -157,12 +150,12 @@
     check.addEventListener('change', function() {
       btn.disabled = !check.checked;
     });
-    // Theme preview on Preview button click
-    if (previewBtn) previewBtn.addEventListener('click', showThemePreview);
-    // Optionally, show preview if loaded with a theme already selected
-    if(document.getElementById('theme_type').value) showThemePreview();
+    if (previewBtn)
+      previewBtn.addEventListener('click', showThemePreview);
+    // Show preview if a theme is already selected on load
+    const selectedTheme = document.getElementById('theme_type').value;
+    if (selectedTheme) showThemePreview();
   });
 </script>
-
 </body>
 </html>
