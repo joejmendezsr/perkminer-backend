@@ -770,7 +770,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     def find_top_business_with_user_sponsor(biz):
         while biz and biz.sponsor_id:
-            parent = Business.query.get(biz.sponsor_id)
+            parent = db.session.get(Business, biz.sponsor_id)
             if parent:
                 biz = parent
             else:
