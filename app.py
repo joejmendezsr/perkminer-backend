@@ -755,6 +755,15 @@ def staff_password_reset_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def split_mutual_commission(total_sale, n_referred):
+    if n_referred < 1:
+        return [], 0.0
+    pool = total_sale * 0.0025
+    per_biz = round(pool / n_referred, 2)
+    payouts = [per_biz for _ in range(n_referred)]
+    leftover = round(pool - sum(payouts), 2)
+    return payouts, leftover
+
 def finalize_interaction(interaction, business, amount, staff_id=None, source=None, local_date_time=None):
     import uuid
     from datetime import datetime
@@ -880,31 +889,35 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     sponsoree = Business.query.filter_by(sponsor_id=business.id).first()
     sponsoree_mutual_referral_id = None
     sponsoree_mutual_commission = 0
-    if sponsoree:
-        sponsoree_mutual_referral_id = sponsoree.referral_code
-        sponsoree_mutual_commission = round(min(amount * 0.0025, 6.25), 2)
+    referred_businesses = Business.query.filter_by(sponsor_id=business.id).all()
+    payouts, leftover = split_mutual_commission(amount, len(referred_businesses))
 
-    business_trans = BusinessTransaction(
-        transaction_id=transaction_id,
-        interaction_id=interaction.id,
-        amount=amount,
-        date_time=datetime.utcnow(),
-        local_date_time=local_date_time,
-        ad_fee=ad_fee,
-        business_referral_id=business_referral_id,
-        cash_back=business_cash_back,
-        tier2_business_referral_id=tier2_business_referral_id,
-        tier2_commission=tier2_commission_biz,
-        tier3_business_referral_id=tier3_business_referral_id,
-        tier3_commission=tier3_commission_biz,
-        tier4_business_referral_id=tier4_business_referral_id,
-        tier4_commission=tier4_commission_biz,
-        tier5_business_referral_id=tier5_business_referral_id,
-        tier5_commission=tier5_commission_biz,
-        sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
-        sponsoree_mutual_commission=sponsoree_mutual_commission
-    )
-    db.session.add(business_trans)
+    for idx, sponsoree in enumerate(referred_businesses):
+        sponsoree_mutual_referral_id = sponsoree.referral_code
+        sponsoree_mutual_commission = payouts[idx]
+        # create a BusinessTransaction for each
+        business_trans = BusinessTransaction(
+            transaction_id=transaction_id,
+            interaction_id=interaction.id,
+            amount=amount,
+            date_time=datetime.utcnow(),
+            local_date_time=local_date_time,
+            ad_fee=ad_fee,
+            business_referral_id=business_referral_id,
+            cash_back=business_cash_back,
+            tier2_business_referral_id=tier2_business_referral_id,
+            tier2_commission=tier2_commission_biz,
+            tier3_business_referral_id=tier3_business_referral_id,
+            tier3_commission=tier3_commission_biz,
+            tier4_business_referral_id=tier4_business_referral_id,
+            tier4_commission=tier4_commission_biz,
+            tier5_business_referral_id=tier5_business_referral_id,
+            tier5_commission=tier5_commission_biz,
+            sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
+            sponsoree_mutual_commission=sponsoree_mutual_commission
+        )
+        db.session.add(business_trans)
+    # Commit after the loop to save everything
     db.session.commit()
 
     # Log for staff
