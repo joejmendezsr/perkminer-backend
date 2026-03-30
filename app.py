@@ -768,13 +768,19 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     import uuid
     from datetime import datetime
 
-    def find_top_business_with_user_sponsor(biz):
-        while biz and biz.sponsor_id:
-            parent = db.session.get(Business, biz.sponsor_id)
-            if parent:
-                biz = parent
-            else:
+    def find_top_business_with_user_sponsor(biz, max_depth=50):
+        visited_ids = set()
+        depth = 0
+        while biz and biz.sponsor_id and depth < max_depth:
+            if biz.id in visited_ids:
+                # Detected a cycle (business sponsoring itself or circular chain)
                 break
+            visited_ids.add(biz.id)
+            parent = db.session.get(Business, biz.sponsor_id)
+            if not parent:
+                break
+            biz = parent
+            depth += 1
         return biz
 
     transaction_id = str(uuid.uuid4())
