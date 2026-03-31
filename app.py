@@ -892,11 +892,31 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     business_cash_back = round(min(business_cash_back_raw, 25), 2)
 
     business.account_balance = (business.account_balance or 0.0) - ad_fee
-    db.session.commit()
 
-    sponsoree = Business.query.filter_by(sponsor_id=business.id).first()
-    sponsoree_mutual_referral_id = None
-    sponsoree_mutual_commission = 0
+    # ---- Main business commission row: only ONE record for Tiers 1-5 ----
+    business_trans = BusinessTransaction(
+        transaction_id=transaction_id,
+        interaction_id=interaction.id,
+        amount=amount,
+        date_time=datetime.utcnow(),
+        local_date_time=local_date_time,
+        ad_fee=ad_fee,
+        business_referral_id=business_referral_id,
+        cash_back=business_cash_back,  # Tier 1, capped
+        tier2_business_referral_id=tier2_business_referral_id,
+        tier2_commission=tier2_commission_biz,
+        tier3_business_referral_id=tier3_business_referral_id,
+        tier3_commission=tier3_commission_biz,
+        tier4_business_referral_id=tier4_business_referral_id,
+        tier4_commission=tier4_commission_biz,
+        tier5_business_referral_id=tier5_business_referral_id,
+        tier5_commission=tier5_commission_biz,
+        sponsoree_mutual_referral_id=None,
+        sponsoree_mutual_commission=0
+    )
+    db.session.add(business_trans)
+
+    # ---- Downline mutual commission: one record per sponsoree, tiers are empty ----
     referred_businesses = Business.query.filter_by(sponsor_id=business.id).all()
     payouts, leftover = split_mutual_commission(amount, len(referred_businesses))
 
@@ -904,7 +924,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         sponsoree_mutual_referral_id = sponsoree.referral_code
         sponsoree_mutual_commission = payouts[idx]
         print(f"Mutual payout to: {sponsoree_mutual_referral_id}, amount: {sponsoree_mutual_commission}")
-        business_trans = BusinessTransaction(
+        mutual_trans = BusinessTransaction(
             transaction_id=transaction_id,
             interaction_id=interaction.id,
             amount=amount,
@@ -924,7 +944,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
             sponsoree_mutual_commission=sponsoree_mutual_commission
         )
-        db.session.add(business_trans)
+        db.session.add(mutual_trans)
+
     db.session.commit()
 
     # Log for staff
