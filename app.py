@@ -912,19 +912,20 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             local_date_time=local_date_time,
             ad_fee=ad_fee,
             business_referral_id=business_referral_id,
-            cash_back=business_cash_back,
-            tier2_business_referral_id=tier2_business_referral_id,
-            tier2_commission=tier2_commission_biz,
-            tier3_business_referral_id=tier3_business_referral_id,
-            tier3_commission=tier3_commission_biz,
-            tier4_business_referral_id=tier4_business_referral_id,
-            tier4_commission=tier4_commission_biz,
-            tier5_business_referral_id=tier5_business_referral_id,
-            tier5_commission=tier5_commission_biz,
+            cash_back=0,  # for mutuals
+            tier2_business_referral_id="",
+            tier2_commission=0,
+            tier3_business_referral_id="",
+            tier3_commission=0,
+            tier4_business_referral_id="",
+            tier4_commission=0,
+            tier5_business_referral_id="",
+            tier5_commission=0,
             sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
             sponsoree_mutual_commission=sponsoree_mutual_commission
         )
         db.session.add(business_trans)
+    db.session.commit()
 
     # Log for staff
     if staff_id:
