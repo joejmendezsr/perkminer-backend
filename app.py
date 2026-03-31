@@ -816,8 +816,10 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     business_chain = []
     b = business
-    while b:
+    visited_ids = set()
+    while b and b.id not in visited_ids:
         business_chain.insert(0, b)
+        visited_ids.add(b.id)
         b = Business.query.get(b.sponsor_id) if b.sponsor_id else None
     downline_tier = len(business_chain)
 
