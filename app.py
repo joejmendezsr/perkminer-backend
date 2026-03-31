@@ -195,6 +195,21 @@ migrate = Migrate(app, db)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 stripe.api_key = os.environ.get("STRIPE_API_KEY")
 
+def find_top_business_with_user_sponsor(biz, max_depth=50):
+    visited_ids = set()
+    depth = 0
+    while biz and biz.sponsor_id and depth < max_depth:
+        if biz.id in visited_ids:
+            # Detected a cycle (business sponsoring itself or a circular chain)
+            break
+        visited_ids.add(biz.id)
+        parent = db.session.get(Business, biz.sponsor_id)
+        if not parent:
+            break
+        biz = parent
+        depth += 1
+    return biz
+
 # ────────────────────────────────────────────────
 # Check Stripe key early – prevent silent failures
 # ────────────────────────────────────────────────
@@ -768,21 +783,6 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     import uuid
     from datetime import datetime
 
-    def find_top_business_with_user_sponsor(biz, max_depth=50):
-        visited_ids = set()
-        depth = 0
-        while biz and biz.sponsor_id and depth < max_depth:
-            if biz.id in visited_ids:
-                # Detected a cycle (business sponsoring itself or circular chain)
-                break
-            visited_ids.add(biz.id)
-            parent = db.session.get(Business, biz.sponsor_id)
-            if not parent:
-                break
-            biz = parent
-            depth += 1
-        return biz
-
     transaction_id = str(uuid.uuid4())
 
     ad_fee = min(round(amount * 0.10, 2), 250.00)
@@ -901,7 +901,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     for idx, sponsoree in enumerate(referred_businesses):
         sponsoree_mutual_referral_id = sponsoree.referral_code
         sponsoree_mutual_commission = payouts[idx]
-        # create a BusinessTransaction for each
+        print(f"Mutual payout to: {sponsoree_mutual_referral_id}, amount: {sponsoree_mutual_commission}")
         business_trans = BusinessTransaction(
             transaction_id=transaction_id,
             interaction_id=interaction.id,
@@ -923,8 +923,6 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             sponsoree_mutual_commission=sponsoree_mutual_commission
         )
         db.session.add(business_trans)
-    # Commit after the loop to save everything
-    db.session.commit()
 
     # Log for staff
     if staff_id:
