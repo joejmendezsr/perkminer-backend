@@ -70,7 +70,8 @@
         <div><b>Ad Fee Paid (10% - max $250):</b> ${{ '%.2f' % ad_fee }}</div>
         <div><b>Net Gross (Sale - Ad Fee):</b> ${{ '%.2f' % net_gross }}</div>
         <div><b>Marketing ROI:</b> {{ marketing_roi|round(0) }}%</div>
-        <div><b>Marketing ROI Ratio:</b> {{ marketing_ratio|round(2) }}:1</div>
+        <div><b>Marketing ROI Ratio:</b> {{ marketing_ratio|round(2) }} to 1 Ratio</div>
+        <div>(Your business paid $1 for every ${{ marketing_ratio|round(2) }} sold)</div>
       </div>
       <div class="alert alert-success text-center">
         Transaction recorded! Rewards credited.

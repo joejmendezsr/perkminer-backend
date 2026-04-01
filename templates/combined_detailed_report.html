@@ -7,6 +7,8 @@
 </head>
 <body>
 <div class="container py-4">
+
+  <!-- PAGE HEADER AND SEARCH/FILTERS -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Combined Detailed Report</h3>
     <a href="{{ url_for('finance_dashboard') }}" class="btn btn-outline-primary">Return to Finance Dashboard</a>
@@ -51,19 +53,27 @@
       <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
     </div>
   </form>
+
+  <!-- SUMMARY SALIENT NUMBERS -->
   <div class="mb-4">
-    <b>Grand Total (Business Transactions):</b> ${{ "{:,.2f}".format(grand_total) }}<br>
-    <b>Total Advertising Fee:</b> ${{ "{:,.2f}".format(total_ad_fee) }}<br>
-    <b>Total Paid to Users: Cashback (Tier 1):</b> ${{ "{:,.2f}".format(total_user_cash_back) }}<br>
-    <b>Total Paid to Users: Commissions (Tiers 2-5):</b> ${{ "{:,.2f}".format(total_user_commission) }}<br>
-    <b>Mutual Sponsoree Commission:</b> ${{ summary.sponsoree_mutual_earnings or "0.00" }}<br>
-    <b>Total Paid to Users: User-Business Commission (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_user_business_commission) }}<br>
-    <b>Total Paid to Businesses (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_biz_cash_back) }}<br>
-    <b>Grand Total Paid Out:</b> ${{ summary.total_paid_all or "0.00" }}
+    <h5>Summary</h5>
+    <ul class="list-unstyled">
+      <li><b>Grand Total (Business “Main” Transactions/Invoices):</b> ${{ "{:,.2f}".format(grand_total|float) }}</li>
+      <li><b>Total Advertising Fee:</b> ${{ "{:,.2f}".format(total_ad_fee|float) }}</li>
+      <li><b>Total Paid to Users: Cashback (Tier 1):</b> ${{ "{:,.2f}".format(total_user_cash_back|float) }}</li>
+      <li><b>Total Paid to Users: Commissions (Tiers 2-5):</b> ${{ "{:,.2f}".format(total_user_commission|float) }}</li>
+      <li><b>Total Paid to Users: User-Business Commission (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_user_business_commission|float) }}</li>
+      <li><b>Total Paid to Businesses (Tiers 1-5):</b> ${{ "{:,.2f}".format(total_biz_cash_back|float) }}</li>
+      <li class="text-success"><b>Mutual Sponsoree (Downline) Commission Paid:</b> ${{ "{:,.2f}".format(total_sponsoree_mutual_commission|float) }}</li>
+      <li class="fw-bold text-info"><b>Grand Total Paid Out:</b> ${{ "{:,.2f}".format(total_paid_all|float) }}</li>
+    </ul>
   </div>
-  <div class="table-responsive">
-    <table class="table table-bordered align-middle" id="details-table">
-      <thead>
+
+  <!-- DETAILS: USER TRANSACTIONS -->
+  <h5 class="mt-5">User Transactions</h5>
+  <div class="table-responsive mb-5">
+    <table class="table table-bordered align-middle" id="user-details-table">
+      <thead class="table-light">
         <tr>
           <th>Date/Time</th>
           <th>Interaction ID</th>
@@ -80,15 +90,6 @@
           <th>Tier 3 User-Biz</th>
           <th>Tier 4 User-Biz</th>
           <th>Tier 5 User-Biz</th>
-          <th>Business Referral ID</th>
-          <th>Business Name</th>
-          <th>Business Email</th>
-          <th>Tier 1 Biz Cashback</th>
-          <th>Tier 2 Biz Cashback</th>
-          <th>Tier 3 Biz Cashback</th>
-          <th>Tier 4 Biz Cashback</th>
-          <th>Tier 5 Biz Cashback</th>
-          <th>Mutual Sponsoree Cashback</th>
           <th>Transaction ID</th>
         </tr>
       </thead>
@@ -110,35 +111,37 @@
           <td>${{ "{:,.2f}".format(t.tier3_business_user_commission or 0) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_business_user_commission or 0) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_business_user_commission or 0) }}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
           <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
-        {% for t in btrans %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DETAILS: BUSINESS TRANSACTIONS -->
+  <h5>Main Business Transactions (Tiers 1–5, One per Paid Invoice)</h5>
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered align-middle" id="main-business-details-table">
+      <thead class="table-secondary">
+        <tr>
+          <th>Date/Time</th>
+          <th>Interaction ID</th>
+          <th>Business Referral ID</th>
+          <th>Business Name</th>
+          <th>Business Email</th>
+          <th>Tier 1 Biz Cashback</th>
+          <th>Tier 2 Biz Cashback</th>
+          <th>Tier 3 Biz Cashback</th>
+          <th>Tier 4 Biz Cashback</th>
+          <th>Tier 5 Biz Cashback</th>
+          <th>Transaction ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in main_btrans %}
         <tr>
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ t.interaction_id }}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
           <td>{{ t.business_referral_id }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
@@ -147,6 +150,36 @@
           <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
           <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
+          <td>{{ t.transaction_id }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mutual/Downline Transactions -->
+  <h5 class="text-success">Mutual Sponsoree (Downline) Business Commissions</h5>
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered align-middle" id="mutual-business-details-table">
+      <thead class="table-warning">
+        <tr>
+          <th>Date/Time</th>
+          <th>Interaction ID</th>
+          <th>Business Referral ID</th>
+          <th>Business Name</th>
+          <th>Business Email</th>
+          <th>Mutual Sponsoree Cashback (0.25% Split, Capped)</th>
+          <th>Transaction ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in mutual_btrans %}
+        <tr>
+          <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>{{ t.interaction_id }}</td>
+          <td>{{ t.business_referral_id }}</td>
+          <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
+          <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
           <td>${{ "{:,.2f}".format(t.sponsoree_mutual_commission or 0) }}</td>
           <td>{{ t.transaction_id }}</td>
         </tr>
@@ -154,6 +187,7 @@
       </tbody>
     </table>
   </div>
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
