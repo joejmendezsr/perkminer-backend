@@ -4818,10 +4818,16 @@ def finance_dashboard():
     main_btxns = [t for t in btxns if not t.sponsoree_mutual_referral_id]
     mutual_btxns = [t for t in btxns if t.sponsoree_mutual_referral_id]
 
+    def biz_tier_commission(t, tier_field, ref_field):
+        # Do not count if paid to BIZPerkMiner
+        return getattr(t, tier_field) if getattr(t, ref_field) != "BIZPerkMiner" else 0
+
     # Totals for MAIN transactions only
     total_gross_sales = sum(t.amount for t in main_btxns)
     total_ad_revenue = sum(min(t.amount * 0.10, 250) for t in main_btxns)
     total_transactions = len(main_btxns)
+
+    total_sponsoree_mutual_commission = sum(t.sponsoree_mutual_commission or 0 for t in mutual_btxns)
 
     # All user commissions and user-biz commissions
     total_paid_members = sum(
@@ -4838,23 +4844,20 @@ def finance_dashboard():
         for t in utxns
     )
 
-    # All business payouts (tier commissions and mutual)
+    # Business payouts: Tier1 always included; Tiers 2-5 only if NOT BIZPerkMiner, plus mutuals
     total_paid_businesses = (
         sum(
             (t.cash_back or 0)
-            + (t.tier2_commission or 0)
-            + (t.tier3_commission or 0)
-            + (t.tier4_commission or 0)
-            + (t.tier5_commission or 0)
+            + biz_tier_commission(t, "tier2_commission", "tier2_business_referral_id")
+            + biz_tier_commission(t, "tier3_commission", "tier3_business_referral_id")
+            + biz_tier_commission(t, "tier4_commission", "tier4_business_referral_id")
+            + biz_tier_commission(t, "tier5_commission", "tier5_business_referral_id")
             for t in main_btxns
-        ) +
-        sum(t.sponsoree_mutual_commission or 0 for t in mutual_btxns)
+        )
+        + total_sponsoree_mutual_commission
     )
 
-    # Mutual sum
-    total_sponsoree_mutual_commission = sum(t.sponsoree_mutual_commission or 0 for t in mutual_btxns)
-
-    # Capital reserves logic (unchanged)
+    # Capital reserves: only those explicitly paid to BIZPerkMiner
     capital_reserves = sum(
         (t.cash_back or 0) if t.business_referral_id == "BIZPerkMiner" else 0
         for t in main_btxns
