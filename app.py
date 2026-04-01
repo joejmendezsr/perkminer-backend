@@ -920,10 +920,12 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     referred_businesses = Business.query.filter_by(sponsor_id=business.id).all()
     payouts, leftover = split_mutual_commission(amount, len(referred_businesses))
 
+    print("Splitting pool:", amount * 0.0025, "among", len(referred_businesses), "->", payouts)  # <--- PLACE THIS HERE
+
     for idx, sponsoree in enumerate(referred_businesses):
         sponsoree_mutual_referral_id = sponsoree.referral_code
         sponsoree_mutual_commission = payouts[idx]
-        print(f"Mutual payout to: {sponsoree_mutual_referral_id}, amount: {sponsoree_mutual_commission}")
+        print(f"Paying {sponsoree_mutual_referral_id}: {sponsoree_mutual_commission}")  # <--- PLACE THIS HERE
         mutual_trans = BusinessTransaction(
             transaction_id=transaction_id,
             interaction_id=interaction.id,
