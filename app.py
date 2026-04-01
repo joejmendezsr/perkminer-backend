@@ -4024,101 +4024,6 @@ def business_earnings():
         month=month
     )
 
-@app.route('/finance/combined-detailed-report/export/csv')
-@role_required("finance")
-def export_combined_detailed_report_csv():
-    interaction_id = request.args.get("interaction_id", "").strip()
-    user_email = (request.args.get("user_email", "") or "").strip().lower()
-    business_email = (request.args.get("business_email", "") or "").strip().lower()
-    period = request.args.get("period", "all")
-    year = request.args.get("year", 0) or 0
-    month = request.args.get("month", 0) or 0
-
-    uq = UserTransaction.query
-    bq = BusinessTransaction.query
-
-    # ---- Date/period filtering ----
-    if period == "year" and year:
-        uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year)+1, 1, 1))
-        bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year)+1, 1, 1))
-    elif period == "month" and year and month:
-        start = datetime(int(year), int(month), 1)
-        if int(month) == 12:
-            end = datetime(int(year)+1, 1, 1)
-        else:
-            end = datetime(int(year), int(month)+1, 1)
-        uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
-        bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-    if interaction_id:
-        uq = uq.filter(UserTransaction.interaction_id == interaction_id)
-        bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
-
-    user_lookup = {u.referral_code: u for u in User.query.all()}
-    business_lookup = {b.referral_code: b for b in Business.query.all()}
-
-    # ---- Email filtering ----
-    if user_email:
-        utrans = [t for t in uq.all() if t.user_referral_id in user_lookup and user_lookup[t.user_referral_id].email.lower() == user_email]
-        btrans = []
-    elif business_email:
-        btrans = [t for t in bq.all() if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email]
-        utrans = []
-    else:
-        utrans = uq.all()
-        btrans = bq.all()
-
-    # ---- Split Main and Mutual ----
-    main_btrans = [t for t in btrans if not t.sponsoree_mutual_referral_id]
-    mutual_btrans = [t for t in btrans if t.sponsoree_mutual_referral_id]
-
-    import csv
-    from io import StringIO
-    si = StringIO()
-    writer = csv.writer(si)
-
-    # ---- CSV HEADER ----
-    writer.writerow([
-        "Type", "Date/Time", "Interaction ID", "Business Referral ID", "Business Name", "Business Email",
-        "Tier 1 Biz Cashback", "Tier 2 Biz Cashback", "Tier 3 Biz Cashback", "Tier 4 Biz Cashback", "Tier 5 Biz Cashback",
-        "Sponsoree Mutual Commission (0.25%)", "Transaction ID"
-    ])
-
-    # ---- MAIN transaction rows ----
-    for t in main_btrans:
-        writer.writerow([
-            "Main",
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            t.interaction_id,
-            t.business_referral_id,
-            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
-            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
-            f"{t.cash_back:.2f}",
-            f"{t.tier2_commission:.2f}",
-            f"{t.tier3_commission:.2f}",
-            f"{t.tier4_commission:.2f}",
-            f"{t.tier5_commission:.2f}",
-            "",  # No mutual commission here
-            t.transaction_id
-        ])
-
-    # ---- MUTUAL commission rows ----
-    for t in mutual_btrans:
-        writer.writerow([
-            "Mutual",
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            t.interaction_id,
-            t.business_referral_id,
-            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
-            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
-            "", "", "", "", "",  # No tier commissions here
-            f"{t.sponsoree_mutual_commission:.2f}" if t.sponsoree_mutual_commission else "",
-            t.transaction_id
-        ])
-
-    output = si.getvalue()
-    return Response(output, mimetype="text/csv",
-                    headers={"Content-Disposition": "attachment;filename=perkminer_combined_detailed_report.csv"})
-
 @app.route("/export_business_earnings_csv")
 @business_login_required
 def export_business_earnings_csv():
@@ -5501,6 +5406,7 @@ def export_combined_detailed_report_csv():
     uq = UserTransaction.query
     bq = BusinessTransaction.query
 
+    # ---- Date/period filtering ----
     if period == "year" and year:
         uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year)+1, 1, 1))
         bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year)+1, 1, 1))
@@ -5519,6 +5425,7 @@ def export_combined_detailed_report_csv():
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
 
+    # ---- Email filtering ----
     if user_email:
         utrans = [t for t in uq.all() if t.user_referral_id in user_lookup and user_lookup[t.user_referral_id].email.lower() == user_email]
         btrans = []
@@ -5529,82 +5436,57 @@ def export_combined_detailed_report_csv():
         utrans = uq.all()
         btrans = bq.all()
 
+    # ---- Split Main and Mutual ----
+    main_btrans = [t for t in btrans if not t.sponsoree_mutual_referral_id]
+    mutual_btrans = [t for t in btrans if t.sponsoree_mutual_referral_id]
+
     import csv
     from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
 
-    writer.writerow(["Perk Miner Detailed Report"])
-    writer.writerow([])
-
+    # ---- CSV HEADER ----
     writer.writerow([
-        "Date/Time",
-        "Interaction ID",
-        "User Referral ID",
-        "User Name",
-        "User Email",
-        "Tier 1 Cashback",
-        "Tier 2 Commission",
-        "Tier 3 Commission",
-        "Tier 4 Commission",
-        "Tier 5 Commission",
-        "Tier 1 User-Biz",
-        "Tier 2 User-Biz",
-        "Tier 3 User-Biz",
-        "Tier 4 User-Biz",
-        "Tier 5 User-Biz",
-        "Transaction ID",
-    ])
-    for t in utrans:
-        writer.writerow([
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            t.interaction_id,
-            t.user_referral_id,
-            user_lookup[t.user_referral_id].name if t.user_referral_id in user_lookup else "",
-            user_lookup[t.user_referral_id].email if t.user_referral_id in user_lookup else "",
-            f"{t.cash_back:,.2f}",
-            f"{t.tier2_commission:,.2f}",
-            f"{t.tier3_commission:,.2f}",
-            f"{t.tier4_commission:,.2f}",
-            f"{t.tier5_commission:,.2f}",
-            f"{t.tier1_business_user_commission:,.2f}" if hasattr(t, "tier1_business_user_commission") else "",
-            f"{t.tier2_business_user_commission:,.2f}" if hasattr(t, "tier2_business_user_commission") else "",
-            f"{t.tier3_business_user_commission:,.2f}" if hasattr(t, "tier3_business_user_commission") else "",
-            f"{t.tier4_business_user_commission:,.2f}" if hasattr(t, "tier4_business_user_commission") else "",
-            f"{t.tier5_business_user_commission:,.2f}" if hasattr(t, "tier5_business_user_commission") else "",
-            t.transaction_id
-        ])
-
-    writer.writerow([])
-    writer.writerow(["Business Transactions"])
-    # Add separate column for mutual earnings by sponsoree (and clearly label!)
-    writer.writerow([
-        "Date/Time", "Interaction ID", "Business Referral ID", "Business Name", "Business Email",
+        "Type", "Date/Time", "Interaction ID", "Business Referral ID", "Business Name", "Business Email",
         "Tier 1 Biz Cashback", "Tier 2 Biz Cashback", "Tier 3 Biz Cashback", "Tier 4 Biz Cashback", "Tier 5 Biz Cashback",
-        "Sponsoree Mutual Commission (0.25%)",
-        "Transaction ID"
+        "Sponsoree Mutual Commission (0.25%)", "Transaction ID"
     ])
-    for t in btrans:
-        mutual_comm_val = ""
-        if getattr(t, "sponsoree_mutual_referral_id", None) is not None and getattr(t, "sponsoree_mutual_commission", 0):
-            mutual_comm_val = f"{t.sponsoree_mutual_commission:,.2f}"
+
+    # ---- MAIN transaction rows ----
+    for t in main_btrans:
         writer.writerow([
+            "Main",
             t.date_time.strftime('%Y-%m-%d %I:%M %p'),
             t.interaction_id,
             t.business_referral_id,
             business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
             business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
-            f"{t.cash_back:,.2f}",
-            f"{t.tier2_commission:,.2f}",
-            f"{t.tier3_commission:,.2f}",
-            f"{t.tier4_commission:,.2f}",
-            f"{t.tier5_commission:,.2f}",
-            mutual_comm_val,
+            f"{t.cash_back:.2f}",
+            f"{t.tier2_commission:.2f}",
+            f"{t.tier3_commission:.2f}",
+            f"{t.tier4_commission:.2f}",
+            f"{t.tier5_commission:.2f}",
+            "",  # No mutual commission here
+            t.transaction_id
+        ])
+
+    # ---- MUTUAL commission rows ----
+    for t in mutual_btrans:
+        writer.writerow([
+            "Mutual",
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            t.interaction_id,
+            t.business_referral_id,
+            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
+            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
+            "", "", "", "", "",  # No tier commissions here
+            f"{t.sponsoree_mutual_commission:.2f}" if t.sponsoree_mutual_commission else "",
             t.transaction_id
         ])
 
     output = si.getvalue()
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition": f"attachment;filename=perkminer_combined_detailed_report.csv"})
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment;filename=perkminer_combined_detailed_report.csv"})
 
 @app.route("/finance/business-detailed-report", methods=["GET"])
 @role_required("finance")
