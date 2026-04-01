@@ -773,7 +773,7 @@ def staff_password_reset_required(f):
 def split_mutual_commission(total_sale, n_referred):
     if n_referred < 1:
         return [], 0.0
-    pool = total_sale * 0.0025
+    pool = min(total_sale * 0.0025, 6.25)
     per_biz = round(pool / n_referred, 2)
     payouts = [per_biz for _ in range(n_referred)]
     leftover = round(pool - sum(payouts), 2)

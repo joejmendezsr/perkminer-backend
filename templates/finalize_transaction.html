@@ -56,9 +56,9 @@
 
     {% if summary %}
       {% set amt = summary.amount|float %}
-      {% set user_cash_back = amt * 0.02 %}
+      {% set user_cash_back = amt * 0.02 if amt * 0.02 < 50 else 50 %}
       {% set ad_fee = amt * 0.10 if amt * 0.10 <= 250 else 250 %}
-      {% set business_cash_back = amt * 0.01 %}
+      {% set business_cash_back = amt * 0.01 if amt * 0.01 < 25 else 25 %}
       {% set net_gross = amt - ad_fee %}
       {% set marketing_roi = (net_gross / ad_fee * 100) if ad_fee else 0 %}
       {% set marketing_ratio = (amt / ad_fee) if ad_fee else 0 %}
