@@ -5277,30 +5277,27 @@ def view_listing(biz_id):
 @app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
 def combined_detailed_report():
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
     interaction_id = request.args.get("interaction_id", "").strip()
     user_email = (request.args.get("user_email", "") or "").strip().lower()
     business_email = (request.args.get("business_email", "") or "").strip().lower()
-    period = request.args.get("period", "all")
-    year = request.args.get("year", "")
-    month = request.args.get("month", "")
 
     uq = UserTransaction.query
     bq = BusinessTransaction.query
 
-    # --- Date/month/year filter logic ---
     if period == "year" and year:
-        uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year) + 1, 1, 1))
-        bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year) + 1, 1, 1))
+        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
     elif period == "month" and year and month:
-        start = datetime(int(year), int(month), 1)
-        if int(month) == 12:
-            end = datetime(int(year) + 1, 1, 1)
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year + 1, 1, 1)
         else:
-            end = datetime(int(year), int(month) + 1, 1)
+            end = datetime(year, month + 1, 1)
         uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
         bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
-
-    # --- Interaction ID filtering ---
     if interaction_id:
         uq = uq.filter(UserTransaction.interaction_id == interaction_id)
         bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
@@ -5308,7 +5305,6 @@ def combined_detailed_report():
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
 
-    # --- Email filter logic ---
     if user_email:
         utrans = [t for t in uq.all() if t.user_referral_id in user_lookup and user_lookup[t.user_referral_id].email.lower() == user_email]
         btrans = []
@@ -5319,72 +5315,98 @@ def combined_detailed_report():
         utrans = uq.all()
         btrans = bq.all()
 
-    # --- Split Main and Mutual Transactions ---
-    main_btrans = [t for t in btrans if not t.sponsoree_mutual_referral_id]
-    mutual_btrans = [t for t in btrans if t.sponsoree_mutual_referral_id]
+    # ==== USER TABS ====
+    def user_tier_rows(utrans, ref_field, val_field, tier_label):
+        res = []
+        for t in utrans:
+            uid = getattr(t, ref_field)
+            amount = getattr(t, val_field) or 0
+            if uid and amount > 0 and uid in user_lookup:
+                res.append({
+                    "tier": tier_label,
+                    "date_time": t.date_time,
+                    "interaction_id": t.interaction_id,
+                    "user_referral_id": uid,
+                    "user_name": user_lookup[uid].name or "",
+                    "user_email": user_lookup[uid].email or "",
+                    "earning": amount,
+                    "transaction_id": t.transaction_id
+                })
+        return res
 
-    # --- Totals: only from main transactions (avoid double-count) ---
-    grand_total = sum(t.amount for t in main_btrans)
-    total_ad_fee = sum(min(t.amount * 0.10, 250) for t in main_btrans)
-    total_user_cash_back = sum(t.cash_back for t in utrans)
-    total_user_commission = sum(
-        (t.tier2_commission or 0) + (t.tier3_commission or 0) +
-        (t.tier4_commission or 0) + (t.tier5_commission or 0)
-        for t in utrans
-    )
-    total_user_business_commission = sum(
-        (t.tier1_business_user_commission or 0) +
-        (t.tier2_business_user_commission or 0) +
-        (t.tier3_business_user_commission or 0) +
-        (t.tier4_business_user_commission or 0) +
-        (t.tier5_business_user_commission or 0)
-        for t in utrans
-    )
-    total_biz_cash_back = sum(
-        t.cash_back + (t.tier2_commission or 0) + (t.tier3_commission or 0) +
-        (t.tier4_commission or 0) + (t.tier5_commission or 0)
-        for t in main_btrans
-    )
+    user_rows = []
+    user_rows += user_tier_rows(utrans, "user_referral_id", "cash_back", "Tier 1 Cashback")
+    user_rows += user_tier_rows(utrans, "tier2_user_referral_id", "tier2_commission", "Tier 2 Commission")
+    user_rows += user_tier_rows(utrans, "tier3_user_referral_id", "tier3_commission", "Tier 3 Commission")
+    user_rows += user_tier_rows(utrans, "tier4_user_referral_id", "tier4_commission", "Tier 4 Commission")
+    user_rows += user_tier_rows(utrans, "tier5_user_referral_id", "tier5_commission", "Tier 5 Commission")
+    user_rows += user_tier_rows(utrans, "tier1_business_user_referral_id", "tier1_business_user_commission", "Tier 1 User-Biz")
+    user_rows += user_tier_rows(utrans, "tier2_business_user_referral_id", "tier2_business_user_commission", "Tier 2 User-Biz")
+    user_rows += user_tier_rows(utrans, "tier3_business_user_referral_id", "tier3_business_user_commission", "Tier 3 User-Biz")
+    user_rows += user_tier_rows(utrans, "tier4_business_user_referral_id", "tier4_business_user_commission", "Tier 4 User-Biz")
+    user_rows += user_tier_rows(utrans, "tier5_business_user_referral_id", "tier5_business_user_commission", "Tier 5 User-Biz")
 
-    # --- Sum mutual commissions only from the mutual rows ---
-    total_sponsoree_mutual_commission = sum(t.sponsoree_mutual_commission or 0 for t in mutual_btrans)
+    # ==== BUSINESS TABS ====
+    def biz_tier_rows(btrans, ref_field, val_field, tier_label):
+        res = []
+        for t in btrans:
+            bid = getattr(t, ref_field)
+            earning = getattr(t, val_field) or 0
+            if bid and earning > 0 and bid in business_lookup:
+                res.append({
+                    "tier": tier_label,
+                    "date_time": t.date_time,
+                    "interaction_id": t.interaction_id,
+                    "business_referral_id": bid,
+                    "business_name": business_lookup[bid].business_name or "",
+                    "business_email": business_lookup[bid].business_email or "",
+                    "earning": earning,
+                    "transaction_id": t.transaction_id
+                })
+        return res
 
-    total_paid_all = (
-        total_user_cash_back
-        + total_user_commission
-        + total_user_business_commission
-        + total_biz_cash_back
-        + total_sponsoree_mutual_commission
+    tier1_biz_rows = biz_tier_rows(btrans, "business_referral_id", "cash_back", "Tier 1 Biz Cashback")
+    tier2_biz_rows = biz_tier_rows(btrans, "tier2_business_referral_id", "tier2_commission", "Tier 2 Biz Cashback")
+    tier3_biz_rows = biz_tier_rows(btrans, "tier3_business_referral_id", "tier3_commission", "Tier 3 Biz Cashback")
+    tier4_biz_rows = biz_tier_rows(btrans, "tier4_business_referral_id", "tier4_commission", "Tier 4 Biz Cashback")
+    tier5_biz_rows = biz_tier_rows(btrans, "tier5_business_referral_id", "tier5_commission", "Tier 5 Biz Cashback")
+    mutual_rows = biz_tier_rows(btrans, "sponsoree_mutual_referral_id", "sponsoree_mutual_commission", "Mutual Sponsoree")
+
+    # ========== SUMMARY LOGIC ==========
+    total_user_paid = sum(row["earning"] for row in user_rows)
+    total_tier1_biz_paid = sum(row["earning"] for row in tier1_biz_rows)
+    total_tier2_biz_paid = sum(row["earning"] for row in tier2_biz_rows)
+    total_tier3_biz_paid = sum(row["earning"] for row in tier3_biz_rows)
+    total_tier4_biz_paid = sum(row["earning"] for row in tier4_biz_rows)
+    total_tier5_biz_paid = sum(row["earning"] for row in tier5_biz_rows)
+    total_mutual_paid = sum(row["earning"] for row in mutual_rows)
+    grand_total_paid = (
+        total_user_paid +
+        total_tier1_biz_paid + total_tier2_biz_paid + total_tier3_biz_paid +
+        total_tier4_biz_paid + total_tier5_biz_paid + total_mutual_paid
     )
-
     summary = dict(
-        total_sponsoree_mutual_commission=f"{total_sponsoree_mutual_commission:,.2f}",
-        grand_total=f"{grand_total:,.2f}",
-        total_ad_fee=f"{total_ad_fee:,.2f}",
-        total_user_cash_back=f"{total_user_cash_back:,.2f}",
-        total_user_commission=f"{total_user_commission:,.2f}",
-        total_user_business_commission=f"{total_user_business_commission:,.2f}",
-        total_biz_cash_back=f"{total_biz_cash_back:,.2f}",
-        sponsoree_mutual_earnings=f"{total_sponsoree_mutual_commission:,.2f}",
-        total_paid_all=f"{total_paid_all:,.2f}"
+        total_user_paid = f"{total_user_paid:,.2f}",
+        total_tier1_biz_paid = f"{total_tier1_biz_paid:,.2f}",
+        total_tier2_biz_paid = f"{total_tier2_biz_paid:,.2f}",
+        total_tier3_biz_paid = f"{total_tier3_biz_paid:,.2f}",
+        total_tier4_biz_paid = f"{total_tier4_biz_paid:,.2f}",
+        total_tier5_biz_paid = f"{total_tier5_biz_paid:,.2f}",
+        total_mutual_paid = f"{total_mutual_paid:,.2f}",
+        grand_total_paid = f"{grand_total_paid:,.2f}"
     )
 
     return render_template(
         "combined_detailed_report.html",
-        utrans=utrans,
-        btrans=btrans,  # original list
-        main_btrans=main_btrans,  # filtered
-        mutual_btrans=mutual_btrans,  # filtered
+        user_rows=user_rows,
+        tier1_biz_rows=tier1_biz_rows,
+        tier2_biz_rows=tier2_biz_rows,
+        tier3_biz_rows=tier3_biz_rows,
+        tier4_biz_rows=tier4_biz_rows,
+        tier5_biz_rows=tier5_biz_rows,
+        mutual_rows=mutual_rows,
         user_lookup=user_lookup,
         business_lookup=business_lookup,
-        grand_total=grand_total,
-        total_ad_fee=total_ad_fee,
-        total_user_cash_back=total_user_cash_back,
-        total_user_commission=total_user_commission,
-        total_user_business_commission=total_user_business_commission,
-        total_biz_cash_back=total_biz_cash_back,
-        total_sponsoree_mutual_commission=total_sponsoree_mutual_commission,
-        total_paid_all=total_paid_all,
         period=period,
         year=year,
         month=month,
@@ -5399,26 +5421,26 @@ def combined_detailed_report():
 @app.route('/finance/combined-detailed-report/export/csv')
 @role_required("finance")
 def export_combined_detailed_report_csv():
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
     interaction_id = request.args.get("interaction_id", "").strip()
     user_email = (request.args.get("user_email", "") or "").strip().lower()
     business_email = (request.args.get("business_email", "") or "").strip().lower()
-    period = request.args.get("period", "all")
-    year = request.args.get("year", 0) or 0
-    month = request.args.get("month", 0) or 0
 
     uq = UserTransaction.query
     bq = BusinessTransaction.query
 
-    # ---- Date/period filtering ----
+    # Date/month/year filter logic
     if period == "year" and year:
-        uq = uq.filter(UserTransaction.date_time >= datetime(int(year), 1, 1), UserTransaction.date_time < datetime(int(year)+1, 1, 1))
-        bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year)+1, 1, 1))
+        uq = uq.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year+1, 1, 1))
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(year, 1, 1), BusinessTransaction.date_time < datetime(year+1, 1, 1))
     elif period == "month" and year and month:
-        start = datetime(int(year), int(month), 1)
-        if int(month) == 12:
-            end = datetime(int(year)+1, 1, 1)
+        start = datetime(year, month, 1)
+        if month == 12:
+            end = datetime(year + 1, 1, 1)
         else:
-            end = datetime(int(year), int(month)+1, 1)
+            end = datetime(year, month + 1, 1)
         uq = uq.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
         bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
     if interaction_id:
@@ -5428,65 +5450,71 @@ def export_combined_detailed_report_csv():
     user_lookup = {u.referral_code: u for u in User.query.all()}
     business_lookup = {b.referral_code: b for b in Business.query.all()}
 
-    # ---- Email filtering ----
-    if user_email:
-        utrans = [t for t in uq.all() if t.user_referral_id in user_lookup and user_lookup[t.user_referral_id].email.lower() == user_email]
-        btrans = []
-    elif business_email:
-        btrans = [t for t in bq.all() if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email]
-        utrans = []
-    else:
-        utrans = uq.all()
-        btrans = bq.all()
+    utrans = uq.all()
+    btrans = bq.all()
 
-    # ---- Split Main and Mutual ----
-    main_btrans = [t for t in btrans if not t.sponsoree_mutual_referral_id]
-    mutual_btrans = [t for t in btrans if t.sponsoree_mutual_referral_id]
+    csv_rows = []
+
+    def user_tier_rows(utrans, ref_field, val_field, tier_label):
+        for t in utrans:
+            uid = getattr(t, ref_field)
+            amount = getattr(t, val_field) or 0
+            if uid and amount > 0 and uid in user_lookup:
+                csv_rows.append([
+                    "User",
+                    tier_label,
+                    t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+                    t.interaction_id,
+                    uid,
+                    user_lookup[uid].name or "",
+                    user_lookup[uid].email or "",
+                    f"{amount:.2f}",
+                    t.transaction_id
+                ])
+
+    user_tier_rows(utrans, "user_referral_id", "cash_back", "Tier 1 Cashback")
+    user_tier_rows(utrans, "tier2_user_referral_id", "tier2_commission", "Tier 2 Commission")
+    user_tier_rows(utrans, "tier3_user_referral_id", "tier3_commission", "Tier 3 Commission")
+    user_tier_rows(utrans, "tier4_user_referral_id", "tier4_commission", "Tier 4 Commission")
+    user_tier_rows(utrans, "tier5_user_referral_id", "tier5_commission", "Tier 5 Commission")
+    user_tier_rows(utrans, "tier1_business_user_referral_id", "tier1_business_user_commission", "Tier 1 User-Biz")
+    user_tier_rows(utrans, "tier2_business_user_referral_id", "tier2_business_user_commission", "Tier 2 User-Biz")
+    user_tier_rows(utrans, "tier3_business_user_referral_id", "tier3_business_user_commission", "Tier 3 User-Biz")
+    user_tier_rows(utrans, "tier4_business_user_referral_id", "tier4_business_user_commission", "Tier 4 User-Biz")
+    user_tier_rows(utrans, "tier5_business_user_referral_id", "tier5_business_user_commission", "Tier 5 User-Biz")
+
+    def biz_tier_rows(btrans, ref_field, val_field, tier_label):
+        for t in btrans:
+            bid = getattr(t, ref_field)
+            earning = getattr(t, val_field) or 0
+            if bid and earning > 0 and bid in business_lookup:
+                csv_rows.append([
+                    "Business",
+                    tier_label,
+                    t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+                    t.interaction_id,
+                    bid,
+                    business_lookup[bid].business_name or "",
+                    business_lookup[bid].business_email or "",
+                    f"{earning:.2f}",
+                    t.transaction_id
+                ])
+    biz_tier_rows(btrans, "business_referral_id", "cash_back", "Tier 1 Biz Cashback")
+    biz_tier_rows(btrans, "tier2_business_referral_id", "tier2_commission", "Tier 2 Biz Cashback")
+    biz_tier_rows(btrans, "tier3_business_referral_id", "tier3_commission", "Tier 3 Biz Cashback")
+    biz_tier_rows(btrans, "tier4_business_referral_id", "tier4_commission", "Tier 4 Biz Cashback")
+    biz_tier_rows(btrans, "tier5_business_referral_id", "tier5_commission", "Tier 5 Biz Cashback")
+    biz_tier_rows(btrans, "sponsoree_mutual_referral_id", "sponsoree_mutual_commission", "Mutual Sponsoree")
 
     import csv
     from io import StringIO
     si = StringIO()
     writer = csv.writer(si)
-
-    # ---- CSV HEADER ----
     writer.writerow([
-        "Type", "Date/Time", "Interaction ID", "Business Referral ID", "Business Name", "Business Email",
-        "Tier 1 Biz Cashback", "Tier 2 Biz Cashback", "Tier 3 Biz Cashback", "Tier 4 Biz Cashback", "Tier 5 Biz Cashback",
-        "Sponsoree Mutual Commission (0.25%)", "Transaction ID"
+        "RecordType","Tier","Date/Time","Interaction ID","Referral ID","Name","Email","Earning","Transaction ID"
     ])
-
-    # ---- MAIN transaction rows ----
-    for t in main_btrans:
-        writer.writerow([
-            "Main",
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            t.interaction_id,
-            t.business_referral_id,
-            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
-            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
-            f"{t.cash_back:.2f}",
-            f"{t.tier2_commission:.2f}",
-            f"{t.tier3_commission:.2f}",
-            f"{t.tier4_commission:.2f}",
-            f"{t.tier5_commission:.2f}",
-            "",  # No mutual commission here
-            t.transaction_id
-        ])
-
-    # ---- MUTUAL commission rows ----
-    for t in mutual_btrans:
-        writer.writerow([
-            "Mutual",
-            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
-            t.interaction_id,
-            t.business_referral_id,
-            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '',
-            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '',
-            "", "", "", "", "",  # No tier commissions here
-            f"{t.sponsoree_mutual_commission:.2f}" if t.sponsoree_mutual_commission else "",
-            t.transaction_id
-        ])
-
+    for row in csv_rows:
+        writer.writerow(row)
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
                     headers={"Content-Disposition": "attachment;filename=perkminer_combined_detailed_report.csv"})
