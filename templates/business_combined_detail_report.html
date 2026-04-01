@@ -52,7 +52,7 @@
         <tr>
           <th>Date/Time</th>
           <th>Interaction ID</th>
-          <th>Business Referral ID</th>
+          <th>Referral ID</th>
           <th>Business Name</th>
           <th>Business Email</th>
           <th>Tier 1 Cashback</th>
@@ -60,7 +60,7 @@
           <th>Tier 3 Cashback</th>
           <th>Tier 4 Cashback</th>
           <th>Tier 5 Cashback</th>
-          <th>Mutual Sponsoree Commission (split/capped)</th>
+          <th>Mutual Sponsoree Commission (0.25% split/capped)</th>
           <th>Transaction ID</th>
         </tr>
       </thead>
@@ -69,14 +69,34 @@
         <tr class="{% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}table-warning{% endif %}">
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ t.interaction_id }}</td>
-          <td>{{ t.business_referral_id }}</td>
-          <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
-          <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
+          <td>
+            {% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}
+              {{ t.sponsoree_mutual_referral_id }}
+            {% else %}
+              {{ t.business_referral_id }}
+            {% endif %}
+          </td>
+          <td>
+            {% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}
+              {{ business_lookup[t.sponsoree_mutual_referral_id].business_name if t.sponsoree_mutual_referral_id in business_lookup else '' }}
+            {% else %}
+              {{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}
+            {% endif %}
+          </td>
+          <td>
+            {% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}
+              {{ business_lookup[t.sponsoree_mutual_referral_id].business_email if t.sponsoree_mutual_referral_id in business_lookup else '' }}
+            {% else %}
+              {{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}
+            {% endif %}
+          </td>
+          <!-- Tiers and mutual: Only display for main, or for mutual, leave tiers blank -->
           <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.cash_back) }}{% endif %}</td>
           <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier2_commission) }}{% endif %}</td>
           <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier3_commission) }}{% endif %}</td>
           <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier4_commission) }}{% endif %}</td>
           <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier5_commission) }}{% endif %}</td>
+          <!-- Mutual column: only for mutual transactions -->
           <td>{% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}${{ "{:,.2f}".format(t.sponsoree_mutual_commission) }}{% endif %}</td>
           <td>{{ t.transaction_id }}</td>
         </tr>
