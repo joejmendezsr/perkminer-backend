@@ -40,6 +40,7 @@
       <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
     </div>
   </form>
+
   <div class="table-responsive">
     <table class="table table-bordered align-middle" id="commissions-table">
       <thead class="table-light">
@@ -51,6 +52,11 @@
           <th>Tier 3 (0.25%)</th>
           <th>Tier 4 (0.25%)</th>
           <th>Tier 5 (2%)</th>
+          <th>Tier 1 Biz (1%)</th>
+          <th>Tier 2 Biz (0.25%)</th>
+          <th>Tier 3 Biz (0.25%)</th>
+          <th>Tier 4 Biz (0.25%)</th>
+          <th>Tier 5 Biz (1%)</th>
           <th>Grand Total</th>
         </tr>
       </thead>
@@ -64,7 +70,12 @@
           <td>${{ "{:,.2f}".format(u.tier3) }}</td>
           <td>${{ "{:,.2f}".format(u.tier4) }}</td>
           <td>${{ "{:,.2f}".format(u.tier5) }}</td>
-          <td>${{ "{:,.2f}".format(u.grand_total) }}</td>
+          <td>${{ "{:,.2f}".format(u.tier1_biz) }}</td>
+          <td>${{ "{:,.2f}".format(u.tier2_biz) }}</td>
+          <td>${{ "{:,.2f}".format(u.tier3_biz) }}</td>
+          <td>${{ "{:,.2f}".format(u.tier4_biz) }}</td>
+          <td>${{ "{:,.2f}".format(u.tier5_biz) }}</td>
+          <td class="fw-bold">${{ "{:,.2f}".format(u.grand_total) }}</td>
         </tr>
         {% endfor %}
       </tbody>

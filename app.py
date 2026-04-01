@@ -5654,24 +5654,36 @@ def commissions_paid():
 
     qry = UserTransaction.query
     if period == "year" and year:
-        qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+        qry = qry.filter(
+            UserTransaction.date_time >= datetime(year, 1, 1),
+            UserTransaction.date_time < datetime(year + 1, 1, 1)
+        )
     elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
             end = datetime(year + 1, 1, 1)
         else:
-            end = datetime(year, month+1, 1)
-        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+            end = datetime(year, month + 1, 1)
+        qry = qry.filter(
+            UserTransaction.date_time >= start,
+            UserTransaction.date_time < end
+        )
 
     transactions = qry.all()
     from collections import defaultdict
 
-    users_data = defaultdict(lambda: {"referral_id": "", "name": "", "email": "",
-                                      "tier2": 0.0, "tier3": 0.0, "tier4": 0.0, "tier5": 0.0, "grand_total": 0.0})
+    users_data = defaultdict(
+        lambda: {
+            "referral_id": "", "name": "", "email": "",
+            "tier2": 0.0, "tier3": 0.0, "tier4": 0.0, "tier5": 0.0,
+            "tier1_biz": 0.0, "tier2_biz": 0.0, "tier3_biz": 0.0, "tier4_biz": 0.0, "tier5_biz": 0.0,
+            "grand_total": 0.0
+        }
+    )
     all_users = {u.referral_code: u for u in User.query.all()}
 
-    # Loop through every transaction and add to every user's total (per tier) if that user earned a commission in any tier
     for t in transactions:
+        # User-to-user commissions
         for tier, field, comm_field in [
             ("tier2", t.tier2_user_referral_id, t.tier2_commission),
             ("tier3", t.tier3_user_referral_id, t.tier3_commission),
@@ -5686,8 +5698,23 @@ def commissions_paid():
                 udata["email"] = u.email or ""
                 udata[tier] += comm_field
                 udata["grand_total"] += comm_field
+        # User-business commissions
+        for biz_tier, field, comm_field in [
+            ("tier1_biz", t.tier1_business_user_referral_id, t.tier1_business_user_commission),
+            ("tier2_biz", t.tier2_business_user_referral_id, t.tier2_business_user_commission),
+            ("tier3_biz", t.tier3_business_user_referral_id, t.tier3_business_user_commission),
+            ("tier4_biz", t.tier4_business_user_referral_id, t.tier4_business_user_commission),
+            ("tier5_biz", t.tier5_business_user_referral_id, t.tier5_business_user_commission),
+        ]:
+            if field and comm_field > 0 and field in all_users:
+                u = all_users[field]
+                udata = users_data[u.referral_code]
+                udata["referral_id"] = u.referral_code
+                udata["name"] = u.name or ""
+                udata["email"] = u.email or ""
+                udata[biz_tier] += comm_field
+                udata["grand_total"] += comm_field
 
-    # Only display users with nonzero grand total:
     users = [u for u in users_data.values() if u["grand_total"] > 0]
     users.sort(key=lambda x: x["grand_total"], reverse=True)
 
@@ -5708,14 +5735,20 @@ def export_commissions_paid_csv():
 
     qry = UserTransaction.query
     if period == "year" and year:
-        qry = qry.filter(UserTransaction.date_time >= datetime(year, 1, 1), UserTransaction.date_time < datetime(year + 1, 1, 1))
+        qry = qry.filter(
+            UserTransaction.date_time >= datetime(year, 1, 1),
+            UserTransaction.date_time < datetime(year + 1, 1, 1)
+        )
     elif period == "month" and year and month:
         start = datetime(year, month, 1)
         if month == 12:
             end = datetime(year + 1, 1, 1)
         else:
             end = datetime(year, month + 1, 1)
-        qry = qry.filter(UserTransaction.date_time >= start, UserTransaction.date_time < end)
+        qry = qry.filter(
+            UserTransaction.date_time >= start,
+            UserTransaction.date_time < end
+        )
     transactions = qry.all()
 
     from collections import defaultdict
@@ -5727,53 +5760,60 @@ def export_commissions_paid_csv():
         "tier3": 0.0,
         "tier4": 0.0,
         "tier5": 0.0,
+        "tier1_biz": 0.0,
+        "tier2_biz": 0.0,
+        "tier3_biz": 0.0,
+        "tier4_biz": 0.0,
+        "tier5_biz": 0.0,
         "grand_total": 0.0
     })
     all_users = {u.referral_code: u for u in User.query.all()}
 
     for t in transactions:
-        if t.tier2_user_referral_id and t.tier2_commission > 0:
-            u = all_users.get(t.tier2_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier2"] += t.tier2_commission
-                x["grand_total"] += t.tier2_commission
-        if t.tier3_user_referral_id and t.tier3_commission > 0:
-            u = all_users.get(t.tier3_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier3"] += t.tier3_commission
-                x["grand_total"] += t.tier3_commission
-        if t.tier4_user_referral_id and t.tier4_commission > 0:
-            u = all_users.get(t.tier4_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier4"] += t.tier4_commission
-                x["grand_total"] += t.tier4_commission
-        if t.tier5_user_referral_id and t.tier5_commission > 0:
-            u = all_users.get(t.tier5_user_referral_id)
-            if u:
-                x = users_data[u.referral_code]
-                x["referral_id"] = u.referral_code
-                x["name"] = u.name or ""
-                x["email"] = u.email or ""
-                x["tier5"] += t.tier5_commission
-                x["grand_total"] += t.tier5_commission
+        # User-to-user commissions
+        for tier, field, comm_field in [
+            ("tier2", t.tier2_user_referral_id, t.tier2_commission),
+            ("tier3", t.tier3_user_referral_id, t.tier3_commission),
+            ("tier4", t.tier4_user_referral_id, t.tier4_commission),
+            ("tier5", t.tier5_user_referral_id, t.tier5_commission),
+        ]:
+            if field and comm_field > 0 and field in all_users:
+                u = all_users[field]
+                udata = users_data[u.referral_code]
+                udata["referral_id"] = u.referral_code
+                udata["name"] = u.name or ""
+                udata["email"] = u.email or ""
+                udata[tier] += comm_field
+                udata["grand_total"] += comm_field
+        # User-business commissions
+        for biz_tier, field, comm_field in [
+            ("tier1_biz", t.tier1_business_user_referral_id, t.tier1_business_user_commission),
+            ("tier2_biz", t.tier2_business_user_referral_id, t.tier2_business_user_commission),
+            ("tier3_biz", t.tier3_business_user_referral_id, t.tier3_business_user_commission),
+            ("tier4_biz", t.tier4_business_user_referral_id, t.tier4_business_user_commission),
+            ("tier5_biz", t.tier5_business_user_referral_id, t.tier5_business_user_commission),
+        ]:
+            if field and comm_field > 0 and field in all_users:
+                u = all_users[field]
+                udata = users_data[u.referral_code]
+                udata["referral_id"] = u.referral_code
+                udata["name"] = u.name or ""
+                udata["email"] = u.email or ""
+                udata[biz_tier] += comm_field
+                udata["grand_total"] += comm_field
 
     users = sorted(users_data.values(), key=lambda x: x["grand_total"], reverse=True)
 
+    from io import StringIO
+    import csv
     si = StringIO()
     writer = csv.writer(si)
-    writer.writerow(['User Referral ID', 'Name', 'Email', 'Tier 2 (0.25%)', 'Tier 3 (0.25%)', 'Tier 4 (0.25%)', 'Tier 5 (2%)', 'Grand Total'])
+    writer.writerow([
+        'User Referral ID','Name','Email',
+        'Tier 2 (0.25%)','Tier 3 (0.25%)','Tier 4 (0.25%)','Tier 5 (2%)',
+        'Tier 1 Biz (1%)','Tier 2 Biz (0.25%)','Tier 3 Biz (0.25%)','Tier 4 Biz (0.25%)','Tier 5 Biz (1%)',
+        'Grand Total'
+    ])
     for u in users:
         writer.writerow([
             u["referral_id"],
@@ -5783,6 +5823,11 @@ def export_commissions_paid_csv():
             f"{u['tier3']:.2f}",
             f"{u['tier4']:.2f}",
             f"{u['tier5']:.2f}",
+            f"{u['tier1_biz']:.2f}",
+            f"{u['tier2_biz']:.2f}",
+            f"{u['tier3_biz']:.2f}",
+            f"{u['tier4_biz']:.2f}",
+            f"{u['tier5_biz']:.2f}",
             f"{u['grand_total']:.2f}",
         ])
     output = si.getvalue()
