@@ -5498,25 +5498,55 @@ def business_combined_detail_report():
     business_name = (request.args.get("business_name", "") or "").strip().lower()
     start_date = request.args.get("start_date", "")
     end_date = request.args.get("end_date", "")
+    selected_year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    selected_month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
     qry = BusinessTransaction.query
 
-    # Date range filtering
+    # Date and month/year filtering
+    if selected_year and selected_month:
+        start = datetime(selected_year, selected_month, 1)
+        if selected_month == 12:
+            end = datetime(selected_year + 1, 1, 1)
+        else:
+            end = datetime(selected_year, selected_month + 1, 1)
+        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
     if start_date:
         qry = qry.filter(BusinessTransaction.date_time >= datetime.strptime(start_date, "%Y-%m-%d"))
     if end_date:
         qry = qry.filter(BusinessTransaction.date_time <= datetime.strptime(end_date, "%Y-%m-%d"))
     if business_referral_id:
-        qry = qry.filter(BusinessTransaction.business_referral_id == business_referral_id)
+        qry = qry.filter(
+            (BusinessTransaction.business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier2_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier3_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier4_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier5_business_referral_id == business_referral_id) |
+            (BusinessTransaction.sponsoree_mutual_referral_id == business_referral_id)
+        )
     transactions = qry.all()
     business_lookup = {b.referral_code: b for b in Business.query.all()}
 
-    # If business_name given, filter to businesses with that name
+    # If business_name given, filter to businesses with that name in any relevant field
     if business_name:
-        business_ids = [b.referral_code for b in business_lookup.values() if b.business_name and business_name in b.business_name.lower()]
-        transactions = [t for t in transactions if t.business_referral_id in business_ids]
+        filtered_ids = [
+            b.referral_code
+            for b in business_lookup.values()
+            if b.business_name and business_name in b.business_name.lower()
+        ]
+        transactions = [
+            t for t in transactions
+            if (
+                t.business_referral_id in filtered_ids or
+                t.tier2_business_referral_id in filtered_ids or
+                t.tier3_business_referral_id in filtered_ids or
+                t.tier4_business_referral_id in filtered_ids or
+                t.tier5_business_referral_id in filtered_ids or
+                t.sponsoree_mutual_referral_id in filtered_ids
+            )
+        ]
 
-    # Aggregate earnings by business_referral_id
+    # Aggregate totals per business by any field they earn in
     from collections import defaultdict
     biz_totals = defaultdict(lambda: {
         "referral_id": "",
@@ -5527,34 +5557,73 @@ def business_combined_detail_report():
         "tier3_commission": 0.0,
         "tier4_commission": 0.0,
         "tier5_commission": 0.0,
-        "sponsoree_mutual_commission": 0.0
+        "sponsoree_mutual_commission": 0.0,
+        "total_earned": 0.0
     })
-    for t in transactions:
-        # Use sponsoree_mutual_referral_id for mutual commission rows
-        if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0:
-            b_id = t.sponsoree_mutual_referral_id
-            if b_id in business_lookup:
-                b = business_lookup[b_id]
-                rec = biz_totals[b_id]
-                rec["referral_id"] = b_id
-                rec["business_name"] = b.business_name
-                rec["business_email"] = b.business_email
-                rec["sponsoree_mutual_commission"] += t.sponsoree_mutual_commission
-        else:
-            b_id = t.business_referral_id
-            if b_id in business_lookup:
-                b = business_lookup[b_id]
-                rec = biz_totals[b_id]
-                rec["referral_id"] = b_id
-                rec["business_name"] = b.business_name
-                rec["business_email"] = b.business_email
-                rec["cash_back"] += t.cash_back or 0
-                rec["tier2_commission"] += t.tier2_commission or 0
-                rec["tier3_commission"] += t.tier3_commission or 0
-                rec["tier4_commission"] += t.tier4_commission or 0
-                rec["tier5_commission"] += t.tier5_commission or 0
 
-    summary_rows = [v for v in biz_totals.values() if any([v["cash_back"], v["tier2_commission"], v["tier3_commission"], v["tier4_commission"], v["tier5_commission"], v["sponsoree_mutual_commission"]])]
+    for t in transactions:
+        # Tier 1 cashback
+        bid = t.business_referral_id
+        if bid in business_lookup and t.cash_back:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["cash_back"] += t.cash_back
+            rec["total_earned"] += t.cash_back
+        # Tier 2
+        bid = t.tier2_business_referral_id
+        if bid in business_lookup and t.tier2_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier2_commission"] += t.tier2_commission
+            rec["total_earned"] += t.tier2_commission
+        # Tier 3
+        bid = t.tier3_business_referral_id
+        if bid in business_lookup and t.tier3_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier3_commission"] += t.tier3_commission
+            rec["total_earned"] += t.tier3_commission
+        # Tier 4
+        bid = t.tier4_business_referral_id
+        if bid in business_lookup and t.tier4_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier4_commission"] += t.tier4_commission
+            rec["total_earned"] += t.tier4_commission
+        # Tier 5
+        bid = t.tier5_business_referral_id
+        if bid in business_lookup and t.tier5_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier5_commission"] += t.tier5_commission
+            rec["total_earned"] += t.tier5_commission
+        # Mutual
+        bid = t.sponsoree_mutual_referral_id
+        if bid in business_lookup and t.sponsoree_mutual_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["sponsoree_mutual_commission"] += t.sponsoree_mutual_commission
+            rec["total_earned"] += t.sponsoree_mutual_commission
+
+    summary_rows = [
+        v for v in biz_totals.values()
+        if any([v["cash_back"], v["tier2_commission"], v["tier3_commission"], v["tier4_commission"], v["tier5_commission"], v["sponsoree_mutual_commission"]])
+    ]
+
+    months = [(str(m), datetime(2026, m, 1).strftime('%B')) for m in range(1,13)]
+    years = [str(y) for y in range(2020, 2051)]
 
     return render_template(
         "business_combined_detail_report.html",
@@ -5562,7 +5631,11 @@ def business_combined_detail_report():
         business_referral_id=business_referral_id,
         business_name=business_name,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        month=selected_month,
+        year=selected_year,
+        months=months,
+        years=years
     )
 
 @app.route("/finance/business-detailed-report/export/csv")
@@ -5572,20 +5645,49 @@ def export_business_combined_detail_report_csv():
     business_name = (request.args.get("business_name", "") or "").strip().lower()
     start_date = request.args.get("start_date", "")
     end_date = request.args.get("end_date", "")
+    selected_year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    selected_month = int(request.args.get("month", 0)) if request.args.get("month") else 0
 
     qry = BusinessTransaction.query
+    if selected_year and selected_month:
+        start = datetime(selected_year, selected_month, 1)
+        if selected_month == 12:
+            end = datetime(selected_year + 1, 1, 1)
+        else:
+            end = datetime(selected_year, selected_month + 1, 1)
+        qry = qry.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
     if start_date:
         qry = qry.filter(BusinessTransaction.date_time >= datetime.strptime(start_date, "%Y-%m-%d"))
     if end_date:
         qry = qry.filter(BusinessTransaction.date_time <= datetime.strptime(end_date, "%Y-%m-%d"))
     if business_referral_id:
-        qry = qry.filter(BusinessTransaction.business_referral_id == business_referral_id)
+        qry = qry.filter(
+            (BusinessTransaction.business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier2_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier3_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier4_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier5_business_referral_id == business_referral_id) |
+            (BusinessTransaction.sponsoree_mutual_referral_id == business_referral_id)
+        )
     transactions = qry.all()
     business_lookup = {b.referral_code: b for b in Business.query.all()}
-
     if business_name:
-        business_ids = [b.referral_code for b in business_lookup.values() if b.business_name and business_name in b.business_name.lower()]
-        transactions = [t for t in transactions if t.business_referral_id in business_ids]
+        filtered_ids = [
+            b.referral_code
+            for b in business_lookup.values()
+            if b.business_name and business_name in b.business_name.lower()
+        ]
+        transactions = [
+            t for t in transactions
+            if (
+                t.business_referral_id in filtered_ids or
+                t.tier2_business_referral_id in filtered_ids or
+                t.tier3_business_referral_id in filtered_ids or
+                t.tier4_business_referral_id in filtered_ids or
+                t.tier5_business_referral_id in filtered_ids or
+                t.sponsoree_mutual_referral_id in filtered_ids
+            )
+        ]
 
     from collections import defaultdict
     biz_totals = defaultdict(lambda: {
@@ -5597,34 +5699,69 @@ def export_business_combined_detail_report_csv():
         "tier3_commission": 0.0,
         "tier4_commission": 0.0,
         "tier5_commission": 0.0,
-        "sponsoree_mutual_commission": 0.0
+        "sponsoree_mutual_commission": 0.0,
+        "total_earned": 0.0
     })
     for t in transactions:
+        # Tier 1 cashback
+        bid = t.business_referral_id
+        if bid in business_lookup and t.cash_back:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["cash_back"] += t.cash_back
+            rec["total_earned"] += t.cash_back
+        # Tier 2
+        bid = t.tier2_business_referral_id
+        if bid in business_lookup and t.tier2_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier2_commission"] += t.tier2_commission
+            rec["total_earned"] += t.tier2_commission
+        # Tier 3
+        bid = t.tier3_business_referral_id
+        if bid in business_lookup and t.tier3_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier3_commission"] += t.tier3_commission
+            rec["total_earned"] += t.tier3_commission
+        # Tier 4
+        bid = t.tier4_business_referral_id
+        if bid in business_lookup and t.tier4_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier4_commission"] += t.tier4_commission
+            rec["total_earned"] += t.tier4_commission
+        # Tier 5
+        bid = t.tier5_business_referral_id
+        if bid in business_lookup and t.tier5_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["tier5_commission"] += t.tier5_commission
+            rec["total_earned"] += t.tier5_commission
         # Mutual
-        if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0:
-            b_id = t.sponsoree_mutual_referral_id
-            if b_id in business_lookup:
-                b = business_lookup[b_id]
-                rec = biz_totals[b_id]
-                rec["referral_id"] = b_id
-                rec["business_name"] = b.business_name
-                rec["business_email"] = b.business_email
-                rec["sponsoree_mutual_commission"] += t.sponsoree_mutual_commission
-        else:
-            b_id = t.business_referral_id
-            if b_id in business_lookup:
-                b = business_lookup[b_id]
-                rec = biz_totals[b_id]
-                rec["referral_id"] = b_id
-                rec["business_name"] = b.business_name
-                rec["business_email"] = b.business_email
-                rec["cash_back"] += t.cash_back or 0
-                rec["tier2_commission"] += t.tier2_commission or 0
-                rec["tier3_commission"] += t.tier3_commission or 0
-                rec["tier4_commission"] += t.tier4_commission or 0
-                rec["tier5_commission"] += t.tier5_commission or 0
+        bid = t.sponsoree_mutual_referral_id
+        if bid in business_lookup and t.sponsoree_mutual_commission:
+            rec = biz_totals[bid]
+            rec["referral_id"] = bid
+            rec["business_name"] = business_lookup[bid].business_name or ""
+            rec["business_email"] = business_lookup[bid].business_email or ""
+            rec["sponsoree_mutual_commission"] += t.sponsoree_mutual_commission
+            rec["total_earned"] += t.sponsoree_mutual_commission
 
-    summary_rows = [v for v in biz_totals.values() if any([v["cash_back"], v["tier2_commission"], v["tier3_commission"], v["tier4_commission"], v["tier5_commission"], v["sponsoree_mutual_commission"]])]
+    summary_rows = [
+        v for v in biz_totals.values()
+        if any([v["cash_back"], v["tier2_commission"], v["tier3_commission"], v["tier4_commission"], v["tier5_commission"], v["sponsoree_mutual_commission"]])
+    ]
 
     import csv
     from io import StringIO
@@ -5639,7 +5776,8 @@ def export_business_combined_detail_report_csv():
         "Tier 3 Cashback",
         "Tier 4 Cashback",
         "Tier 5 Cashback",
-        "Mutual Sponsoree Commission (0.25% split/capped)"
+        "Mutual Sponsoree Commission (0.25% split/capped)",
+        "Total Earned"
     ])
     for row in summary_rows:
         writer.writerow([
@@ -5651,7 +5789,8 @@ def export_business_combined_detail_report_csv():
             f"{row['tier3_commission']:.2f}",
             f"{row['tier4_commission']:.2f}",
             f"{row['tier5_commission']:.2f}",
-            f"{row['sponsoree_mutual_commission']:.2f}"
+            f"{row['sponsoree_mutual_commission']:.2f}",
+            f"{row['total_earned']:.2f}"
         ])
     output = si.getvalue()
     return Response(output, mimetype="text/csv",
