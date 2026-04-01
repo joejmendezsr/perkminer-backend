@@ -5527,7 +5527,11 @@ def business_combined_detail_report():
     transactions = bq.all()
     business_lookup = {b.referral_code: b for b in Business.query.all()}
     if business_email:
-        transactions = [t for t in transactions if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email]
+        transactions = [
+            t for t in transactions
+            if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email
+        ]
+
     return render_template(
         "business_combined_detail_report.html",
         transactions=transactions,
@@ -5541,6 +5545,76 @@ def business_combined_detail_report():
         months=[(f"{i}", datetime(2026, i, 1).strftime('%B')) for i in range(1, 13)],
         years=[str(y) for y in range(2026, 2051)]
     )
+
+@app.route("/finance/business-detailed-report/export/csv")
+@role_required("finance")
+def export_business_combined_detail_report_csv():
+    period = request.args.get("period", "all")
+    year = int(request.args.get("year", 0)) if request.args.get("year") else 0
+    month = int(request.args.get("month", 0)) if request.args.get("month") else 0
+    interaction_id = request.args.get("interaction_id", "").strip()
+    business_referral_id = request.args.get("business_referral_id", "").strip()
+    business_email = (request.args.get("business_email", "") or "").strip().lower()
+
+    bq = BusinessTransaction.query
+    if period == "year" and year:
+        bq = bq.filter(BusinessTransaction.date_time >= datetime(int(year), 1, 1), BusinessTransaction.date_time < datetime(int(year)+1, 1, 1))
+    elif period == "month" and year and month:
+        start = datetime(int(year), int(month), 1)
+        if int(month) == 12:
+            end = datetime(int(year)+1, 1, 1)
+        else:
+            end = datetime(int(year), int(month)+1, 1)
+        bq = bq.filter(BusinessTransaction.date_time >= start, BusinessTransaction.date_time < end)
+    if interaction_id:
+        bq = bq.filter(BusinessTransaction.interaction_id == interaction_id)
+    if business_referral_id:
+        bq = bq.filter(
+            (BusinessTransaction.business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier2_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier3_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier4_business_referral_id == business_referral_id) |
+            (BusinessTransaction.tier5_business_referral_id == business_referral_id)
+        )
+
+    transactions = bq.all()
+    business_lookup = {b.referral_code: b for b in Business.query.all()}
+    if business_email:
+        transactions = [
+            t for t in transactions
+            if t.business_referral_id in business_lookup and business_lookup[t.business_referral_id].business_email.lower() == business_email
+        ]
+    import csv
+    from io import StringIO
+    si = StringIO()
+    writer = csv.writer(si)
+
+    writer.writerow([
+        "Type", "Date/Time", "Interaction ID", "Business Referral ID", "Business Name", "Business Email",
+        "Tier 1 Cashback", "Tier 2 Cashback", "Tier 3 Cashback", "Tier 4 Cashback", "Tier 5 Cashback",
+        "Mutual Sponsoree Commission (0.25%, split/capped)", "Transaction ID"
+    ])
+    for t in transactions:
+        is_mutual = t.sponsoree_mutual_commission and (t.sponsoree_mutual_commission > 0)
+        writer.writerow([
+            "Mutual" if is_mutual else "Main",
+            t.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            t.interaction_id,
+            t.business_referral_id,
+            business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else "",
+            business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else "",
+            f"{t.cash_back:.2f}" if not is_mutual else "",
+            f"{t.tier2_commission:.2f}" if not is_mutual else "",
+            f"{t.tier3_commission:.2f}" if not is_mutual else "",
+            f"{t.tier4_commission:.2f}" if not is_mutual else "",
+            f"{t.tier5_commission:.2f}" if not is_mutual else "",
+            f"{t.sponsoree_mutual_commission:.2f}" if is_mutual else "",
+            t.transaction_id
+        ])
+
+    output = si.getvalue()
+    return Response(output, mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment;filename=business_combined_detail_report.csv"})
 
 @app.route("/finance/combined-cashback-paid", methods=["GET"])
 @role_required("finance")

@@ -60,22 +60,24 @@
           <th>Tier 3 Cashback</th>
           <th>Tier 4 Cashback</th>
           <th>Tier 5 Cashback</th>
+          <th>Mutual Sponsoree Commission (split/capped)</th>
           <th>Transaction ID</th>
         </tr>
       </thead>
       <tbody>
         {% for t in transactions %}
-        <tr>
+        <tr class="{% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}table-warning{% endif %}">
           <td>{{ t.date_time.strftime('%Y-%m-%d %I:%M %p') }}</td>
           <td>{{ t.interaction_id }}</td>
           <td>{{ t.business_referral_id }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_name if t.business_referral_id in business_lookup else '' }}</td>
           <td>{{ business_lookup[t.business_referral_id].business_email if t.business_referral_id in business_lookup else '' }}</td>
-          <td>${{ "{:,.2f}".format(t.cash_back) }}</td>
-          <td>${{ "{:,.2f}".format(t.tier2_commission) }}</td>
-          <td>${{ "{:,.2f}".format(t.tier3_commission) }}</td>
-          <td>${{ "{:,.2f}".format(t.tier4_commission) }}</td>
-          <td>${{ "{:,.2f}".format(t.tier5_commission) }}</td>
+          <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.cash_back) }}{% endif %}</td>
+          <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier2_commission) }}{% endif %}</td>
+          <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier3_commission) }}{% endif %}</td>
+          <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier4_commission) }}{% endif %}</td>
+          <td>{% if not t.sponsoree_mutual_commission or t.sponsoree_mutual_commission == 0 %}${{ "{:,.2f}".format(t.tier5_commission) }}{% endif %}</td>
+          <td>{% if t.sponsoree_mutual_commission and t.sponsoree_mutual_commission > 0 %}${{ "{:,.2f}".format(t.sponsoree_mutual_commission) }}{% endif %}</td>
           <td>{{ t.transaction_id }}</td>
         </tr>
         {% endfor %}
