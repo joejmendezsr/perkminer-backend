@@ -2164,21 +2164,21 @@ def stripe_webhook():
     if event['type'] == 'checkout.session.completed':
         session_obj = event['data']['object']
         amount = (session_obj['amount_total'] if 'amount_total' in session_obj else 0) / 100.0
-        metadata = session_obj.get('metadata', {}) or {}
-        business_id = metadata.get("business_id")
+        metadata = session_obj['metadata'] if 'metadata' in session_obj else {}
+        business_id = metadata['business_id'] if 'business_id' in metadata else None
         buyer_email = session_obj['customer_email'] if 'customer_email' in session_obj else None
 
-        business = Business.query.get(business_id)
+        business = Business.query.get(business_id) if business_id else None
         
-        # NEW: If this was a fund_account action, update account balance!
+        # Fund Account: Update account balance
         if metadata.get('purpose') == 'fund_account' and business:
             business.account_balance = (business.account_balance or 0) + amount
             db.session.commit()
             import logging
             logging.info(f"Business {business.id} funded account with ${amount:.2f}")
 
-        # If this is a store purchase, proceed as before
-        if business and business.has_ecommerce_store:
+        # Store Purchase: Old logic
+        if business and getattr(business, "has_ecommerce_store", False):
             try:
                 # Rewards/cashback/commissions
                 issue_store_sale_rewards(business, amount, buyer_email=buyer_email)
@@ -2204,7 +2204,7 @@ def stripe_webhook():
                 # DIGITAL FULFILLMENT: Assign a download token if digital
                 fulfillment_token = None
                 download_url = None
-                is_digital = getattr(product, "is_digital", False)  # Add/adjust is_digital as you wish
+                is_digital = getattr(product, "is_digital", False)
 
                 if is_digital:
                     fulfillment_token = secrets.token_urlsafe(32)
@@ -2215,7 +2215,7 @@ def stripe_webhook():
                     product_id=product.id,
                     buyer_email=buyer_email,
                     amount=product.price * qty,
-                    stripe_checkout_id=session_obj.get('id'),
+                    stripe_checkout_id=session_obj['id'] if 'id' in session_obj else None,
                     timestamp=datetime.utcnow(),
                     status="paid",
                     fulfillment_token=fulfillment_token
