@@ -2171,7 +2171,7 @@ def stripe_webhook():
         business = Business.query.get(business_id) if business_id else None
         
         # Fund Account: Update account balance
-        if metadata.get('purpose') == 'fund_account' and business:
+        if ('purpose' in metadata and metadata['purpose'] == 'fund_account') and business:
             business.account_balance = (business.account_balance or 0) + amount
             db.session.commit()
             import logging
