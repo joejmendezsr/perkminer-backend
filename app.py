@@ -2171,7 +2171,7 @@ def stripe_webhook():
         business = Business.query.get(business_id) if business_id else None
     
         import logging
-        logging.warning(f"WEBHOOK received: metadata={dict(metadata)}, business_id={business_id}, found_business={bool(business)}, amount={amount}")
+        logging.warning(f"WEBHOOK received: metadata={str(metadata)}, business_id={business_id}, found_business={bool(business)}, amount={amount}")
 
         # Fund Account: Update account balance
         if ('purpose' in metadata and metadata['purpose'] == 'fund_account') and business:
