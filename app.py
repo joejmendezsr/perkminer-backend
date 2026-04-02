@@ -2163,10 +2163,10 @@ def stripe_webhook():
 
     if event['type'] == 'checkout.session.completed':
         session_obj = event['data']['object']
-        amount = (session_obj.get('amount_total') or 0) / 100.0
+        amount = (session_obj['amount_total'] if 'amount_total' in session_obj else 0) / 100.0
         metadata = session_obj.get('metadata', {}) or {}
         business_id = metadata.get("business_id")
-        buyer_email = session_obj.get("customer_email", None)
+        buyer_email = session_obj['customer_email'] if 'customer_email' in session_obj else None
 
         business = Business.query.get(business_id)
         

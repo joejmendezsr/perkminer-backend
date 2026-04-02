@@ -16,7 +16,10 @@
 <body>
 <div class="container py-5">
     <div class="card shadow-sm p-4">
-        <h2 class="mb-4 text-center">Before You Submit</h2>
+        <h2 class="mb-4 text-center">Before You Submit</h2></br>
+        <p class="text-danger small mb-3" aria-label="Funds">
+        <strong>You must have funds in your account balance before submitting</strong>
+        </p>
         <div class="mb-3">
             <label class="form-label fw-bold">Prohibited Listings & Terms</label>
             <div class="border rounded p-2 terms-box" aria-label="Terms and Conditions">
@@ -37,7 +40,7 @@
         </div>
         <p class="text-danger small mb-3" aria-label="Disclaimer">
             <strong>Disclaimer:</strong>
-            Approval or rejection of your listing is at PerkMiner's sole discretion, and listings may become temporarily unavailable during re-approval reviews.
+            Approval or rejection of your listing is at PerkMiner's sole discretion, and <b>your listing may become temporarily unavailable during re-approval process.</b>
         </p>
         <form method="post" action="{{ url_for('send_for_review') }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
