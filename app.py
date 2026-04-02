@@ -2442,8 +2442,12 @@ def home():
     # Add mutual commission to business total
     total_biz_paid += total_biz_mutual_commission
 
-    total_gross_sales = sum(t.amount or 0 for t in business_transactions)
-    total_ad_fees = sum((t.ad_fee or 0) for t in business_transactions)
+    # *** THE ONLY LINES CHANGED: filter for "main" invoice entries ***
+    main_btxns = [t for t in business_transactions if not t.sponsoree_mutual_referral_id]
+    total_gross_sales = sum(t.amount or 0 for t in main_btxns)
+    total_ad_fees = sum((t.ad_fee or 0) for t in main_btxns)
+    # *** END CHANGE ***
+
     total_paid_out = total_member_paid + total_biz_paid
     percent_fees_paid = ((total_paid_out / total_ad_fees) * 100) if total_ad_fees > 0 else 0
 
