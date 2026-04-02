@@ -3673,7 +3673,10 @@ def business_create_checkout_session():
             customer_email=biz.business_email,  # always use the business's email
             success_url=YOUR_DOMAIN + '/business/dashboard?fund_success=1',
             cancel_url=YOUR_DOMAIN + '/business/fund-account?canceled=1',
-            metadata={'purpose': 'fund_account'}
+            metadata={
+                'purpose': 'fund_account',
+                'business_id': str(biz.id)  # <-- THIS ENSURES THE WEBHOOK CAN FIND THE BUSINESS!
+            }
         )
         return jsonify({'sessionId': session_obj.id})
     except Exception as e:
