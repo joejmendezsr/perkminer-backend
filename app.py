@@ -2169,12 +2169,16 @@ def stripe_webhook():
         buyer_email = session_obj['customer_email'] if 'customer_email' in session_obj else None
 
         business = Business.query.get(business_id) if business_id else None
-        
+    
+        import logging
+        logging.warning(f"WEBHOOK received: metadata={dict(metadata)}, business_id={business_id}, found_business={bool(business)}, amount={amount}")
+
         # Fund Account: Update account balance
         if ('purpose' in metadata and metadata['purpose'] == 'fund_account') and business:
-            business.account_balance = (business.account_balance or 0) + amount
+            old_balance = business.account_balance or 0
+            business.account_balance = old_balance + amount
             db.session.commit()
-            import logging
+            logging.warning(f"[FUND HOOK] Old: {old_balance}, Amount: {amount}, New: {business.account_balance}")
             logging.info(f"Business {business.id} funded account with ${amount:.2f}")
 
         # Store Purchase: Old logic
