@@ -2169,6 +2169,15 @@ def stripe_webhook():
         buyer_email = session_obj.get("customer_email", None)
 
         business = Business.query.get(business_id)
+        
+        # NEW: If this was a fund_account action, update account balance!
+        if metadata.get('purpose') == 'fund_account' and business:
+            business.account_balance = (business.account_balance or 0) + amount
+            db.session.commit()
+            import logging
+            logging.info(f"Business {business.id} funded account with ${amount:.2f}")
+
+        # If this is a store purchase, proceed as before
         if business and business.has_ecommerce_store:
             try:
                 # Rewards/cashback/commissions
