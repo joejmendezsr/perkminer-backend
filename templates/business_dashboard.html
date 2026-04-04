@@ -294,13 +294,6 @@
           data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
           View/Edit Profile
         </button>
-        {% if not business.has_ecommerce_store %}
-          <a href="{{ url_for('store_terms') }}" class="btn btn-warning">
-            Activate E-Commerce Store
-          </a>
-        {% else %}
-          <a href="{{ url_for('store_admin') }}" class="btn btn-primary">Manage Storefront</a>
-        {% endif %}
       </div>
 
       <!-- Account Balance and Fund/Add Funds Button -->
@@ -443,6 +436,12 @@
       </div>
 
       <div class="col-12 mb-3">
+        <label class="form-label">Hours of Operation</label>
+        <input type="url" class="form-control" id="hours_of_operation" name="hours_of_operation" maxlength="100"
+               value="{{ form_data.hours_of_operation or '' }}" placeholder="Mon - Fri 8a-8p">
+      </div>
+
+      <div class="col-12 mb-3">
         <label class="form-label">Website</label>
         <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
                value="{{ form_data.website_url or '' }}" placeholder="https://your-website.com">
@@ -561,6 +560,7 @@
   </div>
 
     <div class="card p-4 mb-4">
+
 <h4>Your Business Activity</h4>
 <div class="mb-3">
   <div class="row align-items-center">
@@ -568,6 +568,9 @@
       <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary">View Invoices</a>
       <a href="{{ url_for('business_earnings') }}" class="btn btn-outline-success">
         <i class="bi bi-graph-up"></i> View Earnings
+      </a>
+      <a href="{{ url_for('business_pending_earnings') }}" class="btn btn-outline-warning">
+        <i class="bi bi-hourglass-split"></i> View Pending Earnings
       </a>
     </div>
     {% if business.stripe_account_id %}
@@ -853,6 +856,9 @@ let largeListing = `
   </div>
   <div class="about-block">
     <b>About Us:</b><br>${about || "&mdash;"}
+  </div>
+  <div class="hours">
+    <b>Hours of Operation:</b><br>${hours-of-operation || "&mdash;"}
   </div>
   <div class="service-list-label">Products or Services Offered:</div>
   <ul class="service-list">

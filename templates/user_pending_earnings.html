@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Pending Earnings</h3>
+<div class="mt-3 mb-4">
+  <div class="alert alert-info">
+    These rewards and commissions are not withdrawable yet—they will be available after the return/pending period is over for each transaction.
+  </div>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Amount</th>
+      <th>Type or Tier</th>
+      <th>Pending Until</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in transactions %}
+      <tr>
+        <td>{{ t.date_time.strftime('%Y-%m-%d') }}</td>
+        <td>${{ '%.2f'|format(t.cash_back + t.tier2_commission + t.tier3_commission + t.tier4_commission + t.tier5_commission) }}</td>
+        <td>
+          {% if t.cash_back %}Tier 1 Cashback{% endif %}
+          {% if t.tier2_commission %}Tier 2{% endif %}
+          {% if t.tier3_commission %}Tier 3{% endif %}
+          {% if t.tier4_commission %}Tier 4{% endif %}
+          {% if t.tier5_commission %}Tier 5{% endif %}
+        </td>
+        <td>{{ t.pending_until.strftime('%Y-%m-%d') if t.pending_until else 'N/A' }}</td>
+        <td><span class="badge bg-warning text-dark">Pending</span></td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="5">You have no pending earnings.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

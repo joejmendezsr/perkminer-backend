@@ -85,6 +85,13 @@
       </tbody>
     </table>
   </div>
+
+  {% if transaction.status == "available" %}
+    <form action="{{ url_for('process_return', txn_id=transaction.id) }}" method="post" style="display:inline;">
+      <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to return/refund this transaction?');">Return / Refund</button>
+    </form>
+  {% endif %}
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>

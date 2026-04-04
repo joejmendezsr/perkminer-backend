@@ -34,6 +34,13 @@
     <div class="alert alert-success text-center">
       Thank you for your purchase! Your cashback has been credited.
     </div>
+
+    {% if transaction.status == "available" %}
+      <form action="{{ url_for('process_return', txn_id=transaction.id) }}" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to return/refund this transaction?');">Return / Refund</button>
+      </form>
+    {% endif %}
+
     <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-danger w-100 mb-2">End Session</button>

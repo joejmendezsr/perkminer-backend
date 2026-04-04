@@ -28,6 +28,7 @@ import logging
 from datetime import datetime, date
 import json
 from sqlalchemy import or_, and_, func, literal
+from sqlalchemy import func, or_
 from flask_migrate import Migrate
 import re
 import random
@@ -43,6 +44,7 @@ import cloudinary.uploader
 import qrcode
 import base64
 import secrets
+from datetime import datetime, timedelta
 
 # --- Cart Logic ---
 def get_cart():
@@ -144,6 +146,234 @@ def business_login_required(f):
             return redirect(url_for('business_login', next=request.path))
         return f(*args, **kwargs)
     return decorated_function
+
+def release_pending_earnings():
+    now = datetime.utcnow()
+
+    # Release UserTransactions
+    pending_user_txns = UserTransaction.query.filter(
+        UserTransaction.status == "pending",
+        UserTransaction.pending_until <= now
+    ).all()
+    for txn in pending_user_txns:
+        txn.status = "available"
+
+    # Release BusinessTransactions
+    pending_business_txns = BusinessTransaction.query.filter(
+        BusinessTransaction.status == "pending",
+        BusinessTransaction.pending_until <= now
+    ).all()
+    for txn in pending_business_txns:
+        txn.status = "available"
+
+    db.session.commit()
+
+def process_transaction_return(original_user_txn, original_business_txn, reason="Return processed"):
+    # Create reversal UserTransaction
+    reverse_user_txn = UserTransaction(
+        transaction_id=str(uuid.uuid4()),
+        interaction_id=original_user_txn.interaction_id,
+        date_time=datetime.utcnow(),
+        local_date_time=None,
+        amount=-(original_user_txn.amount),
+        business_referral_id=original_user_txn.business_referral_id,
+        user_referral_id=original_user_txn.user_referral_id,
+        cash_back=-(original_user_txn.cash_back or 0),
+        tier2_user_referral_id=original_user_txn.tier2_user_referral_id,
+        tier2_commission=-(original_user_txn.tier2_commission or 0),
+        tier3_user_referral_id=original_user_txn.tier3_user_referral_id,
+        tier3_commission=-(original_user_txn.tier3_commission or 0),
+        tier4_user_referral_id=original_user_txn.tier4_user_referral_id,
+        tier4_commission=-(original_user_txn.tier4_commission or 0),
+        tier5_user_referral_id=original_user_txn.tier5_user_referral_id,
+        tier5_commission=-(original_user_txn.tier5_commission or 0),
+        tier1_business_user_referral_id=original_user_txn.tier1_business_user_referral_id,
+        tier1_business_user_commission=-(original_user_txn.tier1_business_user_commission or 0),
+        tier2_business_user_referral_id=original_user_txn.tier2_business_user_referral_id,
+        tier2_business_user_commission=-(original_user_txn.tier2_business_user_commission or 0),
+        tier3_business_user_referral_id=original_user_txn.tier3_business_user_referral_id,
+        tier3_business_user_commission=-(original_user_txn.tier3_business_user_commission or 0),
+        tier4_business_user_referral_id=original_user_txn.tier4_business_user_referral_id,
+        tier4_business_user_commission=-(original_user_txn.tier4_business_user_commission or 0),
+        tier5_business_user_referral_id=original_user_txn.tier5_business_user_referral_id,
+        tier5_business_user_commission=-(original_user_txn.tier5_business_user_commission or 0),
+        status="available",
+        pending_until=None  # not pending; process immediately
+        # You may want to add a 'note' or 'reason' field too if desired
+    )
+    db.session.add(reverse_user_txn)
+
+    # Create reversal BusinessTransaction
+    reverse_business_txn = BusinessTransaction(
+        transaction_id=reverse_user_txn.transaction_id,  # Use same txid as above for link
+        interaction_id=original_business_txn.interaction_id,
+        date_time=datetime.utcnow(),
+        local_date_time=None,
+        amount=-(original_business_txn.amount),
+        ad_fee=-(original_business_txn.ad_fee or 0),
+        business_referral_id=original_business_txn.business_referral_id,
+        cash_back=-(original_business_txn.cash_back or 0),
+        tier2_business_referral_id=original_business_txn.tier2_business_referral_id,
+        tier2_commission=-(original_business_txn.tier2_commission or 0),
+        tier3_business_referral_id=original_business_txn.tier3_business_referral_id,
+        tier3_commission=-(original_business_txn.tier3_commission or 0),
+        tier4_business_referral_id=original_business_txn.tier4_business_referral_id,
+        tier4_commission=-(original_business_txn.tier4_commission or 0),
+        tier5_business_referral_id=original_business_txn.tier5_business_referral_id,
+        tier5_commission=-(original_business_txn.tier5_commission or 0),
+        sponsoree_mutual_referral_id=original_business_txn.sponsoree_mutual_referral_id,
+        sponsoree_mutual_commission=-(original_business_txn.sponsoree_mutual_commission or 0),
+        status="available",
+        pending_until=None
+    )
+    db.session.add(reverse_business_txn)
+
+    # Optionally, mark originals as "reversed"
+    original_user_txn.status = "reversed"
+    original_business_txn.status = "reversed"
+
+    db.session.commit()
+
+def get_user_available_earnings(user):
+    # Sum all "available" cash back and commissions for the user
+    total = db.session.query(
+        func.coalesce(
+            func.sum(
+                # Tier 1 cashback (earned directly)
+                func.case((UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back), else_=0)
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case((UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission), else_=0)
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case((UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission), else_=0)
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case((UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission), else_=0)
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case((UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission), else_=0)
+            ), 0
+        )
+        # Add any extra commission columns if needed (business commissions, etc.)
+    ).filter(
+        UserTransaction.status == "available"
+    ).scalar()
+    return float(total or 0)
+
+def get_business_available_earnings(biz):
+    total = db.session.query(
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission), else_=0
+            )), 0
+        )
+    ).filter(
+        BusinessTransaction.status == "available"
+    ).scalar()
+    return float(total or 0)
+
+def get_user_pending_earnings(user):
+    total = db.session.query(
+        func.coalesce(
+            func.sum(
+                func.case(
+                    (UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back), else_=0
+                )
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case(
+                    (UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission), else_=0
+                )
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case(
+                    (UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission), else_=0
+                )
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case(
+                    (UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission), else_=0
+                )
+            ), 0
+        ) +
+        func.coalesce(
+            func.sum(
+                func.case(
+                    (UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission), else_=0
+                )
+            ), 0
+        )
+    ).filter(
+        UserTransaction.status == "pending"
+    ).scalar()
+    return float(total or 0)
+
+def get_business_pending_earnings(biz):
+    total = db.session.query(
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission), else_=0
+            )), 0
+        ) +
+        func.coalesce(
+            func.sum(func.case(
+                (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission), else_=0
+            )), 0
+        )
+    ).filter(
+        BusinessTransaction.status == "pending"
+    ).scalar()
+    return float(total or 0)
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -781,13 +1011,17 @@ def split_mutual_commission(total_sale, n_referred):
 
 def finalize_interaction(interaction, business, amount, staff_id=None, source=None, local_date_time=None):
     import uuid
-    from datetime import datetime
+    from datetime import datetime, timedelta
 
     transaction_id = str(uuid.uuid4())
 
     ad_fee = min(round(amount * 0.10, 2), 250.00)
     if business.account_balance is None or business.account_balance < ad_fee:
         raise Exception("Insufficient funds to complete this transaction. Please fund your account.")
+
+    # --- calculate pending period using business settings ---
+    pending_days = (business.return_days or 0) + (business.pending_release_days or 0)
+    pending_until = datetime.utcnow() + timedelta(days=pending_days)
 
     user_referral_id = interaction.user.referral_code or "REFjoejmendez"
     user_cash_back_raw = amount * 0.02
@@ -870,7 +1104,9 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         tier4_business_user_referral_id=tier4_business_user_referral_id,
         tier4_business_user_commission=tier4_business_user_commission,
         tier5_business_user_referral_id=tier5_business_user_referral_id,
-        tier5_business_user_commission=tier5_business_user_commission
+        tier5_business_user_commission=tier5_business_user_commission,
+        status="pending",                       # new field here
+        pending_until=pending_until             # new field here
     )
     db.session.add(user_trans)
 
@@ -893,7 +1129,6 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     business.account_balance = (business.account_balance or 0.0) - ad_fee
 
-    # ---- Main business commission row: only ONE record for Tiers 1-5 ----
     business_trans = BusinessTransaction(
         transaction_id=transaction_id,
         interaction_id=interaction.id,
@@ -902,7 +1137,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         local_date_time=local_date_time,
         ad_fee=ad_fee,
         business_referral_id=business_referral_id,
-        cash_back=business_cash_back,  # Tier 1, capped
+        cash_back=business_cash_back,
         tier2_business_referral_id=tier2_business_referral_id,
         tier2_commission=tier2_commission_biz,
         tier3_business_referral_id=tier3_business_referral_id,
@@ -912,20 +1147,21 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         tier5_business_referral_id=tier5_business_referral_id,
         tier5_commission=tier5_commission_biz,
         sponsoree_mutual_referral_id=None,
-        sponsoree_mutual_commission=0
+        sponsoree_mutual_commission=0,
+        status="pending",                       # new field here
+        pending_until=pending_until             # new field here
     )
     db.session.add(business_trans)
 
-    # ---- Downline mutual commission: one record per sponsoree, tiers are empty ----
     referred_businesses = Business.query.filter_by(sponsor_id=business.id).all()
     payouts, leftover = split_mutual_commission(amount, len(referred_businesses))
 
-    print("Splitting pool:", amount * 0.0025, "among", len(referred_businesses), "->", payouts)  # <--- PLACE THIS HERE
+    print("Splitting pool:", amount * 0.0025, "among", len(referred_businesses), "->", payouts)
 
     for idx, sponsoree in enumerate(referred_businesses):
         sponsoree_mutual_referral_id = sponsoree.referral_code
         sponsoree_mutual_commission = payouts[idx]
-        print(f"Paying {sponsoree_mutual_referral_id}: {sponsoree_mutual_commission}")  # <--- PLACE THIS HERE
+        print(f"Paying {sponsoree_mutual_referral_id}: {sponsoree_mutual_commission}")
         mutual_trans = BusinessTransaction(
             transaction_id=transaction_id,
             interaction_id=interaction.id,
@@ -934,7 +1170,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             local_date_time=local_date_time,
             ad_fee=ad_fee,
             business_referral_id=business_referral_id,
-            cash_back=0,  # for mutuals
+            cash_back=0,
             tier2_business_referral_id="",
             tier2_commission=0,
             tier3_business_referral_id="",
@@ -944,13 +1180,14 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             tier5_business_referral_id="",
             tier5_commission=0,
             sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
-            sponsoree_mutual_commission=sponsoree_mutual_commission
+            sponsoree_mutual_commission=sponsoree_mutual_commission,
+            status="pending",                       # new field here
+            pending_until=pending_until             # new field here
         )
         db.session.add(mutual_trans)
 
     db.session.commit()
 
-    # Log for staff
     if staff_id:
         log_finalization(staff_id, business.id, transaction_id, source, amount)
 
@@ -1165,6 +1402,9 @@ class Business(db.Model):
     products_js = db.Column(db.Text, nullable=True)
     contact_js = db.Column(db.Text, nullable=True)
     theme_type = db.Column(db.String(50))
+    return_days = db.Column(db.Integer, default=0)
+    pending_earnings = db.Column(db.Numeric(12,2), default=0.00)
+    pending_release_days = db.Column(db.Integer, default=5)
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1203,6 +1443,8 @@ class UserTransaction(db.Model):
     tier4_business_user_commission = db.Column(db.Float)
     tier5_business_user_referral_id = db.Column(db.String(32))
     tier5_business_user_commission = db.Column(db.Float)
+    status = db.Column(db.String(20), default="pending")
+    pending_until = db.Column(db.DateTime, nullable=True)
 
 class BusinessTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1225,6 +1467,8 @@ class BusinessTransaction(db.Model):
     # The business who was sponsored (sponsoree) earns 0.25% whenever their sponsor generates a paid invoice
     sponsoree_mutual_referral_id = db.Column(db.String(32))
     sponsoree_mutual_commission = db.Column(db.Float, default=0)
+    status = db.Column(db.String(20), default="pending")
+    pending_until = db.Column(db.DateTime, nullable=True)
 
 class Interaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -2897,6 +3141,8 @@ def dashboard():
     # --- Updated Earnings Calculation (ALWAYS up-to-date!) ---
     user.grand_total_earnings = calculate_user_grand_total(user)
     user.earnings_balance = user.grand_total_earnings - (user.withdrawn_total or Decimal(0))
+    user_available = get_user_available_earnings(current_user)
+    user_pending = get_user_pending_earnings(current_user)
     db.session.commit()
 
     if request.method == "POST" and profile_form.submit.data and profile_form.validate():
@@ -3370,6 +3616,22 @@ def export_user_earnings_csv():
     return Response(output, mimetype="text/csv", headers={
         "Content-Disposition": f"attachment;filename=user_earnings_{user.referral_code}.csv"
     })
+
+@app.route("/user/pending-earnings")
+@login_required
+def user_pending_earnings():
+    # Only transactions where this user earned and status is pending
+    ref_code = current_user.referral_code
+
+    txns = UserTransaction.query.filter(
+        ((UserTransaction.user_referral_id == ref_code) |
+         (UserTransaction.tier2_user_referral_id == ref_code) |
+         (UserTransaction.tier3_user_referral_id == ref_code) |
+         (UserTransaction.tier4_user_referral_id == ref_code) |
+         (UserTransaction.tier5_user_referral_id == ref_code)),
+        UserTransaction.status == "pending"
+    ).order_by(UserTransaction.pending_until, UserTransaction.date_time.desc()).all()
+    return render_template("user_pending_earnings.html", transactions=txns)
 
 # USER — View Quote (read-only; user context)
 @app.route("/session/<int:interaction_id>/user-quote")
@@ -4174,6 +4436,23 @@ def export_business_earnings_csv():
     output = si.getvalue()
     return Response(output, mimetype="text/csv", headers={"Content-Disposition": "attachment;filename=business_earnings.csv"})
 
+@app.route("/business/pending-earnings")
+@business_login_required
+def business_pending_earnings():
+    biz_id = session.get('business_id')
+    biz = Business.query.get_or_404(biz_id)
+    ref_code = biz.referral_code
+
+    txns = BusinessTransaction.query.filter(
+        ((BusinessTransaction.business_referral_id == ref_code) |
+         (BusinessTransaction.tier2_business_referral_id == ref_code) |
+         (BusinessTransaction.tier3_business_referral_id == ref_code) |
+         (BusinessTransaction.tier4_business_referral_id == ref_code) |
+         (BusinessTransaction.tier5_business_referral_id == ref_code)),
+        BusinessTransaction.status == "pending"
+    ).order_by(BusinessTransaction.pending_until, BusinessTransaction.date_time.desc()).all()
+    return render_template("business_pending_earnings.html", transactions=txns)
+
 @app.route("/business/scan-qr/<int:interaction_id>")
 @business_login_required
 def scan_qr(interaction_id):
@@ -4483,6 +4762,8 @@ def business_dashboard():
     # ---- Update earnings at every dashboard load ----
     biz.grand_total_earnings = calculate_business_grand_total(biz)
     biz.earnings_balance = biz.grand_total_earnings - (biz.withdrawn_total or Decimal(0))
+    biz_available = get_business_available_earnings(biz)
+    biz_pending = get_business_pending_earnings(biz)
     db.session.commit()
 
     if request.args.get("fund_success") == "1":
@@ -6718,6 +6999,26 @@ def business_stripe_update_info():
         type='account_onboarding'
     )
     return redirect(account_link.url)
+
+@app.route("/process_return/<int:txn_id>", methods=["POST"])
+@login_required  # or @business_login_required if needed
+def process_return(txn_id):
+    # Fetch the original user and business transaction
+    orig_user_txn = UserTransaction.query.get_or_404(txn_id)
+    orig_business_txn = BusinessTransaction.query.filter_by(transaction_id=orig_user_txn.transaction_id).first()
+
+    # Check: only allow if status is "available"
+    if orig_user_txn.status != "available":
+        flash("Transaction not eligible for return.", "danger")
+        return redirect(request.referrer or url_for('dashboard'))
+
+    # Optionally: Security check — only allow if the current user/business matches
+
+    # Process the return (creates the negative entries)
+    process_transaction_return(orig_user_txn, orig_business_txn)
+
+    flash("Return processed and funds reversed!", "success")
+    return redirect(request.referrer or url_for('dashboard'))
 
 @app.errorhandler(500)
 def internal_server_error(error):
