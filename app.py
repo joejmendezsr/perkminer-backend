@@ -4785,13 +4785,14 @@ def business_dashboard():
         except (TypeError, ValueError):
             return None
 
-    # POST: Handle profile save
+    # ----- PROFILE SAVE LOGIC (POST) -----
     if request.method == "POST":
         updated = False
         if not request.form.get("listing_type"):
             flash("Listing Type is required.")
             return redirect(url_for('business_dashboard'))
 
+        # ---------- Existing editable fields update ----------
         if biz.status == "approved":
             for field in editable_fields:
                 val = request.form.get(field)
@@ -4824,12 +4825,20 @@ def business_dashboard():
                 biz.profile_photo = upload_result.get('secure_url')
                 updated = True
 
+        # --------- NEW: save the return_days field ---------
+        if "return_days" in request.form:
+            try:
+                biz.return_days = int(request.form.get("return_days", 0))
+                updated = True
+            except Exception:
+                flash("Invalid value for return policy days.", "danger")
+
         if updated:
             db.session.commit()
             flash("Business profile updated!")
         return redirect(url_for('business_dashboard'))
 
-    # GET: Load profile form data (prefer draft if status=approved and draft exists)
+    # ----- PROFILE FORM DATA (GET) -----
     form_data = {}
     for field in editable_fields:
         draft_field = f"draft_{field}"
@@ -4839,7 +4848,10 @@ def business_dashboard():
         else:
             form_data[field] = getattr(biz, field, "")
 
-    # Profile photo logic (show draft if exists, otherwise live)
+    # ------ NEW: Populate return_days for dropdown ------
+    form_data["return_days"] = int(getattr(biz, "return_days", 0) or 0)
+
+    # ------ Rest of your dashboard view ------
     if hasattr(biz, "draft_profile_photo") and biz.status == "approved" and biz.draft_profile_photo:
         profile_img_url = biz.draft_profile_photo
     else:
@@ -4848,7 +4860,6 @@ def business_dashboard():
     latitude = form_data.get("latitude", "")
     longitude = form_data.get("longitude", "")
 
-    # --- Rewards and referral tree logic (leave unchanged) ---
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
@@ -4903,11 +4914,9 @@ def business_dashboard():
                 b5s = Business.query.filter_by(sponsor_id=b4.id).all()
                 level5.extend(b5s)
 
-    # Add active session indicator for dashboard button
     active_biz_sessions = Interaction.query.filter_by(business_id=biz.id, status='active').all()
     has_active_biz_sessions = len(active_biz_sessions) > 0
 
-    # Add this line to fetch payment alerts/awaiting payments
     payment_alerts = Interaction.query.filter_by(
         business_id=biz.id,
         awaiting_payment=True,
@@ -4920,7 +4929,7 @@ def business_dashboard():
         profile_form=profile_form,
         invite_form=invite_form,
         business=biz,
-        payment_alerts=payment_alerts,  # <-- This line passes to template
+        payment_alerts=payment_alerts,
         form_data=form_data,
         sponsor=sponsor,
         referral_code=biz.referral_code,
@@ -4931,7 +4940,7 @@ def business_dashboard():
         address=form_data.get("address",""),
         latitude=latitude,
         longitude=longitude,
-        has_active_biz_sessions=has_active_biz_sessions  # pass to template
+        has_active_biz_sessions=has_active_biz_sessions
     )
 
 @app.route("/business/logout")

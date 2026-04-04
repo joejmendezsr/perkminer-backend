@@ -349,21 +349,6 @@
         </div>
         {% endif %}
 
-        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
-            <i class="bi bi-person-plus"></i> Add Staff Member
-        </a>
-        <div class="mt-4">
-          <h5>Current Staff</h5>
-          <ul>
-            {% for staff in business.staff_members %}
-              <li>
-                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
-              </li>
-            {% else %}
-              <li>No staff added yet.</li>
-            {% endfor %}
-          </ul>
-
           <!-- Finalized Transactions Report Button -->
           <a href="{{ url_for('finalized_report') }}" class="btn btn-info w-100 mt-3">
             <i class="bi bi-list-check"></i> Finalized Transactions Report
@@ -525,6 +510,20 @@
           <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
         </select>
       </div>
+
+<div class="mb-3">
+  <label for="return_days" class="form-label">Return Policy</label>
+  <select class="form-select" id="return_days" name="return_days" required>
+    <option value="0" {% if form_data.return_days == 0 %}selected{% endif %}>No Returns</option>
+    {% for n in range(1, 121) %}
+      <option value="{{ n }}" {% if form_data.return_days == n %}selected{% endif %}>
+        {{ n }} day{% if n > 1 %}s{% endif %}
+      </option>
+    {% endfor %}
+  </select>
+  <div class="form-text">Number of days after purchase when customers can request a return. (Set to "No Returns" for immediate earnings availability.)</div>
+</div>
+
       <!-- Keywords -->
       <div class="col-12 mt-3">
         <label class="form-label">Keywords (for search, separated by commas)</label>
@@ -538,6 +537,27 @@
   </div>
 </div>
 <!-- end .card.mb-4.p-4 (dashboard main card) -->
+
+<!-- Staff Code Section -->
+  <div class="card p-4 mb-4">
+    <h4>Your Staff</h4>
+
+        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
+            <i class="bi bi-person-plus"></i> Add Staff Member
+        </a>
+        <div class="mt-4">
+          <h5>Current Staff</h5>
+          <ul>
+            {% for staff in business.staff_members %}
+              <li>
+                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
+              </li>
+            {% else %}
+              <li>No staff added yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+  </div>
 
   <!-- Referral Code Section -->
   <div class="card p-4 mb-4">
