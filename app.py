@@ -235,35 +235,32 @@ def process_transaction_return(original_user_txn, original_business_txn, reason=
     db.session.commit()
 
 def get_user_available_earnings(user):
-    # Sum all "available" cash back and commissions for the user
     total = db.session.query(
         func.coalesce(
             func.sum(
-                # Tier 1 cashback (earned directly)
-                func.case((UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back), else_=0)
+                case((UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back), else_=0)
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case((UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission), else_=0)
+                case((UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission), else_=0)
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case((UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission), else_=0)
+                case((UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission), else_=0)
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case((UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission), else_=0)
+                case((UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission), else_=0)
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case((UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission), else_=0)
+                case((UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission), else_=0)
             ), 0
         )
-        # Add any extra commission columns if needed (business commissions, etc.)
     ).filter(
         UserTransaction.status == "available"
     ).scalar()
@@ -272,29 +269,44 @@ def get_user_available_earnings(user):
 def get_business_available_earnings(biz):
     total = db.session.query(
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission),
+                    else_=0
+                )
+            ), 0
         )
     ).filter(
         BusinessTransaction.status == "available"
@@ -305,36 +317,41 @@ def get_user_pending_earnings(user):
     total = db.session.query(
         func.coalesce(
             func.sum(
-                func.case(
-                    (UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back), else_=0
+                case(
+                    (UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back),
+                    else_=0
                 )
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case(
-                    (UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission), else_=0
+                case(
+                    (UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission),
+                    else_=0
                 )
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case(
-                    (UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission), else_=0
+                case(
+                    (UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission),
+                    else_=0
                 )
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case(
-                    (UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission), else_=0
+                case(
+                    (UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission),
+                    else_=0
                 )
             ), 0
         ) +
         func.coalesce(
             func.sum(
-                func.case(
-                    (UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission), else_=0
+                case(
+                    (UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission),
+                    else_=0
                 )
             ), 0
         )
@@ -346,29 +363,44 @@ def get_user_pending_earnings(user):
 def get_business_pending_earnings(biz):
     total = db.session.query(
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission),
+                    else_=0
+                )
+            ), 0
         ) +
         func.coalesce(
-            func.sum(func.case(
-                (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission), else_=0
-            )), 0
+            func.sum(
+                case(
+                    (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission),
+                    else_=0
+                )
+            ), 0
         )
     ).filter(
         BusinessTransaction.status == "pending"
