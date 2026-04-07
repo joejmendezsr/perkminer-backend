@@ -294,6 +294,13 @@
           data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
           View/Edit Profile
         </button>
+        {% if not business.has_ecommerce_store %}
+          <a href="{{ url_for('store_terms') }}" class="btn btn-warning">
+            Activate E-Commerce Store
+          </a>
+        {% else %}
+          <a href="{{ url_for('store_admin') }}" class="btn btn-primary">Manage Storefront</a>
+        {% endif %}
       </div>
 
       <!-- Account Balance and Fund/Add Funds Button -->
@@ -348,6 +355,21 @@
           </strong>
         </div>
         {% endif %}
+
+        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
+            <i class="bi bi-person-plus"></i> Add Staff Member
+        </a>
+        <div class="mt-4">
+          <h5>Current Staff</h5>
+          <ul>
+            {% for staff in business.staff_members %}
+              <li>
+                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
+              </li>
+            {% else %}
+              <li>No staff added yet.</li>
+            {% endfor %}
+          </ul>
 
           <!-- Finalized Transactions Report Button -->
           <a href="{{ url_for('finalized_report') }}" class="btn btn-info w-100 mt-3">
@@ -418,12 +440,6 @@
         <input type="hidden" name="longitude" id="longitude" value="{{ longitude or '' }}">
         <label class="form-label mt-2 mb-1 d-block">Pin or change your location on the map below:</label>
         <div id="profile-map" style="width:100%; height:300px; border-radius:8px; margin-bottom:12px;"></div>
-      </div>
-
-      <div class="col-12 mb-3">
-        <label class="form-label">Hours of Operation</label>
-        <input type="url" class="form-control" id="hours_of_operation" name="hours_of_operation" maxlength="100"
-               value="{{ form_data.hours_of_operation or '' }}" placeholder="Mon - Fri 8a-8p">
       </div>
 
       <div class="col-12 mb-3">
@@ -510,20 +526,6 @@
           <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
         </select>
       </div>
-
-<div class="mb-3">
-  <label for="return_days" class="form-label">Return Policy</label>
-  <select class="form-select" id="return_days" name="return_days" required>
-    <option value="0" {% if form_data.return_days == 0 %}selected{% endif %}>No Returns</option>
-    {% for n in range(1, 121) %}
-      <option value="{{ n }}" {% if form_data.return_days == n %}selected{% endif %}>
-        {{ n }} day{% if n > 1 %}s{% endif %}
-      </option>
-    {% endfor %}
-  </select>
-  <div class="form-text">Number of days after purchase when customers can request a return. (Set to "No Returns" for immediate earnings availability.)</div>
-</div>
-
       <!-- Keywords -->
       <div class="col-12 mt-3">
         <label class="form-label">Keywords (for search, separated by commas)</label>
@@ -537,27 +539,6 @@
   </div>
 </div>
 <!-- end .card.mb-4.p-4 (dashboard main card) -->
-
-<!-- Staff Code Section -->
-  <div class="card p-4 mb-4">
-    <h4>Your Staff</h4>
-
-        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
-            <i class="bi bi-person-plus"></i> Add Staff Member
-        </a>
-        <div class="mt-4">
-          <h5>Current Staff</h5>
-          <ul>
-            {% for staff in business.staff_members %}
-              <li>
-                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
-              </li>
-            {% else %}
-              <li>No staff added yet.</li>
-            {% endfor %}
-          </ul>
-        </div>
-  </div>
 
   <!-- Referral Code Section -->
   <div class="card p-4 mb-4">
@@ -580,7 +561,6 @@
   </div>
 
     <div class="card p-4 mb-4">
-
 <h4>Your Business Activity</h4>
 <div class="mb-3">
   <div class="row align-items-center">
@@ -588,9 +568,6 @@
       <a href="{{ url_for('business_receipts') }}" class="btn btn-outline-secondary">View Invoices</a>
       <a href="{{ url_for('business_earnings') }}" class="btn btn-outline-success">
         <i class="bi bi-graph-up"></i> View Earnings
-      </a>
-      <a href="{{ url_for('business_pending_earnings') }}" class="btn btn-outline-warning">
-        <i class="bi bi-hourglass-split"></i> View Pending Earnings
       </a>
     </div>
     {% if business.stripe_account_id %}
@@ -876,9 +853,6 @@ let largeListing = `
   </div>
   <div class="about-block">
     <b>About Us:</b><br>${about || "&mdash;"}
-  </div>
-  <div class="hours">
-    <b>Hours of Operation:</b><br>${hours-of-operation || "&mdash;"}
   </div>
   <div class="service-list-label">Products or Services Offered:</div>
   <ul class="service-list">
