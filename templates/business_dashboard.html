@@ -294,13 +294,6 @@
           data-bs-target="#profileCollapse" aria-expanded="false" aria-controls="profileCollapse">
           View/Edit Profile
         </button>
-        {% if not business.has_ecommerce_store %}
-          <a href="{{ url_for('store_terms') }}" class="btn btn-warning">
-            Activate E-Commerce Store
-          </a>
-        {% else %}
-          <a href="{{ url_for('store_admin') }}" class="btn btn-primary">Manage Storefront</a>
-        {% endif %}
       </div>
 
       <!-- Account Balance and Fund/Add Funds Button -->
@@ -314,28 +307,6 @@
           <i class="bi bi-wallet2 me-1"></i>Add Funds
         </a>
       </div>
-      {% if has_active_biz_sessions %}
-        <div class="mb-2">
-          <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-outline-primary w-100">
-            <i class="bi bi-chat-dots me-1"></i>My Active Sessions
-          </a>
-        </div>
-      {% endif %}
-      {% if payment_alerts %}
-        <div class="mb-3">
-          <div class="alert alert-warning text-center p-2 mb-2">
-            <b>New Scan:</b> A customer is awaiting for you to scan their QR code!
-            {% for ia in payment_alerts %}
-              <div class="mt-2">
-                <a class="btn btn-success btn-sm w-100"
-                   href="{{ url_for('scan_qr', interaction_id=ia.id) }}">
-                   Scan Payment QR for {{ ia.user.name or ia.user.email }}
-                </a>
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
       {% if business.status %}
         <div class="alert alert-info p-2 mb-3" style="font-size:1.09em; text-align:center;">
           Status: <strong>
@@ -355,27 +326,6 @@
           </strong>
         </div>
         {% endif %}
-
-        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
-            <i class="bi bi-person-plus"></i> Add Staff Member
-        </a>
-        <div class="mt-4">
-          <h5>Current Staff</h5>
-          <ul>
-            {% for staff in business.staff_members %}
-              <li>
-                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
-              </li>
-            {% else %}
-              <li>No staff added yet.</li>
-            {% endfor %}
-          </ul>
-
-          <!-- Finalized Transactions Report Button -->
-          <a href="{{ url_for('finalized_report') }}" class="btn btn-info w-100 mt-3">
-            <i class="bi bi-list-check"></i> Finalized Transactions Report
-          </a>
-        </div>
 
       <!-- Invite Modal stays unchanged... -->
       <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">
@@ -557,8 +507,43 @@
         <i class="bi bi-person-plus me-1"></i>Invite other businesses to join
       </button>
     </div>
-
   </div>
+
+          <!-- Finalized Transactions Report Button -->
+          <a href="{{ url_for('finalized_report') }}" class="btn btn-info w-100 mt-3">
+            <i class="bi bi-list-check"></i> Finalized Transactions Report
+          </a>
+        </div>
+
+    <div class="card p-4 mb-4">
+<h4>Finalize Transactions</h4>
+<div class="mb-3">
+  <div class="row align-items-center">
+    <div class="col-12 col-md-auto d-flex flex-wrap gap-2 mb-2 mb-md-0">
+      {% if has_active_biz_sessions %}
+        <div class="mb-2">
+          <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-outline-primary w-100">
+            <i class="bi bi-chat-dots me-1"></i>My Active Sessions
+          </a>
+        </div>
+      {% endif %}
+      {% if payment_alerts %}
+        <div class="mb-3">
+          <div class="alert alert-warning text-center p-2 mb-2">
+            <b>New Scan:</b> A customer is awaiting for you to scan their QR code!
+            {% for ia in payment_alerts %}
+              <div class="mt-2">
+                <a class="btn btn-success btn-sm w-100"
+                   href="{{ url_for('scan_qr', interaction_id=ia.id) }}">
+                   Scan Payment QR for {{ ia.user.name or ia.user.email }}
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+  </div>
+</div>
 
     <div class="card p-4 mb-4">
 <h4>Your Business Activity</h4>
@@ -605,6 +590,28 @@
     {% endif %}
   </div>
 </div>
+    <div class="card p-4 mb-4">
+<h4>Staff Section</h4>
+<div class="mb-3">
+  <div class="row align-items-center">
+    <div class="col-12 col-md-auto d-flex flex-wrap gap-2 mb-2 mb-md-0">
+        <a href="{{ url_for('staff_new') }}" class="btn btn-primary w-100 mb-2">
+            <i class="bi bi-person-plus"></i> Add Staff Member
+        </a>
+        <div class="mt-4">
+          <h5>Current Staff</h5>
+          <ul>
+            {% for staff in business.staff_members %}
+              <li>
+                {{ staff.email }}{% if staff.is_active %} (Active){% else %} (Inactive){% endif %}
+              </li>
+            {% else %}
+              <li>No staff added yet.</li>
+            {% endfor %}
+          </ul>
+  </div>
+</div>
+
 
   <!-- Reward calculators and Network tree -->
   <div class="card p-4 mb-4">

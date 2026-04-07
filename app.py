@@ -3894,6 +3894,8 @@ def business_receipts():
     business = Business.query.get_or_404(biz_id)
     transactions = BusinessTransaction.query.filter_by(
         business_referral_id=business.referral_code
+    ).filter(
+        (BusinessTransaction.sponsoree_mutual_referral_id == None) | (BusinessTransaction.sponsoree_mutual_referral_id == "")
     ).order_by(BusinessTransaction.date_time.desc()).all()
     return render_template("business_receipts.html", transactions=transactions, business=business)
 
@@ -3903,8 +3905,12 @@ def export_business_receipts_csv():
     biz_id = session.get('business_id')
     business = Business.query.get_or_404(biz_id)
 
-    # Get transactions for this business (without filtering for commission)
-    transactions = BusinessTransaction.query.filter_by(business_referral_id=business.referral_code).order_by(BusinessTransaction.date_time.desc()).all()
+    # Only main invoice entries: sponsoree_mutual_referral_id is None or empty string
+    transactions = BusinessTransaction.query.filter_by(
+        business_referral_id=business.referral_code
+    ).filter(
+        (BusinessTransaction.sponsoree_mutual_referral_id == None) | (BusinessTransaction.sponsoree_mutual_referral_id == "")
+    ).order_by(BusinessTransaction.date_time.desc()).all()
 
     import csv
     from io import StringIO
@@ -3912,10 +3918,10 @@ def export_business_receipts_csv():
     writer = csv.writer(si)
 
     # Header for business and Perk Miner
-    writer.writerow([f"Invoices for '{business.business_name}' from Perk Miner"])
+    writer.writerow([f"Invoices for '{business.business_name}' from PerkMiner"])
     writer.writerow([])
 
-    # Table headers (should match what you show in business_receipts.html)
+    # Table headers
     writer.writerow([
         "Date/Time",
         "Interaction ID",
@@ -3927,7 +3933,6 @@ def export_business_receipts_csv():
         "Cash Back"
     ])
 
-    # Write each transaction (match values as in your HTML)
     for txn in transactions:
         ad_fee = txn.ad_fee or 0
         net_gross = txn.amount - ad_fee
@@ -3935,7 +3940,7 @@ def export_business_receipts_csv():
         ratio = (net_gross + ad_fee) / ad_fee if ad_fee else 0
 
         writer.writerow([
-            txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
+            txn.local_date_time if txn.local_date_time else txn.date_time.strftime('%Y-%m-%d %I:%M %p'),
             txn.interaction_id,
             f"{txn.amount:,.2f}",
             f"{ad_fee:,.2f}",
