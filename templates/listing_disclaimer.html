@@ -28,19 +28,32 @@
                     <li>Illegal services or products</li>
                     <li>Unlicensed or fraudulent business offers</li>
                     <li>Spam, scams, or misleading content</li>
-                    <li>Adult content and restricted materials</li>
+                    <li>Adult content and pornographic materials</li>
+                    <li>Any offensive products or services</li>
+                    <li>Politically related products or services with an agenda</li>
+                    <li>Religious products or services with an agenda</li>
+                    <li>Anything related to criminal activity</li>
                 </ul>
                 <hr class="my-2">
                 <div>
                     <strong>Terms:</strong>  
-                    Once you submit your listing for approval and it is approved, any new changes (edits) must be re-submitted for approval. While under review, your live listing will become temporarily unavailable until changes are approved.  
-                    By submitting, you confirm your listing complies with PerkMiner’s terms and all local laws.
+                    1.) Once you submit your listing for approval and it is approved, any new changes (edits) must be re-submitted for approval. While under review, <b>your live listing will become temporarily unavailable until changes are approved</b>.
+                    2.) By submitting, you confirm your listing complies with PerkMiner’s terms and all local laws.
+                    3.) If one of our members informs you that they a Perk Miner member and require the transaction to be finalized, YOU AGREE TO MAINTAIN ENOUGH FUNDS IN YOUR ACCOUNT BALANCE TO FINALIZE THE TRANSACTION AND YOU FINALIZE THE TRANSACTION.
+                    4.) You understand that all cash back and commissions paid pays up to 5 Members and 6 Businesses (including your business cash back) and is paid from the advertising revenue you pay (ALL CASH BACK AND COMMISSIONS ARE PAID BY PERK MINER ... NOT PAID BY YOUR COMPANY).
+                    5.) <b>Failure to finalize all transactions for our members</b> will result in immediate suspension of your listing or deletion of your account.
+                    6.) Your company pays 10% of the total sale or closed deal (max of $250) from each transaction with a guaranteed 900% Marketing ROI (10 to 1 ration - you pay $1 for every $10 sold capped at $250).  Transactions over $2,500 provide a Marketing ROI greater than 900%.
+                    7.) Finalizing the transaction must be completed from your dashboard using any mobile device.
+                    8.) You must maintain enough funds in your account at all times to finalize all transactions from any of our members.
+                    9.) <b>You must enter total amount paid by our members (including taxes, if applicable and tips paid)</b>.
+                    10.) Amount paid applies to manually finalized transactions as well (these are transactions finalized remotely).
                 </div>
             </div>
         </div>
         <p class="text-danger small mb-3" aria-label="Disclaimer">
             <strong>Disclaimer:</strong>
-            Approval or rejection of your listing is at PerkMiner's sole discretion, and <b>your listing may become temporarily unavailable during re-approval process.</b>
+            Approval or rejection of your listing is at PerkMiner's sole discretion.  If you re-submit your listing after making any changes, <b>your listing will become temporarily unavailable</b> during the re-approval process.</br>
+            IF YOU ACCEPT RETURNS, <b>Perk Miner is not responsible or liable for lost advertising revenue</b>.  Optional: Inform our members you only accept exchanges for the purchase of these products sold or services rendered.
         </p>
         <form method="post" action="{{ url_for('send_for_review') }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
