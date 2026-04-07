@@ -235,177 +235,138 @@ def process_transaction_return(original_user_txn, original_business_txn, reason=
     db.session.commit()
 
 def get_user_available_earnings(user):
-    total = db.session.query(
-        func.coalesce(
-            func.sum(
-                case((UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back), else_=0)
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case((UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission), else_=0)
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case((UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission), else_=0)
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case((UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission), else_=0)
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case((UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission), else_=0)
-            ), 0
-        )
-    ).filter(
-        UserTransaction.status == "available"
+    rc = user.referral_code
+    filters = [UserTransaction.status == "available"]
+
+    tier1 = db.session.query(func.coalesce(func.sum(UserTransaction.cash_back), 0)).filter(
+        UserTransaction.user_referral_id == rc, *filters
     ).scalar()
-    return float(total or 0)
+    tier2 = db.session.query(func.coalesce(func.sum(UserTransaction.tier2_commission), 0)).filter(
+        UserTransaction.tier2_user_referral_id == rc, *filters
+    ).scalar()
+    tier3 = db.session.query(func.coalesce(func.sum(UserTransaction.tier3_commission), 0)).filter(
+        UserTransaction.tier3_user_referral_id == rc, *filters
+    ).scalar()
+    tier4 = db.session.query(func.coalesce(func.sum(UserTransaction.tier4_commission), 0)).filter(
+        UserTransaction.tier4_user_referral_id == rc, *filters
+    ).scalar()
+    tier5 = db.session.query(func.coalesce(func.sum(UserTransaction.tier5_commission), 0)).filter(
+        UserTransaction.tier5_user_referral_id == rc, *filters
+    ).scalar()
+    tier1_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier1_business_user_commission), 0)).filter(
+        UserTransaction.tier1_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier2_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier2_business_user_commission), 0)).filter(
+        UserTransaction.tier2_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier3_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier3_business_user_commission), 0)).filter(
+        UserTransaction.tier3_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier4_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier4_business_user_commission), 0)).filter(
+        UserTransaction.tier4_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier5_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier5_business_user_commission), 0)).filter(
+        UserTransaction.tier5_business_user_referral_id == rc, *filters
+    ).scalar()
+    
+    total = (
+        float(tier1 or 0) + float(tier2 or 0) + float(tier3 or 0) + float(tier4 or 0) + float(tier5 or 0) +
+        float(tier1_biz or 0) + float(tier2_biz or 0) + float(tier3_biz or 0) + float(tier4_biz or 0) + float(tier5_biz or 0)
+    )
+    return total
 
 def get_business_available_earnings(biz):
-    total = db.session.query(
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission),
-                    else_=0
-                )
-            ), 0
-        )
-    ).filter(
-        BusinessTransaction.status == "available"
+    rc = biz.referral_code
+    filters = [BusinessTransaction.status == "available"]
+
+    tier1 = db.session.query(func.coalesce(func.sum(BusinessTransaction.cash_back), 0)).filter(
+        BusinessTransaction.business_referral_id == rc, *filters
     ).scalar()
-    return float(total or 0)
+    tier2 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier2_commission), 0)).filter(
+        BusinessTransaction.tier2_business_referral_id == rc, *filters
+    ).scalar()
+    tier3 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier3_commission), 0)).filter(
+        BusinessTransaction.tier3_business_referral_id == rc, *filters
+    ).scalar()
+    tier4 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier4_commission), 0)).filter(
+        BusinessTransaction.tier4_business_referral_id == rc, *filters
+    ).scalar()
+    tier5 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier5_commission), 0)).filter(
+        BusinessTransaction.tier5_business_referral_id == rc, *filters
+    ).scalar()
+    mutual = db.session.query(func.coalesce(func.sum(BusinessTransaction.sponsoree_mutual_commission), 0)).filter(
+        BusinessTransaction.sponsoree_mutual_referral_id == rc, *filters
+    ).scalar()
+    
+    total = float(tier1 or 0) + float(tier2 or 0) + float(tier3 or 0) + float(tier4 or 0) + float(tier5 or 0) + float(mutual or 0)
+    return total
 
 def get_user_pending_earnings(user):
-    total = db.session.query(
-        func.coalesce(
-            func.sum(
-                case(
-                    (UserTransaction.user_referral_id == user.referral_code, UserTransaction.cash_back),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (UserTransaction.tier2_user_referral_id == user.referral_code, UserTransaction.tier2_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (UserTransaction.tier3_user_referral_id == user.referral_code, UserTransaction.tier3_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (UserTransaction.tier4_user_referral_id == user.referral_code, UserTransaction.tier4_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (UserTransaction.tier5_user_referral_id == user.referral_code, UserTransaction.tier5_commission),
-                    else_=0
-                )
-            ), 0
-        )
-    ).filter(
-        UserTransaction.status == "pending"
+    rc = user.referral_code
+    filters = [UserTransaction.status == "pending"]
+
+    tier1 = db.session.query(func.coalesce(func.sum(UserTransaction.cash_back), 0)).filter(
+        UserTransaction.user_referral_id == rc, *filters
     ).scalar()
-    return float(total or 0)
+    tier2 = db.session.query(func.coalesce(func.sum(UserTransaction.tier2_commission), 0)).filter(
+        UserTransaction.tier2_user_referral_id == rc, *filters
+    ).scalar()
+    tier3 = db.session.query(func.coalesce(func.sum(UserTransaction.tier3_commission), 0)).filter(
+        UserTransaction.tier3_user_referral_id == rc, *filters
+    ).scalar()
+    tier4 = db.session.query(func.coalesce(func.sum(UserTransaction.tier4_commission), 0)).filter(
+        UserTransaction.tier4_user_referral_id == rc, *filters
+    ).scalar()
+    tier5 = db.session.query(func.coalesce(func.sum(UserTransaction.tier5_commission), 0)).filter(
+        UserTransaction.tier5_user_referral_id == rc, *filters
+    ).scalar()
+    tier1_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier1_business_user_commission), 0)).filter(
+        UserTransaction.tier1_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier2_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier2_business_user_commission), 0)).filter(
+        UserTransaction.tier2_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier3_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier3_business_user_commission), 0)).filter(
+        UserTransaction.tier3_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier4_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier4_business_user_commission), 0)).filter(
+        UserTransaction.tier4_business_user_referral_id == rc, *filters
+    ).scalar()
+    tier5_biz = db.session.query(func.coalesce(func.sum(UserTransaction.tier5_business_user_commission), 0)).filter(
+        UserTransaction.tier5_business_user_referral_id == rc, *filters
+    ).scalar()
+
+    total = (
+        float(tier1 or 0) + float(tier2 or 0) + float(tier3 or 0) + float(tier4 or 0) + float(tier5 or 0) +
+        float(tier1_biz or 0) + float(tier2_biz or 0) + float(tier3_biz or 0) + float(tier4_biz or 0) + float(tier5_biz or 0)
+    )
+    return total
 
 def get_business_pending_earnings(biz):
-    total = db.session.query(
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.business_referral_id == biz.referral_code, BusinessTransaction.cash_back),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier2_business_referral_id == biz.referral_code, BusinessTransaction.tier2_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier3_business_referral_id == biz.referral_code, BusinessTransaction.tier3_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier4_business_referral_id == biz.referral_code, BusinessTransaction.tier4_commission),
-                    else_=0
-                )
-            ), 0
-        ) +
-        func.coalesce(
-            func.sum(
-                case(
-                    (BusinessTransaction.tier5_business_referral_id == biz.referral_code, BusinessTransaction.tier5_commission),
-                    else_=0
-                )
-            ), 0
-        )
-    ).filter(
-        BusinessTransaction.status == "pending"
+    rc = biz.referral_code
+    filters = [BusinessTransaction.status == "pending"]
+
+    tier1 = db.session.query(func.coalesce(func.sum(BusinessTransaction.cash_back), 0)).filter(
+        BusinessTransaction.business_referral_id == rc, *filters
     ).scalar()
-    return float(total or 0)
+    tier2 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier2_commission), 0)).filter(
+        BusinessTransaction.tier2_business_referral_id == rc, *filters
+    ).scalar()
+    tier3 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier3_commission), 0)).filter(
+        BusinessTransaction.tier3_business_referral_id == rc, *filters
+    ).scalar()
+    tier4 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier4_commission), 0)).filter(
+        BusinessTransaction.tier4_business_referral_id == rc, *filters
+    ).scalar()
+    tier5 = db.session.query(func.coalesce(func.sum(BusinessTransaction.tier5_commission), 0)).filter(
+        BusinessTransaction.tier5_business_referral_id == rc, *filters
+    ).scalar()
+    mutual = db.session.query(func.coalesce(func.sum(BusinessTransaction.sponsoree_mutual_commission), 0)).filter(
+        BusinessTransaction.sponsoree_mutual_referral_id == rc, *filters
+    ).scalar()
+
+    total = float(tier1 or 0) + float(tier2 or 0) + float(tier3 or 0) + float(tier4 or 0) + float(tier5 or 0) + float(mutual or 0)
+    return total
 
 cloudinary.config(
   cloud_name = 'dmrntlcfd',
@@ -1051,9 +1012,14 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     if business.account_balance is None or business.account_balance < ad_fee:
         raise Exception("Insufficient funds to complete this transaction. Please fund your account.")
 
-    # --- calculate pending period using business settings ---
-    pending_days = (business.return_days or 0) + (business.pending_release_days or 0)
-    pending_until = datetime.utcnow() + timedelta(days=pending_days)
+    # --- Set pending/available based on business return_days ---
+    if business.return_days == 0:
+        txn_status = "available"
+        txn_pending_until = None
+    else:
+        pending_days = (business.return_days or 0) + (business.pending_release_days or 0)
+        txn_status = "pending"
+        txn_pending_until = datetime.utcnow() + timedelta(days=pending_days)
 
     user_referral_id = interaction.user.referral_code or "REFjoejmendez"
     user_cash_back_raw = amount * 0.02
@@ -1068,14 +1034,10 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     u5 = User.query.filter_by(id=u4.sponsor_id).first() if u4 and u4.sponsor_id else None
     tier5_user_referral_id = u5.referral_code if u5 else "REFjoejmendez"
 
-    tier2_commission_raw = amount * 0.0025
-    tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
-    tier3_commission_raw = amount * 0.0025
-    tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
-    tier4_commission_raw = amount * 0.0025
-    tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
-    tier5_commission_raw = amount * 0.02
-    tier5_commission = round(min(tier5_commission_raw, 50), 2)
+    tier2_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier3_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier4_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier5_commission = round(min(amount * 0.02, 50), 2)
 
     top_biz = find_top_business_with_user_sponsor(business)
     root_user = User.query.get(top_biz.user_sponsor_id) if top_biz and top_biz.user_sponsor_id else None
@@ -1137,8 +1099,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         tier4_business_user_commission=tier4_business_user_commission,
         tier5_business_user_referral_id=tier5_business_user_referral_id,
         tier5_business_user_commission=tier5_business_user_commission,
-        status="pending",                       # new field here
-        pending_until=pending_until             # new field here
+        status=txn_status,
+        pending_until=txn_pending_until
     )
     db.session.add(user_trans)
 
@@ -1180,8 +1142,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         tier5_commission=tier5_commission_biz,
         sponsoree_mutual_referral_id=None,
         sponsoree_mutual_commission=0,
-        status="pending",                       # new field here
-        pending_until=pending_until             # new field here
+        status=txn_status,
+        pending_until=txn_pending_until
     )
     db.session.add(business_trans)
 
@@ -1213,8 +1175,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             tier5_commission=0,
             sponsoree_mutual_referral_id=sponsoree_mutual_referral_id,
             sponsoree_mutual_commission=sponsoree_mutual_commission,
-            status="pending",                       # new field here
-            pending_until=pending_until             # new field here
+            status=txn_status,
+            pending_until=txn_pending_until
         )
         db.session.add(mutual_trans)
 
@@ -1234,6 +1196,72 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         "transaction_id": transaction_id,
     }
     return summary
+
+def process_transaction_return(original_user_txn, original_business_txn, reason="Return processed"):
+    from datetime import datetime
+    import uuid
+
+    reverse_user_txn = UserTransaction(
+        transaction_id=str(uuid.uuid4()),
+        interaction_id=original_user_txn.interaction_id,
+        date_time=datetime.utcnow(),
+        local_date_time=None,
+        amount=-(original_user_txn.amount),
+        business_referral_id=original_user_txn.business_referral_id,
+        user_referral_id=original_user_txn.user_referral_id,
+        cash_back=-(original_user_txn.cash_back or 0),
+        tier2_user_referral_id=original_user_txn.tier2_user_referral_id,
+        tier2_commission=-(original_user_txn.tier2_commission or 0),
+        tier3_user_referral_id=original_user_txn.tier3_user_referral_id,
+        tier3_commission=-(original_user_txn.tier3_commission or 0),
+        tier4_user_referral_id=original_user_txn.tier4_user_referral_id,
+        tier4_commission=-(original_user_txn.tier4_commission or 0),
+        tier5_user_referral_id=original_user_txn.tier5_user_referral_id,
+        tier5_commission=-(original_user_txn.tier5_commission or 0),
+        tier1_business_user_referral_id=original_user_txn.tier1_business_user_referral_id,
+        tier1_business_user_commission=-(original_user_txn.tier1_business_user_commission or 0),
+        tier2_business_user_referral_id=original_user_txn.tier2_business_user_referral_id,
+        tier2_business_user_commission=-(original_user_txn.tier2_business_user_commission or 0),
+        tier3_business_user_referral_id=original_user_txn.tier3_business_user_referral_id,
+        tier3_business_user_commission=-(original_user_txn.tier3_business_user_commission or 0),
+        tier4_business_user_referral_id=original_user_txn.tier4_business_user_referral_id,
+        tier4_business_user_commission=-(original_user_txn.tier4_business_user_commission or 0),
+        tier5_business_user_referral_id=original_user_txn.tier5_business_user_referral_id,
+        tier5_business_user_commission=-(original_user_txn.tier5_business_user_commission or 0),
+        status="available",      # Not pending, reversal funds move instantly
+        pending_until=None
+    )
+    db.session.add(reverse_user_txn)
+
+    reverse_business_txn = BusinessTransaction(
+        transaction_id=reverse_user_txn.transaction_id,  # keep in sync for cross-lookup
+        interaction_id=original_business_txn.interaction_id,
+        date_time=datetime.utcnow(),
+        local_date_time=None,
+        amount=-(original_business_txn.amount),
+        ad_fee=-(original_business_txn.ad_fee or 0),
+        business_referral_id=original_business_txn.business_referral_id,
+        cash_back=-(original_business_txn.cash_back or 0),
+        tier2_business_referral_id=original_business_txn.tier2_business_referral_id,
+        tier2_commission=-(original_business_txn.tier2_commission or 0),
+        tier3_business_referral_id=original_business_txn.tier3_business_referral_id,
+        tier3_commission=-(original_business_txn.tier3_commission or 0),
+        tier4_business_referral_id=original_business_txn.tier4_business_referral_id,
+        tier4_commission=-(original_business_txn.tier4_commission or 0),
+        tier5_business_referral_id=original_business_txn.tier5_business_referral_id,
+        tier5_commission=-(original_business_txn.tier5_commission or 0),
+        sponsoree_mutual_referral_id=original_business_txn.sponsoree_mutual_referral_id,
+        sponsoree_mutual_commission=-(original_business_txn.sponsoree_mutual_commission or 0),
+        status="available",      # Not pending
+        pending_until=None
+    )
+    db.session.add(reverse_business_txn)
+
+    # Mark originals as reversed for audit
+    original_user_txn.status = "reversed"
+    original_business_txn.status = "reversed"
+
+    db.session.commit()
 
 def issue_store_sale_rewards(business, amount, buyer_email=None):
     """
@@ -7042,23 +7070,49 @@ def business_stripe_update_info():
     return redirect(account_link.url)
 
 @app.route("/process_return/<int:txn_id>", methods=["POST"])
-@login_required  # or @business_login_required if needed
+@login_required  # or your @business_login_required for business side
 def process_return(txn_id):
-    # Fetch the original user and business transaction
-    orig_user_txn = UserTransaction.query.get_or_404(txn_id)
-    orig_business_txn = BusinessTransaction.query.filter_by(transaction_id=orig_user_txn.transaction_id).first()
+    from flask import request
 
-    # Check: only allow if status is "available"
-    if orig_user_txn.status != "available":
-        flash("Transaction not eligible for return.", "danger")
-        return redirect(request.referrer or url_for('dashboard'))
+    # Try user transaction first (use .get() so returns None if not found)
+    orig_user_txn = UserTransaction.query.get(txn_id)
+    orig_business_txn = None
 
-    # Optionally: Security check — only allow if the current user/business matches
+    if orig_user_txn and orig_user_txn.status in ["pending", "available"]:
+        # Optionally: safety check owner
+        if orig_user_txn.user_referral_id != current_user.referral_code \
+           and orig_user_txn.tier2_user_referral_id != current_user.referral_code \
+           and orig_user_txn.tier3_user_referral_id != current_user.referral_code \
+           and orig_user_txn.tier4_user_referral_id != current_user.referral_code \
+           and orig_user_txn.tier5_user_referral_id != current_user.referral_code:
+            flash("You don't have permission to return this transaction.", "danger")
+            return redirect(url_for('dashboard'))
+        orig_business_txn = BusinessTransaction.query.filter_by(transaction_id=orig_user_txn.transaction_id).first()
+        process_transaction_return(orig_user_txn, orig_business_txn)
+        flash("Return processed successfully!", "success")
+        return redirect(url_for('dashboard'))
 
-    # Process the return (creates the negative entries)
-    process_transaction_return(orig_user_txn, orig_business_txn)
+    # Try as business txn (if business login system)
+    orig_business_txn = BusinessTransaction.query.get(txn_id)
+    if orig_business_txn and orig_business_txn.status in ["pending", "available"]:
+        # Optionally: safety check owner
+        biz_id = session.get("business_id")
+        biz = Business.query.get(biz_id)
+        if not biz or (
+            orig_business_txn.business_referral_id != biz.referral_code and
+            orig_business_txn.tier2_business_referral_id != biz.referral_code and
+            orig_business_txn.tier3_business_referral_id != biz.referral_code and
+            orig_business_txn.tier4_business_referral_id != biz.referral_code and
+            orig_business_txn.tier5_business_referral_id != biz.referral_code
+        ):
+            flash("You don't have permission to return this transaction.", "danger")
+            return redirect(url_for('business_dashboard'))
+        orig_user_txn = UserTransaction.query.filter_by(transaction_id=orig_business_txn.transaction_id).first()
+        process_transaction_return(orig_user_txn, orig_business_txn)
+        flash("Return processed successfully!", "success")
+        return redirect(url_for('business_dashboard'))
 
-    flash("Return processed and funds reversed!", "success")
+    flash("Return not allowed or transaction not found.", "danger")
     return redirect(request.referrer or url_for('dashboard'))
 
 @app.errorhandler(500)
