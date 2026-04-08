@@ -625,7 +625,7 @@ def build_invite_email(inviter_name, join_url, video_url):
         <!-- Introduction Text + Watch Video Button -->
     <tr>
         <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 28px; color: #374151; line-height: 1.6; text-align:center;">
-            <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b> (Ability to earn more than what you spend!)</p>
+            <p style="margin:0 0 24px;">Discover how you earn Cash Back and Commissions with PerkMiner.  <b>Cash Back like a pro on everyday purchases!</b> (We make it possible for you to earn more than what you spend!)</p>
 
                 <a href="{video_url}" class="button" target="_blank" style="margin: 12px 0 32px;">
                 Watch our intro video
@@ -1411,6 +1411,71 @@ def calculate_business_grand_total(business):
         if hasattr(t, "sponsoree_mutual_referral_id") and t.sponsoree_mutual_referral_id == ref_code and (t.sponsoree_mutual_commission or 0) > 0:
             total += Decimal(t.sponsoree_mutual_commission or 0)
     return total
+
+def get_featured_businesses(lat, lng):
+    # 1. Find nearby businesses within 10 miles using the haversine formula
+    RADIUS = 10  # miles
+    N_FEATURED = 10
+
+    haversine = (
+        3959 * func.acos(
+            func.least(
+                1.0,
+                func.cos(func.radians(lat)) *
+                func.cos(func.radians(Business.latitude)) *
+                func.cos(func.radians(Business.longitude) - func.radians(lng)) +
+                func.sin(func.radians(lat)) *
+                func.sin(func.radians(Business.latitude))
+            )
+        )
+    )
+
+    # 2. Filter all approved businesses within radius
+    all_nearby = Business.query \
+        .filter(Business.status == "approved") \
+        .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
+        .add_columns(haversine.label('distance')) \
+        .filter(haversine <= RADIUS) \
+        .all()
+
+    # Pull the Business objects only
+    businesses = [b for (b, d) in all_nearby]
+
+    # 3. Manually featured businesses in this group
+    manual_featured = [b for (b, d) in all_nearby if b.manual_feature]
+
+    # If 10 or more manuals, use only those
+    if len(manual_featured) >= N_FEATURED:
+        featured = manual_featured[:N_FEATURED]
+        return featured
+
+    # 4. Calculate rank for the rest
+    # Metrics for all in range
+    tx_counts = {b.id: BusinessTransaction.query.filter_by(business_referral_id=b.referral_code).count() for b in businesses}
+    max_tx = max(tx_counts.values() or [1])  # default to 1 if empty
+
+    ad_fees = {b.id: float(db.session.query(func.coalesce(func.sum(BusinessTransaction.ad_fee), 0)).filter_by(business_referral_id=b.referral_code).scalar()) for b in businesses}
+    max_ad_fee = max(ad_fees.values() or [1])
+
+    # Direct referrals: count how many businesses have this biz as sponsor
+    referrals = {b.id: Business.query.filter_by(sponsor_id=b.id).count() for b in businesses}
+    max_referrals = max(referrals.values() or [1])
+
+    # Compute rank (1,000 pt scale)
+    for b in businesses:
+        tx_score = (tx_counts[b.id] / max_tx) * 250 if max_tx else 0
+        ad_score = (ad_fees[b.id] / max_ad_fee) * 150 if max_ad_fee else 0
+        ref_score = (referrals[b.id] / max_referrals) * 600 if max_referrals else 0
+        b.rank = round(tx_score + ad_score + ref_score, 2)
+
+    # 5. Exclude manuals, sort all others by rank (desc), fill up to 10
+    remaining = [b for b in businesses if not b.manual_feature]
+    ranked = sorted(remaining, key=lambda b: b.rank, reverse=True)
+    n_needed = N_FEATURED - len(manual_featured)
+    featured = manual_featured + ranked[:n_needed]
+
+    # Always max 10
+    return featured[:N_FEATURED]
 
 # Add others (interaction, message, etc.) as needed here
 
@@ -2363,16 +2428,12 @@ def edit_variant(variant_id):
 @app.route("/")
 def home():
     approved_listings = Business.query.filter_by(status="approved").all()
-    N_FEATURED = 5
+    N_FEATURED = 10  # show 10 at a time
 
-    # User location detection (GET params: lat/lng)
+    # User/location detection (GET params: lat/lng)
     lat = request.args.get("lat", type=float)
     lng = request.args.get("lng", type=float)
     search_radius = 10  # miles
-
-    # Queries
-    manual_query = Business.query.filter_by(manual_feature=True, status="approved")
-    auto_query = Business.query.filter_by(manual_feature=False, status="approved")
 
     if lat is not None and lng is not None:
         haversine = (
@@ -2387,35 +2448,74 @@ def home():
                 )
             )
         )
-        manual_query = manual_query.add_columns(haversine.label('distance')) \
-            .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
-            .filter(haversine <= search_radius)
-        auto_query = auto_query.add_columns(haversine.label('distance')) \
-            .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
-            .filter(haversine <= search_radius)
 
-        manual_featured = []
-        for biz, dist in manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all():
-            biz.distance_mi = round(dist, 2) if dist is not None else None
-            manual_featured.append(biz)
-        needed = N_FEATURED - len(manual_featured)
-        auto_featured = []
-        if needed > 0:
-            for biz, dist in auto_query.order_by(Business.rank.desc()).limit(needed).all():
-                biz.distance_mi = round(dist, 2) if dist is not None else None
-                auto_featured.append(biz)
+        # Businesses in range
+        all_nearby = Business.query.filter_by(status="approved") \
+            .filter(Business.latitude.isnot(None), Business.longitude.isnot(None)) \
+            .add_columns(haversine.label('distance')) \
+            .filter(haversine <= search_radius) \
+            .all()
+        nearby_businesses = [b for b, d in all_nearby]
+        business_ids = [b.id for b in nearby_businesses]
+
+        # Manual featured first
+        manual_featured = [b for b, d in all_nearby if b.manual_feature]
+        if len(manual_featured) >= N_FEATURED:
+            featured_listings = manual_featured[:N_FEATURED]
+        else:
+            # --- Calculate rank dynamically for each business in range ---
+            # 1. Transactions
+            tx_counts = {
+                b.id: BusinessTransaction.query.filter_by(business_referral_id=b.referral_code).count()
+                for b in nearby_businesses
+            }
+            max_tx = max(tx_counts.values() or [1])
+
+            # 2. Ad fees
+            ad_fees = {
+                b.id: float(db.session.query(func.coalesce(func.sum(BusinessTransaction.ad_fee), 0))
+                    .filter_by(business_referral_id=b.referral_code).scalar())
+                for b in nearby_businesses
+            }
+            max_ad_fee = max(ad_fees.values() or [1])
+
+            # 3. Direct referrals
+            referrals = {
+                b.id: Business.query.filter_by(sponsor_id=b.id).count()
+                for b in nearby_businesses
+            }
+            max_ref = max(referrals.values() or [1])
+
+            # Calculate rank for all non-manual-featured
+            not_manual = [b for b in nearby_businesses if not b.manual_feature]
+            for b in not_manual:
+                tx_score = (tx_counts[b.id] / max_tx) * 250 if max_tx else 0
+                ad_score = (ad_fees[b.id] / max_ad_fee) * 150 if max_ad_fee else 0
+                ref_score = (referrals[b.id] / max_ref) * 600 if max_ref else 0
+                b.rank = round(tx_score + ad_score + ref_score, 2)
+            # Fill up with highest rank
+            n_needed = N_FEATURED - len(manual_featured)
+            ranked = sorted(not_manual, key=lambda b: b.rank, reverse=True)
+            featured_listings = manual_featured + ranked[:n_needed]
+            # Set distance_mi for display
+            dist_lookup = {b.id: d for b, d in all_nearby}
+            for b in featured_listings:
+                b.distance_mi = round(dist_lookup.get(b.id, 0) or 0, 2)
     else:
-        manual_featured = manual_query.order_by(Business.rank.desc()).limit(N_FEATURED).all()
-        for biz in manual_featured:
-            biz.distance_mi = None
+        # No location: show 10, manual first, then highest rank
+        manual_featured = Business.query.filter_by(status="approved", manual_feature=True).order_by(Business.rank.desc()).limit(N_FEATURED).all()
         needed = N_FEATURED - len(manual_featured)
-        auto_featured = []
         if needed > 0:
-            auto_featured = auto_query.order_by(Business.rank.desc()).limit(needed).all()
-            for biz in auto_featured:
-                biz.distance_mi = None
-
-    featured_listings = manual_featured + auto_featured
+            ranked = Business.query.filter_by(status="approved", manual_feature=False).order_by(Business.rank.desc()).limit(needed).all()
+            for b in manual_featured:
+                b.distance_mi = None
+            for b in ranked:
+                b.distance_mi = None
+            featured_listings = manual_featured + ranked
+        else:
+            for b in manual_featured:
+                b.distance_mi = None
+            featured_listings = manual_featured[:N_FEATURED]
 
     # ------------ Totals ------------
     user_transactions = UserTransaction.query.all()
@@ -2436,8 +2536,6 @@ def home():
     total_member_paid = total_user_tier1 + total_user_commission + total_user_biz_commission
 
     business_transactions = BusinessTransaction.query.all()
-
-    # --- Mutual sponsoree commission ---
     total_biz_mutual_commission = sum(
         (t.sponsoree_mutual_commission or 0)
         for t in business_transactions
@@ -2452,14 +2550,11 @@ def home():
         (t.tier5_commission or 0)
         for t in business_transactions
     )
-    # Add mutual commission to business total
     total_biz_paid += total_biz_mutual_commission
 
-    # *** THE ONLY LINES CHANGED: filter for "main" invoice entries ***
     main_btxns = [t for t in business_transactions if not t.sponsoree_mutual_referral_id]
     total_gross_sales = sum(t.amount or 0 for t in main_btxns)
     total_ad_fees = sum((t.ad_fee or 0) for t in main_btxns)
-    # *** END CHANGE ***
 
     total_paid_out = total_member_paid + total_biz_paid
     percent_fees_paid = ((total_paid_out / total_ad_fees) * 100) if total_ad_fees > 0 else 0
@@ -2470,7 +2565,7 @@ def home():
         featured_listings=featured_listings,
         total_member_paid=total_member_paid,
         total_biz_paid=total_biz_paid,
-        total_biz_mutual_commission=total_biz_mutual_commission,  # <== pass if you want to display it separately
+        total_biz_mutual_commission=total_biz_mutual_commission,
         total_gross_sales=total_gross_sales,
         total_ad_fees=total_ad_fees,
         total_paid_out=total_paid_out,
