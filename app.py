@@ -631,10 +631,10 @@ def build_invite_email(inviter_name, join_url, video_url):
                 Watch our intro video
                 </a>
 
-            <p style="margin:0 0 28px;">Free to join (no contracts or monthly subscriptions).</p>
-            <p style="margin:0 0 28px;"><b>Members:</b>  We protect your privacy with secure messaging and never sell your contact information.</p>
-            <p style="margin:0 0 28px;"><b>Business Owners:</b>  ZERO WASTED ADVERTISING DOLLARS!  <font color="#FF0000">No Sale or Closed Deal = Zero Fees</font> (900% or higher Marketing ROI).</p>
-            <p style="margin:0 0 28px;">We connect One Member to One Business at a time.  Members won't receive annoying phone calls or emails.  Business Owners don't have to compete with other businesses with over-sold leads.</p>
+            <p style="margin:0 0 28px;">Free to join (no contracts, monthly subscriptions or commitment).</p>
+            <p style="margin:0 0 28px;"><b>Members:</b>  We protect your privacy with secure messaging and never sell your contact information.  Contact our advertisers with peace of mind.</p>
+            <p style="margin:0 0 28px;"><b>Business Owners:</b>  YOU GET ZERO WASTED ADVERTISING DOLLARS!  <font color="#FF0000">No Sale or Closed Deal = Zero Fees</font></br>(900% or higher Marketing ROI).</p>
+            <p style="margin:0 0 28px;">We connect <b>One Member</b> to <b>One Business</b> at a time.  Members won't get spammed (emails, calls or door-to-door sales).  Businesses don't have to compete with other businesses.</p>
             <p style="margin:0 0 28px;"><b>Both Members and Business Owners earn Cash Back and Commissions</b> (Paid by Perk Miner - from up to 87.5% of the ad revenue paid by our advertisers).</p>
         </td>
     </tr>
