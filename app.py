@@ -619,8 +619,8 @@ def build_invite_email(inviter_name, join_url, video_url):
                         <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771635742/Email_Background_kgfx10.jpg" width="600"
                         alt="PerkMiner Hero Banner"
                         style="display:block; width:100%; height:auto; border:0;" border="0">
-                    </td>
-                </tr>
+        </td>
+    </tr>
 
         <!-- Introduction Text + Watch Video Button -->
     <tr>
@@ -631,47 +631,20 @@ def build_invite_email(inviter_name, join_url, video_url):
                 Watch our intro video
                 </a>
 
+            <p style="margin:0 0 28px;">Free to join (no contracts or monthly subscriptions).</p>
+            <p style="margin:0 0 28px;"><b>Members:</b>  We protect your privacy with secure messaging and never sell your contact information.</p>
+            <p style="margin:0 0 28px;"><b>Business Owners:</b>  ZERO WASTED ADVERTISING DOLLARS!  <font color="#FF0000">No Sale or Closed Deal = Zero Fees</font> (900% or higher Marketing ROI).</p>
+            <p style="margin:0 0 28px;">We connect One Member to One Business at a time.  Members won't receive annoying phone calls or emails.  Business Owners don't have to compete with other businesses with over-sold leads.</p>
+            <p style="margin:0 0 28px;"><b>Both Members and Business Owners earn Cash Back and Commissions</b> (Paid by Perk Miner - from up to 87.5% of the ad revenue paid by our advertisers).</p>
+        </td>
+    </tr>
+
         <!-- Secondary Image -->
-        <td style="padding: 0 40px 30px;">
-            <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1775626999/member-connected_privacy_sotcrp.jpg" width="520" alt="PerkMiner Features"
-            style="display:block; width:100%; max-width:520px; height:auto; border-radius:10px; border:0;" border="0">
-        </td>
-
-            <p style="margin:0 0 28px;"><b>FOR MEMBERS:</b></p>
-            <p style="margin:0 0 28px;">Free to join (no membership fees ... ever!).</p>
-            <p style="margin:0 0 28px;"><b>Members earn 2% Cash Back on all purchases</b> (max $50).</p>
-            <p style="margin:0 0 28px;">Members earn Commissions on referred purchases.</p>
-            <p style="margin:0 0 28px;"><b>Perk Miner pays all Cash Back and Commissions</b> (Advertisers don't).</p>
-        </td>
-    </tr>
-
-        <!-- Join Button -->
     <tr>
-        <td align="center" style="padding: 0 40px 50px;">
-            <a href="{join_url}" class="button" target="_blank" style="font-size:20px; padding:18px 48px;">
-            Join PerkMiner Now
-            </a>
-        </td>
-    </tr>
-
-    <tr>
-
-        <!-- Third Image -->
         <td style="padding: 0 40px 30px;">
             <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1775719494/List-for-Free_pykazg.jpg" width="520" alt="PerkMiner Features"
             style="display:block; width:100%; max-width:520px; height:auto; border-radius:10px; border:0;" border="0">
         </td>
-
-        <td style="padding: 40px 40px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 28px; color: #374151; line-height: 1.6; text-align:center;">
-            <p style="margin:0 0 28px;"><b>FOR BUSINESS OWNERS:</b></p>
-            <p style="margin:0 0 28px;">Free to join (no contract / no subscription).</p>
-            <p style="margin:0 0 28px;"><b>Business owners earn Cash Back on purchases and referred purchases.</p>
-            <p style="margin:0 0 28px;"><Perk Miner pays all Cash Back (Advertisers Don't).</p>
-            <p style="margin:0 0 28px;">Advertisers only pay after they've made a sale or closed a deal (900% or higher Marketing ROI).</p>
-            <p style="margin:0 0 28px;"><font color="#FF0000"><b>No Sale or Closed Deal = Zero Fees</b></font></p>
-            <p style="margin:0 0 28px;"><font color="#FF0000">Simply add funds to your account balance for ad fees to get started.</p>
-        </td>
-
     </tr>
 
         <!-- Join Button -->
