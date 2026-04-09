@@ -102,6 +102,18 @@
         font-size: 1.05em;
         color: #374759;
     }
+
+    .main-info-row i { color: var(--pm-accent); font-size:1.15em; }
+    .hours-block {
+        background: #f4f5fb;
+        border-radius: 10px;
+        padding: 1.05rem 1.06rem;
+        margin-bottom: 1.18rem;
+        min-height: 58px;
+        font-size: 1.05em;
+        color: #374759;
+    }
+
     .service-list-label {
         font-weight:700;
         color: var(--pm-primary);
@@ -186,17 +198,6 @@
     Request Service
   </a>
 
-
-{% if business.has_ecommerce_store and business.store_slug %}
-  <a href="{{ url_for('public_storefront', store_slug=business.store_slug) }}" class="btn btn-primary btn-action">
-    Visit Store
-  </a>
-  <a href="{{ url_for('public_storefront', store_slug=business.store_slug) }}#products" class="btn btn-outline-primary btn-action">
-    View Products
-  </a>
-{% endif %}
-
-
 </div>
     <div class="main-info mt-2">
       <div class="main-info-row">
@@ -219,14 +220,17 @@
         {% else %} - {% endif %}
       </div>
     </div>
-    <div class="about-block">
+
+      <div class="about-block">
       <strong>About Us:</strong><br>
       {{ business.about_us or '—' }}
-    </div>
+      </div>
+
     <div class="hours-block">
       <strong>Hours of Operation:</strong><br>
       {{ business.hours_of_operation or '—' }}
     </div>
+
     <div>
       <div class="service-list-label">Products or Services Offered:</div>
       <ul class="service-list">
