@@ -1072,8 +1072,23 @@ class User(db.Model, UserMixin):
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
+    investor_total_earnings = db.Column(db.Numeric(12, 2), default=0)
+    investor_withdrawn_total = db.Column(db.Numeric(12, 2), default=0)
+    investor_earnings_balance = db.Column(db.Numeric(12, 2), default=0)
     def has_role(self, role_name):
         return any(role.name == role_name for role in self.roles)
+
+class InvestorEarnings(db.Model):
+    __tablename__ = 'investor_earnings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('investor_earnings', lazy=True))
 
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1477,6 +1492,27 @@ def get_featured_businesses(lat, lng):
 
     # Always max 10
     return featured[:N_FEATURED]
+
+def add_monthly_investor_earnings(user, year, month, investment_amount, rate):
+    # Calculate this month’s earnings
+    new_earnings = investment_amount * rate
+
+    # Insert a row in investor_earnings
+    earning = InvestorEarnings(
+        user_id=user.id,
+        year=year,
+        month=month,
+        amount=new_earnings,
+        created_at=datetime.now()
+    )
+    db.session.add(earning)
+
+    # Update running totals on the user
+    user.investor_total_earnings = (user.investor_total_earnings or 0) + new_earnings
+    user.investor_earnings_balance = (user.investor_earnings_balance or 0) + new_earnings
+
+    db.session.commit()
+    return new_earnings
 
 # Add others (interaction, message, etc.) as needed here
 
@@ -6820,11 +6856,39 @@ def business_stripe_update_info():
     )
     return redirect(account_link.url)
 
-@app.route('/test-silent-investor')
+@app.route("/investor_report")
 @login_required
-def test_silent_investor():
-    is_si = current_user.has_role('silent_investor')
-    return f"Silent Investor: {is_si}"
+def investor_report():
+    if not current_user.has_role('silent_investor'):
+        abort(403)
+    investor_rows = InvestorEarnings.query.filter_by(user_id=current_user.id).order_by(
+        InvestorEarnings.year, InvestorEarnings.month
+    ).all()
+    return render_template(
+        "investor_report.html",
+        earnings=investor_rows,
+        user=current_user
+    )
+
+@app.route("/export_investor_earnings_csv")
+@login_required
+def export_investor_earnings_csv():
+    if not current_user.has_role('silent_investor'):
+        abort(403)
+    rows = InvestorEarnings.query.filter_by(user_id=current_user.id).order_by(
+        InvestorEarnings.year, InvestorEarnings.month).all()
+    from io import StringIO
+    import csv
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['Year', 'Month', 'Amount', 'Date Added'])
+    for r in rows:
+        writer.writerow([r.year, r.month, float(r.amount), r.created_at.strftime('%Y-%m-%d') if r.created_at else ""])
+    output = si.getvalue()
+    from flask import Response
+    return Response(output, mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename=investor_earnings_{current_user.id}.csv"
+    })
 
 @app.errorhandler(500)
 def internal_server_error(error):
