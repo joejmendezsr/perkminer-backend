@@ -6820,6 +6820,12 @@ def business_stripe_update_info():
     )
     return redirect(account_link.url)
 
+@app.route('/test-silent-investor')
+@login_required
+def test_silent_investor():
+    is_si = current_user.has_role('silent_investor')
+    return f"Silent Investor: {is_si}"
+
 @app.errorhandler(500)
 def internal_server_error(error):
     # Log the full error + traceback for debugging
