@@ -786,6 +786,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     transaction_id = str(uuid.uuid4())
 
+    # ---- Rewards setup ----
     ad_fee = min(round(amount * 0.10, 2), 250.00)
     if business.account_balance is None or business.account_balance < ad_fee:
         raise Exception("Insufficient funds to complete this transaction. Please fund your account.")
@@ -894,7 +895,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     business.account_balance = (business.account_balance or 0.0) - ad_fee
 
-    # ---- Main business commission row: only ONE record for Tiers 1-5 ----
+    # ---- Main business commission row ----
     business_trans = BusinessTransaction(
         transaction_id=transaction_id,
         interaction_id=interaction.id,
@@ -903,7 +904,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         local_date_time=local_date_time,
         ad_fee=ad_fee,
         business_referral_id=business_referral_id,
-        cash_back=business_cash_back,  # Tier 1, capped
+        cash_back=business_cash_back,
         tier2_business_referral_id=tier2_business_referral_id,
         tier2_commission=tier2_commission_biz,
         tier3_business_referral_id=tier3_business_referral_id,
@@ -917,16 +918,13 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     )
     db.session.add(business_trans)
 
-    # ---- Downline mutual commission: one record per sponsoree, tiers are empty ----
+    # ---- Downline mutual commission ----
     referred_businesses = Business.query.filter_by(sponsor_id=business.id).all()
     payouts, leftover = split_mutual_commission(amount, len(referred_businesses))
-
-    print("Splitting pool:", amount * 0.0025, "among", len(referred_businesses), "->", payouts)
 
     for idx, sponsoree in enumerate(referred_businesses):
         sponsoree_mutual_referral_id = sponsoree.referral_code
         sponsoree_mutual_commission = payouts[idx]
-        print(f"Paying {sponsoree_mutual_referral_id}: {sponsoree_mutual_commission}")
         mutual_trans = BusinessTransaction(
             transaction_id=transaction_id,
             interaction_id=interaction.id,
@@ -951,28 +949,45 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     db.session.commit()
 
-    # ---- SILENT INVESTOR EARNINGS ----
-    # Step 1: Deduct 10.5% for charity
-    charity = amount * 0.105
-    after_charity = amount - charity
+    # ---- SILENT INVESTOR EARNINGS LOGIC (add after transactions and commit) ----
 
-    # Step 2: Sum all user and business payouts for this transaction
+    # 1. Ad fee and charity taken only from ad fee
+    ad_fee = min(round(amount * 0.10, 2), 250.00)
+    charity = ad_fee * 0.105
+    ad_fee_after_charity = ad_fee - charity
+
+    # 2. User payouts (add only those that actually apply)
     user_payouts = user_cash_back + tier2_commission + tier3_commission + tier4_commission + tier5_commission
-    biz_payouts = business_cash_back
-    biz_payouts += tier2_commission_biz + tier3_commission_biz + tier4_commission_biz + tier5_commission_biz
+    user_payouts += tier1_business_user_commission if tier1_business_user_commission else 0
+    user_payouts += tier2_business_user_commission if tier2_business_user_commission else 0
+    user_payouts += tier3_business_user_commission if tier3_business_user_commission else 0
+    user_payouts += tier4_business_user_commission if tier4_business_user_commission else 0
+    user_payouts += tier5_business_user_commission if tier5_business_user_commission else 0
+
+    # 3. Business payouts (add only if referral_id exists)
+    business_payouts = 0
+    if tier1_business_user_referral_id: business_payouts += 25
+    if tier2_business_user_referral_id: business_payouts += 6.25
+    if tier3_business_user_referral_id: business_payouts += 6.25
+    if tier4_business_user_referral_id: business_payouts += 6.25
+    if tier5_business_user_referral_id: business_payouts += 25
+
+    # 4. Mutual sponsoree payout ($6.25 per referred business if any)
+    mutual_sponsoree_payout = 0
     if referred_businesses:
-        mutual_total = sum(payouts)
-        biz_payouts += mutual_total
+        mutual_sponsoree_payout = len(referred_businesses) * 6.25
+    business_payouts += mutual_sponsoree_payout
 
-    total_payouts = user_payouts + biz_payouts
+    # 5. Total payouts
+    total_payouts = user_payouts + business_payouts
 
-    # Step 3: Net gross after all payouts (charity already deducted)
-    net_gross = after_charity - total_payouts
+    # 6. Net gross from ad fee after charity and all payouts
+    net_gross = ad_fee_after_charity - total_payouts
 
-    # Step 4: Allocate 30% of net gross to silent investors
-    silent_investor_pool = net_gross * 0.30
+    # 7. 30% to silent investors (never less than zero)
+    silent_investor_pool = max(net_gross * 0.30, 0)
 
-    # Step 5: Distribute to each silent investor by their investor_share
+    # 8. Distribute to each silent investor
     silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
     for investor in silent_investors:
         share = float(investor.investor_share or 0)
@@ -990,9 +1005,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             investor.investor_earnings_balance = (investor.investor_earnings_balance or 0) + payout
 
     db.session.commit()
-    # ---- END SILENT INVESTOR EARNINGS ----
+    # ---- END SILENT INVESTOR LOGIC ----
 
-    # Log for staff
     if staff_id:
         log_finalization(staff_id, business.id, transaction_id, source, amount)
 
