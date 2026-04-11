@@ -1514,6 +1514,29 @@ def add_monthly_investor_earnings(user, year, month, investment_amount, rate):
     db.session.commit()
     return new_earnings
 
+def distribute_investor_earnings_per_transaction(transaction):
+    total_revenue = transaction.amount  # e.g., $100
+    charity = total_revenue * 0.105
+    after_charity = total_revenue - charity
+
+    payouts = transaction.cashback + transaction.commissions  # use actual values for this tx
+    net_gross = after_charity - payouts
+
+    silent_investor_pool = net_gross * 0.30
+
+    silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
+    for user in silent_investors:
+        share = float(user.investor_share or 0)
+        if share > 0:
+            payout = silent_investor_pool * share
+            add_monthly_investor_earnings(
+                user,
+                transaction.date_time.year,
+                transaction.date_time.month,
+                payout,
+                rate=1.0
+            )
+
 # Add others (interaction, message, etc.) as needed here
 
 # ---------------- STORE ROUTES ----------------
