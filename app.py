@@ -18,7 +18,7 @@ from wtforms.validators import (
 )
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, case
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from flask import flash, redirect, url_for
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -952,14 +952,18 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     # ---- SILENT INVESTOR EARNINGS LOGIC (add after transactions and commit) ----
 
-    # 1. Calculate ad fee (capped and as Decimal)
-    ad_fee = Decimal(str(min(round(amount * 0.10, 2), 250.00)))
+    # 1. Ensure amount is Decimal
+    amount = Decimal(str(amount))
 
-    # 2. Deduct charity from ad fee only
-    charity = ad_fee * Decimal("0.105")
+    # 2. Calculate ad fee, correctly rounded
+    ad_fee = min(amount * Decimal("0.10"), Decimal("250.00"))
+    ad_fee = ad_fee.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    # 3. Charity comes from ad fee ONLY
+    charity = (ad_fee * Decimal("0.105")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     ad_fee_after_charity = ad_fee - charity
 
-    # 3. User payouts (ensure every value is Decimal)
+    # 4. User payouts
     user_payouts = Decimal(str(user_cash_back))
     user_payouts += Decimal(str(tier2_commission))
     user_payouts += Decimal(str(tier3_commission))
@@ -971,7 +975,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     user_payouts += Decimal(str(tier4_business_user_commission or 0))
     user_payouts += Decimal(str(tier5_business_user_commission or 0))
 
-    # 4. Business payouts (only if referral_id exists)
+    # 5. Business payouts
     business_payouts = Decimal("0")
     if tier1_business_user_referral_id: business_payouts += Decimal("25")
     if tier2_business_user_referral_id: business_payouts += Decimal("6.25")
@@ -979,7 +983,6 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
     if tier5_business_user_referral_id: business_payouts += Decimal("25")
 
-    # 5. Mutual sponsoree business commission ($6.25 per referred business)
     mutual_sponsoree_payout = Decimal("0")
     if referred_businesses:
         mutual_sponsoree_payout = Decimal(str(len(referred_businesses))) * Decimal("6.25")
@@ -988,18 +991,21 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     # 6. Total payouts
     total_payouts = user_payouts + business_payouts
 
-    # 7. Net amount left from ad fee (after charity and payouts)
+    # 7. Net amount AVAILABLE for investors (never negative)
     net_gross = ad_fee_after_charity - total_payouts
+    net_gross = max(net_gross, Decimal("0"))
 
-    # 8. 45% to silent investors, never less than zero
-    silent_investor_pool = max(net_gross * Decimal("0.45"), Decimal("0"))
+    # 8. 45% to silent investors
+    silent_investor_pool = (net_gross * Decimal("0.45")).quantize(Decimal("0.02"), rounding=ROUND_HALF_UP)  # Use two decimals
 
-    # 9. Distribute to each silent investor by their share (should also be Decimal)
+    # 9. Distribute once per investor
+    print(f"Silent investor pool: {silent_investor_pool}")
+
     silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
     for investor in silent_investors:
         share = Decimal(str(investor.investor_share or 0))
         if share > 0 and silent_investor_pool > 0:
-            payout = silent_investor_pool * share
+            payout = (silent_investor_pool * share).quantize(Decimal("0.02"), rounding=ROUND_HALF_UP)
             earning = InvestorEarnings(
                 user_id=investor.id,
                 year=datetime.utcnow().year,
