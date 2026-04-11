@@ -877,13 +877,13 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     business_referral_id = business.referral_code or "BIZPerkMiner"
     b2 = Business.query.filter_by(id=business.sponsor_id).first()
-    tier2_business_referral_id = b2.referral_code if b2 else "BIZPerkMiner"
+    tier2_business_referral_id = b2.referral_code if b2 else ""
     tier2_commission_biz = round(min(amount * 0.0025, 6.25), 2)
     b3 = Business.query.filter_by(id=b2.sponsor_id).first() if b2 and b2.sponsor_id else None
-    tier3_business_referral_id = b3.referral_code if b3 else "BIZPerkMiner"
+    tier3_business_referral_id = b3.referral_code if b3 else ""
     tier3_commission_biz = round(min(amount * 0.0025, 6.25), 2)
     b4 = Business.query.filter_by(id=b3.sponsor_id).first() if b3 and b3.sponsor_id else None
-    tier4_business_referral_id = b4.referral_code if b4 else "BIZPerkMiner"
+    tier4_business_referral_id = b4.referral_code if b4 else ""
     tier4_commission_biz = round(min(amount * 0.0025, 6.25), 2)
     b5 = Business.query.filter_by(id=b4.sponsor_id).first() if b4 and b4.sponsor_id else None
     tier5_business_referral_id = b5.referral_code if b5 else "BIZPerkMiner"
@@ -921,12 +921,12 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     referred_businesses = Business.query.filter_by(sponsor_id=business.id).all()
     payouts, leftover = split_mutual_commission(amount, len(referred_businesses))
 
-    print("Splitting pool:", amount * 0.0025, "among", len(referred_businesses), "->", payouts)  # <--- PLACE THIS HERE
+    print("Splitting pool:", amount * 0.0025, "among", len(referred_businesses), "->", payouts)
 
     for idx, sponsoree in enumerate(referred_businesses):
         sponsoree_mutual_referral_id = sponsoree.referral_code
         sponsoree_mutual_commission = payouts[idx]
-        print(f"Paying {sponsoree_mutual_referral_id}: {sponsoree_mutual_commission}")  # <--- PLACE THIS HERE
+        print(f"Paying {sponsoree_mutual_referral_id}: {sponsoree_mutual_commission}")
         mutual_trans = BusinessTransaction(
             transaction_id=transaction_id,
             interaction_id=interaction.id,
@@ -935,7 +935,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             local_date_time=local_date_time,
             ad_fee=ad_fee,
             business_referral_id=business_referral_id,
-            cash_back=0,  # for mutuals
+            cash_back=0,
             tier2_business_referral_id="",
             tier2_commission=0,
             tier3_business_referral_id="",
@@ -950,6 +950,47 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         db.session.add(mutual_trans)
 
     db.session.commit()
+
+    # ---- SILENT INVESTOR EARNINGS ----
+    # Step 1: Deduct 10.5% for charity
+    charity = amount * 0.105
+    after_charity = amount - charity
+
+    # Step 2: Sum all user and business payouts for this transaction
+    user_payouts = user_cash_back + tier2_commission + tier3_commission + tier4_commission + tier5_commission
+    biz_payouts = business_cash_back
+    biz_payouts += tier2_commission_biz + tier3_commission_biz + tier4_commission_biz + tier5_commission_biz
+    if referred_businesses:
+        mutual_total = sum(payouts)
+        biz_payouts += mutual_total
+
+    total_payouts = user_payouts + biz_payouts
+
+    # Step 3: Net gross after all payouts (charity already deducted)
+    net_gross = after_charity - total_payouts
+
+    # Step 4: Allocate 30% of net gross to silent investors
+    silent_investor_pool = net_gross * 0.30
+
+    # Step 5: Distribute to each silent investor by their investor_share
+    silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
+    for investor in silent_investors:
+        share = float(investor.investor_share or 0)
+        if share > 0 and silent_investor_pool > 0:
+            payout = silent_investor_pool * share
+            earning = InvestorEarnings(
+                user_id=investor.id,
+                year=datetime.utcnow().year,
+                month=datetime.utcnow().month,
+                amount=payout,
+                created_at=datetime.utcnow()
+            )
+            db.session.add(earning)
+            investor.investor_total_earnings = (investor.investor_total_earnings or 0) + payout
+            investor.investor_earnings_balance = (investor.investor_earnings_balance or 0) + payout
+
+    db.session.commit()
+    # ---- END SILENT INVESTOR EARNINGS ----
 
     # Log for staff
     if staff_id:
@@ -5082,31 +5123,32 @@ def finance_dashboard():
     misc_services = operating_capital * 0.15
 
     # Silent Partners breakdown (with per-partner cap)
-    marjorie = min(silent_partners * 0.15, 10000000)
+    joe = min(silent_partners * 0.125, 10000000)
+    marjorie = min(silent_partners * 0.125, 10000000)
     pedro = min(silent_partners * 0.12, 1000000)
-    paul_tara = min(silent_partners * 0.06, 500000)
-    james = min(silent_partners * 0.04, 350000)
-    josh = min(silent_partners * 0.035, 300000)
-    angel = min(silent_partners * 0.025, 200000)
-    diego = min(silent_partners * 0.025, 200000)
-    esther = min(silent_partners * 0.025, 200000)
-    reyna = min(silent_partners * 0.025, 200000)
-    ramico = min(silent_partners * 0.025, 200000)
-    michael = min(silent_partners * 0.025, 200000)
-    manuela = min(silent_partners * 0.025, 200000)
-    alex_s = min(silent_partners * 0.025, 200000)
-    victor_r = min(silent_partners * 0.025, 200000)
-    john_paul = min(silent_partners * 0.025, 200000)
-    ana_pepe = min(silent_partners * 0.02, 150000)
-    karen = min(silent_partners * 0.02, 150000)
-    raul = min(silent_partners * 0.02, 150000)
-    genesis = min(silent_partners * 0.03, 500000)
-    jen = min(silent_partners * 0.03, 500000)
-    jj = min(silent_partners * 0.03, 500000)
-    dominick = min(silent_partners * 0.03, 500000)
-    alex_m = min(silent_partners * 0.03, 500000)
-    jose = min(silent_partners * 0.03, 500000)
-    tito = min(silent_partners * 0.03, 500000)
+    paul_tara = min(silent_partners * 0.055, 500000)
+    james = min(silent_partners * 0.05, 350000)
+    josh = min(silent_partners * 0.03, 300000)
+    angel = min(silent_partners * 0.02, 200000)
+    diego = min(silent_partners * 0.02, 200000)
+    esther = min(silent_partners * 0.02, 200000)
+    reyna = min(silent_partners * 0.02, 200000)
+    ramico = min(silent_partners * 0.02, 200000)
+    michael = min(silent_partners * 0.02, 200000)
+    manuela = min(silent_partners * 0.02, 200000)
+    alex_s = min(silent_partners * 0.02, 200000)
+    victor_r = min(silent_partners * 0.02, 200000)
+    john_paul = min(silent_partners * 0.02, 200000)
+    ana_pepe = min(silent_partners * 0.015, 150000)
+    karen = min(silent_partners * 0.015, 150000)
+    raul = min(silent_partners * 0.015, 150000)
+    genesis = min(silent_partners * 0.025, 500000)
+    jen = min(silent_partners * 0.025, 500000)
+    jj = min(silent_partners * 0.025, 500000)
+    dominick = min(silent_partners * 0.025, 500000)
+    alex_m = min(silent_partners * 0.025, 500000)
+    jose = min(silent_partners * 0.025, 500000)
+    tito = min(silent_partners * 0.025, 500000)
     loida = min(silent_partners * 0.015, 250000)
     milvia = min(silent_partners * 0.015, 250000)
     adela = min(silent_partners * 0.015, 250000)
@@ -5132,6 +5174,7 @@ def finance_dashboard():
         employees=f"{employees:,.2f}",
         webapp_fees=f"{webapp_fees:,.2f}",
         misc_services=f"{misc_services:,.2f}",
+        joe=f"{joe:,.2f}",
         marjorie=f"{marjorie:,.2f}",
         tito=f"{tito:,.2f}",
         pedro=f"{pedro:,.2f}",
