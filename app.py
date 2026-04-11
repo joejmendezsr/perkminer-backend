@@ -987,6 +987,14 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
     if tier5_business_user_referral_id: business_payouts += Decimal("25")
     mutual_sponsoree_payout = Decimal("0")
+
+    print(f"T1 biz id: {tier1_business_user_referral_id}")
+    print(f"T2 biz id: {tier2_business_user_referral_id}")
+    print(f"T3 biz id: {tier3_business_user_referral_id}")
+    print(f"T4 biz id: {tier4_business_user_referral_id}")
+    print(f"T5 biz id: {tier5_business_user_referral_id}")
+    print(f"Mutual sponsoree biz ids: {[b.referral_code for b in referred_businesses]}")
+
     if referred_businesses:
         mutual_sponsoree_payout = Decimal(str(len(referred_businesses))) * Decimal("6.25")
     business_payouts += mutual_sponsoree_payout
