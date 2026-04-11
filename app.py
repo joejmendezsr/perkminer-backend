@@ -19,6 +19,7 @@ from wtforms.validators import (
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, case
 from decimal import Decimal
+from flask import flash, redirect, url_for
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask import render_template_string
@@ -951,46 +952,52 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     # ---- SILENT INVESTOR EARNINGS LOGIC (add after transactions and commit) ----
 
-    # 1. Ad fee and charity taken only from ad fee
-    ad_fee = min(round(amount * 0.10, 2), 250.00)
-    charity = ad_fee * 0.105
+    # 1. Calculate ad fee (capped and as Decimal)
+    ad_fee = Decimal(str(min(round(amount * 0.10, 2), 250.00)))
+
+    # 2. Deduct charity from ad fee only
+    charity = ad_fee * Decimal("0.105")
     ad_fee_after_charity = ad_fee - charity
 
-    # 2. User payouts (add only those that actually apply)
-    user_payouts = user_cash_back + tier2_commission + tier3_commission + tier4_commission + tier5_commission
-    user_payouts += tier1_business_user_commission if tier1_business_user_commission else 0
-    user_payouts += tier2_business_user_commission if tier2_business_user_commission else 0
-    user_payouts += tier3_business_user_commission if tier3_business_user_commission else 0
-    user_payouts += tier4_business_user_commission if tier4_business_user_commission else 0
-    user_payouts += tier5_business_user_commission if tier5_business_user_commission else 0
+    # 3. User payouts (ensure every value is Decimal)
+    user_payouts = Decimal(str(user_cash_back))
+    user_payouts += Decimal(str(tier2_commission))
+    user_payouts += Decimal(str(tier3_commission))
+    user_payouts += Decimal(str(tier4_commission))
+    user_payouts += Decimal(str(tier5_commission))
+    user_payouts += Decimal(str(tier1_business_user_commission or 0))
+    user_payouts += Decimal(str(tier2_business_user_commission or 0))
+    user_payouts += Decimal(str(tier3_business_user_commission or 0))
+    user_payouts += Decimal(str(tier4_business_user_commission or 0))
+    user_payouts += Decimal(str(tier5_business_user_commission or 0))
 
-    # 3. Business payouts (add only if referral_id exists)
-    business_payouts = 0
-    if tier1_business_user_referral_id: business_payouts += 25
-    if tier2_business_user_referral_id: business_payouts += 6.25
-    if tier3_business_user_referral_id: business_payouts += 6.25
-    if tier4_business_user_referral_id: business_payouts += 6.25
-    if tier5_business_user_referral_id: business_payouts += 25
+    # 4. Business payouts (only if referral_id exists)
+    business_payouts = Decimal("0")
+    if tier1_business_user_referral_id: business_payouts += Decimal("25")
+    if tier2_business_user_referral_id: business_payouts += Decimal("6.25")
+    if tier3_business_user_referral_id: business_payouts += Decimal("6.25")
+    if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
+    if tier5_business_user_referral_id: business_payouts += Decimal("25")
 
-    # 4. Mutual sponsoree payout ($6.25 per referred business if any)
-    mutual_sponsoree_payout = 0
+    # 5. Mutual sponsoree business commission ($6.25 per referred business)
+    mutual_sponsoree_payout = Decimal("0")
     if referred_businesses:
-        mutual_sponsoree_payout = len(referred_businesses) * 6.25
+        mutual_sponsoree_payout = Decimal(str(len(referred_businesses))) * Decimal("6.25")
     business_payouts += mutual_sponsoree_payout
 
-    # 5. Total payouts
+    # 6. Total payouts
     total_payouts = user_payouts + business_payouts
 
-    # 6. Net gross from ad fee after charity and all payouts
+    # 7. Net amount left from ad fee (after charity and payouts)
     net_gross = ad_fee_after_charity - total_payouts
 
-    # 7. 45% to silent investors (never less than zero)
-    silent_investor_pool = max(net_gross * 0.45, 0)
+    # 8. 45% to silent investors, never less than zero
+    silent_investor_pool = max(net_gross * Decimal("0.45"), Decimal("0"))
 
-    # 8. Distribute to each silent investor
+    # 9. Distribute to each silent investor by their share (should also be Decimal)
     silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
     for investor in silent_investors:
-        share = float(investor.investor_share or 0)
+        share = Decimal(str(investor.investor_share or 0))
         if share > 0 and silent_investor_pool > 0:
             payout = silent_investor_pool * share
             earning = InvestorEarnings(
@@ -1001,10 +1008,11 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
                 created_at=datetime.utcnow()
             )
             db.session.add(earning)
-            investor.investor_total_earnings = (investor.investor_total_earnings or 0) + payout
-            investor.investor_earnings_balance = (investor.investor_earnings_balance or 0) + payout
+            investor.investor_total_earnings = (investor.investor_total_earnings or Decimal("0")) + payout
+            investor.investor_earnings_balance = (investor.investor_earnings_balance or Decimal("0")) + payout
 
     db.session.commit()
+
     # ---- END SILENT INVESTOR LOGIC ----
 
     if staff_id:
@@ -6970,6 +6978,32 @@ def export_investor_earnings_csv():
     return Response(output, mimetype="text/csv",
         headers={"Content-Disposition": f"attachment;filename=investor_earnings_{current_user.id}.csv"
     })
+
+MIN_PAYOUT = Decimal("10.00")
+
+@app.route('/withdraw_investor', methods=['POST'])
+@login_required
+def withdraw_investor():
+    user = current_user
+
+    available = user.investor_earnings_balance or Decimal("0")
+    if available < MIN_PAYOUT:
+        flash(f"You need at least ${MIN_PAYOUT} in silent investor earnings to withdraw.", "warning")
+        return redirect(url_for('dashboard'))
+
+    fee = available * Decimal("0.0025") + Decimal("0.35")
+    payout_amount = available - fee
+    if payout_amount <= 0:
+        flash("Insufficient balance after the transfer fee is deducted.", "warning")
+        return redirect(url_for('dashboard'))
+
+    # ... Stripe transfer code here ...
+
+    user.investor_withdrawn_total = (user.investor_withdrawn_total or Decimal("0")) + available
+    user.investor_earnings_balance = Decimal("0")
+    db.session.commit()
+    flash(f"Silent investor withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
+    return redirect(url_for('dashboard'))
 
 @app.errorhandler(500)
 def internal_server_error(error):
