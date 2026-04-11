@@ -1113,6 +1113,7 @@ class User(db.Model, UserMixin):
     profile_photo = db.Column(db.String(200))
     roles = db.relationship('Role', secondary='user_roles', backref='users')
     is_suspended = db.Column(db.Boolean, default=False)
+    investor_share = db.Column(db.Numeric(5, 4), default=0)
     investor_total_earnings = db.Column(db.Numeric(12, 2), default=0)
     investor_withdrawn_total = db.Column(db.Numeric(12, 2), default=0)
     investor_earnings_balance = db.Column(db.Numeric(12, 2), default=0)
