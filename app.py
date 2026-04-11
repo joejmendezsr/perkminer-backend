@@ -826,6 +826,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
         b = Business.query.get(b.sponsor_id) if b.sponsor_id else None
     downline_tier = len(business_chain)
 
+
+
     tier1_business_user_referral_id = None; tier1_business_user_commission = 0
     tier2_business_user_referral_id = None; tier2_business_user_commission = 0
     tier3_business_user_referral_id = None; tier3_business_user_commission = 0
@@ -979,25 +981,42 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     user_payouts += Decimal(str(tier5_business_user_commission or 0))
     print(f"Total user payouts: {user_payouts}")
 
-    # 5. Business payouts (Decimal)
-    business_payouts = Decimal("0")
-    if tier1_business_user_referral_id: business_payouts += Decimal("25")
-    if tier2_business_user_referral_id: business_payouts += Decimal("6.25")
-    if tier3_business_user_referral_id: business_payouts += Decimal("6.25")
-    if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
-    if tier5_business_user_referral_id: business_payouts += Decimal("25")
-    mutual_sponsoree_payout = Decimal("0")
+    # 5. Business payouts (Decimal) — place this after you've defined "business" and before net_gross math
+
+    # Walk up the sponsor chain from the sale business for correct tier assignments
+    current_biz = business  # The business making the sale is Tier 1
+    tier_biz_ids = []
+    for _ in range(5):
+        tier_biz_ids.append(current_biz.referral_code if current_biz else None)
+        current_biz = Business.query.get(current_biz.sponsor_id) if (current_biz and current_biz.sponsor_id) else None
+
+    tier1_business_user_referral_id = tier_biz_ids[0]
+    tier2_business_user_referral_id = tier_biz_ids[1]
+    tier3_business_user_referral_id = tier_biz_ids[2]
+    tier4_business_user_referral_id = tier_biz_ids[3]
+    tier5_business_user_referral_id = tier_biz_ids[4]
 
     print(f"T1 biz id: {tier1_business_user_referral_id}")
     print(f"T2 biz id: {tier2_business_user_referral_id}")
     print(f"T3 biz id: {tier3_business_user_referral_id}")
     print(f"T4 biz id: {tier4_business_user_referral_id}")
     print(f"T5 biz id: {tier5_business_user_referral_id}")
-    print(f"Mutual sponsoree biz ids: {[b.referral_code for b in referred_businesses]}")
 
+    # Payouts for each tier (only if the biz referral exists at that tier)
+    business_payouts = Decimal("0")
+    if tier1_business_user_referral_id: business_payouts += Decimal("25")
+    if tier2_business_user_referral_id: business_payouts += Decimal("6.25")
+    if tier3_business_user_referral_id: business_payouts += Decimal("6.25")
+    if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
+    if tier5_business_user_referral_id: business_payouts += Decimal("25")
+
+    # Mutual sponsoree payout: $6.25 per referred business, if any
+    mutual_sponsoree_payout = Decimal("0")
     if referred_businesses:
         mutual_sponsoree_payout = Decimal(str(len(referred_businesses))) * Decimal("6.25")
     business_payouts += mutual_sponsoree_payout
+
+    print(f"Mutual sponsoree biz ids: {[b.referral_code for b in referred_businesses]}")
     print(f"Total business payouts: {business_payouts}")
 
     # 6. Net gross (leftover after all above)
