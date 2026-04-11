@@ -984,8 +984,8 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     # 6. Net gross from ad fee after charity and all payouts
     net_gross = ad_fee_after_charity - total_payouts
 
-    # 7. 30% to silent investors (never less than zero)
-    silent_investor_pool = max(net_gross * 0.30, 0)
+    # 7. 45% to silent investors (never less than zero)
+    silent_investor_pool = max(net_gross * 0.45, 0)
 
     # 8. Distribute to each silent investor
     silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
@@ -5099,15 +5099,15 @@ def finance_dashboard():
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier2_commission or 0) if t.tier2_business_referral_id == "BIZPerkMiner" else 0
+        (t.tier2_commission or 0) if t.tier2_business_referral_id == "" else 0
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier3_commission or 0) if t.tier3_business_referral_id == "BIZPerkMiner" else 0
+        (t.tier3_commission or 0) if t.tier3_business_referral_id == "" else 0
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier4_commission or 0) if t.tier4_business_referral_id == "BIZPerkMiner" else 0
+        (t.tier4_commission or 0) if t.tier4_business_referral_id == "" else 0
         for t in main_btxns
     )
     capital_reserves += sum(
