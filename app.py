@@ -955,15 +955,18 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     # 1. Ensure amount is Decimal
     amount = Decimal(str(amount))
 
-    # 2. Calculate ad fee, correctly rounded
-    ad_fee = min(amount * Decimal("0.10"), Decimal("250.00"))
-    ad_fee = ad_fee.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    # 2. Calculate and print Ad fee
+    raw_ad_fee = amount * Decimal("0.10")
+    ad_fee = min(raw_ad_fee, Decimal("250.00")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    print(f"Ad fee: {ad_fee}")
 
-    # 3. Charity comes from ad fee ONLY
+    # 3. Charity from ad fee ONLY
     charity = (ad_fee * Decimal("0.105")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    print(f"Charity: {charity}")
     ad_fee_after_charity = ad_fee - charity
+    print(f"Ad fee after charity: {ad_fee_after_charity}")
 
-    # 4. User payouts
+    # 4. User payouts (Decimal)
     user_payouts = Decimal(str(user_cash_back))
     user_payouts += Decimal(str(tier2_commission))
     user_payouts += Decimal(str(tier3_commission))
@@ -974,38 +977,38 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     user_payouts += Decimal(str(tier3_business_user_commission or 0))
     user_payouts += Decimal(str(tier4_business_user_commission or 0))
     user_payouts += Decimal(str(tier5_business_user_commission or 0))
+    print(f"Total user payouts: {user_payouts}")
 
-    # 5. Business payouts
+    # 5. Business payouts (Decimal)
     business_payouts = Decimal("0")
     if tier1_business_user_referral_id: business_payouts += Decimal("25")
     if tier2_business_user_referral_id: business_payouts += Decimal("6.25")
     if tier3_business_user_referral_id: business_payouts += Decimal("6.25")
     if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
     if tier5_business_user_referral_id: business_payouts += Decimal("25")
-
     mutual_sponsoree_payout = Decimal("0")
     if referred_businesses:
         mutual_sponsoree_payout = Decimal(str(len(referred_businesses))) * Decimal("6.25")
     business_payouts += mutual_sponsoree_payout
+    print(f"Total business payouts: {business_payouts}")
 
-    # 6. Total payouts
+    # 6. Net gross (leftover after all above)
     total_payouts = user_payouts + business_payouts
-
-    # 7. Net amount AVAILABLE for investors (never negative)
     net_gross = ad_fee_after_charity - total_payouts
-    net_gross = max(net_gross, Decimal("0"))
+    print(f"Net gross: {net_gross}")
 
-    # 8. 45% to silent investors
-    silent_investor_pool = (net_gross * Decimal("0.45")).quantize(Decimal("0.02"), rounding=ROUND_HALF_UP)  # Use two decimals
-
-    # 9. Distribute once per investor
+    # 7. Apply 45%
+    silent_investor_pool = (net_gross * Decimal("0.45")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     print(f"Silent investor pool: {silent_investor_pool}")
 
+    # 8. Distribute, show share per
     silent_investors = User.query.join(User.roles).filter(Role.name == 'silent_investor').all()
     for investor in silent_investors:
         share = Decimal(str(investor.investor_share or 0))
+        print(f"Investor {investor.email} share: {share}")
         if share > 0 and silent_investor_pool > 0:
-            payout = (silent_investor_pool * share).quantize(Decimal("0.02"), rounding=ROUND_HALF_UP)
+            payout = (silent_investor_pool * share).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            print(f"Payout for {investor.email}: {payout}")
             earning = InvestorEarnings(
                 user_id=investor.id,
                 year=datetime.utcnow().year,
