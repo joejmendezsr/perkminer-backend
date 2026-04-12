@@ -5143,15 +5143,15 @@ def finance_dashboard():
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier2_commission or 0) if t.tier2_business_referral_id == "" else 0
+        (t.tier2_commission or 0) if t.tier2_business_referral_id == "NOBIZ" else 0
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier3_commission or 0) if t.tier3_business_referral_id == "" else 0
+        (t.tier3_commission or 0) if t.tier3_business_referral_id == "NOBIZ" else 0
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier4_commission or 0) if t.tier4_business_referral_id == "" else 0
+        (t.tier4_commission or 0) if t.tier4_business_referral_id == "NOBIZ" else 0
         for t in main_btxns
     )
     capital_reserves += sum(
