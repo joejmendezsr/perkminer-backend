@@ -1637,6 +1637,12 @@ def distribute_investor_earnings_per_transaction(transaction):
                 rate=1.0
             )
 
+def biz_tier_commission(t, tier_field, ref_field):
+    ref_id = getattr(t, ref_field)
+    if ref_id and str(ref_id).strip() and ref_id != "BIZPerkMiner":
+        return getattr(t, tier_field) or 0
+    return 0
+
 # Add others (interaction, message, etc.) as needed here
 
 # ---------------- STORE ROUTES ----------------
@@ -5097,13 +5103,6 @@ def finance_dashboard():
     # Filter for main and mutual transactions
     main_btxns = [t for t in btxns if not t.sponsoree_mutual_referral_id]
     mutual_btxns = [t for t in btxns if t.sponsoree_mutual_referral_id]
-
-    def biz_tier_commission(t, tier_field, ref_field):
-        ref_id = getattr(t, ref_field)
-        # Only treat as a business payout if referral exists, is not empty, and is not BIZPerkMiner
-        if ref_id and str(ref_id).strip() and ref_id != "BIZPerkMiner":
-            return getattr(t, tier_field) or 0
-        return 0
 
     # Totals for MAIN transactions only
     total_gross_sales = sum(t.amount for t in main_btxns)
