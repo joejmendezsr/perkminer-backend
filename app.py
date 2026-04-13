@@ -5141,7 +5141,7 @@ def finance_dashboard():
     )
 
     # Capital reserves: only those explicitly paid to BIZPerkMiner
-    capital_reserves += sum(
+    capital_reserves = sum(
         (t.cash_back or 0) if t.business_referral_id == "BIZPerkMiner" else 0
         for t in main_btxns
     )
