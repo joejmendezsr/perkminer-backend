@@ -5099,8 +5099,11 @@ def finance_dashboard():
     mutual_btxns = [t for t in btxns if t.sponsoree_mutual_referral_id]
 
     def biz_tier_commission(t, tier_field, ref_field):
-        # Do not count if paid to BIZPerkMiner
-        return getattr(t, tier_field) if getattr(t, ref_field) != "BIZPerkMiner" else 0
+        ref_id = getattr(t, ref_field)
+        # Only count as a payout if there is a non-empty, real referral and it's not "BIZPerkMiner"
+        if ref_id and str(ref_id).strip() and ref_id != "BIZPerkMiner":
+            return getattr(t, tier_field) or 0
+        return 0
 
     # Totals for MAIN transactions only
     total_gross_sales = sum(t.amount for t in main_btxns)
@@ -5143,15 +5146,15 @@ def finance_dashboard():
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier2_commission or 0) if t.tier2_business_referral_id == "NOBIZ" else 0
+        (t.tier2_commission or 0) if not (t.tier2_business_referral_id and str(t.tier2_business_referral_id).strip()) else 0
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier3_commission or 0) if t.tier3_business_referral_id == "NOBIZ" else 0
+        (t.tier3_commission or 0) if not (t.tier3_business_referral_id and str(t.tier3_business_referral_id).strip()) else 0
         for t in main_btxns
     )
     capital_reserves += sum(
-        (t.tier4_commission or 0) if t.tier4_business_referral_id == "NOBIZ" else 0
+        (t.tier4_commission or 0) if not (t.tier4_business_referral_id and str(t.tier4_business_referral_id).strip()) else 0
         for t in main_btxns
     )
     capital_reserves += sum(
