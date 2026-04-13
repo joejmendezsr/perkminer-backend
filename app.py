@@ -2704,10 +2704,10 @@ def home():
 
     total_biz_paid = sum(
         (t.cash_back or 0) +
-        (t.tier2_commission or 0) +
-        (t.tier3_commission or 0) +
-        (t.tier4_commission or 0) +
-        (t.tier5_commission or 0)
+        biz_tier_commission(t, "tier2_commission", "tier2_business_referral_id") +
+        biz_tier_commission(t, "tier3_commission", "tier3_business_referral_id") +
+        biz_tier_commission(t, "tier4_commission", "tier4_business_referral_id") +
+        biz_tier_commission(t, "tier5_commission", "tier5_business_referral_id")
         for t in business_transactions
     )
     total_biz_paid += total_biz_mutual_commission
@@ -5100,7 +5100,7 @@ def finance_dashboard():
 
     def biz_tier_commission(t, tier_field, ref_field):
         ref_id = getattr(t, ref_field)
-        # Only count as a payout if there is a non-empty, real referral and it's not "BIZPerkMiner"
+        # Only treat as a business payout if referral exists, is not empty, and is not BIZPerkMiner
         if ref_id and str(ref_id).strip() and ref_id != "BIZPerkMiner":
             return getattr(t, tier_field) or 0
         return 0
