@@ -1003,20 +1003,19 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     # Define the conditional payout helper
     def biz_tier_commission_val(biz_id, commission_amt, special_exclude="BIZPerkMiner"):
-        if biz_id and str(biz_id).strip() and biz_id != special_exclude:
-            return commission_amt
-        return Decimal("0")
+        if biz_id is None or not str(biz_id).strip() or biz_id == special_exclude:
+            return Decimal("0")
+        return commission_amt
 
-    # Calculate the *actual* capped payout for each tier on this transaction
-    # (Using Decimal after ad_fee is finalized and quantized)
-    ad_fee_dec = Decimal(str(ad_fee))  # ad_fee used should already be quantized for money
-    t1_payout = min(ad_fee_dec * Decimal("0.1"), Decimal("25.00"))
+    # ... your tier assignment code ...
+
+    ad_fee_dec = Decimal(str(ad_fee))
+    t1_payout = min(ad_fee_dec * Decimal("0.10"), Decimal("25.00"))
     t2_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
     t3_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
     t4_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
-    t5_payout = min(ad_fee_dec * Decimal("0.1"), Decimal("25.00"))
+    t5_payout = min(ad_fee_dec * Decimal("0.10"), Decimal("25.00"))
 
-    # Add up business payouts for each real tier
     business_payouts = Decimal("0")
     business_payouts += biz_tier_commission_val(tier1_business_user_referral_id, t1_payout)
     business_payouts += biz_tier_commission_val(tier2_business_user_referral_id, t2_payout)
@@ -1024,17 +1023,12 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     business_payouts += biz_tier_commission_val(tier4_business_user_referral_id, t4_payout)
     business_payouts += biz_tier_commission_val(tier5_business_user_referral_id, t5_payout)
 
-    # Mutual sponsoree payout: $6.25 per referred business, if any
+    # mutual
     mutual_sponsoree_payout = Decimal("0")
     num_sponsorees = len(referred_businesses)
     if num_sponsorees > 0:
         split_pool = min(amount * Decimal("0.0025"), Decimal("6.25"))
-        mutual_sponsoree_payout = split_pool  # This is the total to be paid to all sponsorees
-        split_commission = (split_pool / num_sponsorees).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        print(f"Mutual sponsoree split pool: {split_pool}")
-        print(f"Each mutual sponsoree commission: {split_commission}")
-    else:
-        split_commission = Decimal("0.00")
+        mutual_sponsoree_payout = split_pool
     business_payouts += mutual_sponsoree_payout
 
     # Print step results for debugging
