@@ -1003,12 +1003,17 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     print(f"T5 biz id: {tier5_business_user_referral_id}")
 
     # Payouts for each tier (only if the biz referral exists at that tier)
+    def biz_tier_commission_val(biz_id, commission_amt, special_exclude="BIZPerkMiner"):
+        if biz_id and str(biz_id).strip() and biz_id != special_exclude:
+            return commission_amt
+        return Decimal("0")
+
     business_payouts = Decimal("0")
-    if tier1_business_user_referral_id: business_payouts += Decimal("25")
-    if tier2_business_user_referral_id: business_payouts += Decimal("6.25")
-    if tier3_business_user_referral_id: business_payouts += Decimal("6.25")
-    if tier4_business_user_referral_id: business_payouts += Decimal("6.25")
-    if tier5_business_user_referral_id: business_payouts += Decimal("25")
+    business_payouts += biz_tier_commission_val(tier1_business_user_referral_id, Decimal("25"))
+    business_payouts += biz_tier_commission_val(tier2_business_user_referral_id, Decimal("6.25"))
+    business_payouts += biz_tier_commission_val(tier3_business_user_referral_id, Decimal("6.25"))
+    business_payouts += biz_tier_commission_val(tier4_business_user_referral_id, Decimal("6.25"))
+    business_payouts += biz_tier_commission_val(tier5_business_user_referral_id, Decimal("25"))
 
     # Mutual sponsoree payout: $6.25 per referred business, if any
     mutual_sponsoree_payout = Decimal("0")
