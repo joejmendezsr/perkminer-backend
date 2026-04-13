@@ -982,7 +982,6 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     print(f"Total user payouts: {user_payouts}")
 
     # 5. Business payouts (Decimal) — place this after you've defined "business" and before net_gross math
-
     # Walk up the sponsor chain from the sale business for correct tier assignments
     current_biz = business  # The business making the sale is Tier 1
     tier_biz_ids = []
@@ -1002,25 +1001,48 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     print(f"T4 biz id: {tier4_business_user_referral_id}")
     print(f"T5 biz id: {tier5_business_user_referral_id}")
 
-    # Payouts for each tier (only if the biz referral exists at that tier)
+    # Define the conditional payout helper
     def biz_tier_commission_val(biz_id, commission_amt, special_exclude="BIZPerkMiner"):
         if biz_id and str(biz_id).strip() and biz_id != special_exclude:
             return commission_amt
         return Decimal("0")
 
+    # Calculate the *actual* capped payout for each tier on this transaction
+    # (Using Decimal after ad_fee is finalized and quantized)
+    ad_fee_dec = Decimal(str(ad_fee))  # ad_fee used should already be quantized for money
+    t1_payout = min(ad_fee_dec * Decimal("0.01"), Decimal("25.00"))
+    t2_payout = min(ad_fee_dec * Decimal("0.0025"), Decimal("6.25"))
+    t3_payout = min(ad_fee_dec * Decimal("0.0025"), Decimal("6.25"))
+    t4_payout = min(ad_fee_dec * Decimal("0.0025"), Decimal("6.25"))
+    t5_payout = min(ad_fee_dec * Decimal("0.01"), Decimal("25.00"))
+
+    # Add up business payouts for each real tier
     business_payouts = Decimal("0")
-    business_payouts += biz_tier_commission_val(tier1_business_user_referral_id, Decimal("25"))
-    business_payouts += biz_tier_commission_val(tier2_business_user_referral_id, Decimal("6.25"))
-    business_payouts += biz_tier_commission_val(tier3_business_user_referral_id, Decimal("6.25"))
-    business_payouts += biz_tier_commission_val(tier4_business_user_referral_id, Decimal("6.25"))
-    business_payouts += biz_tier_commission_val(tier5_business_user_referral_id, Decimal("25"))
+    business_payouts += biz_tier_commission_val(tier1_business_user_referral_id, t1_payout)
+    business_payouts += biz_tier_commission_val(tier2_business_user_referral_id, t2_payout)
+    business_payouts += biz_tier_commission_val(tier3_business_user_referral_id, t3_payout)
+    business_payouts += biz_tier_commission_val(tier4_business_user_referral_id, t4_payout)
+    business_payouts += biz_tier_commission_val(tier5_business_user_referral_id, t5_payout)
 
     # Mutual sponsoree payout: $6.25 per referred business, if any
     mutual_sponsoree_payout = Decimal("0")
-    if referred_businesses:
-        mutual_sponsoree_payout = Decimal(str(len(referred_businesses))) * Decimal("6.25")
+    num_sponsorees = len(referred_businesses)
+    if num_sponsorees > 0:
+        split_pool = min(amount * Decimal("0.0025"), Decimal("6.25"))
+        mutual_sponsoree_payout = split_pool  # This is the total to be paid to all sponsorees
+        split_commission = (split_pool / num_sponsorees).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        print(f"Mutual sponsoree split pool: {split_pool}")
+        print(f"Each mutual sponsoree commission: {split_commission}")
+    else:
+        split_commission = Decimal("0.00")
     business_payouts += mutual_sponsoree_payout
 
+    # Print step results for debugging
+    print(f"T1 payout: {t1_payout}, id: {tier1_business_user_referral_id}")
+    print(f"T2 payout: {t2_payout}, id: {tier2_business_user_referral_id}")
+    print(f"T3 payout: {t3_payout}, id: {tier3_business_user_referral_id}")
+    print(f"T4 payout: {t4_payout}, id: {tier4_business_user_referral_id}")
+    print(f"T5 payout: {t5_payout}, id: {tier5_business_user_referral_id}")
     print(f"Mutual sponsoree biz ids: {[b.referral_code for b in referred_businesses]}")
     print(f"Total business payouts: {business_payouts}")
 
