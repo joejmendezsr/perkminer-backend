@@ -1010,11 +1010,11 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     # Calculate the *actual* capped payout for each tier on this transaction
     # (Using Decimal after ad_fee is finalized and quantized)
     ad_fee_dec = Decimal(str(ad_fee))  # ad_fee used should already be quantized for money
-    t1_payout = min(ad_fee_dec * Decimal("0.01"), Decimal("25.00"))
-    t2_payout = min(ad_fee_dec * Decimal("0.0025"), Decimal("6.25"))
-    t3_payout = min(ad_fee_dec * Decimal("0.0025"), Decimal("6.25"))
-    t4_payout = min(ad_fee_dec * Decimal("0.0025"), Decimal("6.25"))
-    t5_payout = min(ad_fee_dec * Decimal("0.01"), Decimal("25.00"))
+    t1_payout = min(ad_fee_dec * Decimal("0.1"), Decimal("25.00"))
+    t2_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
+    t3_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
+    t4_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
+    t5_payout = min(ad_fee_dec * Decimal("0.1"), Decimal("25.00"))
 
     # Add up business payouts for each real tier
     business_payouts = Decimal("0")
