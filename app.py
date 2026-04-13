@@ -1042,7 +1042,16 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     # 6. Net gross (leftover after all above)
     total_payouts = user_payouts + business_payouts
-    net_gross = ad_fee_after_charity - total_payouts
+
+    # ...previous business payout code above...
+
+    capital_reserves = Decimal("0")
+    if (not tier5_business_user_referral_id or tier5_business_user_referral_id == "BIZPerkMiner"):
+        capital_reserves += t5_payout
+
+    print(f"Capital reserves from Tier 5: {capital_reserves}")
+
+    net_gross = ad_fee_after_charity - user_payouts - business_payouts - capital_reserves
     print(f"Net gross: {net_gross}")
 
     # 7. Apply 45%
