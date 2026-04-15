@@ -5364,6 +5364,8 @@ def approve_listing(listing_id):
             "service_6", "service_7", "service_8", "service_9", "service_10",
             "profile_photo"
         ]
+        if biz.draft_category == "Other" and biz.category not in [None, "", "Other"]:
+            biz.draft_category = biz.category
         for field in promote_fields:
             draft_attr = f"draft_{field}"
             draft_value = getattr(biz, draft_attr, None)

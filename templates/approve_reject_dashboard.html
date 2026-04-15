@@ -105,7 +105,7 @@
                         <small>
                           Services:
                           {%- set services = [biz.service_1, biz.service_2, biz.service_3, biz.service_4, biz.service_5, biz.service_6, biz.service_7, biz.service_8, biz.service_9, biz.service_10] %}
-                          {{ services|select('string')|reject('equalto','')|join(', ') if services|select('string')|reject('equalto','')|list else 'N/A' }}
+                          {{ services|select('string')|reject('equalto','')|join(', ') if services|select('string')|reject('equalto','')|list else ' ' }}
                         </small>
                       </div>
                     </div>
