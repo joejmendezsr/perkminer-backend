@@ -23,14 +23,13 @@
       }
       @media (max-width: 767px) {
         .pm-split-row {
-          flex-direction: column;
+          flex-direction: column !important;
         }
         .pm-feature-img {
           margin-bottom: 18px;
           max-height: 767px;
         }
       }
-      /* How It Works overlay */
       .how-it-works-section {
         position: relative;
         margin: 40px 0 0 0;
@@ -82,7 +81,6 @@
         </div>
     </nav>
     <main class="container pb-5">
-        <!-- Centered Title & Tagline -->
         <div class="text-center mb-4">
             <h1 class="display-5 fw-bold mb-2">Grow Your Business</br>With PerkMiner Today!</h1>
             <div class="lead mb-2">
@@ -92,31 +90,30 @@
                 (No Sale or No Closed Deal = $0 Fees)
             </div>
         </div>
-        <!-- Split Row -->
-        <div class="row pm-split-row align-items-stretch mb-5 gy-4">
+        <!-- New Split Row Desktop Layout -->
+        <div class="row pm-split-row align-items-stretch mb-5 gy-4 d-flex flex-lg-row flex-column">
+            <!-- Image -->
             <div class="col-12 col-lg-6 mb-3 mb-lg-0 d-flex align-items-stretch">
                 <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1775719494/List-for-Free_pykazg.jpg?fit=crop&w=600&q=80"
                      alt="Business Growth" class="pm-feature-img mx-auto">
             </div>
-
-        <!-- Centered CTA and Buttons -->
-        <div class="text-center mb-3">
-            <p class="h5 mb-3">List Your Business Today:</p>
-            <div class="row justify-content-center g-2">
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <a class="btn btn-primary btn-lg w-100" href="{{ url_for('business_login') }}">Business Login</a>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <a class="btn btn-success btn-lg w-100" href="{{ url_for('business_register') }}">Register Your Business</a>
-                </div>
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <a href="{{ url_for('staff_login') }}" class="btn btn-outline-primary btn-lg w-100">Staff Login</a>
+            <!-- Button Group -->
+            <div class="col-12 col-lg-6 d-flex flex-column justify-content-center align-items-lg-start align-items-center">
+                <div class="mb-4 w-100">
+                    <!-- List Your Business CTA -->
+                    <p class="h5 mb-3 text-lg-start text-center">List Your Business Today:</p>
+                    <div class="d-flex flex-lg-row flex-column gap-3 justify-content-lg-start justify-content-center w-100">
+                        <a class="btn btn-primary btn-lg" style="min-width:220px;" href="{{ url_for('business_login') }}">Business Login</a>
+                        <a class="btn btn-success btn-lg" style="min-width:220px;" href="{{ url_for('business_register') }}">Register Your Business</a>
+                        <a href="{{ url_for('staff_login') }}" class="btn btn-outline-primary btn-lg" style="min-width:220px;">Staff Login</a>
+                    </div>
                 </div>
             </div>
         </div>
-
-            <div class="col-12 col-lg-6 d-flex align-items-center">
-                <ul class="fs-5 ps-3 mb-0">
+        <!-- Info Text - always below on desktop and mobile, centered -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <ul class="fs-5 ps-3 mb-0 text-center">
                     <li><b><u>IT PAYS TO ADVERTISE WITH PERKMINER!</u></b> Your business earns cashback for finalizing transactions.</br></br>1. You make a sale / close a deal</br>2. Member pays your business for the sale or services rendered</br>3. You Finalize the transaction</br>4. Ad fee is deducted</br>5. You make a profit and earn cash back</br></br><font color="#FF0000"><b>NOTE: Only members earn cash back on purchases and for paid services</b></font></br></br></li>
                     <li><b>Starting Marketing ROI of 900%</b> (Guaranteed).  10:1 Ratio — pay $1 for every $10 sold (max $250).</li>
                     <li>No Contracts, No Commitment, No Hidden Fees & No Startup Costs, except $25 min to fund your account to pay for advertising the fees.</li>
@@ -124,7 +121,6 @@
                 </ul>
             </div>
         </div>
-
         <!-- How It Works section with image and overlay button -->
         <div class="how-it-works-section">
             <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1774196020/purchase_ntjk5q.jpg?fit=crop&w=900&q=80"
@@ -137,7 +133,6 @@
                 </div>
             </div>
         </div>
-        <!-- /Additional Illustrations Here -->
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
