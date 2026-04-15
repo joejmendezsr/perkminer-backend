@@ -393,6 +393,13 @@
       </div>
 
       <div class="col-12 mb-3">
+        <label class="form-label">Hours of Operation</label>
+        <input type="text" class="form-control" name="hours_of_operation"
+               value="{{ form_data.hours_of_operation or '' }}" placeholder="e.g. Mon-Fri 9am–5pm">
+        <div class="form-text">Example: Mon-Fri 9am–5pm; Sat 10am–2pm</div>
+      </div>
+
+      <div class="col-12 mb-3">
         <label class="form-label">Website</label>
         <input type="url" class="form-control" id="website_url" name="website_url" maxlength="255"
                value="{{ form_data.website_url or '' }}" placeholder="https://your-website.com">
