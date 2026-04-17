@@ -27,7 +27,6 @@ import os
 import stripe
 import logging
 from datetime import datetime, date
-from your_user_model_import import User
 import json
 from sqlalchemy import or_, and_, func, literal
 from flask_migrate import Migrate
@@ -5342,6 +5341,13 @@ def support_session(interaction_id):
     # render a support-specific template (or reuse active_session.html and adjust template logic if needed)
     # anyone involved can see all history and send messages
     ...
+
+@app.route("/support-dashboard")
+@role_required("customer_support")
+def support_dashboard():
+    # Only show "Support" service_type
+    support_interactions = Interaction.query.filter_by(service_type="Support", status="active").order_by(Interaction.created_at.desc()).all()
+    return render_template("support_dashboard.html", interactions=support_interactions)
 
 @app.route("/start-support/<int:business_id>", methods=["GET", "POST"])
 @login_required
