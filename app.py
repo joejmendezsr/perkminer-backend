@@ -5443,6 +5443,44 @@ def start_support(business_id):
         db.session.commit()
     return redirect(url_for('support_session', interaction_id=interaction.id))
 
+@app.route("/support/session/<int:interaction_id>/messages")
+@login_required
+def support_session_messages(interaction_id):
+    interaction = Interaction.query.get_or_404(interaction_id)
+    is_user = current_user.is_authenticated and current_user.id == interaction.user_id
+    is_biz = session.get('business_id') == interaction.business_id
+    is_support = current_user.is_authenticated and current_user.has_role("customer_support")
+    if not (is_user or is_biz or is_support):
+        return "", 403
+
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+    messages_with_labels = []
+    for msg in messages:
+        if msg.sender_type == "user":
+            label = interaction.user.name or interaction.user.email
+        elif msg.sender_type == "business":
+            if msg.sender_id == interaction.business.id:
+                label = interaction.business.business_name
+            else:
+                label = f"{interaction.business.business_name} Staff"
+        elif msg.sender_type == "customer_support":
+            sender = User.query.get(msg.sender_id)
+            label = f"Customer Support ({sender.name or sender.email})" if sender else "Customer Support"
+        else:
+            label = "Unknown"
+        messages_with_labels.append({
+            "text": msg.text,
+            "timestamp": msg.timestamp,
+            "sender_label": label,
+            "file_url": msg.file_url,
+            "file_name": msg.file_name,
+        })
+    return render_template(
+        "partials/_support_messages.html",
+        interaction=interaction,
+        messages=messages_with_labels
+    )
+
 @app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
 @admin_required
 def admin_delete_user(user_id):
