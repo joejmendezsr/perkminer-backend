@@ -5328,14 +5328,91 @@ def feedback_dashboard():
     return render_template("feedback_dashboard.html")
 
 @app.route("/support/session/<int:interaction_id>", methods=["GET", "POST"])
-@login_required  # or suitable admin/user/business guard
+@login_required
 def support_session(interaction_id):
-    # load the interaction
-    # fetch messages as you do elsewhere
-    # allow user, business, or customer_support to send messages as in Step 1
-    # render a support-specific template (or reuse active_session.html and adjust template logic if needed)
-    # anyone involved can see all history and send messages
-    ...
+    interaction = Interaction.query.get_or_404(interaction_id)
+
+    # Permissions: only user, business, or support admin can access
+    is_user = (current_user.is_authenticated and getattr(current_user, 'id', None) == interaction.user_id)
+    is_biz = (session.get('business_id') == interaction.business_id)
+    is_support = (current_user.is_authenticated and current_user.has_role("customer_support"))
+
+    if not (is_user or is_biz or is_support):
+        flash("Access denied.")
+        return redirect(url_for('dashboard'))
+
+    # Handle sending a new message
+    if request.method == "POST":
+        text = request.form.get("message_text", "").strip()
+        uploaded_file = request.files.get("message_file")
+        file_url = None
+        file_name = None
+
+        if uploaded_file and uploaded_file.filename:
+            filename = secure_filename(uploaded_file.filename)
+            upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(upload_path)
+            file_url = url_for('uploaded_file', filename=filename)
+            file_name = uploaded_file.filename
+
+        if text or file_url:
+            if is_user:
+                sender_type = "user"
+                sender_id = current_user.id
+            elif is_biz:
+                sender_type = "business"
+                staff_id = session.get('staff_id')
+                sender_id = staff_id if staff_id else session['business_id']
+            elif is_support:
+                sender_type = "customer_support"
+                sender_id = current_user.id
+            else:
+                flash("Invalid sender.")
+                return redirect(url_for('support_session', interaction_id=interaction.id))
+
+            msg = Message(
+                interaction_id=interaction.id,
+                sender_type=sender_type,
+                sender_id=sender_id,
+                text=text,
+                file_url=file_url,
+                file_name=file_name
+            )
+            db.session.add(msg)
+            db.session.commit()
+            return redirect(url_for('support_session', interaction_id=interaction.id))
+
+    # FETCH all messages
+    messages = Message.query.filter_by(interaction_id=interaction.id).order_by(Message.timestamp).all()
+
+    # Build sender labels
+    messages_with_labels = []
+    for msg in messages:
+        if msg.sender_type == "user":
+            label = interaction.user.name or interaction.user.email
+        elif msg.sender_type == "business":
+            if msg.sender_id == interaction.business.id:
+                label = interaction.business.business_name
+            else:
+                label = f"{interaction.business.business_name} Staff"
+        elif msg.sender_type == "customer_support":
+            sender = User.query.get(msg.sender_id)
+            label = f"Customer Support ({sender.name or sender.email})" if sender else "Customer Support"
+        else:
+            label = "Unknown"
+        messages_with_labels.append({
+            "text": msg.text,
+            "timestamp": msg.timestamp,
+            "sender_label": label,
+            "file_url": msg.file_url,
+            "file_name": msg.file_name,
+        })
+
+    return render_template(
+        "support_session.html",
+        interaction=interaction,
+        messages=messages_with_labels
+    )
 
 @app.route("/support-dashboard")
 @role_required("customer_support")
