@@ -10,15 +10,13 @@
           msg-bubble-biz
         {% endif %}
       ">
-        <span class="fw-bold small
-          {% if msg.sender_label.startswith('Customer Support') %}
-            text-warning
-          {% elif msg.sender_label == (interaction.user.name or interaction.user.email) %}
-            text-primary
-          {% else %}
-            text-success
-          {% endif %}
-        ">{{ msg.sender_label }}</span>
+        {% if msg.sender_label.startswith('Customer Support') %}
+          <span class="fw-bold small text-warning">Customer Support</span>
+        {% elif msg.sender_label == (interaction.user.name or interaction.user.email) %}
+          <span class="fw-bold small text-primary">{{ msg.sender_label }}</span>
+        {% else %}
+          <span class="fw-bold small text-success">{{ msg.sender_label }}</span>
+        {% endif %}
         <span class="msg-time">{{ msg.timestamp.strftime('%Y-%m-%d %I:%M%p') }}</span>
         <div>{{ msg.text | e }}</div>
         {% if msg.file_url and msg.file_name and msg.file_name.lower().endswith(('.png','.jpg','.jpeg','.gif','.webp')) %}

@@ -26,11 +26,21 @@
   {% if interactions %}
     <ul class="list-group">
       {% for i in interactions %}
-        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-          <div>
-            <strong>{{ i.business.business_name }}</strong><br>
-            <small class="text-muted">{{ i.business.category }} | {{ i.business.address }}</small>
-          </div>
+      <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+          <strong>{{ i.business.business_name }}</strong>
+          {% if i.service_type == "Support" %}
+            <span class="badge bg-warning text-dark ms-2">Customer Support</span>
+          {% endif %}
+          <br>
+          <small class="text-muted">
+            {% if i.service_type == "Support" %}
+              Customer Support Session
+            {% else %}
+              {{ i.business.category }} | {{ i.business.address }}
+            {% endif %}
+          </small>
+        </div>
           <div class="py-1 d-flex flex-column gap-1 align-items-end">
             <a href="{{ url_for('active_session', interaction_id=i.id) }}" class="btn btn-primary btn-sm mb-1">Select</a>
             <form method="post" action="{{ url_for('end_session', interaction_id=i.id) }}">
