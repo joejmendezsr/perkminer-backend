@@ -5327,11 +5327,6 @@ def approve_reject_dashboard():
 def feedback_dashboard():
     return render_template("feedback_dashboard.html")
 
-@app.route("/support-dashboard")
-@role_required("customer_support")
-def support_dashboard():
-    return render_template("support_dashboard.html")
-
 @app.route("/support/session/<int:interaction_id>", methods=["GET", "POST"])
 @login_required  # or suitable admin/user/business guard
 def support_session(interaction_id):
