@@ -663,7 +663,7 @@ def build_invite_email(inviter_name, join_url, video_url):
         <td align="center" style="padding: 30px 40px; background-color:#f8f9fa; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #6b7280; line-height:1.5; border-top:1px solid #e5e7eb;">
             <p style="margin:0 0 8px;">
                 For questions regarding this email, contact
-                <a href="mailto:fromperkminer@gmail.com" style="color:#4f46e5;">support@perkminer.com</a>
+                <a href="mailto:fromperkminer@gmail.com" style="color:#4f46e5;">Need help?</a>
             </p>
             <p style="margin:0;">
                 Copyright © PerkMiner 2026. All rights reserved.
@@ -3026,7 +3026,7 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and bcrypt.check_password_hash(user.password, password):
             if user.is_suspended:
-                flash('Account suspended, contact <a href="mailto:fromperkpay@gmail.com">support</a>.', 'danger')
+                flash('Account suspended, contact <a href="mailto:fromperkpay@gmail.com">Contact Support</a>.', 'danger')
                 return redirect(url_for("login"))
             if not user.email_confirmed:
                 message = "Please confirm your email first (check your inbox)."
@@ -4619,7 +4619,7 @@ def business_login():
         biz = Business.query.filter_by(business_email=business_email).first()
         if biz and bcrypt.check_password_hash(biz.password, password):
             if biz.is_suspended:
-                flash('Account suspended, contact <a href="mailto:fromperkpay@gmail.com">support</a>.', 'danger')
+                flash('Account suspended, contact <a href="mailto:fromperkpay@gmail.com">Contact Support</a>.', 'danger')
                 return redirect(url_for("business_login"))
             if not biz.email_confirmed:
                 message = "Please confirm your business email first (check your inbox)."
