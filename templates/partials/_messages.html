@@ -1,14 +1,14 @@
 {% for msg in messages %}
   <div class="row {% if msg.sender_type == 'user' and is_user or msg.sender_type == 'business' and is_biz %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
     <div class="col-auto">
-      <div class="{% if msg.sender_type == 'user' %}msg-bubble-user{% else %}msg-bubble-biz{% endif %}">
-        <span class="fw-bold small {% if msg.sender_type == 'user' %}text-primary{% else %}text-success{% endif %}">
-          {% if msg.sender_type == "user" %}
-            {{ interaction.user.name or interaction.user.email }}
-          {% elif msg.sender_type == "business" %}
-            {{ interaction.business.business_name }}
-          {% endif %}
-        </span>
+      <div class="{% if msg.sender_type == 'user' %}msg-bubble-user{% elif msg.sender_type == 'business' %}msg-bubble-biz{% else %}msg-bubble-support{% endif %}">
+        {% if msg.sender_type == "customer_support" %}
+          <span class="fw-bold small text-warning">Customer Support</span>
+        {% elif msg.sender_type == "user" %}
+          <span class="fw-bold small text-primary">{{ interaction.user.name or interaction.user.email }}</span>
+        {% elif msg.sender_type == "business" %}
+          <span class="fw-bold small text-success">{{ interaction.business.business_name }}</span>
+        {% endif %}
         <span class="msg-time">{{ msg.timestamp.strftime('%Y-%m-%d %I:%M%p') }}</span>
         <div>{{ msg.text | e }}</div>
         {% if msg.file_url and msg.file_name and msg.file_name.lower().endswith(('.png','.jpg','.jpeg','.gif','.webp')) %}
