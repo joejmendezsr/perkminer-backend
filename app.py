@@ -27,6 +27,7 @@ import os
 import stripe
 import logging
 from datetime import datetime, date
+from your_user_model_import import User
 import json
 from sqlalchemy import or_, and_, func, literal
 from flask_migrate import Migrate
@@ -1509,6 +1510,19 @@ class FinalizedTransaction(db.Model):
     source = db.Column(db.String(20)) # "barcode" or "message"
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     amount = db.Column(db.Float)
+
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Optionally add 'transaction_id' if you want to link to a specific transaction
+
+class ConversationParticipant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # Optionally add role ("member", "business", "admin")
 
 def calculate_user_grand_total(user):
     ref_code = user.referral_code
@@ -4105,6 +4119,9 @@ def active_session(interaction_id):
                 # if staff is logged in, store their id; if owner, store business id
                 staff_id = session.get('staff_id')
                 sender_id = staff_id if staff_id else session['business_id']
+            elif current_user.is_authenticated and current_user.has_role("customer_support"):
+                sender_type = "customer_support"
+                sender_id = current_user.id
             else:
                 flash("Invalid sender.")
                 return redirect(url_for('active_session', interaction_id=interaction_id))
@@ -4131,11 +4148,13 @@ def active_session(interaction_id):
         if msg.sender_type == "user":
             label = interaction.user.name or interaction.user.email
         elif msg.sender_type == "business":
-            # owner uses business_id, staff uses their own id
             if msg.sender_id == interaction.business.id:
                 label = interaction.business.business_name
             else:
                 label = f"{interaction.business.business_name} Staff"
+        elif msg.sender_type == "customer_support":
+            sender = User.query.get(msg.sender_id)
+            label = f"Customer Support ({sender.name or sender.email})" if sender else "Customer Support"
         messages_with_labels.append({
             "text": msg.text,
             "timestamp": msg.timestamp,
@@ -5313,6 +5332,38 @@ def feedback_dashboard():
 @role_required("customer_support")
 def support_dashboard():
     return render_template("support_dashboard.html")
+
+@app.route("/support/session/<int:interaction_id>", methods=["GET", "POST"])
+@login_required  # or suitable admin/user/business guard
+def support_session(interaction_id):
+    # load the interaction
+    # fetch messages as you do elsewhere
+    # allow user, business, or customer_support to send messages as in Step 1
+    # render a support-specific template (or reuse active_session.html and adjust template logic if needed)
+    # anyone involved can see all history and send messages
+    ...
+
+@app.route("/start-support/<int:business_id>", methods=["GET", "POST"])
+@login_required
+def start_support(business_id):
+    # Only one open support thread per issue
+    interaction = Interaction.query.filter_by(
+        user_id=current_user.id,
+        business_id=business_id,
+        service_type="Support",
+        status="active"
+    ).first()
+    if not interaction:
+        interaction = Interaction(
+            user_id=current_user.id,
+            business_id=business_id,
+            service_type="Support",
+            details="Member reports issue with transaction finalization.",
+            status="active"
+        )
+        db.session.add(interaction)
+        db.session.commit()
+    return redirect(url_for('support_session', interaction_id=interaction.id))
 
 @app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
 @admin_required
