@@ -799,9 +799,9 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     u2 = User.query.filter_by(id=interaction.user.sponsor_id).first()
     tier2_user_referral_id = u2.referral_code if u2 else "REFjoejmendez"
     u3 = User.query.filter_by(id=u2.sponsor_id).first() if u2 and u2.sponsor_id else None
-    tier3_user_referral_id = u3.referral_code if u3 else "REFjoejmendez"
+    tier3_user_referral_id = u3.referral_code if u3 else "REFmarjoriepint"
     u4 = User.query.filter_by(id=u3.sponsor_id).first() if u3 and u3.sponsor_id else None
-    tier4_user_referral_id = u4.referral_code if u4 else "REFjoejmendez"
+    tier4_user_referral_id = u4.referral_code if u4 else "REFmarjoriepint"
     u5 = User.query.filter_by(id=u4.sponsor_id).first() if u4 and u4.sponsor_id else None
     tier5_user_referral_id = u5.referral_code if u5 else "REFjoejmendez"
 
