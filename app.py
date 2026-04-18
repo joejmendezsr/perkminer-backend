@@ -184,7 +184,11 @@ app.config['RECAPTCHA_PUBLIC_KEY'] = '6LdhAV8sAAAAABwITf0HytcbADISlcMd87NP-i2H'
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdhAV8sAAAAAFi9YjxnZqFLUl3SlQjHc1g7IEOq'
 
 app.config['BABEL_DEFAULT_LOCALE'] = 'en'
-babel = Babel(app)
+
+def get_locale():
+    return session.get('lang', 'en')
+
+babel = Babel(app, locale_selector=get_locale)
 
 # List of languages you'd like to support:
 LANGUAGES = {
@@ -205,11 +209,6 @@ LANGUAGES = {
     'ko': '한국어',        # Korean
     'it': 'Italiano'      # Italian
 }
-
-@babel.localeselector
-def get_locale():
-    # First look for language in session (set by user dropdown)
-    return session.get('lang', 'en')
 
 UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
