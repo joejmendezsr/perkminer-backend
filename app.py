@@ -44,8 +44,6 @@ import cloudinary.uploader
 import qrcode
 import base64
 import secrets
-from flask_babel import Babel, _, lazy_gettext as _l
-from flask import session, request, redirect, url_for
 
 # --- Cart Logic ---
 def get_cart():
@@ -182,33 +180,6 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
 app.config['RECAPTCHA_PUBLIC_KEY'] = '6LdhAV8sAAAAABwITf0HytcbADISlcMd87NP-i2H'
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdhAV8sAAAAAFi9YjxnZqFLUl3SlQjHc1g7IEOq'
-
-app.config['BABEL_DEFAULT_LOCALE'] = 'en'
-
-def get_locale():
-    return session.get('lang', 'en')
-
-babel = Babel(app, locale_selector=get_locale)
-
-# List of languages you'd like to support:
-LANGUAGES = {
-    'en': 'English',
-    'es': 'Español',
-    'zh': '中文',          # Chinese
-    'fr': 'Français',     # French
-    'ja': '日本語',        # Japanese
-    'de': 'Deutsch',      # German
-    'nl': 'Nederlands',   # Dutch
-    'pt': 'Português',    # Portuguese
-    'tl': 'Tagalog',      # Tagalog/Filipino
-    'hi': 'हिन्दी',       # Hindi
-    'ar': 'العربية',      # Arabic
-    'bn': 'বাংলা',        # Bengali
-    'ru': 'Русский',      # Russian
-    'id': 'Bahasa Indonesia', # Indonesian
-    'ko': '한국어',        # Korean
-    'it': 'Italiano'      # Italian
-}
 
 UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -1716,17 +1687,6 @@ def biz_tier_commission(t, tier_field, ref_field):
     return 0
 
 # Add others (interaction, message, etc.) as needed here
-
-@app.route('/set_language/<lang_code>')
-def set_language(lang_code):
-    if lang_code not in LANGUAGES.keys():
-        lang_code = 'en'
-    session['lang'] = lang_code
-    return redirect(request.referrer or url_for('home'))
-
-@app.context_processor
-def inject_languages():
-    return dict(LANGUAGES=LANGUAGES)
 
 # ---------------- STORE ROUTES ----------------
 
