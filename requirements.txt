@@ -29,3 +29,4 @@ pillow
 stripe
 pyotp
 flask_simple_captcha
+flask-babel
