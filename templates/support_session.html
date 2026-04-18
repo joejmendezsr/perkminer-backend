@@ -76,7 +76,15 @@
         Supports: emoji 😊, images, PDF, .doc, .xls, .txt. Max size: 5MB.
       </small>
     </form>
-    <a href="{{ url_for('support_dashboard') }}" class="btn btn-secondary mt-3 w-100">Back to Dashboard</a>
+    <form method="post" action="{{ url_for('end_session', interaction_id=interaction.id) }}" class="mb-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger w-100" type="submit">End Session</button>
+    </form>
+    {% if current_user.is_authenticated and current_user.has_role('customer_support') %}
+      <a href="{{ url_for('support_dashboard') }}" class="btn btn-secondary mt-3 w-100">Back to Dashboard</a>
+    {% elif current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3 w-100">Back to Dashboard</a>
+    {% endif %}
   </div>
 </div>
 <script>

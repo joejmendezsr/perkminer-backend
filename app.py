@@ -3876,7 +3876,9 @@ def end_session(interaction_id):
     flash("Session ended.", "success")
 
     # Redirect accordingly
-    if is_staff:
+    if current_user.is_authenticated and current_user.has_role('customer_support'):
+        return redirect(url_for('support_dashboard'))
+    elif is_staff:
         return redirect(url_for('staff_dashboard'))
     elif is_biz:
         return redirect(url_for('biz_user_interactions'))
