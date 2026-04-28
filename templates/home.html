@@ -1,438 +1,243 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>PerkMiner Homepage</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PerkMiner — Perks, Not Crypto</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
   <style>
-    :root { 
-      --pm-primary: #2a5859; 
-      --pm-accent: #ffd66b; 
-      --pm-bg: #fff; 
-      --pm-text: #222; 
-      --pm-hover: #e6f6f5;
-      --pm-shadow: 0 8px 32px rgba(42,88,89,0.18);
-      --pm-transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    :root {
+      --pm-primary: #214d4e;
+      --pm-accent: #ffd66b;
+      --pm-bg: #f8fafb;
+      --pm-surface: #fff;
+      --pm-text: #243;
+      --pm-muted: #698185;
+      --pm-shadow: 0 4px 28px rgba(40,77,78,0.13);
+      --pm-hero-bg: url('https://res.cloudinary.com/dmrntlcfd/image/upload/v1771643789/cash-back_x9kj5f.jpg?auto=format&fit=crop&w=1200&q=60');
     }
-    body { background: var(--pm-bg); color: var(--pm-text);}
-    .navbar-brand img.nav-logo { height: 90px; width: auto; max-width: 140px;}
-    .hero-logo { height: 90px; max-width: 280px; width: auto; display: block; margin: 0 auto 18px auto; object-fit: contain;}
-    .hero-section { min-height: 45vh; background: url('https://res.cloudinary.com/dmrntlcfd/image/upload/v1771643789/cash-back_x9kj5f.jpg?auto=format&fit=crop&w=1200&q=60') center/cover no-repeat; position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 0;}
-    .hero-section .overlay { position: absolute; inset: 0; background: rgba(42,88,89,.23); z-index: 1; }
-    .hero-content { position: relative; z-index: 2; width: 100%; max-width: 620px; margin: 0 auto; color: #fff; padding-top: 1.5rem; padding-bottom: 1rem; text-align: center;}
-    .dashboard-btn-hero { position: absolute; top: 18px; right: 32px; z-index: 5;}
-    @media (max-width: 700px) { .dashboard-btn-hero { top: 8px; right: 12px; } }
-    .dashboard-btn-hero .btn { font-size: 0.93rem; padding: 0.28rem 0.85rem; border-radius: 15px; box-shadow: 0 2px 10px #e6f4ee; }
-    .totals-section { margin-top: 0.5rem; margin-bottom: 0.8rem;}
-    .totals-mini { background: #fff; border: 1px solid #e7ebed; border-radius: 10px; box-shadow: 0 1px 5px #e6f4ee; padding: .35rem 0.7rem .25rem 0.7rem; min-width: 106px; min-height: 42px; display: inline-block; margin: 0 3px 6px 3px;}
-    .totals-label-mini { font-size: 0.61em; color: #305A5B; font-weight: 600; line-height: 1.07; margin-bottom: -3px;}
-    .totals-value-mini { font-size: 0.95em; font-weight: 700;}
-    .totals-value-mini.text-warning { color: #d8a608 !important; }
-    .totals-value-mini.text-info { color: #1097bb !important; }
-    .search-form .input-group { border-radius: 18px; box-shadow: 0 2px 10px #f2f5f5; background: #fff; overflow: hidden;}
-    .search-form .form-control, .search-form .btn { border-radius: 18px !important; font-size: 1.1em;}
-    
-    /* Categories Section */
-    .categories-section { padding: 3rem 0 4rem; }
-    .categories-title { 
-      font-size: 2.1rem; 
-      font-weight: 700; 
-      color: var(--pm-primary); 
-      text-align: center; 
-      margin-bottom: 2.2rem; 
-      position: relative; 
+    body { background: var(--pm-bg); color: var(--pm-text); margin: 0;}
+    .hero-section {
+      min-height: 55vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--pm-hero-bg) center/cover no-repeat;
+      position: relative;
     }
-    .categories-title:after {
+    .hero-section::before {
       content: '';
       position: absolute;
-      bottom: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 4px;
-      background: var(--pm-accent);
-      border-radius: 2px;
-    }
-
-    .categories-scroll-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      padding: 0 5vw;
-      margin: 0 -5vw;
-    }
-    .categories-scroll-wrap::-webkit-scrollbar { display: none; }
-
-    .categories-row {
-      display: flex;
-      flex-wrap: nowrap;
-      gap: 1.1rem;
-      padding: 1rem 0;
-    }
-
-    .category-card-wrapper {
-      scroll-snap-align: start;
-      flex: 0 0 72vw;
-      max-width: 240px;
-      transition: var(--pm-transition);
-    }
-
-    .category-card {
-      border-radius: 16px;
-      overflow: hidden;
-      background: white;
-      box-shadow: var(--pm-shadow);
-      transition: var(--pm-transition);
-      height: 100%;
-      position: relative;
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-
-    .category-card:hover {
-      transform: translateY(-12px) scale(1.04) rotate(1.2deg);
-      box-shadow: 0 22px 48px rgba(42,88,89,0.26);
-    }
-
-    .category-image-wrap {
-      position: relative;
-      height: 140px;
-      overflow: hidden;
-    }
-
-    .category-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.6s ease;
-    }
-
-    .category-card:hover .category-image {
-      transform: scale(1.14);
-    }
-
-    .category-overlay {
-      position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(42,88,89,0.38) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.4s ease;
+      background: rgba(33,77,78,0.46);
+      z-index: 1;
     }
-
-    .category-card:hover .category-overlay {
-      opacity: 1;
-    }
-
-    .category-label {
-      padding: 1.1rem 0.9rem 1.3rem;
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--pm-primary);
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
       text-align: center;
-      line-height: 1.28;
-      background: linear-gradient(145deg, #ffffff, #f8fbfc);
+      color: #fff;
+      padding: 3.5rem 1rem 2rem 1rem;
     }
-
-    /* Desktop grid */
-    @media (min-width: 992px) {
-      .categories-scroll-wrap, .categories-row {
-        overflow-x: hidden !important;
-        padding: 0;
-        margin: 0;
-      }
-      .categories-row {
-        display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 1.6rem 1.8rem;
-      }
-      .category-card-wrapper {
-        flex: 1 1 auto;
-        max-width: none;
-        scroll-snap-align: none;
-      }
-      .category-card {
-        border-radius: 20px;
-      }
-      .category-image-wrap {
-        height: 160px;
-      }
-      .category-label {
-        font-size: 1.12rem;
-        padding: 1.3rem 1.1rem 1.5rem;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .category-card-wrapper { flex: 0 0 78vw; max-width: 260px; }
-      .category-image-wrap { height: 130px; }
-      .categories-title { font-size: 1.75rem; }
-    }
-
-    /* Mobile & tablet: force single row + hide button */
-    @media (max-width: 991.98px) {
-      .more-btn-container {
-        display: none !important;
-      }
-    }
-
-    /* More button */
-    .more-btn-container { 
-      text-align: center; 
-      margin: 2rem 0 1rem; 
-    }
-    .more-btn { 
-      background: var(--pm-primary); 
-      color: white; 
-      border: none; 
-      padding: 0.75rem 2rem; 
-      font-size: 1.1rem; 
-      font-weight: 600; 
-      border-radius: 50px; 
-      box-shadow: 0 6px 20px rgba(42,88,89,0.3); 
-      transition: var(--pm-transition); 
-      cursor: pointer;
-    }
-    .more-btn:hover { 
-      transform: translateY(-4px) scale(1.05); 
-      box-shadow: 0 12px 30px rgba(42,88,89,0.4); 
-      background: #1f4344;
-    }
-    .more-btn.expanded {
-      background: #d9534f;
-    }
-
-    .business-listing-modern {
-      border: none;
-      overflow: hidden;
+    .hero-logo {
+      width: 120px;
+      margin-bottom: 16px;
       border-radius: 14px;
       background: #fff;
-      box-shadow: 0 4px 18px #e5eceb;
-      transition: box-shadow 0.18s, transform 0.16s;
-      min-height: 360px;
-      max-width: 380px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
+      box-shadow: 0 5px 18px rgba(40,77,78,0.09);
     }
-    .biz-feature-img-wrap {
-      width: 100%;
-      height: 180px;
-      overflow: hidden;
-      border-radius: 14px 14px 0 0;
-      background: #f7f7f7;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .hero-title {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.8px;
     }
-    .biz-feature-img,
-    .small-listing-modern-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      margin: 0 auto;
-    }
-    .small-listing-modern-img {
-      width: 180px;
-      height: 180px;
-      object-fit: cover;
-    }
-    .biz-services {
-      white-space: normal;
-      overflow-wrap: break-word;
-      word-break: break-word;
-      max-width: 100%;
-      margin: 0 auto;
-      display: block;
-      font-size: .94em;
-      color: #345;
+    .hero-sub {
+      font-size: 1.1rem;
       font-weight: 500;
-      opacity: .93;
+      margin-bottom: 1.5rem;
     }
-
-    .mb-1.small { font-size: .96em; }
-    @media (max-width:600px) {
-      .business-listing-modern { max-width: 97vw; }
-      .biz-services { max-width: 74vw; font-size:.98em;}
-      .biz-feature-img-wrap { height: 160px; }
-      .biz-feature-img,
-      .small-listing-modern-img { 
-        width: 160px; 
-        height: 160px; 
-      }
+    .search-form {
+      max-width: 100%;
+      margin: 0 auto 1.3rem auto;
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: var(--pm-shadow);
+      padding: 6px 10px 6px 16px;
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
     }
-    footer { background: #f8fafb; color: #999; padding: 1.5rem 0; margin-top: 2.3rem; text-align: center; font-size: 1em; border-top: 1px solid #e1e7ea; }
-
-    .marquee-container {
-      --speed: 15s;
-      --gap: 4rem;
-      width: 100%;
-      overflow: hidden;
+    .search-form input, .search-form select {
+      border: none;
+      outline: none;
+      background: transparent;
+    }
+    .search-form .btn {
+      border-radius: 19px;
+      font-weight: bold;
       background: var(--pm-primary);
-      color: white;
-      padding: 0.9rem 0;
-      margin: 0;
-      border-top: 2px solid var(--pm-accent);
-      border-bottom: 2px solid var(--pm-accent);
-      box-shadow: 0 2px 12px rgba(42,88,89,0.25);
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 6px #d2e5e5;
+      transition: background 0.15s;
     }
-    .marquee {
+    .search-form .btn:hover {
+      background: #153a3b;
+    }
+    .hero-benefits {
       display: flex;
-      white-space: nowrap;
-      animation: scroll var(--speed) linear infinite;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0 auto 1.7rem auto;
+      flex-wrap: wrap;
     }
-    .marquee:hover { animation-play-state: paused; cursor: default; }
-    .marquee-content {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--gap);
-      font-size: 1.35rem;
+    .benefit-item {
+      background: rgba(255,255,255,0.13);
+      border-radius: 12px;
+      padding: 0.8em 1.1em;
+      color: #fffddf;
+      flex: 1 1 90px;
+      min-width: 90px;
+      max-width: 148px;
+      font-size: 1em;
       font-weight: 600;
-      padding: 0 2rem;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .marquee-content span.highlight {
-      color: var(--pm-accent);
-      font-weight: 700;
-    }
-    @keyframes scroll {
-      from { transform: translateX(0); }
-      to   { transform: translateX(calc(-100% - var(--gap))); }
-    }
-    @media (max-width: 576px) {
-      .marquee-content { font-size: 1.1rem; }
-      .marquee-container { padding: 0.7rem 0; }
-    }
-
-    .how-it-works-section {
-      position: relative;
-      margin: 48px 0 0 0;
-      padding: 0;
-    }
-    .how-it-works-bg {
-      width: 100%;
-      min-height: 220px;
-      max-height: 360px;
-      object-fit: cover;
-      filter: brightness(0.74);
-      border-radius: 15px;
-      display: block;
-    }
-    .how-it-works-btn-outer {
-      position: absolute;
-      left: 0; top: 0; right: 0; bottom: 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      z-index: 2;
-      pointer-events: none;
+      gap: 0.47em;
+      box-shadow: 0 2px 8px rgba(33,77,78,0.09);
     }
-    .how-it-works-btn-inner {
-      background: rgba(255,255,255,0.92);
-      border-radius: 2rem;
-      padding: 1.17rem 2.7rem;
-      box-shadow: 0 3px 24px rgba(40,40,40,0.12);
-      pointer-events: all;
+    .benefit-icon {
+      font-size: 1.3em;
+      opacity: 0.94;
     }
-    @media (max-width: 575px) {
-      .how-it-works-bg { min-height: 120px; max-height: 150px; }
-      .how-it-works-btn-inner { padding: .7rem 1.15rem; font-size: 1.09em; }
+    @media (max-width: 525px) {
+      .hero-title { font-size: 1.3rem; }
+      .hero-content { padding: 2rem 0.3rem 1.3rem 0.3rem;}
+      .hero-logo { width: 55px;}
+      .benefit-item { font-size: 0.97em;}
+      .hero-benefits { gap: 0.6rem; }
     }
-
+    .metrics-bar {
+      background: var(--pm-surface);
+      box-shadow: 0 2px 12px #e9f1f0;
+      border-radius: 14px;
+      margin: -44px auto 2rem auto;
+      padding: 1.07em 8vw;
+      position: relative;
+      z-index: 4;
+      max-width: 560px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+    .metric-item {
+      font-size: 1em;
+      color: var(--pm-primary);
+      font-weight: 600;
+      flex: 1 1 102px;
+      margin: 0 0.18em;
+      text-align: center;
+    }
+    .metric-label { font-size: 0.82em; color: var(--pm-muted);}
+    .money-flow {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 22px #e5eceb;
+      padding: 2.7rem 1.5rem 1.2rem 1.5rem;
+      margin: 2.7rem auto;
+      max-width: 640px;
+      text-align: center;
+    }
+    .flow-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      color: var(--pm-primary);
+    }
+    .flow-step {
+      font-size:1em; margin:0.2em 0; color: var(--pm-text);
+    }
+    .privacy-badge {
+      display:inline-block;
+      background: var(--pm-accent);
+      color: var(--pm-primary);
+      padding: 0.29em 0.9em;
+      border-radius:17px;
+      font-size:0.95em;
+      font-weight:600;
+      margin: 0.25em 0;
+    }
   </style>
 </head>
 <body>
+  <!-- Hero Section -->
   <section class="hero-section">
-    <div class="overlay"></div>
-    {% if current_user.is_authenticated %}
-      <div class="dashboard-btn-hero">
-        {% if current_user.business_email %}
-          <a href="{{ url_for('business_dashboard') }}" class="btn btn-warning shadow">Return to Dashboard</a>
-        {% else %}
-          <a href="{{ url_for('dashboard') }}" class="btn btn-warning shadow">Return to Dashboard</a>
-        {% endif %}
-      </div>
-    {% elif session.get('business_id') %}
-      <div class="dashboard-btn-hero">
-        <a href="{{ url_for('business_dashboard') }}" class="btn btn-warning shadow">Return to Dashboard</a>
-      </div>
-    {% endif %}
-    <div class="container hero-content">
+    <div class="hero-content">
       <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771632656/New_Perk_Miner_Logo_xt8y0e.jpg" alt="Perk Miner" class="hero-logo">
-      <h1 class="mb-2">Not crypto. Not mining.</br>Just Real Perks!<h1>
-      <h4>Members Earn Cashback on Real Purchases.  No Sale/Close = No Fee For Our Advertisers!</h4>
-      <form class="search-form mb-3" method="get" action="/search">
-        <div class="input-group mb-2">
-          <input type="text" class="form-control" name="q" placeholder="Search for products, services, or businesses..." aria-label="Search">
-          <select class="form-select" name="distance" style="max-width:110px;">
-            <option value="">Closest</option>
-            <option value="5">5 mi</option>
-            <option value="10">10 mi</option>
-            <option value="25">25 mi</option>
-            <option value="all">All</option>
-          </select>
-          <button class="btn btn-primary" type="submit">Search</button>
-        </div>
-        <input type="hidden" name="lat" id="search-lat">
-        <input type="hidden" name="lng" id="search-lng">
+      <h1 class="hero-title">Perks, Not Crypto.</h1>
+      <div class="hero-sub">Cashback on real purchases. No crypto, no mining.<br>Your privacy flows with your perks.</div>
+      <form class="search-form" method="get" action="/search">
+        <input type="text" name="q" class="form-control" placeholder="Search for products, services, or businesses..." aria-label="Search">
+        <select class="form-select" name="distance">
+          <option value="">Closest</option>
+          <option value="5">5 mi</option>
+          <option value="10">10 mi</option>
+          <option value="25">25 mi</option>
+          <option value="all">All</option>
+        </select>
+        <button class="btn" type="submit">Search</button>
       </form>
-      <div class="container-fluid d-flex flex-wrap justify-content-center totals-section px-0">
-      <h1 class="mb-2">Launch Metrics (live updates)</h1>
-        <div class="totals-mini mx-1">
-          <div class="totals-label-mini">Member Cash Back<br>and Commissions Paid</div>
-          <div class="totals-value-mini text-success">${{ "{:,.2f}".format(total_member_paid|default(0, true)) }}</div>
+      <div class="hero-benefits">
+        <div class="benefit-item">
+          <span class="benefit-icon">💰</span>
+          Cashback (no receipts)
         </div>
-        <div class="totals-mini mx-1">
-          <div class="totals-label-mini">Business Cash Back<br>and Commissions Paid</div>
-          <div class="totals-value-mini text-primary">${{ "{:,.2f}".format(total_biz_paid|default(0, true)) }}</div>
+        <div class="benefit-item">
+          <span class="benefit-icon">👻</span>
+          Privacy Protected
         </div>
-        <div class="totals-mini mx-1">
-          <div class="totals-label-mini">Gross Sales Generated<br>By Our Advertisers</div>
-          <div class="totals-value-mini text-dark">${{ "{:,.2f}".format(total_gross_sales|default(0, true)) }}</div>
-        </div>
-        <div class="totals-mini mx-1">
-          <div class="totals-label-mini">Advertising Fees<br>Paid By Advertisers</div>
-          <div class="totals-value-mini text-info">${{ "{:,.2f}".format(total_ad_fees|default(0, true)) }}</div>
-        </div>
-        <div class="totals-mini mx-1">
-          <div class="totals-label-mini">Percent of Ad Revenues<br>Paid To Members & Businesses</div>
-          <div class="totals-value-mini text-warning">
-            {{ percent_fees_paid|default(0, true)|round(1) }}%
-          </div>
+        <div class="benefit-item">
+          <span class="benefit-icon">🔗</span>
+          Referral Commissions
         </div>
       </div>
     </div>
   </section>
 
-  <div class="marquee-container">
-    <div class="marquee">
-      <div class="marquee-content">
-        *** LAUNCHING SOON!! ***<span class="highlight">Free to Join - join early and start earning cashback on real purchases (Paid By Perk Miner)</span>
-      </div>
+  <!-- Metrics (Under Hero) -->
+  <div class="metrics-bar">
+    <div class="metric-item">
+      <div>$0</div>
+      <div class="metric-label">Member Rewards Paid</div>
+    </div>
+    <div class="metric-item">
+      <div>$0</div>
+      <div class="metric-label">Advertiser Fees</div>
+    </div>
+    <div class="metric-item">
+      <div>900%</div>
+      <div class="metric-label">Min. ROI for Businesses</div>
+    </div>
+    <div class="metric-item">
+      <div class="privacy-badge">Privacy by Default</div>
     </div>
   </div>
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-0">
-    <div class="container">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <div class="navbar-nav ms-auto">
-          <a class="nav-link" href="/login">Login</a>
-          <a class="nav-link" href="/register">Register</a>
-          <a class="nav-link" href="/business">Advertise with Us</a>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <!-- Money Flow Explainer -->
+  <section class="money-flow">
+    <div class="flow-title">How Money Flows</div>
+    <div class="flow-step">1. Member buys from an advertiser</div>
+    <div class="flow-step">2. Business pays Perk Miner a small fee (<b>only when a sale closes</b>)</div>
+    <div class="flow-step">3. Members & referrers are paid cashback/commissions (<b>by Perk Miner, not by business</b>)</div>
+    <div class="flow-step">4. Business sees live ROI (no hidden fees, <b>no leads sold</b>)</div>
+  </section>
+
+  <!-- (Add category grid, featured listings, footer, etc. below as needed.) -->
 
   <main class="container my-5">
     <section class="categories-section">
@@ -763,32 +568,6 @@
       </div>
       {% endif %}
     </div>
-    <div class="text-center mt-4">
-      <p>"Perk Miner connects customers with businesses through secure messaging <b>(We protect our members!)</b>"</br>Explore businesses and start Earning for all purchases and paid services (Paid by Perk Miner).</p>
-      <p><h3 class="mb-2">"How Money Flows:"</h3></p>
-      <p><h6 class="mb-2">1. Customer makes a purchase</h6></p>
-      <p><h6 class="mb-2">2. Business pays Perk Miner a 10% fee (max $250)</h6></p>
-      <p><h6 class="mb-2">3. That fee is split into:</h6></p>
-      <p><h7 class="mb-2">a. Cashback (Paid by Perk Miner)</h7></p>
-      <p><h7 class="mb-2">b. Referral Commissions (Paid by Perk Miner)</h7></p>
-      <p><h7 class="mb-2">c. Platform Revenue</h7></p>
-    </div>
-  </main>
-
-        <!-- How It Works section with image and overlay button -->
-
-<div class="how-it-works-section container mt-5 mb-4 px-0" style="position: relative; display: flex; align-items: center; justify-content: center;">
-  <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1774196020/purchase_ntjk5q.jpg?fit=crop&w=900&q=80"
-       alt="How It Works" class="how-it-works-bg">
-  <div class="how-it-works-btn-outer" style="position:absolute; left:0; top:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; z-index:2;">
-    <div class="how-it-works-btn-inner">
-      <a href="{{ url_for('how_it_works') }}" class="btn btn-primary btn-xl fs-4 shadow-lg px-4 py-2"
-        style="font-weight:600;">
-        <i class="bi bi-info-circle"></i> How It Works
-      </a>
-    </div>
-  </div>
-</div>
   <footer>
     <div>
       <div class="mb-2">
@@ -874,5 +653,6 @@
       }
     });
   </script>
+
 </body>
 </html>
