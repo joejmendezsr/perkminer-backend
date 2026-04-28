@@ -365,7 +365,8 @@
     {% endif %}
     <div class="container hero-content">
       <img src="https://res.cloudinary.com/dmrntlcfd/image/upload/v1771632656/New_Perk_Miner_Logo_xt8y0e.jpg" alt="Perk Miner" class="hero-logo">
-      <h1 class="mb-2">Welcome to PerkMiner</h1>
+      <h1 class="mb-2">Not crypto.  Not mining. Member Perks: Earn Cashback on Real Purchases.  Business Perks: No Sale/Close = No Fee For Advertisers!</h1>
+      <h4 class="mb-2">"Perk Miner connects customers with businesses through secure in-app messaging (We protect member contact information).</h4>
       <form class="search-form mb-3" method="get" action="/search">
         <div class="input-group mb-2">
           <input type="text" class="form-control" name="q" placeholder="Search for products, services, or businesses..." aria-label="Search">
@@ -382,6 +383,7 @@
         <input type="hidden" name="lng" id="search-lng">
       </form>
       <div class="container-fluid d-flex flex-wrap justify-content-center totals-section px-0">
+      <h1 class="mb-2">Launch Metrics (will update live)</h1>
         <div class="totals-mini mx-1">
           <div class="totals-label-mini">Member Cash Back<br>and Commissions Paid</div>
           <div class="totals-value-mini text-success">${{ "{:,.2f}".format(total_member_paid|default(0, true)) }}</div>
@@ -404,6 +406,13 @@
             {{ percent_fees_paid|default(0, true)|round(1) }}%
           </div>
         </div>
+      <h1 class="mb-2">"How Money Flows"</h1>
+      <h3 class="mb-2">Customer makes a purchase</h3>
+      <h3 class="mb-2">Business pays Perk Miner a 10% fee (capped at $250)</h3>
+      <h3 class="mb-2">That fee is split into:</h3>
+      <h4 class="mb-2">Cashback (Paid by Perk Miner)</h4>
+      <h4 class="mb-2">Referral Commissions (Paid by Perk Miner)</h4>
+      <h4 class="mb-2">Platform Revenue</h4>
       </div>
     </div>
   </section>
@@ -411,9 +420,7 @@
   <div class="marquee-container">
     <div class="marquee">
       <div class="marquee-content">
-        *** SITE IS NOT LIVE - LAUNCHING SOON!! ***<span class="highlight">Earn Cash Back & Commissions (Paid By Perk Miner)</span>Free To Join
-        <span class="highlight">Cash Back On All Purchases</span>No Sale/Close = No Fee For Advertisers *****
-        &nbsp;&nbsp;&nbsp;
+        *** LAUNCHING SOON!! ***<span class="highlight">Free to Join - join early and start earning cashback on real purchases (Paid By Perk Miner)</span>
       </div>
     </div>
   </div>
@@ -764,7 +771,7 @@
       {% endif %}
     </div>
     <div class="text-center mt-4">
-      <p>Explore all businesses and Earn Cash Back and Commissions for all purchases and paid services <a href="/business" style="color:var(--pm-primary);font-weight:500;">(Paid by Perk Miner)</a>.</p>
+      <p>Explore all businesses and start Earning Cash Back and Referral Commissions for all purchases and paid services <a href="/business" style="color:var(--pm-primary);font-weight:500;">(Paid by Perk Miner)</a>.</p>
     </div>
   </main>
 
