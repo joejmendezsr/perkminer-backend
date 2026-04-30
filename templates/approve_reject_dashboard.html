@@ -96,7 +96,7 @@
                     <strong>Small Preview</strong>
                     <div class="d-flex align-items-center mt-1 mb-2 flex-wrap gap-2">
                       {% if biz.draft_profile_photo or biz.profile_photo %}
-                        <img src="{{ biz.draft_profile_photo or biz.profile_photo }}" ...>
+                        <img src="{{ biz.draft_profile_photo or biz.profile_photo }}" width="120" height="120">
                       {% endif %}
                       <div>
                         <b>{{ biz.draft_business_name or biz.business_name }}</b><br/>
