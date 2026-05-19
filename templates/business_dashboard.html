@@ -831,7 +831,7 @@ window.addEventListener('DOMContentLoaded', function() {
     let name = document.querySelector('[name="business_name"]')?.value || {{ business.business_name | tojson }};
     let address = document.getElementById('address-autocomplete')?.value || {{ business.address | tojson }};
     let category = document.getElementById('business_category')?.value || {{ business.category | tojson }};
-    let category = document.getElementById('business_finalization')?.value || {{ business.finalization | tojson }};
+    let finalization = document.getElementById('business_finalization')?.value || {{ business.finalization | tojson }};
     let phone = document.getElementById('us-phone')?.value || {{ business.phone_number | tojson }};
     let website = document.getElementById('website_url')?.value || {{ business.website_url | tojson }};
     let about = document.getElementById('about_us')?.value || {{ business.about_us | tojson }};
