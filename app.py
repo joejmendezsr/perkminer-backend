@@ -7015,6 +7015,10 @@ def how_it_works():
 def about():
     return render_template("about.html")
 
+@app.route("/privacy")
+def about():
+    return render_template("privacy.html")
+
 @app.route('/onboard/stripe')
 @login_required
 def onboard_stripe():
