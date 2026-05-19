@@ -483,6 +483,19 @@
           <option value="Other" {% if form_data.category == 'Other' %}selected{% endif %}>Other</option>
         </select>
       </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">Finalization</label>
+        <select class="form-select" name="finalization" id="business_finalization" required>
+          <option value="">Select finalization...</option>
+          <option value="Instant" {% if form_data.finalization == 'Instant' %}selected{% endif %}>Instant</option>
+          <option value="Delayed3" {% if form_data.finalization == 'Delayed3' %}selected{% endif %}>Delayed 3 Days</option>
+          <option value="Delayed7" {% if form_data.finalization == 'Delayed7' %}selected{% endif %}>Delayed 7 Days</option>
+          <option value="Delayed10" {% if form_data.finalization == 'Delayed10' %}selected{% endif %}>Delayed 10 Days</option>
+          <option value="Delayed14" {% if form_data.finalization == 'Delayed14' %}selected{% endif %}>Delayed 14 Days</option>
+          <option value="Delayed21" {% if form_data.finalization == 'Delayed21' %}selected{% endif %}>Delayed 21 Days</option>
+          <option value="Delayed30" {% if form_data.finalization == 'Delayed30' %}selected{% endif %}>Delayed 30 Days</option>
+        </select>
+      </div>
       <!-- Keywords -->
       <div class="col-12 mt-3">
         <label class="form-label">Keywords (for search, separated by commas)</label>
