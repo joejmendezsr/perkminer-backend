@@ -77,6 +77,16 @@
         display:inline-block;
         margin-bottom: 9px;
     }
+    .biz-finalization-badge {
+        font-size:1em;
+        font-weight:500;
+        border-radius:16px;
+        padding:6px 16px;
+        background: #e6f5ff;
+        color: var(--pm-primary);
+        display:inline-block;
+        margin-bottom: 9px;
+    }
     .main-info {
         background: #f8fbfc;
         border-radius: 13px;
@@ -173,7 +183,7 @@
       {% endif %}
       <h2 class="listing-title">{{ business.business_name }}</h2>
       <span class="biz-category-badge mb-2">{{ business.category }}</span>
-      <span class="biz-finalization-badge mb-2">{{ business.finalization }}</span>
+      <span class="biz-finalization-badge mb-2">Finalization: {{ business.finalization }}</span>
     </div>
     <!-- BUTTONS AT THE TOP -->
 <div class="listing-btn-row mb-0">
