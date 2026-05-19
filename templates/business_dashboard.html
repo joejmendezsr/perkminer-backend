@@ -488,12 +488,12 @@
         <select class="form-select" name="finalization" id="business_finalization" required>
           <option value="">Select finalization...</option>
           <option value="Instant" {% if form_data.finalization == 'Instant' %}selected{% endif %}>Instant</option>
-          <option value="Delayed3" {% if form_data.finalization == 'Delayed3' %}selected{% endif %}>Delayed 3 Days</option>
-          <option value="Delayed7" {% if form_data.finalization == 'Delayed7' %}selected{% endif %}>Delayed 7 Days</option>
-          <option value="Delayed10" {% if form_data.finalization == 'Delayed10' %}selected{% endif %}>Delayed 10 Days</option>
-          <option value="Delayed14" {% if form_data.finalization == 'Delayed14' %}selected{% endif %}>Delayed 14 Days</option>
-          <option value="Delayed21" {% if form_data.finalization == 'Delayed21' %}selected{% endif %}>Delayed 21 Days</option>
-          <option value="Delayed30" {% if form_data.finalization == 'Delayed30' %}selected{% endif %}>Delayed 30 Days</option>
+          <option value="Delayed-3-Days" {% if form_data.finalization == 'Delayed-3-Days' %}selected{% endif %}>Delayed 3 Days</option>
+          <option value="Delayed-7-Days" {% if form_data.finalization == 'Delayed-7-Days' %}selected{% endif %}>Delayed 7 Days</option>
+          <option value="Delayed-10-Days" {% if form_data.finalization == 'Delayed-10-Days' %}selected{% endif %}>Delayed 10 Days</option>
+          <option value="Delayed-14-Days" {% if form_data.finalization == 'Delayed-14-Days' %}selected{% endif %}>Delayed 14 Days</option>
+          <option value="Delayed-21-Days" {% if form_data.finalization == 'Delayed-21-Days' %}selected{% endif %}>Delayed 21 Days</option>
+          <option value="Delayed-30-Days" {% if form_data.finalization == 'Delayed-30-Days' %}selected{% endif %}>Delayed 30 Days</option>
         </select>
       </div>
       <!-- Keywords -->
@@ -777,6 +777,7 @@
                 or (business.status == "approved" and (
                   business.draft_business_name or
                   business.draft_category or
+                  business.draft_finalization or
                   business.draft_profile_photo or
                   business.draft_phone_number or
                   business.draft_address or
@@ -830,6 +831,7 @@ window.addEventListener('DOMContentLoaded', function() {
     let name = document.querySelector('[name="business_name"]')?.value || {{ business.business_name | tojson }};
     let address = document.getElementById('address-autocomplete')?.value || {{ business.address | tojson }};
     let category = document.getElementById('business_category')?.value || {{ business.category | tojson }};
+    let category = document.getElementById('business_finalization')?.value || {{ business.finalization | tojson }};
     let phone = document.getElementById('us-phone')?.value || {{ business.phone_number | tojson }};
     let website = document.getElementById('website_url')?.value || {{ business.website_url | tojson }};
     let about = document.getElementById('about_us')?.value || {{ business.about_us | tojson }};
@@ -871,6 +873,7 @@ let largeListing = `
     }
     <h2 class="listing-title">${name}</h2>
     <span class="biz-category-badge mb-2">${category}</span>
+    <span class="biz-finalization-badge mb-2">${finalization}</span>
   </div>
   <div class="main-info-row"><i class="bi bi-pin-map"></i><span><b>Address:</b> ${address}</span></div>
   <div class="main-info-row"><i class="bi bi-telephone"></i><span><b>Phone:</b> ${phone}</span></div>
