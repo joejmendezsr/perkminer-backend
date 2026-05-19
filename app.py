@@ -2915,6 +2915,10 @@ def category_browse(name):
 def intro():
     return render_template("intro.html")
 
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
