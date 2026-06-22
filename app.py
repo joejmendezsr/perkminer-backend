@@ -7253,6 +7253,18 @@ def withdraw_investor():
 def robots_txt():
     return send_from_directory(app.static_folder, 'robots.txt')
 
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory(app.static_folder, 'sitemap.xml')
+
+@app.route('/news')
+def news():
+    return render_template('news.html')
+
+@app.route('/news/2026-06-10-press-release')
+def press_release():
+    return render_template('press_release.html')
+
 @app.errorhandler(500)
 def internal_server_error(error):
     # Log the full error + traceback for debugging
