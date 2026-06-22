@@ -7257,6 +7257,10 @@ def robots_txt():
 def sitemap():
     return send_from_directory(app.static_folder, 'sitemap.xml')
 
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
 @app.route('/news')
 def news():
     return render_template('news.html')
