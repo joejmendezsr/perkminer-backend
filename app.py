@@ -44,6 +44,7 @@ import cloudinary.uploader
 import qrcode
 import base64
 import secrets
+from flask import send_from_directory
 
 # --- Cart Logic ---
 def get_cart():
@@ -7247,6 +7248,10 @@ def withdraw_investor():
     db.session.commit()
     flash(f"Silent investor withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
     return redirect(url_for('dashboard'))
+
+@app.route('/robots.txt')
+def robots_txt():
+    return send_from_directory(app.static_folder, 'robots.txt')
 
 @app.errorhandler(500)
 def internal_server_error(error):
