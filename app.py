@@ -7261,9 +7261,13 @@ def sitemap():
 def news():
     return render_template('news.html')
 
-@app.route('/news/2026-06-10-press-release')
+@app.route('/news/2026-07-01-press-release')
 def press_release():
     return render_template('press_release.html')
+
+@app.route('/news/2026-07-01-new-featured-businesses')
+def press_release():
+    return render_template('new_featured_businesses.html')
 
 @app.errorhandler(500)
 def internal_server_error(error):
