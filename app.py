@@ -7266,7 +7266,7 @@ def press_release():
     return render_template('press_release.html')
 
 @app.route('/news/2026-07-01-new-featured-businesses')
-def press_release():
+def new_featured_businesses():
     return render_template('new_featured_businesses.html')
 
 @app.errorhandler(500)
