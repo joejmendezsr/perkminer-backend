@@ -639,7 +639,7 @@ def build_invite_email(inviter_name, join_url, video_url):
             <p style="margin:0 0 28px;"><b>Business Owners:</b>  YOU GET ZERO WASTED ADVERTISING DOLLARS!  <font color="#FF0000"></br>No Sale or Closed Deal = Zero Fees</font></br>(900% or higher Marketing ROI).</p>
             <p style="margin:0 0 28px;">We connect <b>One Member</b> to <b>One Business</b> at a time.  <b><u>Members</u></b> won't get spammed (emails, calls or door-to-door sales).  <b><u>Businesses</u><b> don't have to compete with other businesses for a sale or closed deal.</p>
             <p style="margin:0 0 28px;">MEMBER SELECTS A BUSINESS -> BUSINESS AND MEMBER CONNECT</br></br>MEMBER OR BUSINESS CAN END SESSION OR FINALIZE THE TRANSACTION.</p>
-            <p style="margin:0 0 28px;"><b>Both Members and Business Owners earn Cash Back and Commissions</b> (Paid by Perk Miner - from up to 87.5% of the ad revenue paid by our advertisers).</p>
+            <p style="margin:0 0 28px;"><b>Both Members and Business Owners earn Cash Back and Commissions</b> (Paid by Perk Miner - from up to 84% of the ad revenue paid by our advertisers).</p>
         </td>
     </tr>
 
@@ -777,7 +777,7 @@ def staff_password_reset_required(f):
 def split_mutual_commission(total_sale, n_referred):
     if n_referred < 1:
         return [], 0.0
-    pool = min(total_sale * 0.0025, 6.25)
+    pool = min(total_sale * 0.002, 5.00)
     per_biz = round(pool / n_referred, 2)
     payouts = [per_biz for _ in range(n_referred)]
     leftover = round(pool - sum(payouts), 2)
@@ -807,12 +807,12 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     u5 = User.query.filter_by(id=u4.sponsor_id).first() if u4 and u4.sponsor_id else None
     tier5_user_referral_id = u5.referral_code if u5 else "REFjoejmendez"
 
-    tier2_commission_raw = amount * 0.0025
-    tier2_commission = round(min(tier2_commission_raw, 6.25), 2)
-    tier3_commission_raw = amount * 0.0025
-    tier3_commission = round(min(tier3_commission_raw, 6.25), 2)
-    tier4_commission_raw = amount * 0.0025
-    tier4_commission = round(min(tier4_commission_raw, 6.25), 2)
+    tier2_commission_raw = amount * 0.002
+    tier2_commission = round(min(tier2_commission_raw, 5.00), 2)
+    tier3_commission_raw = amount * 0.002
+    tier3_commission = round(min(tier3_commission_raw, 5.00), 2)
+    tier4_commission_raw = amount * 0.002
+    tier4_commission = round(min(tier4_commission_raw, 5.00), 2)
     tier5_commission_raw = amount * 0.02
     tier5_commission = round(min(tier5_commission_raw, 50), 2)
 
@@ -842,13 +842,13 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
             tier1_business_user_commission = round(min(amount * 0.01, 25), 2)
         elif downline_tier == 2:
             tier2_business_user_referral_id = root_user.referral_code
-            tier2_business_user_commission = round(min(amount * 0.0025, 6.25), 2)
+            tier2_business_user_commission = round(min(amount * 0.002, 5.00), 2)
         elif downline_tier == 3:
             tier3_business_user_referral_id = root_user.referral_code
-            tier3_business_user_commission = round(min(amount * 0.0025, 6.25), 2)
+            tier3_business_user_commission = round(min(amount * 0.002, 5.00), 2)
         elif downline_tier == 4:
             tier4_business_user_referral_id = root_user.referral_code
-            tier4_business_user_commission = round(min(amount * 0.0025, 6.25), 2)
+            tier4_business_user_commission = round(min(amount * 0.002, 5.00), 2)
         elif downline_tier == 5:
             tier5_business_user_referral_id = root_user.referral_code
             tier5_business_user_commission = round(min(amount * 0.01, 25), 2)
@@ -884,13 +884,13 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     business_referral_id = business.referral_code or "BIZPerkMiner"
     b2 = Business.query.filter_by(id=business.sponsor_id).first()
     tier2_business_referral_id = b2.referral_code if b2 else ""
-    tier2_commission_biz = round(min(amount * 0.0025, 6.25), 2)
+    tier2_commission_biz = round(min(amount * 0.002, 5.00), 2)
     b3 = Business.query.filter_by(id=b2.sponsor_id).first() if b2 and b2.sponsor_id else None
     tier3_business_referral_id = b3.referral_code if b3 else ""
-    tier3_commission_biz = round(min(amount * 0.0025, 6.25), 2)
+    tier3_commission_biz = round(min(amount * 0.002, 5.00), 2)
     b4 = Business.query.filter_by(id=b3.sponsor_id).first() if b3 and b3.sponsor_id else None
     tier4_business_referral_id = b4.referral_code if b4 else ""
-    tier4_commission_biz = round(min(amount * 0.0025, 6.25), 2)
+    tier4_commission_biz = round(min(amount * 0.002, 5.00), 2)
     b5 = Business.query.filter_by(id=b4.sponsor_id).first() if b4 and b4.sponsor_id else None
     tier5_business_referral_id = b5.referral_code if b5 else "BIZPerkMiner"
     tier5_commission_biz = round(min(amount * 0.01, 25), 2)
@@ -1013,9 +1013,9 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
 
     ad_fee_dec = Decimal(str(ad_fee))
     t1_payout = min(ad_fee_dec * Decimal("0.10"), Decimal("25.00"))
-    t2_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
-    t3_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
-    t4_payout = min(ad_fee_dec * Decimal("0.025"), Decimal("6.25"))
+    t2_payout = min(ad_fee_dec * Decimal("0.02"), Decimal("5.00"))
+    t3_payout = min(ad_fee_dec * Decimal("0.02"), Decimal("5.00"))
+    t4_payout = min(ad_fee_dec * Decimal("0.02"), Decimal("5.00"))
     t5_payout = min(ad_fee_dec * Decimal("0.10"), Decimal("25.00"))
 
     business_payouts = Decimal("0")
@@ -1029,7 +1029,7 @@ def finalize_interaction(interaction, business, amount, staff_id=None, source=No
     mutual_sponsoree_payout = Decimal("0")
     num_sponsorees = len(referred_businesses)
     if num_sponsorees > 0:
-        split_pool = min(amount * Decimal("0.0025"), Decimal("6.25"))
+        split_pool = min(amount * Decimal("0.002"), Decimal("5.00"))
         mutual_sponsoree_payout = split_pool
     business_payouts += mutual_sponsoree_payout
 
@@ -1106,9 +1106,9 @@ def issue_store_sale_rewards(business, amount, buyer_email=None):
     """
     # Example: TIER SETUP (adjust if you change reward rates/caps)
     user_cash_back = round(min(amount * 0.02, 50), 2)
-    tier2_commission = round(min(amount * 0.0025, 6.25), 2)
-    tier3_commission = round(min(amount * 0.0025, 6.25), 2)
-    tier4_commission = round(min(amount * 0.0025, 6.25), 2)
+    tier2_commission = round(min(amount * 0.002, 5.00), 2)
+    tier3_commission = round(min(amount * 0.002, 5.00), 2)
+    tier4_commission = round(min(amount * 0.002, 5.00), 2)
     tier5_commission = round(min(amount * 0.02, 50), 2)
 
     # User sponsor/referrer lookups (adjust how you find users per your referral chain)
