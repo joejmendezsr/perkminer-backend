@@ -7019,6 +7019,22 @@ def about():
 def privacy():
     return render_template("privacy.html")
 
+@app.route("/news")
+def news():
+    return render_template("news.html")
+
+@app.route("/FAQ")
+def FAQ():
+    return render_template("FAQ.html")
+
+@app.route("/press_release")
+def press_release():
+    return render_template("press_release.html")
+
+@app.route("/new_featured_businesses")
+def new_featured_businesses():
+    return render_template("new_featured_businesses.html")
+
 @app.route('/onboard/stripe')
 @login_required
 def onboard_stripe():
