@@ -44,7 +44,6 @@ import cloudinary.uploader
 import qrcode
 import base64
 import secrets
-from flask import send_from_directory
 
 # --- Cart Logic ---
 def get_cart():
@@ -639,7 +638,7 @@ def build_invite_email(inviter_name, join_url, video_url):
             <p style="margin:0 0 28px;"><b>Business Owners:</b>  YOU GET ZERO WASTED ADVERTISING DOLLARS!  <font color="#FF0000"></br>No Sale or Closed Deal = Zero Fees</font></br>(900% or higher Marketing ROI).</p>
             <p style="margin:0 0 28px;">We connect <b>One Member</b> to <b>One Business</b> at a time.  <b><u>Members</u></b> won't get spammed (emails, calls or door-to-door sales).  <b><u>Businesses</u><b> don't have to compete with other businesses for a sale or closed deal.</p>
             <p style="margin:0 0 28px;">MEMBER SELECTS A BUSINESS -> BUSINESS AND MEMBER CONNECT</br></br>MEMBER OR BUSINESS CAN END SESSION OR FINALIZE THE TRANSACTION.</p>
-            <p style="margin:0 0 28px;"><b>Both Members and Business Owners earn Cash Back and Commissions</b> (Paid by Perk Miner - from up to 84% of the ad revenue paid by our advertisers).</p>
+            <p style="margin:0 0 28px;"><b>Both Members and Business Owners earn Cash Back and Commissions</b> (Paid by Perk Miner - from up to 87.5% of the ad revenue paid by our advertisers).</p>
         </td>
     </tr>
 
@@ -1246,8 +1245,7 @@ class Business(db.Model):
     has_ecommerce_store = db.Column(db.Boolean, default=False)
     listing_type = db.Column(db.String(50))
     category = db.Column(db.String(50), nullable=False, default="Other")
-    finalization = db.Column(db.String(50), default="Instant")
-    perks = db.Column(db.String(150))
+    finalization = db.Column(db.String(50), default="All-Sales-Final")
     business_email = db.Column(db.String(200), unique=True, nullable=False)
     website_approved = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(60), nullable=False)
@@ -1278,8 +1276,7 @@ class Business(db.Model):
     draft_business_name = db.Column(db.String(100))
     draft_listing_type = db.Column(db.String(50))
     draft_category = db.Column(db.String(50), default="Other")
-    draft_finalization = db.Column(db.String(50), default="Instant")
-    draft_perks = db.Column(db.String(150))
+    draft_finalization = db.Column(db.String(50), default="All Sales Final")
     draft_profile_photo = db.Column(db.String(200))
     draft_phone_number = db.Column(db.String(30))
     draft_address = db.Column(db.String(255))
@@ -4815,7 +4812,7 @@ def business_dashboard():
         flash("Funds added to your account!", "success")
 
     editable_fields = [
-        "business_name", "listing_type", "category", "finalization", "perks", "phone_number", "address", "latitude", "longitude",
+        "business_name", "listing_type", "category", "finalization", "phone_number", "address", "latitude", "longitude",
         "website_url", "about_us", "hours_of_operation", "search_keywords",
         "service_1", "service_2", "service_3", "service_4", "service_5",
         "service_6", "service_7", "service_8", "service_9", "service_10"
@@ -7250,30 +7247,6 @@ def withdraw_investor():
     db.session.commit()
     flash(f"Silent investor withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
     return redirect(url_for('dashboard'))
-
-@app.route('/robots.txt')
-def robots_txt():
-    return send_from_directory(app.static_folder, 'robots.txt')
-
-@app.route('/sitemap.xml')
-def sitemap():
-    return send_from_directory(app.static_folder, 'sitemap.xml')
-
-@app.route('/faq')
-def faq():
-    return render_template('faq.html')
-
-@app.route('/news')
-def news():
-    return render_template('news.html')
-
-@app.route('/news/2026-07-01-press-release')
-def press_release():
-    return render_template('press_release.html')
-
-@app.route('/news/2026-07-01-new-featured-businesses')
-def new_featured_businesses():
-    return render_template('new_featured_businesses.html')
 
 @app.errorhandler(500)
 def internal_server_error(error):
