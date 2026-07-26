@@ -7023,15 +7023,15 @@ def privacy():
 def news():
     return render_template("news.html")
 
-@app.route("/FAQ")
-def FAQ():
-    return render_template("FAQ.html")
+@app.route("/faq")
+def faq():
+    return render_template("faq.html")
 
-@app.route("/press_release")
+@app.route("/2026-07-01-press-release")
 def press_release():
     return render_template("press_release.html")
 
-@app.route("/new_featured_businesses")
+@app.route("/2026-07-01-featured-businesses")
 def new_featured_businesses():
     return render_template("new_featured_businesses.html")
 
