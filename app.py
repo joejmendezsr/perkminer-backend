@@ -7028,11 +7028,11 @@ def faq():
     return render_template("faq.html")
 
 @app.route("/2026-07-01-press-release")
-def press_release():
-    return render_template("2026_07_01_press_release.html")
+def 2026_07_01_press_release():
+    return render_template("press_release.html")
 
 @app.route("/2026-07-01-featured-businesses")
-def new_featured_businesses():
+def 2026_07_01_new_featured_businesses():
     return render_template("2026_07_01_new_featured_businesses.html")
 
 @app.route('/onboard/stripe')
