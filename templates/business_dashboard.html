@@ -488,6 +488,9 @@
         <select class="form-select" name="finalization" id="business_finalization" required>
           <option value="">Select finalization...</option>
           <option value="All-Sales-Final" {% if form_data.finalization == 'All-Sales-Final' %}selected{% endif %}>All Sales Final</option>
+          <option value="No-Refund-Re-Done" {% if form_data.finalization == 'No-Refund-Re-Done' %}selected{% endif %}>No Refund, but Re-Done</option>
+          <option value="Store-Credit-Only" {% if form_data.finalization == 'Store-Credit-Only' %}selected{% endif %}>Store Credit Only</option>
+          <option value="Exchange-Only" {% if form_data.finalization == 'Exchange-Only' %}selected{% endif %}>Exchange Only</option>
           <option value="Exchange-Store-Credit" {% if form_data.finalization == 'Exchange-Store-Credit' %}selected{% endif %}>Exchange or Store Credit</option>
           <option value="Returns-Accepted" {% if form_data.finalization == 'Returns-Accepted' %}selected{% endif %}>Returns Accepted</option>
         </select>
