@@ -1247,6 +1247,7 @@ class Business(db.Model):
     listing_type = db.Column(db.String(50))
     category = db.Column(db.String(50), nullable=False, default="Other")
     finalization = db.Column(db.String(50), default="Instant")
+    perks = db.Column(db.String(150))
     business_email = db.Column(db.String(200), unique=True, nullable=False)
     website_approved = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(60), nullable=False)
@@ -1278,6 +1279,7 @@ class Business(db.Model):
     draft_listing_type = db.Column(db.String(50))
     draft_category = db.Column(db.String(50), default="Other")
     draft_finalization = db.Column(db.String(50), default="Instant")
+    draft_perks = db.Column(db.String(150))
     draft_profile_photo = db.Column(db.String(200))
     draft_phone_number = db.Column(db.String(30))
     draft_address = db.Column(db.String(255))
@@ -4813,7 +4815,7 @@ def business_dashboard():
         flash("Funds added to your account!", "success")
 
     editable_fields = [
-        "business_name", "listing_type", "category", "finalization", "phone_number", "address", "latitude", "longitude",
+        "business_name", "listing_type", "category", "finalization", "perks", "phone_number", "address", "latitude", "longitude",
         "website_url", "about_us", "hours_of_operation", "search_keywords",
         "service_1", "service_2", "service_3", "service_4", "service_5",
         "service_6", "service_7", "service_8", "service_9", "service_10"

@@ -486,15 +486,18 @@
       <div class="col-12 mb-3">
         <label class="form-label">Finalization</label>
         <select class="form-select" name="finalization" id="business_finalization" required>
-          <option value="">Select finalization...</option>
-          <option value="Instant" {% if form_data.finalization == 'Instant' %}selected{% endif %}>Instant</option>
-          <option value="Delayed-3-Days" {% if form_data.finalization == 'Delayed-3-Days' %}selected{% endif %}>Delayed 3 Days</option>
-          <option value="Delayed-7-Days" {% if form_data.finalization == 'Delayed-7-Days' %}selected{% endif %}>Delayed 7 Days</option>
-          <option value="Delayed-10-Days" {% if form_data.finalization == 'Delayed-10-Days' %}selected{% endif %}>Delayed 10 Days</option>
-          <option value="Delayed-14-Days" {% if form_data.finalization == 'Delayed-14-Days' %}selected{% endif %}>Delayed 14 Days</option>
-          <option value="Delayed-21-Days" {% if form_data.finalization == 'Delayed-21-Days' %}selected{% endif %}>Delayed 21 Days</option>
-          <option value="Delayed-30-Days" {% if form_data.finalization == 'Delayed-30-Days' %}selected{% endif %}>Delayed 30 Days</option>
+          <option value="">Select return...</option>
+          <option value="All Sales Final" {% if form_data.finalization == 'All-Sales-Final' %}selected{% endif %}>All Sales Final</option>
+          <option value="Exchange-Allowed" {% if form_data.finalization == 'Exchange-Allowed' %}selected{% endif %}>Exchange Allowed</option>
+          <option value="In-Store-Credit" {% if form_data.finalization == 'In-Store-Credit' %}selected{% endif %}>In Store Credit</option>
+          <option value="Exchange-Credit" {% if form_data.finalization == 'Exchange-Credit' %}selected{% endif %}>Exchange or Credit</option>
+          <option value="Refunds-Allowed" {% if form_data.finalization == 'Refunds-Allowed' %}selected{% endif %}>Refunds Allowed</option>
         </select>
+      </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">Perks You Offer</label>
+        <textarea class="form-control" id="perks" name="perks" rows="3" maxlength="150" placeholder="You must offer one perk - Free drink, 10% off, etc. (max 150 characters)">{{ form_data.perks or '' }}</textarea>
+        <div class="form-text">Recommended: up to 150 characters. Max: 150.</div>
       </div>
       <!-- Keywords -->
       <div class="col-12 mt-3">
