@@ -444,6 +444,11 @@
         <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
       </div>
       <div class="col-12 mb-3">
+        <label class="form-label">Perks Offered <span class="text-danger">*</span></label>
+        <textarea class="form-control" id="perks" name="perks" rows="2" maxlength="500" placeholder="List your business perks here">{{ form_data.perks or '' }}</textarea>
+        <div class="form-text">At least one perk required. Separate with commas or new lines.</div>
+      </div>
+      <div class="col-12 mb-3">
         <label class="form-label">Listing Type <span class="text-danger">*</span></label>
         <select class="form-select" name="listing_type" required>
           <option value="">Select listing type...</option>
@@ -831,6 +836,7 @@ window.addEventListener('DOMContentLoaded', function() {
     let address = document.getElementById('address-autocomplete')?.value || {{ business.address | tojson }};
     let category = document.getElementById('business_category')?.value || {{ business.category | tojson }};
     let finalization = document.getElementById('business_finalization')?.value || {{ business.finalization | tojson }};
+    let perks = document.getElementById('perks')?.value || {{ business.perks | tojson }};
     let phone = document.getElementById('us-phone')?.value || {{ business.phone_number | tojson }};
     let website = document.getElementById('website_url')?.value || {{ business.website_url | tojson }};
     let about = document.getElementById('about_us')?.value || {{ business.about_us | tojson }};
@@ -859,6 +865,9 @@ window.addEventListener('DOMContentLoaded', function() {
           <div>
             <b>Services:</b> ${services.length ? services.join(', ') : 'N/A'}
           </div>
+          <div>
+            <b>Perks:</b> ${perks ? perks.replace(/\n/g, "<br>") : "N/A"}
+          </div>
         </div>
       </div>
     `;
@@ -882,6 +891,9 @@ let largeListing = `
   </div>
   <div class="about-block">
     <b>About Us:</b><br>${about || "&mdash;"}
+  </div>
+  <div>
+    <b>Perks:</b> ${perks ? perks.replace(/\n/g, "<br>") : "N/A"}
   </div>
   <div class="service-list-label">Products or Services Offered:</div>
   <ul class="service-list">
