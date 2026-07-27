@@ -4838,8 +4838,10 @@ def business_dashboard():
         if biz.status == "approved":
             for field in editable_fields:
                 val = request.form.get(field)
-                # Fix for latitude/longitude fields:
-                if field in ["latitude", "longitude"]:
+                if field == "perks":
+                    setattr(biz, "perks", val)  # always update 'perks' live
+                    updated = True
+                elif field in ["latitude", "longitude"]:
                     setattr(biz, f"draft_{field}", safe_float(val))
                     updated = True
                 else:
@@ -4854,7 +4856,10 @@ def business_dashboard():
         else:
             for field in editable_fields:
                 val = request.form.get(field)
-                if field in ["latitude", "longitude"]:
+                if field == "perks":
+                    setattr(biz, "perks", val)
+                    updated = True
+                elif field in ["latitude", "longitude"]:
                     setattr(biz, field, safe_float(val))
                     updated = True
                 else:
