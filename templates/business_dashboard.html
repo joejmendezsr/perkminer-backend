@@ -184,6 +184,15 @@
           font-size: .99em;
           color: #374759;
         }
+        .perks-block {
+          background: #f4f5fb;
+          border-radius: 10px;
+          padding: .79rem 1.01rem;
+          margin-bottom: 1.1rem;
+          min-height: 38px;
+          font-size: .99em;
+          color: #374759;
+        }
         .service-list-label {
           font-weight:700;
           color: #2a5859;
@@ -209,9 +218,9 @@
         if (amount > 2500) amount = 2500;
         document.getElementById('network_amount').value = amount;
         let t1 = 0.01 * amount;
-        let t2 = 0.0025 * amount * numPeople;
-        let t3 = 0.0025 * amount * Math.pow(numPeople, 2);
-        let t4 = 0.0025 * amount * Math.pow(numPeople, 3);
+        let t2 = 0.002 * amount * numPeople;
+        let t3 = 0.002 * amount * Math.pow(numPeople, 2);
+        let t4 = 0.002 * amount * Math.pow(numPeople, 3);
         let t5 = 0.01 * amount * Math.pow(numPeople, 4);
         let total = t1 + t2 + t3 + t4 + t5;
         document.getElementById('network_t1').innerText = t1.toFixed(2);
@@ -233,8 +242,8 @@
         if (tier === "1") {
             reward = amount * 0.01; desc = "As the business, from a paid invoice you generate";
         } else if (["2","3","4"].includes(tier)) {
-            reward = amount * 0.0025;
-            cap = 6.25;
+            reward = amount * 0.002;
+            cap = 5.00;
             if (reward > cap) reward = cap;
             desc = `If your Tier ${tier} referral generates a paid invoice`;
         } else if (tier === "5") {
@@ -442,6 +451,11 @@
         <label class="form-label">About Us</label>
         <textarea class="form-control" id="about_us" name="about_us" rows="3" maxlength="1000" placeholder="Write about your business (max 1000 characters)">{{ form_data.about_us or '' }}</textarea>
         <div class="form-text">Recommended: up to 500 characters. Max: 1000.</div>
+      </div>
+      <div class="col-12 mb-3">
+        <label class="form-label">Perks Offered</label>
+        <textarea class="form-control" id="perks" name="perks" rows="3" maxlength="150" placeholder="Offer at least 1 perk for our members (max 150 characters)">{{ form_data.perks or '' }}</textarea>
+        <div class="form-text">Recommended: up to 100 characters. Max: 150.</div>
       </div>
       <div class="col-12 mb-3">
         <label class="form-label">Listing Type <span class="text-danger">*</span></label>
@@ -777,6 +791,7 @@
                   business.draft_business_name or
                   business.draft_category or
                   business.draft_finalization or
+                  business.draft_perks or
                   business.draft_profile_photo or
                   business.draft_phone_number or
                   business.draft_address or
@@ -831,6 +846,7 @@ window.addEventListener('DOMContentLoaded', function() {
     let address = document.getElementById('address-autocomplete')?.value || {{ business.address | tojson }};
     let category = document.getElementById('business_category')?.value || {{ business.category | tojson }};
     let finalization = document.getElementById('business_finalization')?.value || {{ business.finalization | tojson }};
+    let perks = document.getElementById('perks')?.value || {{ business.perks | tojson }};
     let phone = document.getElementById('us-phone')?.value || {{ business.phone_number | tojson }};
     let website = document.getElementById('website_url')?.value || {{ business.website_url | tojson }};
     let about = document.getElementById('about_us')?.value || {{ business.about_us | tojson }};
@@ -859,6 +875,7 @@ window.addEventListener('DOMContentLoaded', function() {
           <div>
             <b>Services:</b> ${services.length ? services.join(', ') : 'N/A'}
           </div>
+          <div><b>Perks Offered:</b> ${perks}</div>
         </div>
       </div>
     `;
@@ -882,6 +899,9 @@ let largeListing = `
   </div>
   <div class="about-block">
     <b>About Us:</b><br>${about || "&mdash;"}
+  </div>
+  <div class="perks-block">
+    <b>Perks Offered:</b><br>${perks || "&mdash;"}
   </div>
   <div class="service-list-label">Products or Services Offered:</div>
   <ul class="service-list">
