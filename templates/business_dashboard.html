@@ -184,6 +184,15 @@
           font-size: .99em;
           color: #374759;
         }
+        .perks-block {
+          background: #feebe7;
+          border-radius: 10px;
+          padding: .79rem 1.01rem;
+          margin-bottom: 1.1rem;
+          min-height: 38px;
+          font-size: .99em;
+          color: #374759;
+        }
         .service-list-label {
           font-weight:700;
           color: #2a5859;
@@ -892,8 +901,8 @@ let largeListing = `
   <div class="about-block">
     <b>About Us:</b><br>${about || "&mdash;"}
   </div>
-  <div>
-    <b>Perks:</b> ${perks ? perks.replace(/\n/g, "<br>") : "N/A"}
+  <div class="perks-block">
+    <b>Perks Offered:</b> ${perks ? perks.replace(/\n/g, "<br>") : "N/A"}
   </div>
   <div class="service-list-label">Products or Services Offered:</div>
   <ul class="service-list">
