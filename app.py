@@ -23,6 +23,7 @@ from flask import flash, redirect, url_for
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask import render_template_string
+from sqlalchemy.orm import joinedload
 import os
 import stripe
 import logging
@@ -1353,6 +1354,7 @@ class UserTransaction(db.Model):
     tier4_business_user_commission = db.Column(db.Float)
     tier5_business_user_referral_id = db.Column(db.String(32))
     tier5_business_user_commission = db.Column(db.Float)
+    interaction = db.relationship("Interaction", backref="user_transactions", lazy=True)
 
 class BusinessTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -3197,6 +3199,12 @@ def invite():
     )
     return redirect(url_for('dashboard'))
 
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from sqlalchemy import distinct
+from sqlalchemy.orm import joinedload
+from decimal import Decimal
+
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
@@ -3206,7 +3214,7 @@ def dashboard():
     invite_form = InviteForm()
     user = current_user
 
-    # --- Updated Earnings Calculation (ALWAYS up-to-date!) ---
+    # --- Earnings Calculation ---
     user.grand_total_earnings = calculate_user_grand_total(user)
     user.earnings_balance = user.grand_total_earnings - (user.withdrawn_total or Decimal(0))
     db.session.commit()
@@ -3226,6 +3234,7 @@ def dashboard():
             flash("Profile updated!")
         return redirect(url_for('dashboard'))
 
+    # Calculator setup (rewards, tiers, etc)
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
@@ -3258,6 +3267,7 @@ def dashboard():
         else:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
             rewards_table += f"<div class='alert alert-success'>You earn <strong>${reward:.2f}</strong> as cashback.</div>"
+
     sponsor = User.query.get(current_user.sponsor_id) if current_user.sponsor_id else None
     level2 = User.query.filter_by(sponsor_id=current_user.id).all()
     level3, level4, level5 = [], [], []
@@ -3274,19 +3284,25 @@ def dashboard():
     # --- Business network tiers ---
     user_id = current_user.id
     biz_level1 = Business.query.filter_by(user_sponsor_id=user_id).all()
-
     def biz_ids(bizlist): return [b.id for b in bizlist]
-
     biz_level2 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level1))).all() if biz_level1 else []
     biz_level3 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level2))).all() if biz_level2 else []
     biz_level4 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level3))).all() if biz_level3 else []
     biz_level5 = Business.query.filter(Business.sponsor_id.in_(biz_ids(biz_level4))).all() if biz_level4 else []
-
     has_invited_business = len(biz_level1) > 0
 
     # Query for active sessions for this user
     active_sessions = Interaction.query.filter_by(user_id=current_user.id, status='active').all()
     has_active_sessions = len(active_sessions) > 0
+
+    # --- Businesses user has interacted with (distinct) ---
+    businesses = (
+        db.session.query(Business)
+        .join(Interaction, Interaction.business_id == Business.id)
+        .filter(Interaction.user_id == current_user.id)
+        .distinct()
+        .all()
+    )
 
     return render_template(
         "dashboard.html",
@@ -3302,7 +3318,8 @@ def dashboard():
         has_invited_business=has_invited_business,
         user_name=current_user.name,
         profile_img_url=current_user.profile_photo,
-        has_active_sessions=has_active_sessions  # for template logic
+        has_active_sessions=has_active_sessions,  # for template logic
+        businesses=businesses,  # add this line!
     )
 
 @app.route("/logout")
@@ -3350,8 +3367,15 @@ def show_user_receipt(interaction_id):
 @app.route("/user/receipts")
 @login_required
 def user_receipts():
-    transactions = UserTransaction.query.filter_by(user_referral_id=current_user.referral_code).order_by(UserTransaction.date_time.desc()).all()
-    # Optionally join/query interaction/business for each transaction
+    transactions = (
+        UserTransaction.query
+        .filter_by(user_referral_id=current_user.referral_code)
+        .order_by(UserTransaction.date_time.desc())
+        .options(
+            joinedload(UserTransaction.interaction).joinedload(Interaction.business)
+        )
+        .all()
+    )
     return render_template("user_receipts.html", transactions=transactions)
 
 @app.route("/export_user_receipts_csv")
