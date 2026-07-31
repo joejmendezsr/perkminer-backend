@@ -5803,32 +5803,19 @@ def admin_delete_business(business_id):
     flash(f"Business {biz.business_name} deleted.")
     return redirect(url_for("admin_dashboard"))
 
-from flask import render_template, request, redirect, url_for, session
-from flask_login import current_user
-# Also import Favorite and Business models as needed
+from flask_login import login_required
 
 @app.route("/listing/<int:biz_id>")
 def view_listing(biz_id):
-    # block if NOT user AND NOT business
+    # BLOCK if NOT user AND NOT business
     if not (current_user.is_authenticated or session.get("business_id")):
-        return redirect(url_for("login"))  # or redirect as appropriate
-
+        return redirect(url_for("login"))  # or use your custom login page
+    
+    # Render large listing as normal
     distance_mi = request.args.get("distance_mi")
     biz = Business.query.get_or_404(biz_id)
     biz.distance_mi = float(distance_mi) if distance_mi else None
-
-    # Determine if the current user has favorited this business
-    is_favorite = False
-    if current_user.is_authenticated:
-        fav = Favorite.query.filter_by(user_id=current_user.id, business_id=biz.id).first()
-        is_favorite = fav is not None
-
-    return render_template(
-        "large_listing.html",
-        business=biz,
-        is_favorite=is_favorite,
-        # include other context as needed
-    )
+    return render_template("large_listing.html", business=biz)
     
 @app.route("/finance/combined-detailed-report", methods=["GET"])
 @role_required("finance")
