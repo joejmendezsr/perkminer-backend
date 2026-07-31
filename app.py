@@ -3203,7 +3203,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from decimal import Decimal
 from datetime import datetime, timedelta
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
@@ -3238,7 +3238,8 @@ def dashboard():
     if request.method == "GET":
         form.downline_level.data = '1'
         form.invoice_amount.data = 0
-    rewards_table = ""; reward = None
+    rewards_table = ""
+    reward = None
     invoice_amount = float(form.invoice_amount.data or 0)
     downline_level = int(form.downline_level.data or 1)
     cap = None
@@ -3252,14 +3253,22 @@ def dashboard():
         invoice_amount = float(form.invoice_amount.data)
         downline_level = int(form.downline_level.data)
         if downline_level == 1:
-            reward = invoice_amount * 0.02; rewards_desc = "When you make a purchase, you earn"; cap = None
+            reward = invoice_amount * 0.02
+            rewards_desc = "When you make a purchase, you earn"
+            cap = None
         elif downline_level in [2, 3, 4]:
-            rate = 0.0025; cap = 6.25; reward = min(invoice_amount * rate, cap)
+            rate = 0.0025
+            cap = 6.25
+            reward = min(invoice_amount * rate, cap)
             rewards_desc = f"If a person in your Tier {downline_level} level makes a purchase"
         elif downline_level == 5:
-            rate = 0.02; cap = 50; reward = min(invoice_amount * rate, cap)
+            rate = 0.02
+            cap = 50
+            reward = min(invoice_amount * rate, cap)
             rewards_desc = "If a person in your Tier 5 level makes a purchase"
-        else: reward = 0; rewards_desc = ""
+        else:
+            reward = 0
+            rewards_desc = ""
     if invoice_amount > 0 and reward is not None:
         if cap:
             rewards_table += f"<h5 class='mt-4 mb-2'>{rewards_desc} of ${invoice_amount:,.2f}:</h5>"
@@ -3295,20 +3304,26 @@ def dashboard():
     active_sessions = Interaction.query.filter_by(user_id=current_user.id, status='active').all()
     has_active_sessions = len(active_sessions) > 0
 
-    # --- Businesses user has interacted with (distinct, recent, limited) ---
-    days = 60  # Show businesses from the last 60 days
+    # --- Businesses user has interacted with (unique, recent, limit 5, Postgres-safe) ---
+    days = 60
     since = datetime.utcnow() - timedelta(days=days)
-
-    businesses = (
-        db.session.query(Business)
-        .join(Interaction, Interaction.business_id == Business.id)
+    latest_per_business = (
+        db.session.query(
+            Interaction.business_id,
+            func.max(Interaction.created_at).label("last_dt")
+        )
         .filter(
             Interaction.user_id == current_user.id,
             Interaction.created_at >= since
         )
-        .order_by(desc(Interaction.created_at))
-        .distinct(Business.id)
+        .group_by(Interaction.business_id)
+        .order_by(func.max(Interaction.created_at).desc())
         .limit(5)
+        .subquery()
+    )
+    businesses = (
+        db.session.query(Business)
+        .join(latest_per_business, latest_per_business.c.business_id == Business.id)
         .all()
     )
 
