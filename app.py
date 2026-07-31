@@ -3201,9 +3201,9 @@ def invite():
 
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from sqlalchemy import distinct
-from sqlalchemy.orm import joinedload
 from decimal import Decimal
+from datetime import datetime, timedelta
+from sqlalchemy import desc
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
@@ -3295,12 +3295,20 @@ def dashboard():
     active_sessions = Interaction.query.filter_by(user_id=current_user.id, status='active').all()
     has_active_sessions = len(active_sessions) > 0
 
-    # --- Businesses user has interacted with (distinct) ---
+    # --- Businesses user has interacted with (distinct, recent, limited) ---
+    days = 60  # Show businesses from the last 60 days
+    since = datetime.utcnow() - timedelta(days=days)
+
     businesses = (
         db.session.query(Business)
         .join(Interaction, Interaction.business_id == Business.id)
-        .filter(Interaction.user_id == current_user.id)
+        .filter(
+            Interaction.user_id == current_user.id,
+            Interaction.created_at >= since
+        )
+        .order_by(desc(Interaction.created_at))
         .distinct()
+        .limit(5)
         .all()
     )
 
@@ -3318,8 +3326,8 @@ def dashboard():
         has_invited_business=has_invited_business,
         user_name=current_user.name,
         profile_img_url=current_user.profile_photo,
-        has_active_sessions=has_active_sessions,  # for template logic
-        businesses=businesses,  # add this line!
+        has_active_sessions=has_active_sessions,
+        businesses=businesses,
     )
 
 @app.route("/logout")

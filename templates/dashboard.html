@@ -426,7 +426,7 @@
 </div>
 
 <div class="card p-4 mb-4">
-  <h4>Businesses You Interacted With</h4>
+  <h4>Businesses You Interacted With (last 60 days)</h4>
   {% if businesses %}
     <ul>
       {% for biz in businesses %}
@@ -437,11 +437,13 @@
         </li>
       {% endfor %}
     </ul>
+    {% if businesses|length == 5 %}
+      <div class="text-muted" style="font-size: 0.95em;">Only showing 5 most recent. View your receipts for more.</div>
+    {% endif %}
   {% else %}
-    <p>You have not transacted with any businesses yet.</p>
+    <p>You haven’t interacted with any businesses in the last 60 days.</p>
   {% endif %}
 </div>
-
 
 <div class="card p-4 mb-4">
   <h4>Estimate Your Rewards From One Single Purchase</h4>
