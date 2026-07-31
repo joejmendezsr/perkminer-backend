@@ -3307,7 +3307,7 @@ def dashboard():
             Interaction.created_at >= since
         )
         .order_by(desc(Interaction.created_at))
-        .distinct()
+        .distinct(Business.id)
         .limit(5)
         .all()
     )
