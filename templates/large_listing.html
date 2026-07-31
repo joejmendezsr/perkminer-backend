@@ -215,15 +215,22 @@
   &larr; Back to results
 </a>
 
-<form action="{{ url_for('add_favorite', business_id=business.id) }}" method="post" style="display:inline;">
+<form action="{% if is_favorite %}
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  {% if not business in current_user.favorites|map(attribute='business')|list %}
-    <button class="btn btn-outline-primary">Add to Favorites</button>
-  {% else %}
-    <button formaction="{{ url_for('remove_favorite', business_id=business.id) }}" class="btn btn-warning">Remove from Favorites</button>
-  {% endif %}
+    {{ url_for('remove_favorite', business_id=business.id) }}
+{% else %}
+    {{ url_for('add_favorite', business_id=business.id) }}
+{% endif %}"
+      method="post" style="display:inline;">
+    <button type="submit"
+        class="btn {% if is_favorite %}btn-danger{% else %}btn-outline-secondary{% endif %} btn-lg px-4"
+        aria-label="{% if is_favorite %}Remove from Favorites{% else %}Add to Favorites{% endif %}">
+        <i class="bi {% if is_favorite %}bi-heart-fill{% else %}bi-heart{% endif %}" 
+            style="font-size: 1.5em; vertical-align: middle;
+            {% if is_favorite %}color:#ea1d2c{% else %}color:#caaccb{% endif %}"></i>
+        {% if is_favorite %}Favorited{% else %}Add to Favorites{% endif %}
+    </button>
 </form>
-
 
   {% endif %}
   <a href="{{ url_for('start_purchase', biz_id=business.id) }}" class="btn btn-success btn-action btn-set-top">
