@@ -1317,6 +1317,15 @@ class Business(db.Model):
     contact_js = db.Column(db.Text, nullable=True)
     theme_type = db.Column(db.String(50))
 
+class Favorite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref='favorites', lazy=True)
+    business = db.relationship('Business', backref='favorited_by', lazy=True)
+    __table_args__ = (db.UniqueConstraint('user_id', 'business_id', name='_user_business_uc'),)
+
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     interaction_id = db.Column(db.Integer, db.ForeignKey('interaction.id'), nullable=False, unique=True)
@@ -7316,6 +7325,36 @@ def withdraw_investor():
     db.session.commit()
     flash(f"Silent investor withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
     return redirect(url_for('dashboard'))
+
+@app.route("/favorites")
+@login_required
+def favorites():
+    favorites = (
+        Favorite.query.filter_by(user_id=current_user.id)
+        .join(Business).order_by(Favorite.created_at.desc()).all()
+    )
+    return render_template("favorites.html", favorites=favorites)
+
+@app.route("/favorite/<int:business_id>/add", methods=["POST"])
+@login_required
+def add_favorite(business_id):
+    existing = Favorite.query.filter_by(user_id=current_user.id, business_id=business_id).first()
+    if not existing:
+        fav = Favorite(user_id=current_user.id, business_id=business_id)
+        db.session.add(fav)
+        db.session.commit()
+    return redirect(request.referrer or url_for("favorites"))
+
+@app.route("/favorite/<int:business_id>/remove", methods=["POST"])
+@login_required
+def remove_favorite(business_id):
+    fav = Favorite.query.filter_by(user_id=current_user.id, business_id=business_id).first()
+    if fav:
+        db.session.delete(fav)
+        db.session.commit()
+    return redirect(request.referrer or url_for("favorites"))
+
+
 
 @app.errorhandler(500)
 def internal_server_error(error):

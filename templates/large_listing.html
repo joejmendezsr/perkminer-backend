@@ -177,6 +177,16 @@
     </style>
 </head>
 <body>
+
+<form action="{{ url_for('add_favorite', business_id=business.id) }}" method="post" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if not business in current_user.favorites|map(attribute='business')|list %}
+    <button class="btn btn-outline-primary">Add to Favorites</button>
+  {% else %}
+    <button formaction="{{ url_for('remove_favorite', business_id=business.id) }}" class="btn btn-warning">Remove from Favorites</button>
+  {% endif %}
+</form>
+
 <div class="container">
   <div class="main-card">
     <div class="listing-pic-wrap">
