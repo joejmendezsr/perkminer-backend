@@ -3312,6 +3312,7 @@ def dashboard():
     # Query for active sessions for this user
     active_sessions = Interaction.query.filter_by(user_id=current_user.id, status='active').all()
     has_active_sessions = len(active_sessions) > 0
+    active_sessions_count = len(active_sessions)
 
     # --- Businesses user has interacted with (unique, recent, limit 5, Postgres-safe) ---
     days = 60
@@ -3351,6 +3352,7 @@ def dashboard():
         user_name=current_user.name,
         profile_img_url=current_user.profile_photo,
         has_active_sessions=has_active_sessions,
+        active_sessions_count=active_sessions_count,
         businesses=businesses,
     )
 
@@ -5010,6 +5012,7 @@ def business_dashboard():
     # Add active session indicator for dashboard button
     active_biz_sessions = Interaction.query.filter_by(business_id=biz.id, status='active').all()
     has_active_biz_sessions = len(active_biz_sessions) > 0
+    active_biz_sessions_count = len(active_biz_sessions)
 
     # Add this line to fetch payment alerts/awaiting payments
     payment_alerts = Interaction.query.filter_by(
@@ -5035,6 +5038,7 @@ def business_dashboard():
         address=form_data.get("address",""),
         latitude=latitude,
         longitude=longitude,
+        active_biz_sessions_count=active_biz_sessions_count,
         has_active_biz_sessions=has_active_biz_sessions  # pass to template
     )
 

@@ -556,7 +556,11 @@
       {% if has_active_biz_sessions %}
         <div class="mb-2">
           <a href="{{ url_for('biz_user_interactions') }}" class="btn btn-outline-primary w-100">
-            <i class="bi bi-chat-dots me-1"></i>My Active Sessions
+            <i class="bi bi-chat-dots me-1"></i>
+            My Active Sessions
+            {% if active_biz_sessions_count and active_biz_sessions_count > 0 %}
+              <span class="badge bg-danger ms-1">{{ active_biz_sessions_count }}</span>
+            {% endif %}
           </a>
         </div>
       {% endif %}
