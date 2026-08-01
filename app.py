@@ -24,6 +24,7 @@ from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask import render_template_string
 from sqlalchemy.orm import joinedload
+from yourformsfile import StaffForgotPasswordForm  # import your WTForm
 import os
 import stripe
 import logging
@@ -513,6 +514,10 @@ class EmptyForm(FlaskForm):
 class ForgotPasswordForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Send reset link')
+
+class StaffForgotPasswordForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    submit = SubmitField("Send Reset Instructions")
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
@@ -6808,11 +6813,15 @@ def staff_logout():
 
 @app.route("/staff/forgot-password", methods=["GET", "POST"])
 def staff_forgot_password():
-    # TODO: Add your password reset logic here
-    if request.method == "POST":
-        # process form, send reset email, etc.
-        pass
-    return render_template("staff_forgot_password.html")
+    form = StaffForgotPasswordForm()
+    if form.validate_on_submit():
+        # Get the email from the form
+        email = form.email.data.strip().lower()
+        # TODO: Add logic to send reset email if this staff email exists
+        # For now, just show the same flash regardless
+        flash("If the staff email exists, reset instructions have been sent.", "info")
+        return redirect(url_for("staff_login"))
+    return render_template("staff_forgot_password.html", form=form)
 
 @app.route("/staff/session/<int:interaction_id>", methods=["GET", "POST"])
 def staff_active_session(interaction_id):
