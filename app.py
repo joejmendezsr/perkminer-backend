@@ -1481,7 +1481,7 @@ class Invite(db.Model):
 class Staff(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_id = db.Column(db.Integer, db.ForeignKey('business.id'), nullable=False)
-    email = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
     hashed_password = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), default="staff")  # Future roles possible
     is_active = db.Column(db.Boolean, default=True)
@@ -6673,6 +6673,13 @@ def staff_new():
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
         name = form.name.data.strip()
+
+        # --- UNIQUE EMAIL CHECK HERE ---
+        existing_staff = Staff.query.filter_by(email=email).first()
+        if existing_staff:
+            flash("Email address already in use with another business advertiser!", "danger")
+            return render_template("your_staff_form.html", form=form)
+
         temp_password = secrets.token_urlsafe(10)
         hashed_pw = bcrypt.generate_password_hash(temp_password).decode('utf-8')
         staff = Staff(
@@ -6798,6 +6805,14 @@ def staff_logout():
     session.pop('staff_id', None)
     flash("Logged out as staff.")
     return redirect(url_for("business_home"))
+
+@app.route("/staff/forgot-password", methods=["GET", "POST"])
+def staff_forgot_password():
+    # TODO: Add your password reset logic here
+    if request.method == "POST":
+        # process form, send reset email, etc.
+        pass
+    return render_template("staff_forgot_password.html")
 
 @app.route("/staff/session/<int:interaction_id>", methods=["GET", "POST"])
 def staff_active_session(interaction_id):
