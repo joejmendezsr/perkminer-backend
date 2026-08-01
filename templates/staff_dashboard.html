@@ -8,7 +8,11 @@
   <style>
     .dashboard-card { max-width: 660px; margin:32px auto; border-radius:16px; box-shadow:0 4px 16px #e3e9ef; background:#f9fafd;padding:2em 1.4em;}
     .staff-email { color:#2a5859; font-weight:bold; }
-    .session-list li { margin-bottom:13px; }
+    .session-list {
+      max-height: none;
+      min-height: 1px;
+      overflow-y: visible;
+    }
     @media (max-width: 650px) {
       .dashboard-card { margin:12px auto; padding:1em 6px; }
     }
@@ -20,6 +24,10 @@
       <div class="d-flex flex-wrap mb-2 align-items-center">
         <div class="flex-grow-1">
           <h2 class="mb-0" style="font-size:1.5em;">Welcome, <span class="staff-email">{{ staff.email }}</span></h2>
+          <p class="mb-2" style="font-size:1.04em;">
+            You are finalizing transactions and, if applicable, communicating with members through secure messaging on behalf of 
+            <b>{{ staff.business.business_name }}</b> located at <b>{{ staff.business.address }}</b>.
+          </p>
         </div>
         <div>
           <a href="{{ url_for('staff_logout') }}" class="btn btn-outline-danger">
@@ -37,7 +45,7 @@
           <div>
             <b>Session #{{ ia.id }}</b>
             <span class="text-muted d-block" style="font-size:0.95em;">
-              User: {{ ia.user.name or ia.user.email }}
+              Member: {{ ia.user.name or ia.user.email }}
             </span>
           </div>
           <div class="mt-2 mt-md-0 d-flex gap-2 flex-wrap">
