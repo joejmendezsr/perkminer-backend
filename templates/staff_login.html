@@ -35,14 +35,6 @@
                 <div class="text-danger small">{{ form.password.errors[0] }}</div>
               {% endif %}
             </div>
-            <!-- 2FA (One Time Code) -->
-            <div class="mb-3">
-              {{ form.twofa_code.label(class="form-label") }}
-              {{ form.twofa_code(class="form-control", placeholder="Enter 2FA code", required=True) }}
-              {% if form.twofa_code.errors %}
-                <div class="text-danger small">{{ form.twofa_code.errors[0] }}</div>
-              {% endif %}
-            </div>
             {% if form.recaptcha %}
             <div class="mb-3">
               {{ form.recaptcha }}
