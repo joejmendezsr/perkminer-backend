@@ -24,7 +24,6 @@ from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask import render_template_string
 from sqlalchemy.orm import joinedload
-from yourformsfile import StaffForgotPasswordForm  # import your WTForm
 import os
 import stripe
 import logging
