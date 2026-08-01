@@ -1503,6 +1503,7 @@ class StaffRegisterForm(FlaskForm):
 class StaffLoginForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired()])
+    twofa_code = StringField('2FA Code')
     submit = SubmitField("Log In")
 
 class Staff2FAForm(FlaskForm):
