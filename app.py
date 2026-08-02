@@ -7038,6 +7038,16 @@ def staff_create_quote(interaction_id):
         is_finalized=is_finalized  # pass this to hide the quote button in your template
     )
 
+@app.route('/staff/remove/<int:staff_id>', methods=['POST'])
+@business_login_required
+def remove_staff(staff_id):
+    biz_id = session.get("business_id")
+    staff_member = Staff.query.filter_by(id=staff_id, business_id=biz_id).first_or_404()
+    db.session.delete(staff_member)
+    db.session.commit()
+    flash("Staff member removed.", "success")
+    return redirect(url_for("business_dashboard"))
+
 @app.route("/owner/reports/finalized")
 @business_login_required
 def finalized_report():
