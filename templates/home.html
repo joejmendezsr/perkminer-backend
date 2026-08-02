@@ -285,7 +285,7 @@
     .marquee {
       display: flex;
       white-space: nowrap;
-      animation: scroll var(--speed) linear infinite;
+      animation: scroll 15s linear infinite; /* fallback if JS breaks */
     }
 
     .marquee:hover { animation-play-state: paused; cursor: default; }
