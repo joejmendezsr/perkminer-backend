@@ -2,6 +2,7 @@ from flask import (
     Flask, request, redirect, url_for, render_template, flash, session, abort,
     jsonify, send_from_directory, Response, send_file
 )
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message as MailMessage
 from flask_bcrypt import Bcrypt
@@ -24,6 +25,9 @@ from functools import wraps
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask import render_template_string
 from sqlalchemy.orm import joinedload
+from flask import current_app
+from itsdangerous import URLSafeTimedSerializer
+
 import os
 import stripe
 import logging
@@ -6814,13 +6818,33 @@ def staff_logout():
 def staff_forgot_password():
     form = StaffForgotPasswordForm()
     if form.validate_on_submit():
-        # Get the email from the form
         email = form.email.data.strip().lower()
-        # TODO: Add logic to send reset email if this staff email exists
-        # For now, just show the same flash regardless
+        staff = Staff.query.filter_by(email=email).first()
+        if staff:
+            token = generate_reset_token(email, "staff")
+            reset_url = url_for('staff_reset_password', token=token, _external=True)
+            send_reset_email(email, reset_url)
         flash("If the staff email exists, reset instructions have been sent.", "info")
         return redirect(url_for("staff_login"))
     return render_template("staff_forgot_password.html", form=form)
+
+@app.route('/staff/reset_password/<token>', methods=['GET', 'POST'])
+def staff_reset_password(token):
+    email = verify_reset_token(token, "staff")  # "staff" must match your `user_type` in generate_reset_token
+    if not email:
+        flash("Reset link invalid or expired.")
+        return redirect(url_for('staff_login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        staff = Staff.query.filter_by(email=email).first()
+        if staff:
+            staff.hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            staff.password_reset_required = False  # Or True, if you want a forced change
+            db.session.commit()
+            flash("Password has been reset. Please log in.", "success")
+            return redirect(url_for('staff_login'))
+        flash("Account not found.")
+    return render_template('reset_password.html', form=form)
 
 @app.route("/staff/session/<int:interaction_id>", methods=["GET", "POST"])
 def staff_active_session(interaction_id):
