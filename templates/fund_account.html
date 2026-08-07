@@ -101,13 +101,16 @@
             const perSaleFee = Math.min(avg * 0.10, 250);
             const numSales = 25;
             const recommendation = Math.ceil(perSaleFee * numSales * 100) / 100; // round up to cents
+            // For first transaction logic:
+            let lowestAdFee = Math.min(lowest * 0.10, 250);
+
             let msg = `Recommended deposit for <b>25 average sales</b>: <b>$${recommendation.toFixed(2)}</b><br>`;
             if (perSaleFee === 250) {
                 msg += `<span class="text-danger">Because your average sale is high, the ad fee per transaction is capped at $250.<br>
                 Maximum deposit needed for 25 sales is <b>$6,250</b>.</span><br>`;
             }
             if (lowest > 250) {
-                msg += `<span class="text-danger">Since your lowest sale is above $250, you must deposit at least <b>$${lowest.toFixed(2)}</b> for your first transaction.</span><br>`;
+                msg += `<span class="text-danger">Since your lowest sale is above $250, for your first transaction you must deposit at least <b>$${lowestAdFee.toFixed(2)}</b> (10% of $${lowest.toFixed(2)}, capped at $250).</span><br>`;
             } else {
                 msg += 'You only need <b>$25</b> to get started (enough for up to $250 in sales per transaction).';
             }
@@ -115,6 +118,6 @@
             $result.classList.remove("d-none");
         }
     };
-</script>
+    </script>
 </body>
 </html>
