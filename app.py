@@ -7151,6 +7151,10 @@ def news():
 def faq():
     return render_template("faq.html")
 
+@app.route("/discontinue")
+def discontinue():
+    return render_template("discontinue.html")
+
 @app.route("/press-release")
 def press_release():
     return render_template("press_release.html")
@@ -7415,8 +7419,6 @@ def remove_favorite(business_id):
         db.session.delete(fav)
         db.session.commit()
     return redirect(request.referrer or url_for("favorites"))
-
-
 
 @app.errorhandler(500)
 def internal_server_error(error):
