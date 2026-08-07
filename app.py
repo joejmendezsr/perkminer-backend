@@ -7152,8 +7152,19 @@ def faq():
     return render_template("faq.html")
 
 @app.route("/discontinue")
+@business_login_required  # <-- use this if you have it
 def discontinue():
-    return render_template("discontinue.html")
+    # Get the business_id from session
+    biz_id = session.get('business_id')
+    if not biz_id:
+        flash("You must be logged in as a business.")
+        return redirect(url_for("business_login"))
+
+    # Fetch business from the database
+    business = Business.query.get_or_404(biz_id)
+
+    # Render the template with the business context
+    return render_template("discontinue.html", business=business)
 
 @app.route("/press-release")
 def press_release():
@@ -7161,7 +7172,7 @@ def press_release():
 
 @app.route("/new-featured-businesses")
 def new_featured_businesses():
-    return render_template("new_featured_businesses.html")
+    return render_template('your_template.html', business=business)
 
 @app.route('/onboard/stripe')
 @login_required
