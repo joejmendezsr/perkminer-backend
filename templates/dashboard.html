@@ -381,7 +381,8 @@
   <div>
     {% if not current_user.stripe_account_id %}
       <a href="{{ url_for('onboard_stripe') }}" class="btn btn-primary w-100">
-        Set Up Payouts (Bank Transfer)
+        Set Up Payouts (Bank Transfer)</br>
+        <b>(IMPORTANT:  Must Select Professional Services Industry, Other Marketing Services and Perkminer.com for website during onboarding)</b>
       </a>
     {% else %}
       {% set earnings = current_user.earnings_balance|float %}
