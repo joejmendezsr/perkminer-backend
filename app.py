@@ -7436,7 +7436,7 @@ def withdraw_instant():
         return redirect(url_for('dashboard'))
 
     balance_to_withdraw = user.earnings_balance
-    fee = balance_to_withdraw * Decimal("0.011")  # 1.1% fee
+    fee = balance_to_withdraw * Decimal("0.011") + Decimal("0.50")  # 1.1% + $0.50 fee
     payout_amount = balance_to_withdraw - fee
 
     if payout_amount <= 0:
@@ -7454,7 +7454,7 @@ def withdraw_instant():
         user.withdrawn_total = (user.withdrawn_total or Decimal(0)) + balance_to_withdraw
         user.earnings_balance = user.grand_total_earnings - user.withdrawn_total
         db.session.commit()
-        flash(f"Instant withdrawal of ${payout_amount:.2f} initiated! 1.1% fee: ${fee:.2f} deducted.", "success")
+        flash(f"Instant withdrawal of ${payout_amount:.2f} initiated! Instant payout fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Instant withdrawal failed: {e}", "danger")
 
@@ -7483,7 +7483,7 @@ def business_withdraw_instant():
         return redirect(url_for('business_dashboard'))
 
     balance_to_withdraw = biz.earnings_balance
-    fee = balance_to_withdraw * Decimal("0.011")
+    fee = balance_to_withdraw * Decimal("0.011") + Decimal("0.50")
     payout_amount = balance_to_withdraw - fee
 
     if payout_amount <= 0:
@@ -7501,7 +7501,7 @@ def business_withdraw_instant():
         biz.withdrawn_total = (biz.withdrawn_total or Decimal(0)) + balance_to_withdraw
         biz.earnings_balance = biz.grand_total_earnings - biz.withdrawn_total
         db.session.commit()
-        flash(f"Instant business withdrawal of ${payout_amount:.2f} initiated! 1.1% fee: ${fee:.2f} deducted.", "success")
+        flash(f"Instant business withdrawal of ${payout_amount:.2f} initiated! Instant payout fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Instant withdrawal failed: {e}", "danger")
 
@@ -7515,7 +7515,7 @@ def withdraw_investor_instant():
 
     if not user.stripe_account_id:
         flash("Please set up your Stripe payouts first.")
-        return redirect(url_for('onboard_stripe'))  # or a better route if split
+        return redirect(url_for('onboard_stripe'))
 
     balance_to_withdraw = user.investor_earnings_balance or Decimal("0")
 
@@ -7523,7 +7523,7 @@ def withdraw_investor_instant():
         flash(f"You need at least ${MIN_PAYOUT} in silent investor earnings to withdraw.", "warning")
         return redirect(url_for('dashboard'))
 
-    fee = balance_to_withdraw * Decimal("0.011")
+    fee = balance_to_withdraw * Decimal("0.011") + Decimal("0.50")
     payout_amount = balance_to_withdraw - fee
 
     if payout_amount <= 0:
@@ -7541,7 +7541,7 @@ def withdraw_investor_instant():
         user.investor_withdrawn_total = (user.investor_withdrawn_total or Decimal(0)) + balance_to_withdraw
         user.investor_earnings_balance = Decimal("0")
         db.session.commit()
-        flash(f"Instant silent investor withdrawal of ${payout_amount:.2f} initiated! 1.1% fee: ${fee:.2f} deducted.", "success")
+        flash(f"Instant silent investor withdrawal of ${payout_amount:.2f} initiated! Instant payout fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Instant withdrawal failed: {e}", "danger")
 

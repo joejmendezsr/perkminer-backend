@@ -633,14 +633,14 @@
           </form>
         </div>
         <!-- Instant Payout -->
-        {% set inst_fee = earnings * 0.011 %}
+        {% set inst_fee = earnings * 0.011 + 0.50 %}
         {% set inst_net = earnings - inst_fee %}
         <div class="border rounded p-3 bg-warning-subtle">
           <div class="fw-bold mb-1">
             <i class="bi bi-lightning-fill text-warning"></i> Instant Payout (Instant, 24/7)
           </div>
           <div class="text-muted mb-1" style="font-size:0.97em;">
-            Stripe instant payout fee: ${{ '{:,.2f}'.format(inst_fee) }} (1.1%)<br>
+            Stripe instant payout fee: ${{ '{:,.2f}'.format(inst_fee) }} (1.1% + $0.50)<br>
             You will receive: <b>${{ '{:,.2f}'.format(inst_net) }}</b>
           </div>
           <form action="{{ url_for('business_withdraw_instant') }}" method="POST" class="d-inline">
