@@ -5304,37 +5304,37 @@ def finance_dashboard():
     misc_services = operating_capital * 0.15
 
     # Silent Partners breakdown (with per-partner cap)
-    joe = min(silent_partners * 0.125, 1000000000)
-    marjorie = min(silent_partners * 0.125, 1000000000)
-    pedro = min(silent_partners * 0.07, 100000000)
-    paul_tara = min(silent_partners * 0.03, 100000000)
-    james = min(silent_partners * 0.04, 100000000)
-    josh = min(silent_partners * 0.02, 100000000)
-    angel = min(silent_partners * 0.015, 50000000)
-    diego = min(silent_partners * 0.015, 50000000)
-    esther = min(silent_partners * 0.015, 50000000)
-    reyna = min(silent_partners * 0.015, 50000000)
-    ramico = min(silent_partners * 0.015, 50000000)
-    michael = min(silent_partners * 0.015, 50000000)
-    manuela = min(silent_partners * 0.015, 50000000)
-    alex_s = min(silent_partners * 0.015, 50000000)
-    victor_r = min(silent_partners * 0.015, 50000000)
-    john_paul = min(silent_partners * 0.015, 50000000)
-    ana_pepe = min(silent_partners * 0.01, 50000000)
-    karen = min(silent_partners * 0.01, 50000000)
-    raul = min(silent_partners * 0.01, 50000000)
-    genesis = min(silent_partners * 0.02, 100000000)
-    jen = min(silent_partners * 0.02, 100000000)
-    jj = min(silent_partners * 0.02, 100000000)
-    dominick = min(silent_partners * 0.02, 100000000)
-    alex_m = min(silent_partners * 0.02, 100000000)
-    jose = min(silent_partners * 0.02, 100000000)
-    tito = min(silent_partners * 0.02, 100000000)
-    loida = min(silent_partners * 0.005, 50000000)
-    milvia = min(silent_partners * 0.005, 50000000)
-    adela = min(silent_partners * 0.005, 50000000)
-    shelly = min(silent_partners * 0.005, 50000000)
-    nana = min(silent_partners * 0.005, 50000000)
+    joe = min(silent_partners * 0.125, 10000000)
+    marjorie = min(silent_partners * 0.125, 10000000)
+    pedro = min(silent_partners * 0.12, 1000000)
+    paul_tara = min(silent_partners * 0.055, 500000)
+    james = min(silent_partners * 0.05, 350000)
+    josh = min(silent_partners * 0.03, 300000)
+    angel = min(silent_partners * 0.02, 200000)
+    diego = min(silent_partners * 0.02, 200000)
+    esther = min(silent_partners * 0.02, 200000)
+    reyna = min(silent_partners * 0.02, 200000)
+    ramico = min(silent_partners * 0.02, 200000)
+    michael = min(silent_partners * 0.02, 200000)
+    manuela = min(silent_partners * 0.02, 200000)
+    alex_s = min(silent_partners * 0.02, 200000)
+    victor_r = min(silent_partners * 0.02, 200000)
+    john_paul = min(silent_partners * 0.02, 200000)
+    ana_pepe = min(silent_partners * 0.015, 150000)
+    karen = min(silent_partners * 0.015, 150000)
+    raul = min(silent_partners * 0.015, 150000)
+    genesis = min(silent_partners * 0.025, 500000)
+    jen = min(silent_partners * 0.025, 500000)
+    jj = min(silent_partners * 0.025, 500000)
+    dominick = min(silent_partners * 0.025, 500000)
+    alex_m = min(silent_partners * 0.025, 500000)
+    jose = min(silent_partners * 0.025, 500000)
+    tito = min(silent_partners * 0.025, 500000)
+    loida = min(silent_partners * 0.015, 250000)
+    milvia = min(silent_partners * 0.015, 250000)
+    adela = min(silent_partners * 0.015, 250000)
+    shelly = min(silent_partners * 0.015, 250000)
+    nana = min(silent_partners * 0.015, 250000)
 
     summary = dict(
         total_gross_sales=f"{total_gross_sales:,.2f}",
@@ -7240,25 +7240,27 @@ def withdraw():
         return redirect(url_for('dashboard'))
 
     balance_to_withdraw = user.earnings_balance
-    fee = balance_to_withdraw * Decimal("0.0025") + Decimal("0.35")
+    fee = balance_to_withdraw * Decimal("0.011")  # 1.1% instant payout fee
     payout_amount = balance_to_withdraw - fee
 
     if payout_amount <= 0:
-        flash("Insufficient balance after the transfer fee is deducted.", "warning")
+        flash("Insufficient balance after the instant payout fee is deducted.", "warning")
         return redirect(url_for('dashboard'))
 
     try:
-        transfer = stripe.Transfer.create(
+        # Attempt instant payout
+        payout = stripe.Payout.create(
             amount=int(payout_amount * 100),  # in cents
             currency='usd',
-            destination=user.stripe_account_id,
-            description="PerkMiner earnings withdrawal"
+            method='instant',
+            statement_descriptor="PerkMiner Payout",
+            stripe_account=user.stripe_account_id
         )
         # Mark FULL balance as withdrawn (including fee)
         user.withdrawn_total = (user.withdrawn_total or Decimal(0)) + balance_to_withdraw
         user.earnings_balance = user.grand_total_earnings - user.withdrawn_total
         db.session.commit()
-        flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
+        flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe instant payout fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Failed to withdraw: {e}", "danger")
 
@@ -7287,25 +7289,27 @@ def business_withdraw():
         return redirect(url_for('business_dashboard'))
 
     balance_to_withdraw = biz.earnings_balance
-    fee = balance_to_withdraw * Decimal("0.0025") + Decimal("0.35")
+    fee = balance_to_withdraw * Decimal("0.011")  # 1.1% instant payout fee
     payout_amount = balance_to_withdraw - fee
 
     if payout_amount <= 0:
-        flash("Insufficient balance after the transfer fee is deducted.", "warning")
+        flash("Insufficient balance after the instant payout fee is deducted.", "warning")
         return redirect(url_for('business_dashboard'))
 
     try:
-        transfer = stripe.Transfer.create(
+        # Attempt instant payout
+        payout = stripe.Payout.create(
             amount=int(payout_amount * 100),  # in cents
             currency='usd',
-            destination=biz.stripe_account_id,
-            description="PerkMiner business earnings withdrawal"
+            method='instant',
+            statement_descriptor="PerkMiner Business Payout",
+            stripe_account=biz.stripe_account_id
         )
         # Mark FULL balance as withdrawn (including fee)
         biz.withdrawn_total = (biz.withdrawn_total or Decimal(0)) + balance_to_withdraw
         biz.earnings_balance = biz.grand_total_earnings - biz.withdrawn_total
         db.session.commit()
-        flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
+        flash(f"Withdrawal of ${payout_amount:.2f} initiated! Stripe instant payout fee: ${fee:.2f} deducted.", "success")
     except Exception as e:
         flash(f"Failed to withdraw: {e}", "danger")
 
@@ -7382,25 +7386,165 @@ MIN_PAYOUT = Decimal("10.00")
 @app.route('/withdraw_investor', methods=['POST'])
 @login_required
 def withdraw_investor():
+    MIN_PAYOUT = Decimal("10")
     user = current_user
+
+    if not user.stripe_account_id:
+        flash("Please set up your Stripe payouts first.")
+        return redirect(url_for('onboard_stripe'))  # Or change route as needed
 
     available = user.investor_earnings_balance or Decimal("0")
     if available < MIN_PAYOUT:
         flash(f"You need at least ${MIN_PAYOUT} in silent investor earnings to withdraw.", "warning")
         return redirect(url_for('dashboard'))
 
-    fee = available * Decimal("0.0025") + Decimal("0.35")
+    fee = available * Decimal("0.0025") + Decimal("0.35")  # Standard payout fee
     payout_amount = available - fee
+
     if payout_amount <= 0:
         flash("Insufficient balance after the transfer fee is deducted.", "warning")
         return redirect(url_for('dashboard'))
 
-    # ... Stripe transfer code here ...
+    try:
+        transfer = stripe.Transfer.create(
+            amount=int(payout_amount * 100),  # in cents
+            currency='usd',
+            destination=user.stripe_account_id,
+            description="PerkMiner Silent Investor Withdrawal"
+        )
+        user.investor_withdrawn_total = (user.investor_withdrawn_total or Decimal("0")) + available
+        user.investor_earnings_balance = Decimal("0")
+        db.session.commit()
+        flash(f"Silent investor withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
+    except Exception as e:
+        flash(f"Silent investor withdrawal failed: {e}", "danger")
 
-    user.investor_withdrawn_total = (user.investor_withdrawn_total or Decimal("0")) + available
-    user.investor_earnings_balance = Decimal("0")
-    db.session.commit()
-    flash(f"Silent investor withdrawal of ${payout_amount:.2f} initiated! Stripe fee: ${fee:.2f} deducted.", "success")
+    return redirect(url_for('dashboard'))
+
+@app.route('/withdraw_instant', methods=['POST'])
+@login_required
+def withdraw_instant():
+    MIN_PAYOUT = Decimal("10")
+    user = current_user
+
+    if not user.stripe_account_id:
+        flash("Please set up your Stripe payouts first.")
+        return redirect(url_for('onboard_stripe'))
+
+    if user.earnings_balance is None or user.earnings_balance < MIN_PAYOUT:
+        flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
+        return redirect(url_for('dashboard'))
+
+    balance_to_withdraw = user.earnings_balance
+    fee = balance_to_withdraw * Decimal("0.011") + Decimal("0.50")  # 1.1% + $0.50 fee
+    payout_amount = balance_to_withdraw - fee
+
+    if payout_amount <= 0:
+        flash("Insufficient balance after instant payout fee.", "warning")
+        return redirect(url_for('dashboard'))
+
+    try:
+        payout = stripe.Payout.create(
+            amount=int(payout_amount * 100),  # cents
+            currency='usd',
+            method='instant',
+            statement_descriptor="PerkMiner Payout",
+            stripe_account=user.stripe_account_id
+        )
+        user.withdrawn_total = (user.withdrawn_total or Decimal(0)) + balance_to_withdraw
+        user.earnings_balance = user.grand_total_earnings - user.withdrawn_total
+        db.session.commit()
+        flash(f"Instant withdrawal of ${payout_amount:.2f} initiated! Instant payout fee: ${fee:.2f} deducted.", "success")
+    except Exception as e:
+        flash(f"Instant withdrawal failed: {e}", "danger")
+
+    return redirect(url_for('dashboard'))
+
+@app.route('/business/withdraw_instant', methods=['POST'])
+def business_withdraw_instant():
+    business_id = session.get('business_id')
+    MIN_PAYOUT = Decimal("10")
+
+    if not business_id:
+        flash("Please log in as a business.")
+        return redirect(url_for('business_login'))
+
+    biz = Business.query.get(business_id)
+    if not biz:
+        flash("Business not found.", "danger")
+        return redirect(url_for('business_login'))
+
+    if not biz.stripe_account_id:
+        flash("Please set up your Stripe payouts first.", "warning")
+        return redirect(url_for('onboard_business_stripe'))
+
+    if biz.earnings_balance is None or biz.earnings_balance < MIN_PAYOUT:
+        flash(f"You need at least ${MIN_PAYOUT} to withdraw.", "warning")
+        return redirect(url_for('business_dashboard'))
+
+    balance_to_withdraw = biz.earnings_balance
+    fee = balance_to_withdraw * Decimal("0.011") + Decimal("0.50")
+    payout_amount = balance_to_withdraw - fee
+
+    if payout_amount <= 0:
+        flash("Insufficient balance after instant payout fee.", "warning")
+        return redirect(url_for('business_dashboard'))
+
+    try:
+        payout = stripe.Payout.create(
+            amount=int(payout_amount * 100),
+            currency='usd',
+            method='instant',
+            statement_descriptor="PerkMiner Biz Payout",
+            stripe_account=biz.stripe_account_id
+        )
+        biz.withdrawn_total = (biz.withdrawn_total or Decimal(0)) + balance_to_withdraw
+        biz.earnings_balance = biz.grand_total_earnings - biz.withdrawn_total
+        db.session.commit()
+        flash(f"Instant business withdrawal of ${payout_amount:.2f} initiated! Instant payout fee: ${fee:.2f} deducted.", "success")
+    except Exception as e:
+        flash(f"Instant withdrawal failed: {e}", "danger")
+
+    return redirect(url_for('business_dashboard'))
+
+@app.route('/withdraw_investor_instant', methods=['POST'])
+@login_required
+def withdraw_investor_instant():
+    MIN_PAYOUT = Decimal("10")
+    user = current_user
+
+    if not user.stripe_account_id:
+        flash("Please set up your Stripe payouts first.")
+        return redirect(url_for('onboard_stripe'))
+
+    balance_to_withdraw = user.investor_earnings_balance or Decimal("0")
+
+    if balance_to_withdraw < MIN_PAYOUT:
+        flash(f"You need at least ${MIN_PAYOUT} in silent investor earnings to withdraw.", "warning")
+        return redirect(url_for('dashboard'))
+
+    fee = balance_to_withdraw * Decimal("0.011") + Decimal("0.50")
+    payout_amount = balance_to_withdraw - fee
+
+    if payout_amount <= 0:
+        flash("Insufficient balance after instant payout fee.", "warning")
+        return redirect(url_for('dashboard'))
+
+    try:
+        payout = stripe.Payout.create(
+            amount=int(payout_amount * 100),
+            currency='usd',
+            method='instant',
+            statement_descriptor="PerkMiner Investor Payout",
+            stripe_account=user.stripe_account_id
+        )
+        user.investor_withdrawn_total = (user.investor_withdrawn_total or Decimal(0)) + balance_to_withdraw
+        user.investor_earnings_balance = Decimal("0")
+        db.session.commit()
+        flash(f"Instant silent investor withdrawal of ${payout_amount:.2f} initiated! Instant payout fee: ${fee:.2f} deducted.", "success")
+    except Exception as e:
+        flash(f"Instant withdrawal failed: {e}", "danger")
+
     return redirect(url_for('dashboard'))
 
 @app.route("/favorites")
