@@ -1371,6 +1371,7 @@ class UserTransaction(db.Model):
     tier4_business_user_commission = db.Column(db.Float)
     tier5_business_user_referral_id = db.Column(db.String(32))
     tier5_business_user_commission = db.Column(db.Float)
+    funds_available_at = db.Column(db.DateTime, nullable=True)
     interaction = db.relationship("Interaction", backref="user_transactions", lazy=True)
 
 class BusinessTransaction(db.Model):
@@ -1392,6 +1393,7 @@ class BusinessTransaction(db.Model):
     tier5_commission = db.Column(db.Float, nullable=False)
     ad_fee = db.Column(db.Float)
     # The business who was sponsored (sponsoree) earns 0.25% whenever their sponsor generates a paid invoice
+    funds_available_at = db.Column(db.DateTime, nullable=True)
     sponsoree_mutual_referral_id = db.Column(db.String(32))
     sponsoree_mutual_commission = db.Column(db.Float, default=0)
 
